@@ -1,0 +1,33 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+set title "Velocities and Concentration profiles of rotating disk" 
+set xlabel "Z"
+set ylabel "r"
+set label
+set xrange [0.0:0.3]
+set yrange [-0.1:0.1]
+unset grid
+
+fileObj1 = "vk1.20"
+fileObj2 = "vk2.27"
+fileObj3 = "vk3.28"
+fileObj4 = "vk4.29"
+fileObj5 = "vk5.30"
+fileObj6 = "vk6.31"
+fileObj7 = "vk7.32"
+#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuCte.dat"
+#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
+fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
+
+plot fileObj1 using 1:5 title 'C1' with lines ,\
+     fileObj2 using 1:5 title 'C2' with lines ,\
+     fileObj3 using 1:5 title 'C3' with lines ,\
+     fileObj4 using 1:5 title 'C4' with lines ,\
+     fileObj5 using 1:5 title 'C5' with lines ,\
+     fileObj6 using 1:5 title 'C6' with lines ,\
+     fileObj7 using 1:5 title 'C7' with lines ,\
+ 	 fileObjAnalytic using 1:5 title 'C' with lines 

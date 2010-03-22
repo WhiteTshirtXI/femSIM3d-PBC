@@ -8,13 +8,11 @@
 #include "Model3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
-//#include "GMRes.h"
+#include "GMRes.h"
 #include "Simulator3D.h"
 #include "Interface3D.h"
 #include "InOut.h"
 #include "Mumps_Petsc.h"
-#include "GMRes_Petsc.h"
-#include "PCGSolver_Petsc.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 
@@ -23,7 +21,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  const char *dir  = "./";
  //const char *mesh = "../../db/mesh/3d/cube-cube1.vtk";
- const char *mesh = "../../db/mesh/3d/bubble-bubble2.vtk";
+ const char *mesh = "../../db/mesh/3d/bubble-bubble1.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble-cube2.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble8-31-2.vtk";
@@ -49,8 +47,7 @@ int main(int argc, char **argv)
  s1.setAlpha(1);
  s1.setBeta(0);
  //s1.setDt(0.1);
- s1.setCfl(0.1);
- //s1.setCflBubble(10);
+ s1.setCflBubble(1);
  s1.init();
 
  /* ASSEMBLE */
@@ -58,16 +55,16 @@ int main(int argc, char **argv)
  //s1.setSolverPressure(new PetscSolver(KSPCG,PCICC));
  //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCNONE));
  //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCJACOBI));
- s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
+ //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  //s1.setSolverPressure(new PetscSolver(KSPBICG,PCJACOBI));
  //s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
- //s1.setSolverPressure(new PCGSolver);
+ //s1.setSolverPressure(new GMRes);
  //s1.setSolverVelocity(new PCGSolver);
  //s1.setSolverConcentration(new PCGSolver);
  //s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
  
  /* ASSEMBLESLIP */
- //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
+ s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
  
@@ -76,7 +73,7 @@ int main(int argc, char **argv)
  save.saveInfo(dir,mesh);
  save.printInfo(dir,mesh);
 
- for( int i=0;i<100;i++ )
+ for( int i=0;i<1000;i++ )
  {
 
   for( int j=0;j<10;j++ )
@@ -94,11 +91,11 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
    save.saveVTK(dir,vtk,i*10+j);
-   //save.oscillating("oscillating.dat");
-   //save.oscillatingD("oscillatingD.dat");
+   save.oscillating("oscillating.dat");
+   save.oscillatingD("oscillatingD.dat");
    save.oscillatingKappa("oscillatingKappa.dat");
-   save.oscillating(0,1,4,"oscillating.dat");
-   save.oscillatingD(0,2,1,3,4,5,"oscillatingD.dat");
+   //save.oscillating(0,1,4,"oscillating.dat");
+   //save.oscillatingD(0,2,1,3,4,5,"oscillatingD.dat");
   }
  }
 

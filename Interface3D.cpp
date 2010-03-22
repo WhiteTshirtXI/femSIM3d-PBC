@@ -100,157 +100,7 @@ clVector Interface3D::curvature2()
 } // fecha metodo curvature2
 
 // calculo do Kappa geometricamente. Utiliza neighbourVert
-clVector Interface3D::computeKappa()
-{
- int surfaceNode;
- real area;
- listElem plist,plist2,plist3;
- list<int>::iterator face,vert;
-
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-  real P0x = X->Get(surfaceNode);
-  real P0y = Y->Get(surfaceNode);
-  real P0z = Z->Get(surfaceNode);
-  real fx = 0;
-  real fy = 0;
-  real fz = 0;
-  real Px,Py,Pz;
-
-  plist = neighbourVert.at(surfaceNode);
-  for( vert=plist.begin();vert!=plist.end();++vert )
-  {
-   for( int j=0;j<surface->Dim();j++ )
-   {
-	if( *vert == surface->Get(j) )
-	{
-	 Px = X->Get(*vert);
-	 Py = Y->Get(*vert);
-	 Pz = Z->Get(*vert);
-	 real dist = sqrt( (Px-P0x)*(Px-P0x)+(Py-P0y)*(Py-P0y)+(Pz-P0z)*(Pz-P0z) );
-	 real xUnit = (Px-P0x)/dist;
-	 real yUnit = (Py-P0y)/dist;
-	 real zUnit = (Pz-P0z)/dist;
-	 fx = fx + xUnit;
-	 fy = fy + yUnit;
-	 fz = fz + zUnit;
-	 //cout << surfaceNode << " " << fx << " " << fy << " " << fz << endl;
-	}
-   }
-  }
-  //cout << "----------------------------"<<endl;
-
-  area = 0;
-  plist2 = elemSurface.at (surfaceNode); 
-  for( face=plist2.begin();face!=plist2.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos da face
-   plist3 = neighbourFaceVert.at (*face);
-   vert=plist3.begin();
-   real P1x = X->Get(*vert);
-   real P1y = Y->Get(*vert);
-   real P1z = Z->Get(*vert);
-   ++vert;
-   real P2x = X->Get(*vert);
-   real P2y = Y->Get(*vert);
-   real P2z = Z->Get(*vert);
-   // comprimento das arestas a, b e c para aplicacao da formula de
-   // Heron
-   real a = sqrt( (P1x-P0x)*(P1x-P0x)+(P1y-P0y)*(P1y-P0y)+(P1z-P0z)*(P1z-P0z) );
-   real b = sqrt( (P2x-P0x)*(P2x-P0x)+(P2y-P0y)*(P2y-P0y)+(P2z-P0z)*(P2z-P0z) );
-   real c = sqrt( (P2x-P1x)*(P2x-P1x)+(P2y-P1y)*(P2y-P1y)+(P2z-P1z)*(P2z-P1z) );
-   real s = (a+b+c)/2; //semiperimeter
-   area = area + sqrt( s*(s-a)*(s-b)*(s-c) );
-  }
-  real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
-  real L = sqrt(area);
-  real pressure = force/L;
-  //cout << surfaceNode << " " << area << " " << force << " " << pressure << endl;
-  distance.Set( surfaceNode,pressure );
- }
- return distance;
-
-} // fecha metodo computeKappa
-
-// calculo do Kappa geometricamente. Utiliza neighbourVert
-clVector Interface3D::computeKappa2()
-{
- int surfaceNode;
- real area;
- listElem plist,plist2,plist3;
- list<int>::iterator face,vert;
-
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-  real P0x = X->Get(surfaceNode);
-  real P0y = Y->Get(surfaceNode);
-  real P0z = Z->Get(surfaceNode);
-  real fx = 0;
-  real fy = 0;
-  real fz = 0;
-  real Px,Py,Pz;
-
-  plist = neighbourVert.at(surfaceNode);
-  for( vert=plist.begin();vert!=plist.end();++vert )
-  {
-   for( int j=0;j<surface->Dim();j++ )
-   {
-	if( *vert == surface->Get(j) )
-	{
-	 Px = X->Get(*vert);
-	 Py = Y->Get(*vert);
-	 Pz = Z->Get(*vert);
-	 real dist = sqrt( (Px-P0x)*(Px-P0x)+(Py-P0y)*(Py-P0y)+(Pz-P0z)*(Pz-P0z) );
-	 real xUnit = (Px-P0x)/dist;
-	 real yUnit = (Py-P0y)/dist;
-	 real zUnit = (Pz-P0z)/dist;
-	 fx = fx + xUnit;
-	 fy = fy + yUnit;
-	 fz = fz + zUnit;
-	 //cout << surfaceNode << " " << fx << " " << fy << " " << fz << endl;
-	}
-   }
-  }
-  //cout << "----------------------------"<<endl;
-
-  area = 0;
-  plist2 = elemSurface.at (surfaceNode); 
-  for( face=plist2.begin();face!=plist2.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos da face
-   plist3 = neighbourFaceVert.at (*face);
-   vert=plist3.begin();
-   real P1x = X->Get(*vert);
-   real P1y = Y->Get(*vert);
-   real P1z = Z->Get(*vert);
-   ++vert;
-   real P2x = X->Get(*vert);
-   real P2y = Y->Get(*vert);
-   real P2z = Z->Get(*vert);
-   // comprimento das arestas a, b e c para aplicacao da formula de
-   // Heron
-   real a = sqrt( (P1x-P0x)*(P1x-P0x)+(P1y-P0y)*(P1y-P0y)+(P1z-P0z)*(P1z-P0z) );
-   real b = sqrt( (P2x-P0x)*(P2x-P0x)+(P2y-P0y)*(P2y-P0y)+(P2z-P0z)*(P2z-P0z) );
-   real c = sqrt( (P2x-P1x)*(P2x-P1x)+(P2y-P1y)*(P2y-P1y)+(P2z-P1z)*(P2z-P1z) );
-   real s = (a+b+c)/2; //semiperimeter
-   area = area + sqrt( s*(s-a)*(s-b)*(s-c) );
-  }
-  real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
-  real L = sqrt(area);
-  real pressure = force/L;
-  cout << surfaceNode << " " << area << " " << force << " " << pressure << endl;
-  distance.Set( surfaceNode,pressure );
- }
- return distance;
-
-} // fecha metodo computeKappa2
-
-// calculo do Kappa geometricamente. Utiliza neighbourVert
-clVector Interface3D::computeKappa3()
+clVector Interface3D::computeKappa1()
 {
  setCloser();
  int surfaceNode;
@@ -323,7 +173,7 @@ clVector Interface3D::computeKappa3()
    real s = (a+b+c)/2; //semiperimeter
    real area = sqrt( s*(s-a)*(s-b)*(s-c) );
 
-   // vetores unitarios
+   // vetores unitarios deslocados para origem do sistema (0,0,0)
    real x1Unit = (Pm01x-P0x)/a;
    real y1Unit = (Pm01y-P0y)/a;
    real z1Unit = (Pm01z-P0z)/a;
@@ -355,9 +205,10 @@ clVector Interface3D::computeKappa3()
    real yNormal = yUnit - yTang;
    real zNormal = zUnit - zTang;
 
+   // tamanho do vetor considerando que tem origem em 0,0,0
    real len = sqrt( (xNormal*xNormal)+(yNormal*yNormal)+(zNormal*zNormal) ); 
 
-   // Unitario do vetor resultante situado no plano do triangulo
+   // Unitario do vetor resultante do plano do triangulo
    // combinacao linear dos vetores unitarios das arestas do triangulo
    real xNormalUnit = xNormal/len;
    real yNormalUnit = yNormal/len;
@@ -399,7 +250,7 @@ clVector Interface3D::computeKappa3()
 //-------------------------------------------------- 
 
   }
-  force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+  //force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
   real pressure = force/sumArea;
   //real pressure = force;
 
@@ -420,10 +271,10 @@ clVector Interface3D::computeKappa3()
  }
  return distance;
 
-} // fecha metodo computeKappa3
+} // fecha metodo computeKappa1
 
 // calculo do Kappa geometricamente. Utiliza neighbourVert
-clVector Interface3D::computeKappa4()
+clVector Interface3D::computeKappa2()
 {
  setCloser();
  int surfaceNode;
@@ -541,9 +392,12 @@ clVector Interface3D::computeKappa4()
    real yNormalUnit = yNormal/len;
    real zNormalUnit = zNormal/len;
 
-   // tamanho do comprimento da aresta do triangulo que eh metade do
-   // elemento
-   real e = sqrt( (c*c)/2.0 );
+   // tamanho do comprimento da aresta do triangulo que tem a metade da
+   // area do elemento
+   // semelhanca de triangulos: area = bh/2
+   // c'h' = A    ----> b'b' = Ac/h
+   real h = 2*area/c;
+   real e = sqrt( c*area/h );
 
    // normal integrada na distancia (MOD) dos 2 vertices medianos
    // force = resultante das componentes * tamanho da aresta que sera
@@ -602,7 +456,7 @@ clVector Interface3D::computeKappa4()
  }
  return distance;
 
-} // fecha metodo computeKappa3
+} // fecha metodo computeKappa2
 
 
 clVector Interface3D::smoothing(clMatrix &_AcTilde,clVector &_b1cTilde)

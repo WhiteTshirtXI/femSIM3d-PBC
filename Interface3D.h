@@ -27,10 +27,8 @@ class Interface3D
   clVector curvature1();
   clVector curvature2();
   clVector smoothing(clMatrix &_AcTilde,clVector &_b1cTilde);
-  clVector computeKappa();
+  clVector computeKappa1();
   clVector computeKappa2();
-  clVector computeKappa3();
-  clVector computeKappa4();
   void plotKappa(clVector &_kappaAux);
   clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
 	                clVector &_XI,clVector &_YI,clVector &_ZI);

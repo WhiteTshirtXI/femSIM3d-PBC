@@ -12,7 +12,7 @@ set xrange [0.0:0.5]
 set yrange [-0.05:0.1]
 unset grid
 
-N=410
+N=680
 fileObj1 = "vk1."
 fileObj2 = "vk2."
 fileObj3 = "vk3."

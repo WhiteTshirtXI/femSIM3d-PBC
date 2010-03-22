@@ -1060,7 +1060,7 @@ void Simulator3D::setInterface()
 void Simulator3D::setInterfaceGeo()
 {
  Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa4();
+ clVector kappaAux = interface.computeKappa2();
 
  //interface.plotKappa(kappaAux);
  kappa = interface.setKappaSurface(kappaAux);
@@ -1203,7 +1203,7 @@ void Simulator3D::unCoupledC()
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
 
- cSol = cTilde;
+ //cSol = cTilde;
 }
 
 void Simulator3D::convergenceCriteria( real value )
@@ -1409,15 +1409,11 @@ void Simulator3D::setCflDisk(real _cfl)
 void Simulator3D::setCflBubble(real _cfl)
 {
  cfl = _cfl;
- real xMax = X->Max();
- real xMin = X->Min();
- real yMax = Y->Max();
- real yMin = Y->Min();
- real zMax = Z->Max();
- real zMin = Z->Min();
- real L = ( (xMax-xMin)*(yMax-yMin)*(zMax-zMin) )/numNodes;
+ real dx = m->getDeltaXMin();
+ real dy = m->getDeltaYMin();
+ real dz = m->getDeltaZMin();
 
- dt = cfl*sqrt( 1.0*L*L*L/(PI*sigma) );
+ dt = cfl*sqrt( dx*dy*dz/(2*PI*sigma) );
 }
 
 void Simulator3D::setUAnt(clVector &_uAnt)

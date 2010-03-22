@@ -728,7 +728,7 @@ void Model3D::setCubeCubeBC(real param)
    idbcv.AddItem(i);
    idbcw.AddItem(i);
 
-   aux = 0;
+   aux = 0.0;
    uc.Set(i,aux);
    vc.Set(i,aux);
    wc.Set(i,aux);

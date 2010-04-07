@@ -13,11 +13,7 @@ LIBS = -L/opt/local/lib -lm
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
-INCLUDES += -I${PETSC_DIR}
 INCLUDES += -I${PETSC_DIR}/include
-INCLUDES += -I$(PETSC_DIR)/src/dm/mesh/sieve
-INCLUDES += -I${PETSC_DIR}/bmake/${PETSC_ARCH}
-INCLUDES += -I${PETSC_DIR}/externalpackages/mpich2-1.0.8/${PETSC_ARCH}/include
 
 OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
@@ -38,10 +34,12 @@ OBJECTS += InOut.o
 OBJECTS += mainDiskNuC.o
 
 $(TARGET): $(OBJECTS)
-	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} $(CXXFLAGS) -o $(TARGET)
+	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
 
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+
+include ${PETSC_DIR}/conf/base
 
 deepclean:
 	@rm -f core
@@ -64,4 +62,3 @@ deepclean:
 # $< the name of the related file that caused the action
 # $* the prefix shared by target and dependent files
 
-include ${PETSC_DIR}/conf/base

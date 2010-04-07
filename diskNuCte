@@ -9,7 +9,7 @@ TARGET = ns3dDiskNuCte
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O3
-LIBS = -L/opt/local/lib -lm
+LIBS = -L/opt/local/lib -lgsl -lgslcblas -lm
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
@@ -40,10 +40,12 @@ OBJECTS += InOut.o
 OBJECTS += mainDiskNuCte.o
 
 $(TARGET): $(OBJECTS)
-	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} $(CXXFLAGS) -o $(TARGET)
+	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
 
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+
+include ${PETSC_DIR}/conf/base
 
 deepclean:
 	@rm -f core
@@ -66,4 +68,3 @@ deepclean:
 # $< the name of the related file that caused the action
 # $* the prefix shared by target and dependent files
 
-include ${PETSC_DIR}/conf/base

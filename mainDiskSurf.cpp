@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  s1.setFr(10);
  s1.setBeta(1);
  //s1.setDt(dt);
- s1.setCfl(3);
+ s1.setCfl(1);
  s1.setSolverVelocity(new PCGSolver());
  //s1.setSolverPressure(new PCGSolver());
  //s1.setSolverPressure(new GMRes());

@@ -866,7 +866,10 @@ void Simulator3D::assembleK()
 
 void Simulator3D::stepSL()
 {
- SemiLagrangean sl(*m,uSol,vSol,wSol,cSol);
+ clVector velU = uSol;
+ clVector velV = vSol;
+ clVector velW = wSol;
+ SemiLagrangean sl(*m,velU,velV,velW,cSol);
 
  clVector convAux = sl.compute(dt);
 
@@ -962,7 +965,7 @@ void Simulator3D::stepALE()
  stepSmooth();
 
  c1 = 1.0;
- c2 = 0.0;
+ c2 = 1.0;
  c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
 
  uALE = c1*uSL+c2*uSmooth;
@@ -977,14 +980,14 @@ void Simulator3D::stepALE()
  m->setY(m->getY()+(vALE*dt));
  m->setZ(m->getZ()+(wALE*dt));
 
- convUVW.CopyFrom(0,uSol);
- convUVW.CopyFrom(numNodes,vSol);
- convUVW.CopyFrom(2*numNodes,wSol);
- convC = cSol;
-
  // atualizacao de todas as matrizes do sistema
  //assemble();
  assembleSlip();
+
+ convUVW.CopyFrom(0,uSL);
+ convUVW.CopyFrom(numNodes,vSL);
+ convUVW.CopyFrom(2*numNodes,wSL);
+ convC = cSol;
 
 } // fecha metodo stepALE
 
@@ -1002,10 +1005,10 @@ void Simulator3D::stepSmooth()
 void Simulator3D::setRHS()
 {
  // sem correcao na pressao
- va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * convUVW;
+ //va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 
  // com correcao na pressao
- //va = ( (1.0/dt) * M - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
+ va = ( (1.0/dt) * M - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
 }
 
 void Simulator3D::setCRHS()
@@ -1180,8 +1183,8 @@ void Simulator3D::unCoupled()
  uvw.CopyTo(  numNodes,vSol);
  uvw.CopyTo(numNodes*2,wSol);
 
- pSol = pTilde;       // sem correcao na pressao
- //pSol = pSol + pTilde;  // com correcao na pressao
+ //pSol = pTilde;       // sem correcao na pressao
+ pSol = pSol + pTilde;  // com correcao na pressao
 
  uAnt.CopyFrom(0,uvw);
  uAnt.CopyFrom(numNodes*3,pSol);
@@ -1274,8 +1277,8 @@ void Simulator3D::setCoupledBC()
   j = (int) idbcp->Get(i);
   b.CopyMult(j+numNodes*3,A,UVWPC);
   A.Set( j+3*numNodes,j+3*numNodes, -1 );
-  b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
-  //b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
+  //b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
+  b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
  }
  cout << "imposta c.c. de P " << endl;
  
@@ -1341,8 +1344,8 @@ void Simulator3D::setUnCoupledBC()
   j=(int) idbcp->Get(i);
   b1.CopyMult(j,GTilde,DTilde,*pc);
   E.Set(j,j,-1);
-  b2.Set(j,-pc->Get(j));  // sem correcao na pressao
-  //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
+  //b2.Set(j,-pc->Get(j));  // sem correcao na pressao
+  b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
  }
  cout << "imposta c.c. de P " << endl;
 

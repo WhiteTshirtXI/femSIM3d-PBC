@@ -9,16 +9,11 @@ TARGET = ns3dSurf
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O3
-LIBS = -L/opt/local/lib -lm
-#LIBS = -L/opt/local/lib -lgsl -lgslcblas -lm
+LIBS = -L/opt/local/lib -lgsl -lgslcblas -lm
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
-INCLUDES += -I${PETSC_DIR}
 INCLUDES += -I${PETSC_DIR}/include
-INCLUDES += -I$(PETSC_DIR)/src/dm/mesh/sieve
-INCLUDES += -I${PETSC_DIR}/bmake/${PETSC_ARCH}
-INCLUDES += -I${PETSC_DIR}/externalpackages/mpich2-1.0.8/${PETSC_ARCH}/include
 
 OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
@@ -26,8 +21,8 @@ OBJECTS += $(LIBDIR)/clDMatrix.o
 OBJECTS += $(LIBDIR)/CGSolver.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
 OBJECTS += $(LIBDIR)/CGSSolver.o
-#OBJECTS += $(LIBDIR)/GMRes.o
-#OBJECTS += $(LIBDIR)/GSLSolver.o
+OBJECTS += $(LIBDIR)/GMRes.o
+OBJECTS += $(LIBDIR)/GSLSolver.o
 OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
@@ -43,12 +38,13 @@ OBJECTS += InOut.o
 OBJECTS += mainDiskSurf.o
 
 $(TARGET): $(OBJECTS)
-	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} $(CXXFLAGS) -o $(TARGET)
+	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
 
 
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
+include ${PETSC_DIR}/conf/base
 
 deepclean:
 	@rm -f core
@@ -61,4 +57,3 @@ deepclean:
 	@rm -f ./sim/sim*.dat
 	@rm -f ./relatorio.dat
 
-include ${PETSC_DIR}/conf/base

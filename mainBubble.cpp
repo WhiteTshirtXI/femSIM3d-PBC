@@ -21,7 +21,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  const char *dir  = "./";
  //const char *mesh = "../../db/mesh/3d/cube-cube1.vtk";
- const char *mesh = "../../db/mesh/3d/bubble-bubble1.vtk";
+ const char *mesh = "../../db/mesh/3d/bubble-bubble2.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble-cube2.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble8-31-2.vtk";

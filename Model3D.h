@@ -79,75 +79,55 @@ class Model3D
   real getDeltaXMin();
   real getDeltaYMin();
   real getDeltaZMin();
-  clVector getX();
-  clVector* getPointerX();
+  clVector* getX();
   real getMaxX();
   real getMinX();
   void setX(clVector _X);
-  clVector getY();
-  clVector* getPointerY();
+  clVector* getY();
   real getMaxY();
   real getMinY();
   void setY(clVector _Y);
-  clVector getZ();
   real getMaxZ();
   real getMinZ();
-  clVector* getPointerZ();
+  clVector* getZ();
   void setZ(clVector _Z);
-  clVector getUC();
-  clVector* getPointerUC();
-  clVector getVC();
-  clVector* getPointerVC();
-  clVector getWC();
-  clVector* getPointerWC();
-  clVector getPC();
-  clVector* getPointerPC();
-  clVector getCC();
-  clVector* getPointerCC();
-  clVector getOutflow();
-  clVector* getPointerOutflow();
-  clVector getIdbcu();
-  clVector* getPointerIdbcu();
-  clVector getIdbcv();
-  clVector* getPointerIdbcv();
-  clVector getIdbcw();
-  clVector* getPointerIdbcw();
-  clVector getIdbcp();
-  clVector* getPointerIdbcp();
-  clVector getIdbcc();
-  clVector* getPointerIdbcc();
-  clMatrix getIEN();
-  clMatrix* getPointerIEN();
+  clVector* getUC();
+  clVector* getVC();
+  clVector* getWC();
+  clVector* getPC();
+  clVector* getCC();
+  clVector* getOutflow();
+  clVector* getIdbcu();
+  clVector* getIdbcv();
+  clVector* getIdbcw();
+  clVector* getIdbcp();
+  clVector* getIdbcc();
+  clMatrix* getIEN();
   int getNumVerts();
   int getNumNodes();
   int getNumElems();
   int getNumGLEU();
   int getNumGLEP();
   int getNumGLEC();
-  clMatrix getMapViz();
-  clMatrix getFaceFace();
-  clMatrix getFreeFace();
-  clMatrix getOFace();clMatrix* getPointerOFace();
-  clVector getSurface(); clVector* getPointerSurface();
-  clVector getNonSurface(); clVector* getPointerNonSurface();
+  clMatrix* getOFace();
+  clVector* getSurface();
+  clVector* getNonSurface();
   real getXCenter();
   real getYCenter();
   real getZCenter();
   real getBubbleRadius();
   void setSurface();
   void setSurfaceFace();
-  void getNonZeros();
-
-  typedef list<int> listElem;
-  vector<listElem> neighbourElem;
-  vector<listElem> neighbourVert;
-  vector<listElem> neighbourFace;
-  vector<listElem> elemSurface;
-  vector<listElem> neighbourFaceVert;
-  vector<listElem> surfaceViz;
-  vector<listElem> xSurfaceViz;
-  vector<listElem> ySurfaceViz;
-  vector<listElem> zSurfaceViz;
+  void setInOutVert();
+  vector< list<int> >* getNeighbourElem();
+  vector< list<int> >* getNeighbourVert();
+  vector< list<int> >* getNeighbourFace();
+  vector< list<int> >* getNeighbourFaceVert();
+  vector< list<int> >* getElemSurface();
+  vector< list<int> >* getSurfaceViz();
+  vector< list<int> >* getFaceIEN();
+  list<int>* getOutVert();
+  list<int>* getInVert();
 
  private:
   clVector uc,vc,wc,pc,cc;
@@ -170,6 +150,18 @@ class Model3D
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
+
+  vector< list<int> > neighbourElem;  // lista de elementos de cada no
+  vector< list<int> > neighbourVert;  // lista de vizinhos de cada no
+  vector< list<int> > neighbourFace;  // lista de vizinhos de cada no
+  vector< list<int> > faceIEN;
+  vector< list<int> > neighbourFaceVert;
+  vector< list<int> > elemSurface;
+  vector< list<int> > surfaceViz;  // lista de vizinhos na interface
+  vector< list<int> > xSurfaceViz; // lista de coords X de vizinhos na interface
+  vector< list<int> > ySurfaceViz; // lista de coords Y de vizinhos na interface
+  vector< list<int> > zSurfaceViz; // lista de coords Z de vizinhos na interface
+  list<int> outVert,inVert; // lista de vertices do interior e de contorno
 
 };
 

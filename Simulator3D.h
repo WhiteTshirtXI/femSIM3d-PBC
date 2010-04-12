@@ -20,7 +20,7 @@
 #include "FEMLinElement3D.h"
 #include "Galerkin.h"
 #include "SemiLagrangean.h"
-#include "Eulerian.h"
+#include "MeshSmooth.h"
 #include "Solver.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
@@ -51,6 +51,7 @@ class Simulator3D
   void stepLagrangianZ();
   void stepALE();
   void stepSmooth();
+  void setInterfaceVel();
 
   void setRHS();
   void setCRHS();
@@ -95,35 +96,22 @@ class Simulator3D
   void setSolverPressure(Solver *s);
   void setSolverConcentration(Solver *s);
 
-  clVector getUSol()const;
-  clVector* getPointerUSol();
-  clVector getVSol()const;
-  clVector* getPointerVSol();
-  clVector getWSol()const;
-  clVector* getPointerWSol();
-  clVector getPSol()const;
-  clVector* getPointerPSol();
-  clVector getCSol()const;
-  clVector* getPointerCSol();
-  clVector getUAnt()const;
-  clVector* getPointerUAnt();
-  clVector* getPointerCAnt();
-  clVector* getPointerDistance();
-  clDMatrix* getPointerKappa();
-  clMatrix getK()const;
-  clMatrix* getPointerK();
-  clMatrix getM()const;
-  clMatrix* getPointerM();
-  clMatrix getG()const;
-  clMatrix* getPointerG();
-  clMatrix getD()const;
-  clMatrix* getPointerD();
-  clMatrix getGx()const;
-  clMatrix* getPointerGx();
-  clMatrix getGy()const;
-  clMatrix* getPointerGy();
-  clMatrix getGz()const;
-  clMatrix* getPointerGz();
+  clVector* getUSol();
+  clVector* getVSol();
+  clVector* getWSol();
+  clVector* getPSol();
+  clVector* getCSol();
+  clVector* getUAnt();
+  clVector* getCAnt();
+  clVector* getDistance();
+  clDMatrix* getKappa();
+  clMatrix* getK();
+  clMatrix* getM();
+  clMatrix* getG();
+  clMatrix* getD();
+  clMatrix* getGx();
+  clMatrix* getGy();
+  clMatrix* getGz();
 
   Solver *solverV,*solverP,*solverC;
   Model3D *m;
@@ -136,7 +124,7 @@ class Simulator3D
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
-  clVector *outflow;
+  clVector *outflow,*surface;
   clMatrix *IEN;
 
   clMatrix K,Kc,M,Mc,G,D;

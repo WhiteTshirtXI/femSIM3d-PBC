@@ -28,10 +28,10 @@ class SemiLagrangean
   void setBC();
 
  private:
+  Model3D *m;
   int numVerts,numNodes,numElems;
   real dt; 
-  typedef list<int> listElem;
-  vector<listElem> neighbourElem;
+  vector< list<int> > *neighbourElem;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector uParticle,vParticle,wParticle,cParticle;
   clVector *X,*Y,*Z;

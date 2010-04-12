@@ -11,30 +11,31 @@ SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
 										   clVector &_wSol,
 										   clVector &_cSol)
 {
- uc = _m.getPointerUC();
- vc = _m.getPointerVC();
- wc = _m.getPointerWC();
- pc = _m.getPointerPC();
- cc = _m.getPointerCC();
- X = _m.getPointerX();
- Y = _m.getPointerY();
- Z = _m.getPointerZ();
- IEN = _m.getPointerIEN();
- idbcu = _m.getPointerIdbcu();
- idbcv = _m.getPointerIdbcv();
- idbcw = _m.getPointerIdbcw();
- idbcp = _m.getPointerIdbcp();
- idbcc = _m.getPointerIdbcc();
- numVerts = _m.getNumVerts();
- numNodes = _m.getNumNodes();
- numElems = _m.getNumElems();
+ m = &_m;
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ IEN = m->getIEN();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ numVerts = m->getNumVerts();
+ numNodes = m->getNumNodes();
+ numElems = m->getNumElems();
  uSol = _uSol;
  vSol = _vSol;
  wSol = _wSol;
  cSol = _cSol;
  convLin.Dim(numVerts,numVerts);
- neighbourElem = _m.neighbourElem; // fazer funcao GET
- oFace = _m.getPointerOFace();
+ neighbourElem = m->getNeighbourElem(); 
+ oFace = m->getOFace();
 }
 
 clVector SemiLagrangean::compute(real dt)
@@ -147,12 +148,12 @@ void SemiLagrangean::getDepartElem(real dt)
  clVector yParticle = *Y - vSol*dt;
  clVector zParticle = *Z - wSol*dt;
 
- listElem plist;
+ list<int> plist;
  list<int>::iterator mele;
 
  for (int ii = 0; ii < numVerts; ii++)
  {
-  plist = neighbourElem.at(ii);
+  plist = neighbourElem->at(ii);
   mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
 
   xP = xParticle.Get(ii);
@@ -181,12 +182,12 @@ void SemiLagrangean::getDepartElem2(real dt)
  clVector yParticle = *Y - vSol*dt;
  clVector zParticle = *Z;
 
- listElem plist;
+ list<int> plist;
  list<int>::iterator mele;
 
  for (int ii = 0; ii < numVerts; ii++)
  {
-  plist = neighbourElem.at(ii);
+  plist = neighbourElem->at(ii);
   mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
 
   xP = xParticle.Get(ii);

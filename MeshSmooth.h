@@ -1,6 +1,11 @@
-
-#ifndef EULERIAN_H
-#define EULERIAN_H
+// =================================================================== // 
+// this is file MeshSmooth.h, created at 20-Ago-2009                   //
+// maintained by Gustavo Rabello dos Anjos                             //
+// e-mail gustavo.rabello@gmail.com                                    //
+// =================================================================== //
+//
+#ifndef MESHSMOOTH_H
+#define MESHSMOOTH_H
 
 #include "clVector.h"
 #include "clMatrix.h"
@@ -9,11 +14,11 @@
 #include <math.h>
 #include <vector>
 
-class Eulerian
+class MeshSmooth
 {
  public:
-  Eulerian(Model3D &_m);
-  virtual ~Eulerian();
+  MeshSmooth(Model3D &_m);
+  virtual ~MeshSmooth();
 
   clVector compute(real _dt);
   void stepSmooth();
@@ -28,6 +33,7 @@ class Eulerian
   clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
 
  private:
+  Model3D *m;
   real dt;
   int numNodes,numVerts,numElems;
   clVector *X,*Y,*Z;
@@ -37,9 +43,8 @@ class Eulerian
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
   clVector xAverage,yAverage,zAverage;
 
-  typedef list<int> listElem;
-  vector<listElem> neighbourVert;
-  vector<listElem> surfaceViz;
+  vector< list<int> > *neighbourVert,*surfaceViz;
+  list<int> *inVert;
 };
-#endif /* ifndef EULERIAN_H */
+#endif /* ifndef MESHSMOOTH_H */
 

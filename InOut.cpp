@@ -17,22 +17,22 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  numGLEP = m->getNumGLEP();
  numGLEU = m->getNumGLEU();
  numGLEC = m->getNumGLEC();
- X = m->getPointerX();
- Y = m->getPointerY();
- Z = m->getPointerZ();
- uc = m->getPointerUC();
- vc = m->getPointerVC();
- wc = m->getPointerWC();
- pc = m->getPointerPC();
- cc = m->getPointerCC();
- idbcu = m->getPointerIdbcu();
- idbcv = m->getPointerIdbcv();
- idbcw = m->getPointerIdbcw();
- idbcp = m->getPointerIdbcp();
- idbcc = m->getPointerIdbcc();
- outflow = m->getPointerOutflow();
- IEN = m->getPointerIEN();
- surface = m->getPointerSurface();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
 
  s = &_s;
  Re = s->getRe();
@@ -44,24 +44,22 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  alpha = s->getAlpha();
  beta = s->getBeta();
  simTime = s->getTime();
- uAnt = s->getPointerUAnt();
- cAnt = s->getPointerCAnt();
- K = s->getPointerK();
- M = s->getPointerM();
- G = s->getPointerG();
- D = s->getPointerD();
- gx = s->getPointerGx();
- gy = s->getPointerGy();
- gz = s->getPointerGz();
- uSol = s->getPointerUSol();
- vSol = s->getPointerVSol();
- wSol = s->getPointerWSol();
- pSol = s->getPointerPSol();
- cSol = s->getPointerCSol();
- kappa = s->getPointerKappa();
- distance = s->getPointerDistance();
-
-
+ uAnt = s->getUAnt();
+ cAnt = s->getCAnt();
+ K = s->getK();
+ M = s->getM();
+ G = s->getG();
+ D = s->getD();
+ gx = s->getGx();
+ gy = s->getGy();
+ gz = s->getGz();
+ uSol = s->getUSol();
+ vSol = s->getVSol();
+ wSol = s->getWSol();
+ pSol = s->getPSol();
+ cSol = s->getCSol();
+ kappa = s->getKappa();
+ distance = s->getDistance();
 }
 
 InOut::~InOut(){}
@@ -926,6 +924,12 @@ void InOut::saveInfo(const char* _dir,const char* _mesh)
  file << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
  file << "work directory:  " << _dir << endl;
  file << "mesh:            " << _mesh << endl;
+ file << "numVerts:        " << numVerts << endl;
+ file << "numNodes:        " << numNodes << endl;
+ file << "numElems:        " << numElems << endl;
+ file << "Lin Sys dim UVW: " << 3*numNodes << " x " << 3*numNodes << endl;
+ file << "Lin Sys dim P:   " << numVerts << " x " << numVerts << endl;
+ file << "Lin Sys dim C:   " << numVerts << " x " << numVerts << endl;
  file << "Reynolds number: " << Re << endl;
  file << "Schmidt number:  " << Sc << endl;
  file << "Froud number:    " << Fr << endl;
@@ -954,6 +958,12 @@ void InOut::printInfo(const char* _dir,const char* _mesh)
  cout << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
  cout << "work directory:  " << _dir << endl;
  cout << "mesh:            " << _mesh << endl;
+ cout << "numVerts:        " << numVerts << endl;
+ cout << "numNodes:        " << numNodes << endl;
+ cout << "numElems:        " << numElems << endl;
+ cout << "Lin Sys dim UVW: " << 3*numNodes << " x " << 3*numNodes << endl;
+ cout << "Lin Sys dim P:   " << numVerts << " x " << numVerts << endl;
+ cout << "Lin Sys dim C:   " << numVerts << " x " << numVerts << endl;
  cout << "Reynolds number: " << Re << endl;
  cout << "Schmidt number:  " << Sc << endl;
  cout << "Froud number:    " << Fr << endl;

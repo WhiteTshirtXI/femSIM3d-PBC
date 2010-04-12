@@ -18,21 +18,22 @@ Simulator3D::Simulator3D( Model3D &_m )
  numGLEP = m->getNumGLEP();
  numGLEU = m->getNumGLEU();
  numGLEC = m->getNumGLEC();
- X = m->getPointerX();
- Y = m->getPointerY();
- Z = m->getPointerZ();
- uc = m->getPointerUC();
- vc = m->getPointerVC();
- wc = m->getPointerWC();
- pc = m->getPointerPC();
- cc = m->getPointerCC();
- idbcu = m->getPointerIdbcu();
- idbcv = m->getPointerIdbcv();
- idbcw = m->getPointerIdbcw();
- idbcp = m->getPointerIdbcp();
- idbcc = m->getPointerIdbcc();
- outflow = m->getPointerOutflow();
- IEN = m->getPointerIEN();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
 
  // Simulator3D pre-configures parameters
  // =================================================================== //
@@ -900,11 +901,11 @@ void Simulator3D::step()
  clVector uvwSol(3*numNodes);
  uAnt.CopyTo(0,uvwSol);
 
- // sem corerecao na pressao
- //va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
+ // sem correcao na pressao
+ va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
  
- // com corerecao na pressao
- va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol - (G*pSol);
+ // com correcao na pressao
+ //va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol - (G*pSol);
 
  // ainda nao funcionando
  //vcc = ( (1.0/dt) * Mc + (1-alpha) * -(1.0/(Re*Sc)) * Kc ) * cSol;
@@ -916,9 +917,9 @@ void Simulator3D::step()
 
 void Simulator3D::stepLagrangian()
 {
- m->setX(m->getX()+(uSol*dt));
- m->setY(m->getY()+(vSol*dt));
- m->setZ(m->getZ()+(wSol*dt));
+ m->setX(*m->getX()+(uSol*dt));
+ m->setY(*m->getY()+(vSol*dt));
+ m->setZ(*m->getZ()+(wSol*dt));
 
  //assemble();
  assembleSlip();
@@ -932,7 +933,7 @@ void Simulator3D::stepLagrangian()
 
 void Simulator3D::stepLagrangianZ()
 {
- m->setZ(m->getZ()+(wSol*dt));
+ m->setZ(*m->getZ()+(wSol*dt));
 
 //--------------------------------------------------
 //  cout << uSol.Norm() << endl;
@@ -952,7 +953,7 @@ void Simulator3D::stepLagrangianZ()
 
  // atualizacao de todas as matrizes do sistema
  //assemble();
- assembleSlip();
+ //assembleSlip();
 
 } // fecha metodo stepSLSurf
 
@@ -965,7 +966,7 @@ void Simulator3D::stepALE()
  stepSmooth();
 
  c1 = 1.0;
- c2 = 1.0;
+ c2 = 0.0;
  c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
 
  uALE = c1*uSL+c2*uSmooth;
@@ -973,42 +974,55 @@ void Simulator3D::stepALE()
  wALE = c1*wSL+c2*wSmooth;
 
  // impoe velocidade do fluido na interface
- //setInterfaceVel();
+ setInterfaceVel();
 
  // movimentando os pontos da malha com velocidade ALE
- m->setX(m->getX()+(uALE*dt));
- m->setY(m->getY()+(vALE*dt));
- m->setZ(m->getZ()+(wALE*dt));
+ m->setX(*m->getX()+(uALE*dt));
+ m->setY(*m->getY()+(vALE*dt));
+ m->setZ(*m->getZ()+(wALE*dt));
 
  // atualizacao de todas as matrizes do sistema
- //assemble();
- assembleSlip();
+ assemble();
+ //assembleSlip();
 
- convUVW.CopyFrom(0,uSL);
- convUVW.CopyFrom(numNodes,vSL);
- convUVW.CopyFrom(2*numNodes,wSL);
+ convUVW.CopyFrom(0,uSol);
+ convUVW.CopyFrom(numNodes,vSol);
+ convUVW.CopyFrom(2*numNodes,wSol);
  convC = cSol;
 
 } // fecha metodo stepALE
 
 void Simulator3D::stepSmooth()
 {
- Eulerian eu(*m); // criando objeto Eulerian
+ MeshSmooth e1(*m); // criando objeto MeshSmooth
 
- clVector smooth = eu.compute(dt);
+ clVector smooth = e1.compute(dt);
  smooth.CopyTo(0,uSmooth);
  smooth.CopyTo(numNodes,vSmooth);
  smooth.CopyTo(2*numNodes,wSmooth);
 
 } // fecha metodo stepSmooth
 
+void Simulator3D::setInterfaceVel()
+{
+ real aux;
+
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  aux = surface->Get(i);
+  uALE.Set(aux,uSL.Get(aux));
+  vALE.Set(aux,vSL.Get(aux));
+  wALE.Set(aux,wSL.Get(aux));
+ }
+} // fecha metodo setInterfaceVel 
+
 void Simulator3D::setRHS()
 {
  // sem correcao na pressao
- //va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * convUVW;
+ va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 
  // com correcao na pressao
- va = ( (1.0/dt) * M - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
+ //va = ( (1.0/dt) * M - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
 }
 
 void Simulator3D::setCRHS()
@@ -1041,6 +1055,8 @@ void Simulator3D::setGravityBoussinesq()
 
 void Simulator3D::setInterface()
 {
+ matMountC();
+ setUnCoupledCBC();
  Interface3D interface(*m);
  distance = interface.curvature1();
 
@@ -1147,28 +1163,11 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- //uvw = uTilde + invMLumped*fint;
+ //uvw = uTilde + dt*invMLumped*fint;
  uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
- /* teste do norb */
-//--------------------------------------------------
-//  clVector uvwOne(2*numNodes);
-//  uvwOne.SetAll(0.0);
-//  clVector wOne(numNodes);
-//  wOne.SetAll(-1.0);
-//  cout << idbcw->Dim() << endl;
-//  for( int i=0;i<idbcw->Dim();i++ )
-//  {
-//   real aux = (int) idbcw->Get(i);
-//   wOne.Set( aux,wc->Get( (int) idbcw->Get(i) ) );
-//  }
-//  uvwOne.Append(wOne);
-//  uvw = uTilde + M * ( (1.0/(Fr*Fr)) * uvwOne );
-//-------------------------------------------------- 
- 
  b2Tilde = b2 - (DTilde * uvw); // D com c.c.
-
  b2Tilde = (-1) * b2Tilde;
 
  // resolve sistema E pTilde = b2
@@ -1183,8 +1182,8 @@ void Simulator3D::unCoupled()
  uvw.CopyTo(  numNodes,vSol);
  uvw.CopyTo(numNodes*2,wSol);
 
- //pSol = pTilde;       // sem correcao na pressao
- pSol = pSol + pTilde;  // com correcao na pressao
+ pSol = pTilde;       // sem correcao na pressao
+ //pSol = pSol + pTilde;  // com correcao na pressao
 
  uAnt.CopyFrom(0,uvw);
  uAnt.CopyFrom(numNodes*3,pSol);
@@ -1206,7 +1205,7 @@ void Simulator3D::unCoupledC()
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
 
- //cSol = cTilde;
+ cSol = cTilde;
 }
 
 void Simulator3D::convergenceCriteria( real value )
@@ -1277,8 +1276,8 @@ void Simulator3D::setCoupledBC()
   j = (int) idbcp->Get(i);
   b.CopyMult(j+numNodes*3,A,UVWPC);
   A.Set( j+3*numNodes,j+3*numNodes, -1 );
-  //b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
-  b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
+  b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
+  //b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
  }
  cout << "imposta c.c. de P " << endl;
  
@@ -1344,8 +1343,8 @@ void Simulator3D::setUnCoupledBC()
   j=(int) idbcp->Get(i);
   b1.CopyMult(j,GTilde,DTilde,*pc);
   E.Set(j,j,-1);
-  //b2.Set(j,-pc->Get(j));  // sem correcao na pressao
-  b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
+  b2.Set(j,-pc->Get(j));  // sem correcao na pressao
+  //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
  }
  cout << "imposta c.c. de P " << endl;
 
@@ -1495,34 +1494,21 @@ void Simulator3D::setDt(real _dt){dt = _dt;}
 real Simulator3D::getDt(){return dt;}
 real Simulator3D::getCfl(){return cfl;}
 real* Simulator3D::getTime(){return &time;}
-clVector Simulator3D::getUSol() const {return uSol;} 
-clVector* Simulator3D::getPointerUSol(){return &uSol;} 
-clVector Simulator3D::getVSol() const {return vSol;} 
-clVector* Simulator3D::getPointerVSol(){return &vSol;} 
-clVector Simulator3D::getWSol() const {return wSol;}
-clVector* Simulator3D::getPointerWSol(){return &wSol;}
-clVector Simulator3D::getPSol() const {return pSol;}
-clVector* Simulator3D::getPointerPSol(){return &pSol;}
-clVector Simulator3D::getCSol() const {return cSol;}
-clVector* Simulator3D::getPointerCSol(){return &cSol;}
-clVector Simulator3D::getUAnt() const {return uAnt;}
-clVector* Simulator3D::getPointerUAnt(){return &uAnt;}
-clVector* Simulator3D::getPointerCAnt(){return &cAnt;}
-clVector* Simulator3D::getPointerDistance(){return &distance;}
-clDMatrix* Simulator3D::getPointerKappa(){return &kappa;}
-clMatrix Simulator3D::getK() const {return K;}
-clMatrix* Simulator3D::getPointerK(){return &K;}
-clMatrix Simulator3D::getM() const {return M;}
-clMatrix* Simulator3D::getPointerM(){return &M;}
-clMatrix Simulator3D::getGx() const {return gx;}
-clMatrix* Simulator3D::getPointerGx(){return &gx;}
-clMatrix Simulator3D::getGy() const {return gy;}
-clMatrix* Simulator3D::getPointerGy(){return &gy;}
-clMatrix Simulator3D::getGz() const {return gz;}
-clMatrix* Simulator3D::getPointerGz(){return &gz;}
-clMatrix Simulator3D::getG() const {return G;}
-clMatrix* Simulator3D::getPointerG(){return &G;}
-clMatrix Simulator3D::getD() const {return D;}
-clMatrix* Simulator3D::getPointerD(){return &D;}
+clVector* Simulator3D::getUSol(){return &uSol;} 
+clVector* Simulator3D::getVSol(){return &vSol;} 
+clVector* Simulator3D::getWSol(){return &wSol;}
+clVector* Simulator3D::getPSol(){return &pSol;}
+clVector* Simulator3D::getCSol(){return &cSol;}
+clVector* Simulator3D::getUAnt(){return &uAnt;}
+clVector* Simulator3D::getCAnt(){return &cAnt;}
+clVector* Simulator3D::getDistance(){return &distance;}
+clDMatrix* Simulator3D::getKappa(){return &kappa;}
+clMatrix* Simulator3D::getK(){return &K;}
+clMatrix* Simulator3D::getM(){return &M;}
+clMatrix* Simulator3D::getGx(){return &gx;}
+clMatrix* Simulator3D::getGy(){return &gy;}
+clMatrix* Simulator3D::getGz(){return &gz;}
+clMatrix* Simulator3D::getG(){return &G;}
+clMatrix* Simulator3D::getD(){return &D;}
 
 

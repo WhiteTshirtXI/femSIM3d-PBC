@@ -9,7 +9,7 @@ Galerkin::Galerkin(Model3D &_m,clVector &_uSol,
 							   clMatrix &_gy,
 							   clMatrix &_gz)
 {
- outflow = _m.getPointerOutflow();
+ outflow = _m.getOutflow();
  numVerts = _m.getNumVerts();
  numNodes = _m.getNumNodes();
  numElems = _m.getNumElems();

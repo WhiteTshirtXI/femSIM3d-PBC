@@ -1,34 +1,36 @@
 // =================================================================== // 
-// this is file Eulerian.cpp, created at 20-Ago-2009                   //
+// this is file MeshSmooth.cpp, created at 20-Ago-2009                   //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail gustavo.rabello@gmail.com                                    //
 // =================================================================== //
 
-#include "Eulerian.h"
+#include "MeshSmooth.h"
 
-Eulerian::~Eulerian(){};
+MeshSmooth::~MeshSmooth(){};
 
-Eulerian::Eulerian(Model3D &_m)
+MeshSmooth::MeshSmooth(Model3D &_m)
 {
- uc = _m.getPointerUC();
- vc = _m.getPointerVC();
- wc = _m.getPointerWC();
- pc = _m.getPointerPC();
- X = _m.getPointerX();
- Y = _m.getPointerY();
- Z = _m.getPointerZ();
- IEN = _m.getPointerIEN();
- idbcu = _m.getPointerIdbcu();
- idbcv = _m.getPointerIdbcv();
- idbcw = _m.getPointerIdbcw();
- idbcp = _m.getPointerIdbcp();
- numVerts = _m.getNumVerts();
- numNodes = _m.getNumNodes();
- numElems = _m.getNumElems();
- neighbourVert = _m.neighbourVert;
- surfaceViz = _m.surfaceViz;
- surface = _m.getPointerSurface();
- //nonSurface = _m.getPointerNonSurface();
+ m = &_m;
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ IEN = m->getIEN();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ numVerts = m->getNumVerts();
+ numNodes = m->getNumNodes();
+ numElems = m->getNumElems();
+ neighbourVert = m->getNeighbourVert();
+ surfaceViz = m->getSurfaceViz();
+ inVert = m->getInVert();
+ surface = m->getSurface();
+ //nonSurface = m->getNonSurface();
  uSmooth.Dim(numNodes);
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
@@ -37,14 +39,13 @@ Eulerian::Eulerian(Model3D &_m)
  wSmoothSurface.Dim(numNodes);
 }
 
-clVector Eulerian::compute(real _dt)
+clVector MeshSmooth::compute(real _dt)
 {
  dt = _dt;
  //setSurface();
 
  stepSmooth();
  stepSmoothTangent();
- setBC();
  setCentroid();
 
  clVector aux = uSmooth;
@@ -54,10 +55,10 @@ clVector Eulerian::compute(real _dt)
 }
 
 // calcula velocidade euleriana em todos os vertices
-void Eulerian::stepSmooth()
+void MeshSmooth::stepSmooth()
 {
  real aux;
- listElem plist;
+ list<int> plist;
  list<int>::iterator vert;
  real xSum,ySum,zSum;
  real size; // numero de elementos da lista
@@ -68,10 +69,9 @@ void Eulerian::stepSmooth()
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
 
- // loop em todos os vertices 
- for( int i=0;i<numVerts;i++ )
+ for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  {
-  plist = neighbourVert.at(i);
+  plist = neighbourVert->at(*it);
   size = plist.size();
   xSum = 0.0;
   ySum = 0.0;
@@ -82,30 +82,30 @@ void Eulerian::stepSmooth()
    ySum = ySum + Y->Get(*vert);
    zSum = zSum + Z->Get(*vert);
   }
-  xAverage.Set( i,xSum/size ); // X medio
-  aux = (xAverage.Get(i) - X->Get(i))/dt; // velocidade USmooth
-  uSmooth.Set(i,aux);
+  xAverage.Set( *it,xSum/size ); // X medio
+  aux = (xAverage.Get(*it) - X->Get(*it))/dt; // velocidade USmooth
+  uSmooth.Set(*it,aux);
 
-  yAverage.Set( i,ySum/size ); // Y medio
-  aux = (yAverage.Get(i) - Y->Get(i))/dt; // velocidade VSmooth
-  vSmooth.Set(i,aux);
+  yAverage.Set( *it,ySum/size ); // Y medio
+  aux = (yAverage.Get(*it) - Y->Get(*it))/dt; // velocidade VSmooth
+  vSmooth.Set(*it,aux);
 
-  zAverage.Set( i,zSum/size ); // Y medio
-  aux = (zAverage.Get(i) - Z->Get(i))/dt; // velocidade WSmooth
-  wSmooth.Set(i,aux);
+  zAverage.Set( *it,zSum/size ); // Y medio
+  aux = (zAverage.Get(*it) - Z->Get(*it))/dt; // velocidade WSmooth
+  wSmooth.Set(*it,aux);
 //--------------------------------------------------
-//   if( i == 0 )
+//   if( *it == 0 )
 //   {
-//   cout << "-------- " << i << " --------" << endl;
-//   cout << "uSmooth: " << uSmooth.Get(i) << endl;
-//   cout << "vSmooth: " << vSmooth.Get(i) << endl;
-//   cout << "wSmooth: " << wSmooth.Get(i) << endl;
+//   cout << "-------- " << *it << " --------" << endl;
+//   cout << "uSmooth: " << uSmooth.Get(*it) << endl;
+//   cout << "vSmooth: " << vSmooth.Get(*it) << endl;
+//   cout << "wSmooth: " << wSmooth.Get(*it) << endl;
 //   cout << "xAverage: " << xAverage << endl;
 //   cout << "yAverage: " << yAverage << endl;
 //   cout << "zAverage: " << zAverage << endl;
-//   cout << "X: " << X->Get(i) << endl;
-//   cout << "Y: " << Y->Get(i) << endl;
-//   cout << "Z: " << Z->Get(i) << endl;
+//   cout << "X: " << X->Get(*it) << endl;
+//   cout << "Y: " << Y->Get(*it) << endl;
+//   cout << "Z: " << Z->Get(*it) << endl;
 //   cout << "dt: " << dt << endl;
 //   cout << "--------------------" << endl;
 //   }
@@ -113,32 +113,7 @@ void Eulerian::stepSmooth()
  }
 } // fecha metodo stepSmooth
 
-void Eulerian::setBC()
-{
- int aux;
- // ---------------------------------------------------------------- //
- // impondo as condicoes de contorno para u, v e w
- // ---------------------------------------------------------------- //
- for( int i=0;i<idbcu->Dim();i++ )
- {
-  aux = (int) idbcu->Get(i);
-  uSmooth.Set( aux,uc->Get(aux));
- }
-
- for( int i=0;i<idbcv->Dim();i++ )
- {
-  aux = (int) idbcv->Get(i);
-  vSmooth.Set( aux,vc->Get(aux));
- }
-
- for( int i=0;i<idbcw->Dim();i++ )
- {
-  aux = (int) idbcw->Get(i);
-  wSmooth.Set( aux,wc->Get(aux));
- }
-}
-
-void Eulerian::setCentroid()
+void MeshSmooth::setCentroid()
 {  
  // calculando os valores de uSmooth e vSmooth nos centroides
  // atraves da media dos valores nos vertices
@@ -167,7 +142,7 @@ void Eulerian::setCentroid()
 
 // calcula velocidade tangencial euleriana nos vertices da interface
 // atraves da media dos vizinhos.
-void Eulerian::stepSmoothTangent()
+void MeshSmooth::stepSmoothTangent()
 {
  // velocidade da interface eh igual a velocidade do fluido
  // para isso precisa-se encontrar os vertices da interface e impor a
@@ -228,10 +203,10 @@ void Eulerian::stepSmoothTangent()
 // a velocidade eh calculada tomando como base a media das posicoes dos
 // vertices vizinhos pertencentes a interface. A distribuicao de pontos
 // na interface fica mais uniforme que na do metodo stepSmoothTangent.
-void Eulerian::stepSmoothTangent2()
+void MeshSmooth::stepSmoothTangent2()
 {
  real j,aux;
- listElem plist;
+ list<int> plist;
  list<int>::iterator vert;
  real xSum,ySum;
  real size; // numero de elementos da lista
@@ -242,9 +217,9 @@ void Eulerian::stepSmoothTangent2()
  {
   j = surface->Get(i);
 
-  listElem plist;
+  list<int> plist;
   list<int>::iterator vert;
-  plist = surfaceViz.at(i);
+  plist = surfaceViz->at(i);
   size = plist.size();
   xSum = 0.0;
   ySum = 0.0;
@@ -294,7 +269,7 @@ void Eulerian::stepSmoothTangent2()
  }
 } // fecha metodo stepSmoothTangent2
 
-void Eulerian::setSurface()
+void MeshSmooth::setSurface()
 {
  int aux;
 
@@ -312,12 +287,12 @@ void Eulerian::setSurface()
  }
 }
 
-int Eulerian::search(int node,real _XI, real _YI, real _ZI)
+int MeshSmooth::search(int node,real _XI, real _YI, real _ZI)
 {
- listElem plist;
+ list<int> plist;
  list<int>::iterator vert;
  real dist, dmin;
- plist = surfaceViz.at(node);
+ plist = surfaceViz->at(node);
 
  // o primeiro elemento da lista eh a coordenada de trabalho
  vert=plist.begin();

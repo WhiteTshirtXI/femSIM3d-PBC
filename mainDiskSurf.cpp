@@ -52,6 +52,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(dir,vtk);
  save.saveInfo(dir,mesh);
+ save.printInfo(dir,mesh);
 
  for( int i=0;i<1000;i++ )
  {

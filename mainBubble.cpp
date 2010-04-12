@@ -21,9 +21,9 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  const char *dir  = "./";
  //const char *mesh = "../../db/mesh/3d/cube-cube1.vtk";
- const char *mesh = "../../db/mesh/3d/bubble-bubble2.vtk";
+ //const char *mesh = "../../db/mesh/3d/bubble-bubble2.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble-cube2.vtk";
- //const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
+ const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble8-31-2.vtk";
  const char *txt  = "txt/txt";
  const char *bin  = "bin/bin";
@@ -34,8 +34,8 @@ int main(int argc, char **argv)
  m1.readVTK(mesh);
  m1.setCentroid();
  //m1.setCubeCubeBC(1.5);
- m1.setBubbleBubbleBC();
- //m1.setBubbleBC2(); // malha do disco
+ //m1.setBubbleBubbleBC();
+ m1.setBubbleBC2(); // malha do disco
  //m1.setBubble3DBC();
  m1.setOFace();
 
@@ -47,23 +47,9 @@ int main(int argc, char **argv)
  s1.setAlpha(1);
  s1.setBeta(0);
  //s1.setDt(0.1);
- s1.setCflBubble(1);
+ s1.setCflBubble(5);
  s1.init();
 
- /* ASSEMBLE */
- //s1.setSolverPressure(new PetscSolver(KSPCG,PCJACOBI));
- //s1.setSolverPressure(new PetscSolver(KSPCG,PCICC));
- //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCNONE));
- //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCJACOBI));
- //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
- //s1.setSolverPressure(new PetscSolver(KSPBICG,PCJACOBI));
- //s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
- //s1.setSolverPressure(new GMRes);
- //s1.setSolverVelocity(new PCGSolver);
- //s1.setSolverConcentration(new PCGSolver);
- //s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
- 
- /* ASSEMBLESLIP */
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
@@ -82,9 +68,7 @@ int main(int argc, char **argv)
    //s1.stepLagrangian();
    s1.stepALE();
    s1.matMount();
-   s1.matMountC();
    s1.setUnCoupledBC();
-   s1.setUnCoupledCBC();
    s1.setRHS();
    //s1.setGravity();
    //s1.setInterface();

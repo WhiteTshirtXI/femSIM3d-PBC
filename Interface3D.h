@@ -52,16 +52,8 @@ class Interface3D
   clMatrix *IEN;
   clVector *cc;
 
-  typedef list<int> listElem;
-  vector<listElem> neighbourElem;
-  vector<listElem> neighbourVert;
-  vector<listElem> neighbourFace;
-  vector<listElem> elemSurface;
-  vector<listElem> neighbourFaceVert;
-  vector<listElem> surfaceViz;
-  vector<listElem> xSurfaceViz;
-  vector<listElem> ySurfaceViz;
-  vector<listElem> zSurfaceViz;
+  vector< list<int> > *neighbourElem,*neighbourVert,*neighbourFace;
+  vector< list<int> > *neighbourFaceVert,*surfaceViz,*faceIEN,*elemSurface;
 };
 
 #endif

@@ -10,33 +10,7 @@
 
 using namespace std;
 
-Model3D::Model3D()
-{
- IEN;       // matrix de triangulacao
- X;         // coordenada X de todos os pontos da malha
- Y;         // coordenada Y de todos os pontos da malha
- Z;         // coordenada Z de todos os pontos da malha
- uc;        // vetor velocidade na direcao U com condicao de contorno
- vc;        // vetor velocidade na direcao V com condicao de contorno
- wc;        // vetor velocidade na direcao W com condicao de contorno
- pc;        // vetor pressao P com condicao de contorno
- idbcu;     // vetor de indices de condicao de contorno para U
- idbcv;     // vetor de indices de condicao de contorno para V
- idbcw;     // vetor de indices de condicao de contorno para W
- idbcp;     // vetor de indices de condicao de contorno para P
- idbcc;     // vetor de indices de condicao de contorno para C
- outflow;   // vetor de indices de condicao de outflow para pressao
- numVerts;  // numero total de vertices na malha
- numNodes;  // numero total de nos na malha (inclui centroide)
- numElems;  // numero total de elementos da malha
- numGLEU;   // numero de graus de liberdade para velocidade
- numGLEP;   // numero de graus de liberdade para pressao
- neighbourElem; // lista de vizinhos de cada no
- //faceFace;  // matrix com lista de elementos vizinhos
- freeFace;  // matriz com lista de faces de contorno
- //mapViz;    // matriz com identificacao de vizinhos por elementos
- oFace;     // matriz com identificacao de face oposta ao vertice
-}
+Model3D::Model3D(){}
 
 Model3D::~Model3D(){}
 
@@ -1289,7 +1263,7 @@ void Model3D::setVertNeighbour()
 {
  // cria lista de vizinhos para toda a malha
  int v1,v2,v3,v4;
- listElem plist;
+ list<int> plist;
  list<int>::iterator mele;
  neighbourVert.resize (numVerts);
 
@@ -1347,7 +1321,7 @@ void Model3D::setVertNeighbour()
 void Model3D::setSurface()
 {
  int surfaceNode;
- listElem plist;
+ list<int> plist;
  list<int>::iterator vert;
 
  /*        - nome: surfaceViz
@@ -1421,7 +1395,7 @@ void Model3D::setSurface()
 void Model3D::setSurfaceFace()
 {
  int v1,v2,v3,v4;
- listElem plist;
+ list<int> plist;
  list<int>::iterator mele;
  int surfaceNode;
  
@@ -1510,6 +1484,34 @@ void Model3D::setSurfaceFace()
  neighbourFaceVert.resize (count); // trim do vector para numero real de itens
 }
 
+void Model3D::setInOutVert()
+{
+ for(int i=0;i<freeFace.DimI();i++ )
+ {
+  int v1 = freeFace.Get(i,2);
+  int v2 = freeFace.Get(i,3);
+  int v3 = freeFace.Get(i,4);
+  outVert.push_back(v1);
+  outVert.push_back(v2);
+  outVert.push_back(v3);
+ }
+ outVert.sort();
+ outVert.unique();
+
+ list<int>::iterator it;
+ for( int vert=0;vert<numVerts;vert++ )
+  inVert.push_back(vert);
+ for( it=outVert.begin();it!=outVert.end();++it )
+  inVert.remove(*it);
+
+//--------------------------------------------------
+//  cout << "outVert contains:";
+//  for (it=outVert.begin(); it!=outVert.end(); ++it)
+//   cout << " " << *it;
+//  cout << endl;
+//-------------------------------------------------- 
+}
+	   
 void Model3D::setOFace()
 {
  clMatrix mapViz(numElems,numElems);
@@ -1856,7 +1858,7 @@ void Model3D::setOFace()
  int kFace;
  int nele;
  int count;
- listElem plist;
+ list<int> plist;
  list<int>::iterator mele; // definicao do iterador
  for( int i=0;i<freeFace.DimI();i++ )
  {
@@ -1920,6 +1922,7 @@ void Model3D::setOFace()
  delete faces;
 
  setVertNeighbour();
+ setInOutVert();
  setSurface();
  setSurfaceFace();
 }
@@ -2135,49 +2138,30 @@ real Model3D::getMinAbsWC()
  return r;
 }
 
-void Model3D::getNonZeros()
-{
-}
-
-clVector Model3D::getX(){ return X; }
-clVector* Model3D::getPointerX(){ return &X; }
+clVector* Model3D::getX(){ return &X; }
 real Model3D::getMaxX(){ return X.Max(); }
 real Model3D::getMinX(){ return X.Min(); }
 void Model3D::setX(clVector _X){ X = _X; }
-clVector Model3D::getY(){ return Y; }
-clVector* Model3D::getPointerY(){ return &Y; }
+clVector* Model3D::getY(){ return &Y; }
 real Model3D::getMinY(){ return Y.Min(); }
 real Model3D::getMaxY(){ return Y.Max(); }
 void Model3D::setY(clVector _Y){ Y = _Y; }
-clVector Model3D::getZ(){ return Z; }
 real Model3D::getMaxZ(){ return Z.Max(); }
 real Model3D::getMinZ(){ return Z.Min(); }
-clVector* Model3D::getPointerZ(){ return &Z; }
+clVector* Model3D::getZ(){ return &Z; }
 void Model3D::setZ(clVector _Z){ Z = _Z; }
-clVector Model3D::getUC(){ return uc; }
-clVector* Model3D::getPointerUC(){ return &uc; }
-clVector Model3D::getVC(){ return vc; }
-clVector* Model3D::getPointerVC(){ return &vc; }
-clVector Model3D::getWC(){ return wc; }
-clVector* Model3D::getPointerWC(){ return &wc; }
-clVector Model3D::getPC(){ return pc; }
-clVector* Model3D::getPointerPC(){ return &pc; }
-clVector Model3D::getCC(){ return cc; }
-clVector* Model3D::getPointerCC(){ return &cc; }
-clVector Model3D::getOutflow(){ return outflow; }
-clVector* Model3D::getPointerOutflow(){ return &outflow; }
-clVector Model3D::getIdbcu(){ return idbcu; }
-clVector* Model3D::getPointerIdbcu(){ return &idbcu; }
-clVector Model3D::getIdbcv(){ return idbcv; }
-clVector* Model3D::getPointerIdbcv(){ return &idbcv; }
-clVector Model3D::getIdbcw(){ return idbcw; }
-clVector* Model3D::getPointerIdbcw(){ return &idbcw; }
-clVector Model3D::getIdbcp(){ return idbcp; }
-clVector* Model3D::getPointerIdbcp(){ return &idbcp; }
-clVector Model3D::getIdbcc(){ return idbcc; }
-clVector* Model3D::getPointerIdbcc(){ return &idbcc; }
-clMatrix Model3D::getIEN(){ return IEN; }
-clMatrix* Model3D::getPointerIEN(){ return &IEN; }
+clVector* Model3D::getUC(){ return &uc; }
+clVector* Model3D::getVC(){ return &vc; }
+clVector* Model3D::getWC(){ return &wc; }
+clVector* Model3D::getPC(){ return &pc; }
+clVector* Model3D::getCC(){ return &cc; }
+clVector* Model3D::getOutflow(){ return &outflow; }
+clVector* Model3D::getIdbcu(){ return &idbcu; }
+clVector* Model3D::getIdbcv(){ return &idbcv; }
+clVector* Model3D::getIdbcw(){ return &idbcw; }
+clVector* Model3D::getIdbcp(){ return &idbcp; }
+clVector* Model3D::getIdbcc(){ return &idbcc; }
+clMatrix* Model3D::getIEN(){ return &IEN; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
 int Model3D::getNumElems(){ return numElems; }
@@ -2186,13 +2170,18 @@ int Model3D::getNumGLEP(){ return numGLEP; }
 int Model3D::getNumGLEC(){ return numGLEC; }
 //clMatrix Model3D::getMapViz(){ return mapViz; }
 //clMatrix Model3D::getFaceFace(){ return faceFace; }
-clMatrix Model3D::getFreeFace(){ return freeFace; }
-clMatrix Model3D::getOFace(){ return oFace; }
-clMatrix* Model3D::getPointerOFace(){ return &oFace; }
+clMatrix* Model3D::getOFace(){ return &oFace; }
 real Model3D::getXCenter(){ return xCenter; }
 real Model3D::getYCenter(){ return yCenter; }
 real Model3D::getZCenter(){ return zCenter; }
 real Model3D::getBubbleRadius(){ return bubbleRadius; }
-clVector Model3D::getSurface(){ return surface; }
-clVector* Model3D::getPointerSurface(){ return &surface; }
-
+clVector* Model3D::getSurface(){ return &surface; }
+vector< list<int> >* Model3D::getNeighbourElem(){return &neighbourElem;}
+vector< list<int> >* Model3D::getNeighbourVert(){return &neighbourVert;}
+vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
+vector< list<int> >* Model3D::getElemSurface(){return &elemSurface;}
+vector< list<int> >* Model3D::getNeighbourFaceVert(){return &neighbourFaceVert;}
+vector< list<int> >* Model3D::getSurfaceViz(){return &surfaceViz;}
+vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
+list<int>* Model3D::getInVert(){return &inVert;}
+list<int>* Model3D::getOutVert(){return &outVert;}

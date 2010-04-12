@@ -10,34 +10,32 @@
 
 Interface3D::Interface3D(Model3D &_m)
 {
- cc = _m.getPointerCC();
- X = _m.getPointerX();
- Y = _m.getPointerY();
- Z = _m.getPointerZ();
- IEN = _m.getPointerIEN();
- numVerts = _m.getNumVerts();
- numNodes = _m.getNumNodes();
- numElems = _m.getNumElems();
- neighbourElem = _m.neighbourElem;
- neighbourVert = _m.neighbourVert; 
- neighbourFace = _m.neighbourFace; 
- elemSurface = _m.elemSurface; 
- neighbourFaceVert = _m.neighbourFaceVert;
- surfaceViz = _m.surfaceViz;
- xSurfaceViz = _m.xSurfaceViz;
- ySurfaceViz = _m.ySurfaceViz;
- zSurfaceViz = _m.zSurfaceViz;
- surface = _m.getPointerSurface();
+ m = &_m;
+ cc = m->getCC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ IEN = m->getIEN();
+ numVerts = m->getNumVerts();
+ numNodes = m->getNumNodes();
+ numElems = m->getNumElems();
+ neighbourElem = m->getNeighbourElem();
+ neighbourVert = m->getNeighbourVert(); 
+ neighbourFace = m->getNeighbourFace(); 
+ elemSurface = m->getElemSurface(); 
+ neighbourFaceVert = m->getNeighbourFaceVert();
+ surfaceViz = m->getSurfaceViz();
+ surface = m->getSurface();
  closer.Dim(numNodes);
  xCloser.Dim(numNodes);
  yCloser.Dim(numNodes);
  zCloser.Dim(numNodes);
  closerViz.Dim(numNodes);
  distance.Dim(numVerts);
- xCenter = _m.getXCenter();
- yCenter = _m.getYCenter();
- zCenter = _m.getZCenter();
- bubbleRadius = _m.getBubbleRadius();
+ xCenter = m->getXCenter();
+ yCenter = m->getYCenter();
+ zCenter = m->getZCenter();
+ bubbleRadius = m->getBubbleRadius();
  setSolverSmooth(new PCGSolver());
 
  //saveSurfaceVTK();
@@ -105,7 +103,7 @@ clVector Interface3D::computeKappa1()
  setCloser();
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
- listElem plist,plist2;
+ list<int> plist,plist2;
  list<int>::iterator face,vert;
 
  // loop sobre todos os nos da superficie 
@@ -116,7 +114,7 @@ clVector Interface3D::computeKappa1()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  int c1 = 0;
+  //int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -126,12 +124,12 @@ clVector Interface3D::computeKappa1()
   sumLength = 0;
 
   // loop sobre os vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
+  plist = elemSurface->at (surfaceNode); 
   for( face=plist.begin();face!=plist.end();++face )
   {
    // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
    // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
+   plist2 = neighbourFaceVert->at (*face);
    vert=plist2.begin();
    int v1 = *vert;++vert;
    int v2 = *vert;
@@ -279,7 +277,7 @@ clVector Interface3D::computeKappa2()
  setCloser();
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
- listElem plist,plist2;
+ list<int> plist,plist2;
  list<int>::iterator face,vert;
 
  // loop sobre todos os nos da superficie 
@@ -290,7 +288,7 @@ clVector Interface3D::computeKappa2()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  int c1 = 0;
+  //int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -300,12 +298,12 @@ clVector Interface3D::computeKappa2()
   sumLength = 0;
 
   // loop sobre os vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
+  plist = elemSurface->at (surfaceNode); 
   for( face=plist.begin();face!=plist.end();++face )
   {
    // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
    // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
+   plist2 = neighbourFaceVert->at (*face);
    vert=plist2.begin();
    int v1 = *vert;++vert;
    int v2 = *vert;
@@ -344,9 +342,11 @@ clVector Interface3D::computeKappa2()
 			      (P2z-P1z)*(P2z-P1z) );
 
    // distance da metade do segmento 01 ate metade do segmento 02
-   real d = sqrt( (Pm02x-Pm01x)*(Pm02x-Pm01x)+
-	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
-			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
+//--------------------------------------------------
+//    real d = sqrt( (Pm02x-Pm01x)*(Pm02x-Pm01x)+
+// 	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
+// 			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
+//-------------------------------------------------- 
 
    // calculando area do trianglo 0-01medio-02medio
    real s = (a+b+c)/2; //semiperimeter
@@ -561,7 +561,7 @@ void Interface3D::setSolverSmooth(Solver *s){ solverC = s; }
 void Interface3D::saveSurfaceVTK()
 {
  int v0,v1,v2,surfaceNode;
- listElem plist,plist2;
+ list<int> plist,plist2;
  list<int>::iterator face,vert;
 
  const char* filename = "vtk/surface.vtk";
@@ -582,17 +582,17 @@ void Interface3D::saveSurfaceVTK()
  }
  vtkFile << endl;
  
- vtkFile << "CELLS " << neighbourFaceVert.size() << " " 
-         << 4*neighbourFaceVert.size() << endl;
+ vtkFile << "CELLS " << neighbourFaceVert->size() << " " 
+         << 4*neighbourFaceVert->size() << endl;
 
  for( int i=0;i<surface->Dim();i++ )
  {
   surfaceNode = surface->Get(i);
-  plist = elemSurface.at (surfaceNode); 
+  plist = elemSurface->at (surfaceNode); 
   for( face=plist.begin();face!=plist.end();++face )
   {
    v0 = surfaceNode;
-   plist2 = neighbourFaceVert.at (*face);
+   plist2 = neighbourFaceVert->at (*face);
    vert=plist2.begin();
    v1 = *vert;
    ++vert;
@@ -602,8 +602,8 @@ void Interface3D::saveSurfaceVTK()
  }
  vtkFile << endl;
 
- vtkFile <<  "CELL_TYPES " << neighbourFaceVert.size() << endl;
- for( int i=0;i<neighbourFaceVert.size();i++ )
+ vtkFile <<  "CELL_TYPES " << neighbourFaceVert->size() << endl;
+ for( int i=0;i<neighbourFaceVert->size();i++ )
   vtkFile << "5 ";
 
  vtkFile << endl;

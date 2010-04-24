@@ -14,7 +14,7 @@ Model3D::Model3D(){}
 
 Model3D::~Model3D(){}
 
-bool Model3D::readVTK( const char* filename )
+void Model3D::readVTK( const char* filename )
 {
 
  char auxstr[255];
@@ -60,10 +60,7 @@ bool Model3D::readVTK( const char* filename )
    vtkFile >> numElems;
    vtkFile >> auxstr;
 
-   IEN.Dim(numElems,4+1); // "+1" para o centroide
-   numGLEP = 4; // triangulo linear
-   numGLEU = 5; // elemento MINI
-   numGLEC = 4; // elemento linear
+   IEN.Dim(numElems,4);
 
    for( i=0; i < numElems; i++ )
    {
@@ -76,18 +73,7 @@ bool Model3D::readVTK( const char* filename )
 	}
    }
   }
-
  }
-
- numNodes = numVerts + numElems;
- uc.Dim(numNodes);
- vc.Dim(numNodes);
- wc.Dim(numNodes);
- pc.Dim(numVerts);
- cc.Dim(numVerts);
- outflow.Dim(numNodes,1); // usado no metodo Galerkin
-
- return true;
 } // fim do metodo vtkRead
 
 /**
@@ -99,7 +85,7 @@ bool Model3D::readVTK( const char* filename )
  *
  * @return verdadeiro ou falso dependendo do sucesso da leitura
  **/
-bool Model3D::readBC( const char* filename )
+void Model3D::readBC( const char* filename )
 {
 
  char auxstr[255];
@@ -154,7 +140,6 @@ bool Model3D::readBC( const char* filename )
 
   }
  }
- return true;
 } // fim do metodo readBC
 
 void Model3D::clearBC()
@@ -1175,12 +1160,23 @@ void Model3D::setPerturbSurfSquare()
  }
 }
 
-void Model3D::setCentroid()
+void Model3D::setMiniElement()
 {
  real volume;
  V.Dim(numElems);
  real centroidX,centroidY,centroidZ;
  int v1,v2,v3,v4,v5,v[5];
+
+ numGLEP = 4; // triangulo linear
+ numGLEU = 5; // elemento MINI
+ numGLEC = 4; // elemento linear
+ numNodes = numVerts + numElems;
+ uc.Dim(numNodes);
+ vc.Dim(numNodes);
+ wc.Dim(numNodes);
+ pc.Dim(numVerts);
+ cc.Dim(numVerts);
+ outflow.Dim(numNodes,1); // usado no metodo Galerkin
 
  // realocando vetores...
  clVector aux;
@@ -1193,6 +1189,10 @@ void Model3D::setCentroid()
  aux = Z;
  Z.Dim(numNodes);
  Z.CopyFrom(0,aux);
+ clMatrix IENaux;
+ IENaux = IEN;
+ IEN.Dim(numElems,numGLEU); // 10 nos por elemento
+ IEN.CopyFrom(0,0,IENaux);
 
  for( int i=0;i<numElems;i++ )
  {
@@ -1248,6 +1248,259 @@ void Model3D::setCentroid()
   Y.Set(v5,centroidY);
   Z.Set(v5,centroidZ);
  
+ }
+}
+
+// criando os nos na metade de cada aresta. Para isso eh necessario
+// fazer uma lista de arestas e numera-las de forma que uma aresta comum
+// tenha apenas 1 numero e seja compartilhada em todos os elementos que
+// tem a aresta. 
+void Model3D::setQuadElement()
+{
+ int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10;
+ int numFace = 6; // teraedro tem 6 arestas
+ V.Dim(numElems);
+ clVector faceaux(2);
+ IFACE2D *faces = NULL;
+ int listSize = numFace*numElems;
+ faces = new IFACE2D[listSize];
+ for( int mele=0;mele<numElems;mele++ )
+ {
+  v1 = (int) IEN.Get(mele,0);
+  v2 = (int) IEN.Get(mele,1);
+  v3 = (int) IEN.Get(mele,2);
+  v4 = (int) IEN.Get(mele,3);
+
+  // ----- definindo orientacao do elemento ----- //
+  real volume = (-1.0/6.0) * (+1*( (X.Get(v2)*Y.Get(v3)*Z.Get(v4)) 
+	                  +(Y.Get(v2)*Z.Get(v3)*X.Get(v4)) 
+	                  +(Z.Get(v2)*X.Get(v3)*Y.Get(v4)) 
+	                  -(Y.Get(v2)*X.Get(v3)*Z.Get(v4)) 
+	                  -(X.Get(v2)*Z.Get(v3)*Y.Get(v4)) 
+	                  -(Z.Get(v2)*Y.Get(v3)*X.Get(v4)) )
+	      -X.Get(v1)*( +Y.Get(v3)*Z.Get(v4)
+		               +Y.Get(v2)*Z.Get(v3) 
+			           +Z.Get(v2)*Y.Get(v4)
+		               -Y.Get(v2)*Z.Get(v4)
+					   -Z.Get(v3)*Y.Get(v4) 
+					   -Z.Get(v2)*Y.Get(v3) )
+	      +Y.Get(v1)*( +X.Get(v3)*Z.Get(v4)
+					   +X.Get(v2)*Z.Get(v3)
+					   +Z.Get(v2)*X.Get(v4)
+		               -X.Get(v2)*Z.Get(v4)
+					   -Z.Get(v3)*X.Get(v4) 
+					   -Z.Get(v2)*X.Get(v3) )
+		  -Z.Get(v1)*( +X.Get(v3)*Y.Get(v4)
+			           +X.Get(v2)*Y.Get(v3) 
+					   +Y.Get(v2)*X.Get(v4)
+		               -X.Get(v2)*Y.Get(v4)
+				       -Y.Get(v3)*X.Get(v4) 
+					   -Y.Get(v2)*X.Get(v3) ) );
+  V.Set(mele,volume);
+
+  if( fabs(volume)<1.0E-10)
+   cerr << "tetraedro singular, verificar a qualidade da malha!" << endl;
+
+  if( volume<0.0 )
+  {
+   IEN.Set(mele,1,v3);
+   IEN.Set(mele,2,v2);
+  };
+  // -------------------------------------------- //
+
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v2);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+0].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+0].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+0].p3 = mele;
+
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v3);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+1].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+1].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+1].p3 = mele;
+
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+2].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+2].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+2].p3 = mele;
+
+  faceaux.Set(0,v2);
+  faceaux.Set(1,v3);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+3].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+3].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+3].p3 = mele;
+
+  faceaux.Set(0,v2);
+  faceaux.Set(1,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+4].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+4].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+4].p3 = mele;
+
+  faceaux.Set(0,v3);
+  faceaux.Set(1,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+5].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+5].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+5].p3 = mele;
+ }
+
+ // ordena uma estrutura (matriz) em ordem crescente na linha e coluna
+ // as faces continuam repetidas neste ponto.
+ qsort(faces,listSize,sizeof(IFACE2D),IFACE2DCompare);
+
+ /*        - nome: mapEdge
+           - definicao: matrix com mapeamento de arestas
+		                Identificacao da aresta, coordenadas X e Y
+						Ultima coluna representa o elemento que contem a aresta
+
+     ---   +---+---+---+---+---+---+---+
+      |    | a | b | c | d | e | f | g |  a = identificacao da aresta
+      |    +---+---+---+---+---+---+---+
+	  |    .   .   .   .   .   .   .   .  b = coordenada X do noh
+	  |	   .   .   .   .   .   .   .   .
+	  g    .   .   .   .   .   .   .   .  c = coordenada Y do noh
+      |    +---+---+---+---+---+---+---+                               
+      |    | a | b | c | c | e | f | g |  d = coordenada Z do noh
+      |    +---+---+---+---+---+---+---+ 
+      |    | a | b | c | c | e | f | g |  e = vertice vizinho v1
+     ---   +---+---+---+---+---+---+---+                                           
+                                          f = vertice vizinho v2
+	       |____________ h ____________|                                           
+		   |                           |  g = elemento que contem o noh da aresta
+                                                                                   
+		                                  h = numero de arestas (inclui repetidas) 
+
+										  i = 7 colunas
+ 
+ */
+
+ int it=0;
+ clMatrix mapEdge(listSize,7);
+
+ // numeracao de arestas a partir de numVerts e associacao das arestas
+ // aos elementos para inclusao na IEN
+ for( int i=1;i<=listSize;i++ )
+ {
+  real x=X.Get(faces[i-1].p1)+(X.Get(faces[i-1].p2)-X.Get(faces[i-1].p1))*0.5;
+  real y=Y.Get(faces[i-1].p1)+(Y.Get(faces[i-1].p2)-Y.Get(faces[i-1].p1))*0.5;
+  real z=Z.Get(faces[i-1].p1)+(Z.Get(faces[i-1].p2)-Z.Get(faces[i-1].p1))*0.5;
+  mapEdge.Set(i-1,0,numVerts+it); // numero da aresta
+  mapEdge.Set(i-1,1,x ); // coordenada X da aresta
+  mapEdge.Set(i-1,2,y ); // coordenada Y da aresta
+  mapEdge.Set(i-1,3,z ); // coordenada Y da aresta
+  mapEdge.Set(i-1,4,faces[i-1].p1 ); // 1o noh
+  mapEdge.Set(i-1,5,faces[i-1].p2 ); // 2o noh
+  mapEdge.Set(i-1,6,faces[i-1].p3 ); // elemento que contem a aresta
+  while( (faces[i].p1 == faces[i-1].p1) &&
+         (faces[i].p2 == faces[i-1].p2) )
+  {
+  mapEdge.Set(i,0,mapEdge.Get(i-1,0));
+  mapEdge.Set(i,1,mapEdge.Get(i-1,1));
+  mapEdge.Set(i,2,mapEdge.Get(i-1,2));
+  mapEdge.Set(i,3,mapEdge.Get(i-1,3));
+  mapEdge.Set(i,4,faces[i-1].p1 );
+  mapEdge.Set(i,5,faces[i-1].p2 );
+  mapEdge.Set(i,6,faces[i].p3 );
+   i++;
+  }
+  it++; // numero total de arestas
+ }
+
+ // atualizado vetores com numero total de nos
+ numGLEP = 4; // tetraedro linear
+ numGLEC = 4; // tetraedro linear
+ numGLEU = 10; // tetraedro quadratico
+ numNodes = numVerts+it; // atualizando numNodes
+ uc.Dim(numNodes);
+ vc.Dim(numNodes);
+ wc.Dim(numNodes);
+ pc.Dim(numVerts);
+ cc.Dim(numVerts);
+ outflow.Dim(numNodes,1);
+
+ // realocando vetores e matriz IEN
+ clVector aux;
+ aux = X;
+ X.Dim(numNodes);
+ X.CopyFrom(0,aux);
+ aux = Y;
+ Y.Dim(numNodes);
+ Y.CopyFrom(0,aux);
+ aux = Z;
+ Z.Dim(numNodes);
+ Z.CopyFrom(0,aux);
+ clMatrix IENaux;
+ IENaux = IEN;
+ IEN.Dim(numElems,numGLEU); // 10 nos por elemento
+ IEN.CopyFrom(0,0,IENaux);
+
+ // adicionando os vertices das arestas nas estruturas X,Y,Z e IEN
+ vector< list<int> > edge;
+ edge.resize(numElems);
+ list<int> plist;
+ list<int>::iterator ele;
+ for( int i=0;i<listSize;i++ )
+ {
+  int node = mapEdge.Get(i,0);
+  int elem = mapEdge.Get(i,6);
+  X.Set(node,mapEdge.Get(i,1));
+  Y.Set(node,mapEdge.Get(i,2));
+  Z.Set(node,mapEdge.Get(i,3));
+  // vertice v5 que fica entre v1 e v2
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,1)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,1)) )
+  {
+   IEN.Set(elem,4,node);
+  }
+  // vertice v6 que fica entre v1 e v3
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,2)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,2)) )
+  {
+   IEN.Set(elem,5,node);
+  }
+  // vertice v7 que fica entre v1 e v4
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,3)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,0) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,3)) )
+  {
+   IEN.Set(elem,6,node);
+  }
+  // vertice v8 que fica entre v2 e v3
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,1) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,2)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,1) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,2)) )
+  {
+   IEN.Set(elem,7,node);
+  }
+  // vertice v9 que fica entre v3 e v4
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,2) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,3)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,2) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,3)) )
+  {
+   IEN.Set(elem,8,node);
+  }
+  // vertice v10 que fica entre v2 e v4
+  if( (mapEdge.Get(i,4) == IEN.Get(elem,1) && 
+	   mapEdge.Get(i,5) == IEN.Get(elem,3)) || 
+	  (mapEdge.Get(i,5) == IEN.Get(elem,1) && 
+	   mapEdge.Get(i,4) == IEN.Get(elem,3)) )
+  {
+   IEN.Set(elem,9,node);
+  }
  }
 }
 

@@ -37,7 +37,7 @@ int main(int argc, char **argv)
  m1.readVTK(mesh);
  m1.setNuCteDiskBC();
  m1.setAdimenDisk();
- m1.setCentroid();
+ m1.setMiniElement();
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");
 

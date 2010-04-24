@@ -21,9 +21,8 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  const char *dir  = "./";
  //const char *mesh = "../../db/mesh/3d/cube-cube1.vtk";
- //const char *mesh = "../../db/mesh/3d/bubble-bubble2.vtk";
- //const char *mesh = "../../db/mesh/3d/bubble-cube2.vtk";
- const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
+ const char *mesh = "../../db/mesh/3d/bubble-bubble1.vtk";
+ //const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
  //const char *mesh = "../../db/mesh/3d/bubble8-31-2.vtk";
  const char *txt  = "txt/txt";
  const char *bin  = "bin/bin";
@@ -32,10 +31,10 @@ int main(int argc, char **argv)
 
  Model3D m1;
  m1.readVTK(mesh);
- m1.setCentroid();
+ m1.setMiniElement();
  //m1.setCubeCubeBC(1.5);
- //m1.setBubbleBubbleBC();
- m1.setBubbleBC2(); // malha do disco
+ m1.setBubbleBubbleBC();
+ //m1.setBubbleBC2(); // malha do disco
  //m1.setBubble3DBC();
  m1.setOFace();
 
@@ -45,9 +44,9 @@ int main(int argc, char **argv)
  s1.setSc(2);
  s1.setWe(10);
  s1.setAlpha(1);
- s1.setBeta(0);
+ s1.setBeta(-2.0);
  //s1.setDt(0.1);
- s1.setCflBubble(5);
+ s1.setCflBubble(3);
  s1.init();
 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity();
+   s1.setGravityBoussinesq();
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();

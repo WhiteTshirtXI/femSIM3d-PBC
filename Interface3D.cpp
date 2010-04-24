@@ -221,6 +221,7 @@ clVector Interface3D::computeKappa1()
 
    sumArea += area;
    sumLength += c;
+   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
 //--------------------------------------------------
 //    if( surfaceNode == 2185 )
@@ -248,7 +249,6 @@ clVector Interface3D::computeKappa1()
 //-------------------------------------------------- 
 
   }
-  //force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
   real pressure = force/sumArea;
   //real pressure = force;
 

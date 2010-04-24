@@ -15,6 +15,7 @@
 int main(int argc, char **argv)
 {
  const char *dir  = "./";
+ //const char *mesh = "../../db/mesh/3d/step2-2-2.vtk";
  //const char *mesh = "../../db/mesh/3d/step5-5-2.vtk";
  //const char *mesh = "../../db/mesh/3d/step20-10-2.vtk";
  const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
@@ -26,9 +27,10 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.readVTK(mesh);
  //m1.setStepReservInvBC();
- m1.setStepBC();
  m1.setAdimenStep();
- m1.setCentroid();
+ m1.setMiniElement();
+ //m1.setQuadElement();
+ m1.setStepBC();
  m1.setOFace();
 
  Simulator3D s1(m1);

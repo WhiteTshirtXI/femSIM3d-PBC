@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  m1.setPerturbSurf();
  //m1.setPerturbSurf2();
  //m1.setPerturbSurfSquare();
- m1.setCentroid();
+ m1.setMiniElement();
  m1.setOFace();
 
  Simulator3D s1(m1);

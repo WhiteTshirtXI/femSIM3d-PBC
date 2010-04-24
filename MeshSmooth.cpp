@@ -78,9 +78,9 @@ void MeshSmooth::stepSmooth()
   zSum = 0.0;
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
-   xSum = xSum + X->Get(*vert);
-   ySum = ySum + Y->Get(*vert);
-   zSum = zSum + Z->Get(*vert);
+   xSum += X->Get(*vert);
+   ySum += Y->Get(*vert);
+   zSum += Z->Get(*vert);
   }
   xAverage.Set( *it,xSum/size ); // X medio
   aux = (xAverage.Get(*it) - X->Get(*it))/dt; // velocidade USmooth

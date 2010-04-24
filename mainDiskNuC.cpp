@@ -34,7 +34,7 @@ int main(int argc, char **argv)
  m1.readVTK(mesh);
  m1.setNuCDiskBC();
  m1.setAdimenDisk();
- m1.setCentroid();
+ m1.setMiniElement();
  m1.setOFace();
 
  Simulator3D s1(m1);

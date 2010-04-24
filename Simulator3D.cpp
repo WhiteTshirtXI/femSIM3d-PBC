@@ -164,6 +164,11 @@ void Simulator3D::init()
  wSol.CopyFrom( 0,*wc );
  pSol.CopyFrom( 0,*pc );
  cSol.CopyFrom( 0,*cc );
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = 10.0;
+  wSol.Set(i,aux);
+ }
 };
 
 void Simulator3D::assemble()
@@ -1411,11 +1416,23 @@ void Simulator3D::setCflDisk(real _cfl)
 void Simulator3D::setCflBubble(real _cfl)
 {
  cfl = _cfl;
- real dx = m->getDeltaXMin();
- real dy = m->getDeltaYMin();
- real dz = m->getDeltaZMin();
+//--------------------------------------------------
+//  real dx = m->getDeltaXMin();
+//  real dy = m->getDeltaYMin();
+//  real dz = m->getDeltaZMin();
+// 
+//  dt = cfl*sqrt( dx*dy*dz/(2*PI*sigma) );
+//-------------------------------------------------- 
 
- dt = cfl*sqrt( dx*dy*dz/(2*PI*sigma) );
+ real xMax = X->Max();
+ real xMin = X->Min();
+ real yMax = Y->Max();
+ real yMin = Y->Min();
+ real zMax = Z->Max();
+ real zMin = Z->Min();
+ real L = ( (xMax-xMin)*(yMax-yMin)*(zMax-zMin) )/numNodes;
+
+ dt = cfl*sqrt( 1.0*L*L*L/(PI*sigma) );
 }
 
 void Simulator3D::setUAnt(clVector &_uAnt)

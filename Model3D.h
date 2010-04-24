@@ -38,8 +38,8 @@ class Model3D
   Model3D();                      // construtor padrao
   virtual ~Model3D();             // destrutor padrao
 
-  bool readVTK( const char* filename );
-  bool readBC( const char* filename );
+  void readVTK( const char* filename );
+  void readBC( const char* filename );
   void readBaseStateNu(const char* _filename);
   void clearBC();
   void setStep(int nX,int nY,int nZ);
@@ -59,7 +59,8 @@ class Model3D
   void setPerturbSurf();
   void setPerturbSurf2();
   void setPerturbSurfSquare();
-  void setCentroid();             // acrescenta centroide na malha
+  void setMiniElement();            
+  void setQuadElement();             
   void setNeighbour();
   void setVertNeighbour();
   void setOFace();

@@ -29,22 +29,27 @@ class Interface3D
   clVector smoothing(clMatrix &_AcTilde,clVector &_b1cTilde);
   clVector computeKappa1();
   clVector computeKappa2();
+  void computeKappa3();
   void plotKappa(clVector &_kappaAux);
   clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
 	                clVector &_XI,clVector &_YI,clVector &_ZI);
   void setCloser();
   clDMatrix setKappaSurface(clVector &_kappaAux);
+  clDMatrix setKappaSurface(clVector &_kappaNx,
+	                        clVector &_kappaNy,
+							clVector &_kappaNz);
   void setSolverSmooth(Solver *s);
   void saveSurfaceVTK();
   clVector getCloser();
 
 
   Solver *solverC;
+  clVector kappaNx,kappaNy,kappaNz;
+  clVector distance,distance3;
  private:
   Model3D *m;
   int numVerts,numElems,numNodes;
   real xCenter,yCenter,zCenter,bubbleRadius;
-  clVector distance;
   clVector *surface,xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clDMatrix kappa;

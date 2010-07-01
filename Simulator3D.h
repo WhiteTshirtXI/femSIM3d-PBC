@@ -33,6 +33,8 @@ class Simulator3D
 {
  public:
   Simulator3D( Model3D &_m ); // construtor padrao
+  Simulator3D( Model3D &_m, Simulator3D &_s );  // copia
+  Simulator3D( Model3D &_mNew, Model3D &_mOld, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
 
   void init();
@@ -50,8 +52,10 @@ class Simulator3D
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
+  void stepALE2();
   void stepSmooth();
   void setInterfaceVel();
+  void  stepMesh();
 
   void setRHS();
   void setCRHS();
@@ -59,6 +63,7 @@ class Simulator3D
   void setGravityBoussinesq();
   void setInterface();
   void setInterfaceGeo();
+  void setInterfaceGeoTest();
 
   void coupled();
   void unCoupled();
@@ -68,6 +73,9 @@ class Simulator3D
   void setUnCoupledBC();
   void setUnCoupledCBC();
 
+  void setHsmooth();
+  void setNu(real nu0, real nu1);
+  void setRho(real rho0, real rho1);
   void setNuZ();
   void convergenceCriteria( real value );
   void setRe(real _Re);
@@ -82,8 +90,12 @@ class Simulator3D
   real getAlpha();
   void setBeta(real _beta);
   real getBeta();
+  void setSigma(real _sigma);
+  real getSigma();
   void setDt(real _dt);
+  void setTime(real _time);
   real getDt();
+  real getTime2();
   real* getTime();
   void setCfl(real _cfl);
   void setCflDisk(real _cfl);
@@ -91,6 +103,11 @@ class Simulator3D
   real getCfl();
   void setUAnt(clVector &_uAnt);
   void setCSol(clVector &_cSol);
+  void setUSol(clVector &_uSol);
+  void setVSol(clVector &_vSol);
+  void setWSol(clVector &_wSol);
+  void updateIEN();
+  void setCentroid();
 
   void setSolverVelocity(Solver *s);
   void setSolverPressure(Solver *s);
@@ -101,9 +118,13 @@ class Simulator3D
   clVector* getWSol();
   clVector* getPSol();
   clVector* getCSol();
+  clVector* getUALE();
+  clVector* getVALE();
+  clVector* getWALE();
   clVector* getUAnt();
   clVector* getCAnt();
   clVector* getDistance();
+  clVector* getFint();
   clDMatrix* getKappa();
   clMatrix* getK();
   clMatrix* getM();
@@ -112,10 +133,18 @@ class Simulator3D
   clMatrix* getGx();
   clMatrix* getGy();
   clMatrix* getGz();
+  void operator=(Simulator3D &_s);
+  int loadIteration();
+  int loadIteration( const char* _dir,const char* _filename,int _iter );
+  void loadSolution( const char* _dir,const char* _filename,int _iter );
+  void applyLinearInterpolation(Model3D &_mOld);
+  real getBubbleVelocity();
 
   Solver *solverV,*solverP,*solverC;
-  Model3D *m;
+
+  clVector cSol;
  private:
+  Model3D *m;
   int numVerts,numElems,numNodes;
   int numGLEU,numGLEP,numGLEC;
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
@@ -131,14 +160,16 @@ class Simulator3D
   clMatrix mat,matc;
 
   clDMatrix MLumped,McLumped;
-  clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
+  clVector velU,velV,velW,uSol,vSol,wSol,pSol;
+  //clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
   clVector uSL,vSL,wSL,cSL;
   clVector uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth;
+  clVector uALEOld,vALEOld,wALEOld;
+  clVector uSolOld,vSolOld,wSolOld,pSolOld;
 
   clMatrix gx,gy,gz;
   clVector uAnt,cAnt;
-  clVector nu;
 
   clVector va,vcc;
   clVector convUVW,convC;
@@ -153,6 +184,7 @@ class Simulator3D
   clVector distance;
   clDMatrix kappa;
   clVector fint;
+  clVector Hsmooth,nu,rho;
   clVector Fold;
 
 };

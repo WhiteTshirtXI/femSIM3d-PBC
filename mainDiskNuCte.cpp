@@ -34,10 +34,11 @@ int main(int argc, char **argv)
  const char *vonPert1 = "pert/sim1";
 
  Model3D m1;
- m1.readVTK(mesh);
- m1.setNuCteDiskBC();
+ //m1.readVTK(mesh);
+ m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
+ m1.setNuCteDiskBC();
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");
 

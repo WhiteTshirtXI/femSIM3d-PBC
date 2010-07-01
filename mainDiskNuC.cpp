@@ -31,10 +31,11 @@ int main(int argc, char **argv)
 
 
  Model3D m1;
- m1.readVTK(mesh);
- m1.setNuCDiskBC();
+ //m1.readVTK(mesh);
+ m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
+ m1.setNuCDiskBC();
  m1.setOFace();
 
  Simulator3D s1(m1);

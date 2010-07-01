@@ -25,20 +25,21 @@ int main(int argc, char **argv)
  const char *vtk  = "vtk/sim";
 
  Model3D m1;
- m1.readVTK(mesh);
+ //m1.readVTK(mesh);
+ m1.setMeshDisk(6,6,6);
+ m1.setMiniElement();
  m1.setDiskFSBC();
  m1.setPerturbSurf();
  //m1.setPerturbSurf2();
  //m1.setPerturbSurfSquare();
- m1.setMiniElement();
  m1.setOFace();
 
  Simulator3D s1(m1);
 
  s1.init();
 
- s1.setRe(100);
- s1.setSc(1);
+ s1.setRe(1000);
+ s1.setSc(1000);
  s1.setFr(10);
  s1.setBeta(1);
  //s1.setDt(dt);

@@ -9,10 +9,12 @@ TARGET = ns3dDiskNuZ
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O3
-LIBS = -L/opt/local/lib -lgsl -lgslcblas -lm
+LIBS += -L/opt/local/lib -lgsl -lgslcblas -lm
+LIBS += -L$(HOME)/projects/cpp/tetgen/1.4.0 -ltet
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
+INCLUDES += -I$(HOME)/projects/cpp/tetgen/1.4.0
 INCLUDES += -I${PETSC_DIR}/include
 
 OBJECTS += $(LIBDIR)/clVector.o

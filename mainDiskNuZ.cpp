@@ -33,10 +33,10 @@ int main(int argc, char **argv)
 
  Model3D m1;
  m1.readVTK(mesh);
- m1.setNuZDiskBC();;
  m1.setAdimenDisk();
- //m1.readBaseStateNu("NuCte");
  m1.setMiniElement();
+ m1.setNuZDiskBC();;
+ //m1.readBaseStateNu("NuCte");
  m1.setOFace();
 
  Simulator3D s1(m1);
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
  s1.setCflDisk(10);
 
  //s1.setSolverVelocity(new PetscSolver(KSPCG,PCJACOBI));
- //s1.setSolverPressure(new PetscSolver(KSPCG,PCJACOBI));
+ //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCJACOBI));
  s1.setSolverVelocity(new PCGSolver());
  s1.setSolverPressure(new PCGSolver());
 

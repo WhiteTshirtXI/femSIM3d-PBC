@@ -39,27 +39,44 @@ class Model3D
   virtual ~Model3D();             // destrutor padrao
 
   void readVTK( const char* filename );
+  void readVTKCC( const char* filename );
+  void readVTKSurface( const char* filename );
   void readBC( const char* filename );
   void readBaseStateNu(const char* _filename);
   void clearBC();
-  void setStep(int nX,int nY,int nZ);
+  void setMeshStep(int nX,int nY,int nZ);
   void setStepBC();
   void setStepReservBC();
   void setStepReservInvBC();
   void setCouetteBC();
   void setAdimenStep();
-  void setDisk(int nLados1Poli,int nCircMax,int nZ);
+  void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
+  void reMesh();
+  void reMesh2();
+  void reMeshHole();
+  void meshAll();
+  void meshAll(Model3D &_mOriginal);
+  void reMeshAll();
+  void reMeshAll2();
+  void reMeshAll3();
+  void meshRestart();
   void setNuCteDiskBC();
   void setNuCDiskBC();
   void setNuZDiskBC();
   void setDiskFSBC();
   void setDiskCouetteBC();
+  void setSphere(real _xC,real _yC,real _zC,real _r,real _eps);
+  void setCube(real _lim1,real _lim2,real _eps);
+  void setCube(real _xlimInf,real _xlimSup,
+               real _ylimInf,real _ylimSup,
+	       	   real _zlimInf,real _zlimSup,real _eps);
   void setAdimenDiskCouette();
   void setAdimenDisk();
   void setPerturbSurf();
   void setPerturbSurf2();
   void setPerturbSurfSquare();
   void setMiniElement();            
+  void setMiniElement2();            
   void setQuadElement();             
   void setNeighbour();
   void setVertNeighbour();
@@ -69,7 +86,9 @@ class Model3D
   void setBubbleBubbleBC();
   void setBubbleBC2();
   void setBubble3DBC();
-  void setCubeCubeBC(real param);
+  void setCubeBC();
+  void setCubeBC2();
+  void set2BubbleBC();
 
   real getMaxAbsUC();
   real getMinAbsUC();
@@ -104,12 +123,15 @@ class Model3D
   clVector* getIdbcp();
   clVector* getIdbcc();
   clMatrix* getIEN();
+  clMatrix* getIENTri();
+  clMatrix* getIENConvexTri();
   int getNumVerts();
   int getNumNodes();
   int getNumElems();
   int getNumGLEU();
   int getNumGLEP();
   int getNumGLEC();
+  real getVolume(int _elem);
   clMatrix* getOFace();
   clVector* getSurface();
   clVector* getNonSurface();
@@ -119,6 +141,8 @@ class Model3D
   real getBubbleRadius();
   void setSurface();
   void setSurfaceFace();
+  void setSurfaceTri();
+  void setOutTri();
   void setInOutVert();
   vector< list<int> >* getNeighbourElem();
   vector< list<int> >* getNeighbourVert();
@@ -129,17 +153,22 @@ class Model3D
   vector< list<int> >* getFaceIEN();
   list<int>* getOutVert();
   list<int>* getInVert();
+  list<int>* getOutElem();
+  list<int>* getInElem();
+  void operator=(Model3D &_mRight);
 
+
+  clMatrix IENOriginal;
+  int numVertsOriginal;
+  clVector surface,nonSurface,cc;
  private:
-  clVector uc,vc,wc,pc,cc;
-  clMatrix IEN;
-  clMatrix IENSort;
+  clVector uc,vc,wc,pc;
+  clMatrix IEN,IENTri,IENConvexTri;
   clVector X,Y,Z;
   clVector outflow,idbcu,idbcv,idbcw,idbcp,idbcc;
   clMatrix faceFace,freeFace,mapViz;
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
-  clVector surface,nonSurface;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
@@ -162,7 +191,8 @@ class Model3D
   vector< list<int> > xSurfaceViz; // lista de coords X de vizinhos na interface
   vector< list<int> > ySurfaceViz; // lista de coords Y de vizinhos na interface
   vector< list<int> > zSurfaceViz; // lista de coords Z de vizinhos na interface
-  list<int> outVert,inVert; // lista de vertices do interior e de contorno
+  list<int> outVert,inVert; // lista de elementos do interior 
+  list<int> outElem,inElem; // lista de elementos do interior
 
 };
 

@@ -8,11 +8,13 @@
 TARGET = ns3dBubble
 LIBDIR = ../lib
 CXX = g++
-CXXFLAGS = -O2
-LIBS = -L/opt/local/lib -lgsl -lgslcblas -lm
+CXXFLAGS = -O2 -g
+LIBS += -L/opt/local/lib -lgsl -lgslcblas -lm
+LIBS += -L$(HOME)/projects/cpp/tetgen/1.4.0 -ltet
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
+INCLUDES += -I$(HOME)/projects/cpp/tetgen/1.4.0
 INCLUDES += -I${PETSC_DIR}/include
 
 OBJECTS += $(LIBDIR)/clVector.o
@@ -34,7 +36,25 @@ OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
-OBJECTS += mainBubble.o
+#OBJECTS += mainBubble.o
+#OBJECTS += main2Bubble.o
+#OBJECTS += mainTest2Bubble.o
+#OBJECTS += main2BubbleReMesh.o
+#OBJECTS += mainBubbleReMesh.o
+#OBJECTS += mainBubbleReMeshTest.o
+#OBJECTS += mainCubeCubeReMesh.o
+
+# criando malha a partir da malha 2D de superficie
+#OBJECTS += mainCubeCubeMesh.o
+#OBJECTS += mainBubbleTubeMesh.o
+
+# testando o remelhamento total com insercao/retirada de pontos
+#OBJECTS += mainMicroCubeCubeMeshRe.o
+OBJECTS += mainCubeCubeMeshRe.o
+#OBJECTS += mainBubbleTubeMeshRe.o
+
+#OBJECTS += mainCubeCubeRestart.o
+#OBJECTS += main2BubbleMesh.o
 
 $(TARGET): $(OBJECTS)
 	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
@@ -42,7 +62,9 @@ $(TARGET): $(OBJECTS)
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-include ${PETSC_DIR}/conf/base
+#include ${PETSC_DIR}/conf/base
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 deepclean:
 	@rm -f core

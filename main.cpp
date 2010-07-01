@@ -25,7 +25,8 @@ int main(int argc, char **argv)
 
 
  Model3D m1;
- m1.readVTK(mesh);
+ //m1.readVTK(mesh);
+ m1.setMeshStep(40,20,2);
  //m1.setStepReservInvBC();
  m1.setAdimenStep();
  m1.setMiniElement();

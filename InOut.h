@@ -33,6 +33,7 @@
 class InOut
 {
  public:
+  InOut( Model3D &_m );
   InOut( Model3D &_m,Simulator3D &_s );
   virtual ~InOut();
 
@@ -106,6 +107,8 @@ class InOut
    * @return 
    **/
   void saveVTK( const char* _dir,const char* _filename, int iter );
+  void saveVTKTri( const char* _dir,const char* _filename, int iter );
+  void saveVTKTest( const char* _dir,const char* _filename, int iter );
 
   /**
    * @brief imprime em arquivo ASCII a visualizacao de uma matriz
@@ -141,6 +144,10 @@ class InOut
   void saveVortY(const char* _dir,const char* _filename,int iter);
   void saveVortZ(const char* _dir,const char* _filename,int iter);
   void saveTime(const char* _comment);
+  void saveSimTime(int _iter);
+  void saveSimTime( const char* _dir,const char* _filename, int _iter );
+  int loadIter();
+  int loadIter( const char* filename );
   void saveInfo(const char* _dir,const char* _mesh);
   void printInfo(const char* _dir,const char* _mesh);
   void oscillating(int point1,int point2,int point3,const char* _file);
@@ -149,6 +156,8 @@ class InOut
   void oscillating(const char* _file);
   void oscillatingD(const char* _file);
   void oscillatingKappa(const char* _file);
+  void saveDistance(const char* _dir,const char* _filename,real time );
+
 
 private:
   Model3D *m;
@@ -165,7 +174,8 @@ private:
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
-  clVector *distance;
+  clVector *uALE,*vALE,*wALE;
+  clVector *distance,*fint;
   clDMatrix *kappa;
 };
 

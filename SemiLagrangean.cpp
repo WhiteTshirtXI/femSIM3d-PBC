@@ -9,6 +9,9 @@
 SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
                                            clVector &_vSol,
 										   clVector &_wSol,
+										   clVector &_velU,
+										   clVector &_velV,
+										   clVector &_velW,
 										   clVector &_cSol)
 {
  m = &_m;
@@ -32,6 +35,9 @@ SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
  uSol = _uSol;
  vSol = _vSol;
  wSol = _wSol;
+ velU = _velU;
+ velV = _velV;
+ velW = _velW;
  cSol = _cSol;
  convLin.Dim(numVerts,numVerts);
  neighbourElem = m->getNeighbourElem(); 
@@ -144,9 +150,9 @@ void SemiLagrangean::getDepartElem(real dt)
 {
  real xP,yP,zP;
 
- clVector xParticle = *X - uSol*dt; 
- clVector yParticle = *Y - vSol*dt;
- clVector zParticle = *Z - wSol*dt;
+ clVector xParticle = *X - velU*dt; 
+ clVector yParticle = *Y - velV*dt;
+ clVector zParticle = *Z - velW*dt;
 
  list<int> plist;
  list<int>::iterator mele;
@@ -282,7 +288,7 @@ bool SemiLagrangean::testElement(int mele,int ii,real xP,real yP,real zP, real *
 {
  int v[4],v1,v2,v3,v4;
  real V,V1,V2,V3;
- real EPSlocal = 10e-3;
+ real EPSlocal = 10e-6;
 
  v[0] = v1 = (int) IEN->Get(mele,0);
  v[1] = v2 = (int) IEN->Get(mele,1);
@@ -429,3 +435,77 @@ void SemiLagrangean::setBC()
   cParticle.Set( aux,cc->Get(aux) ); 
  }
 }
+
+void SemiLagrangean::meshInterp(clVector &_X,clVector &_Y,clVector &_Z)
+{
+ real xP,yP,zP;
+ list<int> plist;
+ list<int>::iterator mele;
+ interpLin.Dim(_X.Dim(),numVerts);
+
+ for (int ii = 0; ii < _X.Dim(); ii++)
+ {
+  if( ii<numVerts )
+   plist = neighbourElem->at(ii);
+  else
+   plist = neighbourElem->at(0);
+
+  mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
+
+  xP = _X.Get(ii);
+  yP = _Y.Get(ii);
+  zP = _Z.Get(ii);
+
+  //cout << "vertice de origem = " << ii << endl;
+  jumpToElem2(*mele,ii,xP,yP,zP);
+ } 
+} // fim do metodo compute -> getDepartElem
+
+void SemiLagrangean::jumpToElem2(int destElem,int iiVert,real R2X,
+                                 real R2Y,real R2Z)
+{
+ real l1,l2,l3,l4;
+ real Bl1,Bl2,Bl3;
+ int v[4],v1,v2,v3,v4,vjump,ib1,ib2,ib3;
+ if( testElement(destElem,iiVert,R2X,R2Y,R2Z,&l1,&l2,&l3,&l4) )
+ {
+  v[0] = v1 = (int) IEN->Get(destElem,0);
+  v[1] = v2 = (int) IEN->Get(destElem,1);
+  v[2] = v3 = (int) IEN->Get(destElem,2);
+  v[3] = v4 = (int) IEN->Get(destElem,3);
+  interpLin.Set(iiVert,v[0],l1);
+  interpLin.Set(iiVert,v[1],l2);
+  interpLin.Set(iiVert,v[2],l3);
+  interpLin.Set(iiVert,v[3],l4);
+
+  //cout << " Ponto localizado " << iiVert << endl;
+ } 
+ else 
+ {
+  v[0] = v1 = (int) IEN->Get(destElem,0);
+  v[1] = v2 = (int) IEN->Get(destElem,1);
+  v[2] = v3 = (int) IEN->Get(destElem,2);
+  v[3] = v4 = (int) IEN->Get(destElem,3);
+
+  if((l1<=l2) && (l1<=l3) && (l1<=l4)){ vjump=0; ib1=v2; ib2=v3; ib3=v4; };
+  if((l2<=l1) && (l2<=l3) && (l2<=l4)){ vjump=1; ib1=v1; ib2=v3; ib3=v4; };
+  if((l3<=l1) && (l3<=l2) && (l3<=l4)){ vjump=2; ib1=v1; ib2=v2; ib3=v4; };
+  if((l4<=l1) && (l4<=l2) && (l4<=l3)){ vjump=3; ib1=v1; ib2=v2; ib3=v3; };
+
+  if ( oFace->Get(destElem,vjump)!=-1)
+  {
+   jumpToElem2( (int) oFace->Get(destElem,vjump), iiVert,R2X,R2Y,R2Z );
+  }
+  else
+  {
+   computeIntercept( iiVert,R2X,R2Y,R2Z,ib1,ib2,ib3,&Bl1,&Bl2,&Bl3 );
+   interpLin.Set( iiVert,ib1,Bl1 );
+   interpLin.Set( iiVert,ib2,Bl2 );  
+   interpLin.Set( iiVert,ib3,Bl3 );  
+  }
+ }
+ return;
+}
+
+clMatrix* SemiLagrangean::getInterpLin(){ return &interpLin; }
+

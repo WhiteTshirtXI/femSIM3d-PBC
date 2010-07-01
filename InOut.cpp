@@ -8,6 +8,33 @@
 
 //using namespace std;
 
+InOut::InOut( Model3D &_m )
+{
+ m = &_m;
+ numVerts = m->getNumVerts();
+ numNodes = m->getNumNodes();
+ numElems = m->getNumElems();
+ numGLEP = m->getNumGLEP();
+ numGLEU = m->getNumGLEU();
+ numGLEC = m->getNumGLEC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
+}
+
 InOut::InOut( Model3D &_m, Simulator3D &_s )
 {
  m = &_m;
@@ -56,9 +83,13 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  uSol = s->getUSol();
  vSol = s->getVSol();
  wSol = s->getWSol();
+ uALE = s->getUALE();
+ vALE = s->getVALE();
+ wALE = s->getWALE();
  pSol = s->getPSol();
  cSol = s->getCSol();
  kappa = s->getKappa();
+ fint = s->getFint();
  distance = s->getDistance();
 }
 
@@ -71,16 +102,18 @@ void InOut::saveSol( const char* _dir,const char* _filename, int iter )
  ss << iter;
  ss >> str;
 
- clVector vec = *uAnt;
+ clVector vec = *uSol;
+ vec.Append(*vSol);
+ vec.Append(*wSol);
+ vec.Append(*pSol);
  vec.Append(*cSol); // adicionando o vetor concentracao no vetor Vel+Pressao
 
- 
  string fileUVWPC = _dir;
  string aux = _filename;
- fileUVWPC += aux + "UVWPC" + "-" + str + ".bin";
+ fileUVWPC += aux + "-" + str + ".bin";
  const char* filenameUVWPC = fileUVWPC.c_str();
 
- ofstream UVWPC_file( filenameUVWPC,ios::binary ); 
+ ofstream UVWPC_file( filenameUVWPC,ios::binary | ios::trunc ); 
 
  UVWPC_file.write( (const char*) vec.GetVec(),vec.Dim()*sizeof(real) );
 
@@ -109,12 +142,23 @@ void InOut::loadSol( const char* _dir,const char* _filename, int iter )
  UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
 
  UVWPC_file.close();
- 
- aux2.CopyTo(0,*uAnt);  // copyFrom nao funciona para o caso disk6-10-20
+
+ //aux2.CopyTo(0,*uAnt);
+ aux2.CopyTo(0,*uSol);
+ aux2.CopyTo(numNodes,*vSol);
+ aux2.CopyTo(2*numNodes,*wSol);
+ aux2.CopyTo(3*numNodes,*pSol);
  aux2.CopyTo(3*numNodes+numVerts,*cSol);
 
- s->setUAnt(*uAnt); // impondo a velocidade no simulador
- s->setCSol(*cSol); // impondo a concentracao no simulador
+//--------------------------------------------------
+//  clVector solVel(3*numNodes+numVerts);
+//  aux2.CopyTo(0,solVel);
+//  clVector solC(numVerts);
+//  aux2.CopyTo(3*numNodes+numVerts,solC);
+// 
+//  s->setUAnt(solVel); // impondo a velocidade no simulador
+//  s->setCSol(solC); // impondo a concentracao no simulador
+//-------------------------------------------------- 
 
  cout << "solucao no.  " << iter << " lida em binario" << endl;
  
@@ -127,17 +171,20 @@ void InOut::saveSolTXT( const char* _dir,const char* _filename, int iter )
  ss << iter;
  ss >> str;
 
- clVector vec = *uAnt;
- vec.Append(*cSol); // adicionando a concentracao no vetor Vel+Pressao
+ clVector vec = *uSol;
+ vec.Append(*vSol);
+ vec.Append(*wSol);
+ vec.Append(*pSol);
+ vec.Append(*cSol); // adicionando o vetor concentracao no vetor Vel+Pressao
 
  int i;
  string fileUVWPC = _dir;
  string aux = _filename;
- fileUVWPC += aux + "UVWPC" + "-" + str + ".dat";
+ fileUVWPC += aux + "-" + str + ".dat";
  const char* filenameUVWPC = fileUVWPC.c_str();
 
  ofstream UVWPC_file( filenameUVWPC ); 
- UVWPC_file << numVerts << numNodes << endl << endl;
+ UVWPC_file << numVerts << " "  << numNodes << endl << endl;
 
  for( i=0;i<vec.Dim();i++ )
    UVWPC_file << vec.Get(i) << endl;
@@ -156,8 +203,11 @@ void InOut::saveTXT( const char* _dir,const char* _filename, int iter )
  ss << iter;
  ss >> str;
 
- clVector vec = *uAnt;
- vec.Append(*cSol);
+ clVector vec = *uSol;
+ vec.Append(*vSol);
+ vec.Append(*wSol);
+ vec.Append(*pSol);
+ vec.Append(*cSol); // adicionando o vetor concentracao no vetor Vel+Pressao
 
  int i,j,k;
 
@@ -249,6 +299,10 @@ void InOut::saveMatrix( clMatrix &_matrix,const char* _filename,string &_filenam
 
 void InOut::saveVTK( const char* _dir,const char* _filename )
 {
+ IEN = m->getIEN();
+ numElems = m->getNumElems();
+ simTime = s->getTime();
+
  // concatenando nomes para o nome do arquivo final
  string file = _dir;
  string aux = _filename;
@@ -261,7 +315,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  vtkFile << "Modelo 3D C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << numVerts << " float" << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
 
  vtkFile << setprecision(6) << fixed; 
  for( int i=0;i<numVerts;i++ )
@@ -291,7 +346,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << "POINT_DATA " << numVerts << endl;
 
- vtkFile << "SCALARS pressure float" << endl;
+ vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(6) << fixed; 
@@ -300,7 +355,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS concentration float" << endl;
+ vtkFile << "SCALARS concentration double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -308,7 +363,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS u float" << endl;
+ vtkFile << "SCALARS u double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -316,7 +371,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS v float" << endl;
+ vtkFile << "SCALARS v double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -324,7 +379,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS w float" << endl;
+ vtkFile << "SCALARS w double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -332,7 +387,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "VECTORS vectors float" << endl;
+ vtkFile << "VECTORS vectors double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << setw(10) << uc->Get(i) << " " 
           << setw(10) << vc->Get(i) << " " 
@@ -347,6 +402,10 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
 void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 {
+ IEN = m->getIEN();
+ numElems = m->getNumElems();
+ simTime = s->getTime();
+
  stringstream ss;  //convertendo int --> string
  string str;
  ss << iter;
@@ -361,10 +420,16 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
  ofstream vtkFile( filename ); 
 
  vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "Simulacao 3D C++" << endl;
+ vtkFile << "3D Simulation C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << numVerts << " float" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
 
  for( int i=0;i<numVerts;i++ )
   vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
@@ -390,7 +455,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << "POINT_DATA " << numVerts << endl;
 
- vtkFile << "SCALARS pressure float" << endl;
+ vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(10) << fixed;
@@ -399,7 +464,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS concentration float" << endl;
+ vtkFile << "SCALARS concentration double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -407,7 +472,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS u float" << endl;
+ vtkFile << "SCALARS u double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -415,7 +480,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS v float" << endl;
+ vtkFile << "SCALARS v double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -423,7 +488,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS w float" << endl;
+ vtkFile << "SCALARS w double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -431,7 +496,31 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS kappa float" << endl;
+ vtkFile << "SCALARS uALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS vALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << vALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS wALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << wALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS kappa double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -439,7 +528,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS distance float" << endl;
+ vtkFile << "SCALARS distance double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -447,7 +536,172 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "VECTORS vectors float" << endl;
+ vtkFile << "VECTORS velocity double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uSol->Get(i) << " " 
+          << vSol->Get(i) << " " 
+		  << wSol->Get(i) << endl;
+ vtkFile << endl;
+
+ vtkFile << "VECTORS fint double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << fint->Get(i) << " " 
+          << fint->Get(i+numVerts) << " " 
+		  << fint->Get(i+numVerts*2) << endl;
+
+ vtkFile.close();
+
+ cout << "solution num. " << iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVtk
+
+void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = _dir;
+ string aux = _filename;
+ file += aux + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "Simulacao 3D C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
+
+ vtkFile << endl;
+ 
+ // conta numero de elementos
+ real plane1 = ( X->Max()-X->Min() )/2.0;
+ real plane2 = ( Y->Max()-Y->Min() )/2.0;
+ int count = 0;
+ for( int i=0;i<numElems;i++ )
+ {
+  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
+      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+   count++;
+ }
+ 
+ vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numElems;i++ )
+ {
+  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
+      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+  {
+   vtkFile << "4 " << IEN->Get(i,0) << " "  
+            	   << IEN->Get(i,1) << " " 
+				   << IEN->Get(i,2) << " " 
+				   << IEN->Get(i,3) << endl;
+  }
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << count << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
+	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
+      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
+	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+   vtkFile << "10 ";
+ }
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkFile << "POINT_DATA " << numVerts << endl;
+
+ vtkFile << "SCALARS pressure double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ vtkFile << setprecision(10) << fixed;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << pSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS concentration double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << cSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS u double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS v double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << vSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS w double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << wSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS kappa double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << kappa->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS distance double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << distance->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "VECTORS vectors double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << uSol->Get(i) << " " 
           << vSol->Get(i) << " " 
@@ -459,7 +713,6 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
  cout << "solution num. " << iter << " saved in VTK" << endl;
 
 } // fecha metodo saveVtk
-
 
 void InOut::matrixPrint( clMatrix &_m, const char* _filename )
 {
@@ -656,7 +909,7 @@ void InOut::savePert(const char* _dir,const char* _filename,int iter,
   }
   vonKarmanFile << endl;
   vonKarmanFile << "# theta = " 
-   << atan(Y->Get( (int) aux2.Get(ntheta))/Y->Max())*180.0/PI 
+   << atan(Y->Get( (int) aux2.Get(ntheta))/Y->Max())*180.0/3.141592
    << " graus" << endl;
   vonKarmanFile << "# raio = " << raio << endl;
   vonKarmanFile << "# X = " << X->Get( (int) Y0.Get(ntheta) ) << endl;
@@ -707,7 +960,13 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int iter)
  vtkFile << "Vorticidade em X 3D C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << numVerts << " float" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
 
  for( int i=0;i<numVerts;i++ )
   vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
@@ -732,7 +991,7 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
 
  vtkFile << "POINT_DATA " << numVerts << endl;
- vtkFile << "SCALARS vort float" << endl;
+ vtkFile << "SCALARS vort double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -782,7 +1041,13 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int iter)
  vtkFile << "Vorticidade 3D C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << numVerts << " float" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
 
  for( int i=0;i<numVerts;i++ )
   vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
@@ -807,7 +1072,7 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
 
  vtkFile << "POINT_DATA " << numVerts << endl;
- vtkFile << "SCALARS vort float" << endl;
+ vtkFile << "SCALARS vort double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -857,7 +1122,13 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int iter)
  vtkFile << "Vorticidade 3D C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << numVerts << " float" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
 
  for( int i=0;i<numVerts;i++ )
   vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
@@ -882,7 +1153,7 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
 
  vtkFile << "POINT_DATA " << numVerts << endl;
- vtkFile << "SCALARS vort float" << endl;
+ vtkFile << "SCALARS vort double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  for( int i=0;i<numVerts;i++ )
@@ -910,6 +1181,91 @@ void InOut::saveTime(const char* _comment)
  file << asctime( localtime( &currentTime ) ) << "   - " << _comment << endl;
  file << endl;
 }
+
+void InOut::saveSimTime(int _iter)
+{
+ ofstream file( "./sim/simTime.dat",ios::trunc );
+ if( !file )
+ {
+  cerr << "erro na abertura do arquivo de relatorio";
+  exit(1);
+ }
+
+ file << _iter << " " << *simTime << endl;
+ file << endl;
+}
+
+void InOut::saveSimTime( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = _dir;
+ string aux = _filename;
+ file += aux + "-" + str + ".dat";
+ const char* filename = file.c_str();
+
+ ofstream datFile( filename ); 
+ datFile << _iter << " " << *simTime << endl;
+ datFile << endl;
+}
+
+int InOut::loadIter()
+{
+ ifstream simTime( "./sim/simTime.dat",ios::in ); 
+
+ real time;
+ int iter;
+
+ simTime >> iter;
+ simTime >> time;
+ s->setTime(time); 
+
+ simTime.close();
+
+ cout << "time = " << time << " " << "itereracao: " << iter << endl;
+ return iter;
+} // fecha metodo loadIter
+
+int InOut::loadIter( const char* filename )
+{
+ char auxstr[255];
+ real time;
+ int iter;
+
+ ifstream vtkFile( filename,ios::in );
+
+ if( !vtkFile )
+ {
+  cerr << "VTK Mesh file is missing for TIME reading!" << endl;
+  exit(1);
+ }
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"TIME") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> time;
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> iter;
+
+ vtkFile.close();
+
+ s->setTime(time); 
+
+ return iter;
+} // fecha metodo loadIter
 
 void InOut::saveInfo(const char* _dir,const char* _mesh)
 {
@@ -1121,5 +1477,105 @@ void InOut::oscillatingKappa(const char* _file)
 
  //file << "#time kappaNorm" << endl;
  file << *simTime << " " << norm << endl;
+}
+
+void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = _dir;
+ string aux = _filename;
+ file += aux + "TRI" + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+ clMatrix *IENTri = m->getIENTri();
+ //clMatrix *IENTri = m->getIENConvexTri();
+ int numTri = IENTri->DimI();
+
+ ofstream vtkFile( filename ); 
+
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "Modelo 3D C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << "FIELD FieldData 2" << endl;
+ vtkFile << "TIME 1 1 double" << endl;
+ vtkFile << *simTime << endl;
+ vtkFile << "ITERATION 1 1 int" << endl;
+ vtkFile << iter << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << numVerts << " double" << endl;
+
+ vtkFile << setprecision(6) << fixed; 
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << setw(10) << X->Get(i) << " " 
+          << setw(10) << Y->Get(i) << " " 
+		  << setw(10) << Z->Get(i) << endl;
+
+ vtkFile << endl;
+ 
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numTri;i++ )
+ {
+  vtkFile << "3 " << IENTri->Get(i,0) << " "  
+                  << IENTri->Get(i,1) << " " 
+                  << IENTri->Get(i,2) << endl;
+ };
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "5 ";
+
+ vtkFile << endl;
+
+ vtkFile.close();
+
+ cout << "mesh TRI saved in VTK" << endl;
+
+} // fecha metodo saveVTKTri 
+
+void InOut::saveDistance(const char* _dir,const char* _filename,real time )
+{
+ string file = _dir;
+ string aux = _filename;
+ file += aux;
+ const char* filename = file.c_str();
+
+ ofstream dist( filename,ios::app );
+
+ double Ymax1=-100;
+ double Ymin1=100;
+ double Ymax2=-100;
+ double Ymin2=100;
+
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  if( Y->Get(i) > 0 )
+  {
+   if(Y->Get(i)>Ymax1) Ymax1=Y->Get(i);
+   if(Y->Get(i)<Ymin1) Ymin1=Y->Get(i);
+  }
+  if( Y->Get(i) < 0 )
+  {
+   if(Y->Get(i)>Ymax2) Ymax2=Y->Get(i);
+   if(Y->Get(i)<Ymin2) Ymin2=Y->Get(i);
+  }
+ }
+ real dist1 = Ymin1-Ymax2;
+ real dist2 = Ymax1-Ymin2;
+
+ dist << setprecision(10) << fixed; 
+ dist << setw(9) <<  time << " " << Ymin1 << " " << Ymax2 << " " 
+                                 << Ymax1 << " " << Ymin2 << " " 
+								 << dist1 << " " << dist2 << endl;
+
+ dist.close();
+
+ cout << "2 bubbles distance iter saved in ASCII " << dist1 << endl;
 }
 

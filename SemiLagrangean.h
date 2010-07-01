@@ -13,7 +13,9 @@ class SemiLagrangean
 {
  public:
   SemiLagrangean(Model3D &_m,clVector &_uSol,clVector &_vSol,
-	             clVector &_wSol,clVector &_cSol);
+	             clVector &_wSol,
+				 clVector &_velU,clVector &_velV,clVector &_velW,
+				 clVector &_cSol);
 
   clVector compute(real dt);
   clVector computeFreeSurface(real dt);
@@ -26,6 +28,9 @@ class SemiLagrangean
 	                    int ib3,real *l1,real *l2,real *l3);
   void setCentroid();
   void setBC();
+  void meshInterp(clVector &_X,clVector &_Y,clVector &_Z);
+  void jumpToElem2(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
+  clMatrix* getInterpLin();
 
  private:
   Model3D *m;
@@ -38,9 +43,10 @@ class SemiLagrangean
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
   clMatrix *IEN;
   clVector uSol,vSol,wSol,cSol;
+  clVector velU,velV,velW;
   clMatrix convLin;
   clMatrix *oFace;
-
+  clMatrix interpLin;
 };
 #endif /* ifndef SEMILAGRANGEAN_H */
 

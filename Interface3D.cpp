@@ -32,6 +32,9 @@ Interface3D::Interface3D(Model3D &_m)
  zCloser.Dim(numNodes);
  closerViz.Dim(numNodes);
  distance.Dim(numVerts);
+ kappaNx.Dim(numVerts);
+ kappaNy.Dim(numVerts);
+ kappaNz.Dim(numVerts);
  xCenter = m->getXCenter();
  yCenter = m->getYCenter();
  zCenter = m->getZCenter();
@@ -100,12 +103,16 @@ clVector Interface3D::curvature2()
 // calculo do Kappa geometricamente. Utiliza neighbourVert
 clVector Interface3D::computeKappa1()
 {
+ //cout << "distance em Interface3D .Dim = " << distance.Dim() << endl;
+ //cout << "surface em Interface3D .Dim = " << surface->Dim() << endl;
+ //surface->Display();
  setCloser();
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
 
+ //cout << "              ------> " << surface->Dim() << endl;
  // loop sobre todos os nos da superficie 
  for( int i=0;i<surface->Dim();i++ )
  {
@@ -114,7 +121,7 @@ clVector Interface3D::computeKappa1()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  //int c1 = 0;
+  int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -125,6 +132,14 @@ clVector Interface3D::computeKappa1()
 
   // loop sobre os vizinhos do vertice i
   plist = elemSurface->at (surfaceNode); 
+
+//--------------------------------------------------
+//   cout << "---------" << surfaceNode << "------------" << endl;
+//   std::ostream_iterator< int > output( cout, " " );
+//   std::copy( elemSurface->at(surfaceNode).begin(),elemSurface->at(surfaceNode).end(), output );
+//   cout << endl;
+//-------------------------------------------------- 
+
   for( face=plist.begin();face!=plist.end();++face )
   {
    // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
@@ -221,10 +236,11 @@ clVector Interface3D::computeKappa1()
 
    sumArea += area;
    sumLength += c;
-   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
 
 //--------------------------------------------------
-//    if( surfaceNode == 2185 )
+//   //cout << surfaceNode << endl;
+//    if( surfaceNode == 238 )
 //    {
 // 	cout << "Triangulo: ------------------------- " << c1 << endl;
 // 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
@@ -251,9 +267,9 @@ clVector Interface3D::computeKappa1()
   }
   real pressure = force/sumArea;
   //real pressure = force;
-
 //--------------------------------------------------
-//   if( surfaceNode == 1268 )
+// 
+//   if( surfaceNode == 214 )
 //   {
 //   cout << surfaceNode << endl;
 //   cout << "  " << "force = " << force << endl; 
@@ -288,7 +304,7 @@ clVector Interface3D::computeKappa2()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  //int c1 = 0;
+  int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -297,7 +313,7 @@ clVector Interface3D::computeKappa2()
   sumArea = 0;
   sumLength = 0;
 
-  // loop sobre os vizinhos do vertice i
+  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
   plist = elemSurface->at (surfaceNode); 
   for( face=plist.begin();face!=plist.end();++face )
   {
@@ -411,7 +427,7 @@ clVector Interface3D::computeKappa2()
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
 //--------------------------------------------------
-//    if( surfaceNode == 173 )
+//    if( surfaceNode == 214 )
 //    {
 // 	cout << "Triangulo: ------------------------- " << c1 << endl;
 // 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
@@ -458,6 +474,201 @@ clVector Interface3D::computeKappa2()
 
 } // fecha metodo computeKappa2
 
+// calculo do Kappa geometricamente. Utiliza neighbourVert
+void Interface3D::computeKappa3()
+{
+ //cout << "distance em Interface3D .Dim = " << distance.Dim() << endl;
+ //cout << "surface em Interface3D .Dim = " << surface->Dim() << endl;
+ //surface->Display();
+ setCloser();
+ int surfaceNode;
+ real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ list<int> plist,plist2;
+ list<int>::iterator face,vert;
+
+ //cout << "              ------> " << surface->Dim() << endl;
+ // loop sobre todos os nos da superficie 
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  surfaceNode = surface->Get(i);
+  real P0x = X->Get(surfaceNode);
+  real P0y = Y->Get(surfaceNode);
+  real P0z = Z->Get(surfaceNode);
+
+  int c1 = 0;
+  fx = 0;
+  fy = 0;
+  fz = 0;
+  force = 0;
+  sumForce = 0;
+  sumArea = 0;
+  sumLength = 0;
+
+  // loop sobre os vizinhos do vertice i
+  plist = elemSurface->at (surfaceNode); 
+
+//--------------------------------------------------
+//   cout << "---------" << surfaceNode << "------------" << endl;
+//   std::ostream_iterator< int > output( cout, " " );
+//   std::copy( elemSurface->at(surfaceNode).begin(),elemSurface->at(surfaceNode).end(), output );
+//   cout << endl;
+//-------------------------------------------------- 
+
+  for( face=plist.begin();face!=plist.end();++face )
+  {
+   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
+   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
+   plist2 = neighbourFaceVert->at (*face);
+   vert=plist2.begin();
+   int v1 = *vert;++vert;
+   int v2 = *vert;
+   vert=plist2.end();
+
+   real P1x = X->Get(v1);
+   real P1y = Y->Get(v1);
+   real P1z = Z->Get(v1);
+   real P2x = X->Get(v2);
+   real P2y = Y->Get(v2);
+   real P2z = Z->Get(v2);
+
+   // ponto medio aresta 01
+   real Pm01x = P0x + (P1x-P0x)/2.0; 
+   real Pm01y = P0y + (P1y-P0y)/2.0; 
+   real Pm01z = P0z + (P1z-P0z)/2.0; 
+
+   // ponto medio aresta 02
+   real Pm02x = P0x + (P2x-P0x)/2.0; 
+   real Pm02y = P0y + (P2y-P0y)/2.0; 
+   real Pm02z = P0z + (P2z-P0z)/2.0; 
+
+   // distance do ponto 0 ate metade do segmento 01
+   real a = sqrt( (P0x-Pm01x)*(P0x-Pm01x)+
+	              (P0y-Pm01y)*(P0y-Pm01y)+
+				  (P0z-Pm01z)*(P0z-Pm01z) );
+
+   // distance do ponto 0 ate metade do segmento 02
+   real b = sqrt( (P0x-Pm02x)*(P0x-Pm02x)+
+	              (P0y-Pm02y)*(P0y-Pm02y)+
+			      (P0z-Pm02z)*(P0z-Pm02z) );
+
+   // distance da metade do segmento 01 ate metade do segmento 02
+   real c = sqrt( (Pm02x-Pm01x)*(Pm02x-Pm01x)+
+	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
+			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
+
+   // calculando area do trianglo 0-01medio-02medio
+   real s = (a+b+c)/2; //semiperimeter
+   real area = sqrt( s*(s-a)*(s-b)*(s-c) );
+
+   // vetores unitarios deslocados para origem do sistema (0,0,0)
+   real x1Unit = (Pm01x-P0x)/a;
+   real y1Unit = (Pm01y-P0y)/a;
+   real z1Unit = (Pm01z-P0z)/a;
+
+   real x2Unit = (Pm02x-P0x)/b;
+   real y2Unit = (Pm02y-P0y)/b;
+   real z2Unit = (Pm02z-P0z)/b;
+
+   real xRetaUnit = (Pm02x-Pm01x)/c;
+   real yRetaUnit = (Pm02y-Pm01y)/c;
+   real zRetaUnit = (Pm02z-Pm01z)/c;
+
+   // soma dos vetores 1Unit + 2Unit = resultante
+   real xUnit = x1Unit+x2Unit;
+   real yUnit = y1Unit+y2Unit;
+   real zUnit = z1Unit+z2Unit;
+
+   // produto escalar --> projecao do vetor Unit no segmento de reta
+   // | Unit.RetaUnit | . RetaUnit
+   // resultado = vetor tangente a reta situado na superficie
+   real prod = xUnit*xRetaUnit + yUnit*yRetaUnit + zUnit*zRetaUnit;
+   real xTang = xRetaUnit*prod;
+   real yTang = yRetaUnit*prod;
+   real zTang = zRetaUnit*prod;
+
+   // subtraindo vetor tangente do vetor unitario para encontrar as
+   // coordenadas do vetor normal situada na superficie
+   real xNormal = xUnit - xTang;
+   real yNormal = yUnit - yTang;
+   real zNormal = zUnit - zTang;
+
+   // tamanho do vetor considerando que tem origem em 0,0,0
+   real len = sqrt( (xNormal*xNormal)+(yNormal*yNormal)+(zNormal*zNormal) ); 
+
+   // Unitario do vetor resultante do plano do triangulo
+   // combinacao linear dos vetores unitarios das arestas do triangulo
+   real xNormalUnit = xNormal/len;
+   real yNormalUnit = yNormal/len;
+   real zNormalUnit = zNormal/len;
+
+   // normal integrada na distancia (MOD) dos 2 vertices medianos
+   // force = resultante das componentes * tamanho da aresta que sera
+   // usada como referencia no calculo da area do triangulo
+   fx += xNormalUnit*c;
+   fy += yNormalUnit*c;
+   fz += zNormalUnit*c;
+
+   sumArea += area;
+   sumLength += c;
+   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
+
+//--------------------------------------------------
+//   //cout << surfaceNode << endl;
+//    if( surfaceNode == 238 )
+//    {
+// 	cout << "Triangulo: ------------------------- " << c1 << endl;
+// 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+// 	cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
+// 	cout << "RetaUnit = " << xRetaUnit << " " 
+// 	                      << yRetaUnit << " " 
+// 						  << zRetaUnit << endl;
+// 	cout << "c = " << c << endl;
+// 	cout << "Normal = " << xNormal << " " 
+// 	                    << yNormal << " " 
+// 						<< zNormal << endl;
+// 	cout << "area = " << area << endl;
+// 	cout << "force = " << force << endl;
+// 	cout << "sumArea = " << sumArea << endl;
+// 	cout << "fx = " << fx << endl;
+// 	cout << "fy = " << fy << endl;
+// 	cout << "fz = " << fz << endl;
+// 	//cout << "sumForce = " << sumForce << endl;
+// 	//cout << "pressure = " << sumForce/sumArea << endl;
+// 	c1++;
+//    }
+//-------------------------------------------------- 
+
+  }
+  real normX = fx/(force+EPS);
+  real normY = fy/(force+EPS);
+  real normZ = fz/(force+EPS);
+   fx = fx/sumArea;
+   fy = fy/sumArea;
+   fz = fz/sumArea;
+   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
+  real pressure = force;
+  //real pressure = force;
+//--------------------------------------------------
+// 
+//   if( surfaceNode == 214 )
+//   {
+//   cout << surfaceNode << endl;
+//   cout << "  " << "force = " << force << endl; 
+//   cout << "  " << "fx = " << fx << endl; 
+//   cout << "  " << "fy = " << fy << endl;
+//   cout << "  " << "fz = " << fz << endl;
+//   cout << "  " << "sumArea = " << sumArea << endl;
+//   cout << "  " << "pressure = " << pressure << endl;
+//   }
+//-------------------------------------------------- 
+
+  distance.Set( surfaceNode,pressure );
+  kappaNx.Set( surfaceNode,fx );
+  kappaNy.Set( surfaceNode,fy );
+  kappaNz.Set( surfaceNode,fz );
+ }
+
+} // fecha metodo computeKappa3
 
 clVector Interface3D::smoothing(clMatrix &_AcTilde,clVector &_b1cTilde)
 {
@@ -501,6 +712,7 @@ void Interface3D::setCloser()
  }
 }
 
+// espalhando capa calculado na superfice para todos os pontos
 clDMatrix Interface3D::setKappaSurface(clVector &_kappaAux)
 {
  int aux;
@@ -511,6 +723,23 @@ clDMatrix Interface3D::setKappaSurface(clVector &_kappaAux)
   kappa.Set(i,_kappaAux.Get(aux));
   kappa.Set(i+numNodes,_kappaAux.Get(aux));
   kappa.Set(i+2*numNodes,_kappaAux.Get(aux));
+ }
+ return kappa;
+}
+
+// espalhando capa calculado na superfice para todos os pontos
+clDMatrix Interface3D::setKappaSurface(clVector &_kappaNx,
+                                       clVector &_kappaNy,
+									   clVector &_kappaNz)
+{
+ int aux;
+ clDMatrix kappa(3*numNodes);
+ for( int i=0;i<numNodes;i++ )
+ {
+  aux = closer.Get(i);
+  kappa.Set(i,_kappaNx.Get(aux));
+  kappa.Set(i+numNodes,_kappaNy.Get(aux));
+  kappa.Set(i+2*numNodes,_kappaNz.Get(aux));
  }
  return kappa;
 }

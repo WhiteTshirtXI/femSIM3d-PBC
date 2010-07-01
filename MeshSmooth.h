@@ -24,6 +24,7 @@ class MeshSmooth
   void stepSmooth();
   void stepSmoothTangent();
   void stepSmoothTangent2();
+  void stepSmoothTangent3();
   void setBC();
   void setCentroid();
   void setSurface();
@@ -42,6 +43,7 @@ class MeshSmooth
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
   clVector xAverage,yAverage,zAverage;
+  clVector *xNormalSurface,*yNormalSurface,*zNormalSurface;
 
   vector< list<int> > *neighbourVert,*surfaceViz;
   list<int> *inVert;

@@ -41,6 +41,7 @@ class Model3D
   void readVTK( const char* filename );
   void readVTKCC( const char* filename );
   void readVTKSurface( const char* filename );
+  void readMSH( const char* filename );
   void readBC( const char* filename );
   void readBaseStateNu(const char* _filename);
   void clearBC();
@@ -70,6 +71,7 @@ class Model3D
   void setCube(real _xlimInf,real _xlimSup,
                real _ylimInf,real _ylimSup,
 	       	   real _zlimInf,real _zlimSup,real _eps);
+  void setInterfaceBC();
   void setAdimenDiskCouette();
   void setAdimenDisk();
   void setPerturbSurf();
@@ -169,6 +171,7 @@ class Model3D
   clMatrix faceFace,freeFace,mapViz;
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
+  clVector idRegion;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
@@ -193,6 +196,7 @@ class Model3D
   vector< list<int> > zSurfaceViz; // lista de coords Z de vizinhos na interface
   list<int> outVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
+  //vector< string > idRegion; // lista de coords Z de vizinhos na interface
 
 };
 

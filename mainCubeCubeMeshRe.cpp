@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- const char *mesh = "../../db/mesh/3d/cube-cube2D-2.vtk";
+ const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -28,19 +28,24 @@ int main(int argc, char **argv)
  int iter = 0;
 
  Model3D m1,mNew,mOld,mOriginal;
- m1.readVTKSurface(mesh);
- m1.setCube(1.1,1.9,1E-10);
+
+ m1.readMSH(mesh);
+ m1.setInterfaceBC();
+
+ //m1.readVTKSurface(mesh);
+ //m1.setCube(1.1,1.9,1E-10);
  m1.meshAll();
  m1.setMiniElement();
  m1.setCubeBC();
  m1.setOFace();
  m1.setSurfaceTri();
+ return 0;
 
  mOriginal = m1;
 
  Simulator3D s1(m1);
 
- s1.setRe(100);
+ s1.setRe(400);
  s1.setSc(2);
  s1.setWe(10);
  s1.setAlpha(1);
@@ -80,7 +85,7 @@ int main(int argc, char **argv)
   Simulator3D s2(m1);
   s1 = s2; 
 
-  s1.setRe(100);
+  s1.setRe(400);
   s1.setSc(2);
   s1.setWe(10);
   s1.setAlpha(1);
@@ -106,7 +111,7 @@ int main(int argc, char **argv)
  save.printInfo("./",mesh);
 
  int nIter = 1;
- int nReMesh = 5;
+ int nReMesh = 1;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -122,6 +127,7 @@ int main(int argc, char **argv)
    //s1.setGravity();
    //s1.setGravityBoussinesq();
    s1.setInterfaceGeo();
+   //s1.setInterfaceGeoTest();
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao

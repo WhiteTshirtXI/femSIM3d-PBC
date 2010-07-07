@@ -109,6 +109,7 @@ clVector Interface3D::computeKappa1()
  setCloser();
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ real xN,yN,zN;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
 
@@ -125,6 +126,9 @@ clVector Interface3D::computeKappa1()
   fx = 0;
   fy = 0;
   fz = 0;
+  xN = 0;
+  yN = 0;
+  zN = 0;
   force = 0;
   sumForce = 0;
   sumArea = 0;
@@ -182,7 +186,7 @@ clVector Interface3D::computeKappa1()
 	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
 			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
 
-   // calculando area do trianglo 0-01medio-02medio
+   // calculando area do trianglo 0-01medio-02medio (Haron's formula)
    real s = (a+b+c)/2; //semiperimeter
    real area = sqrt( s*(s-a)*(s-b)*(s-c) );
 
@@ -213,7 +217,7 @@ clVector Interface3D::computeKappa1()
    real zTang = zRetaUnit*prod;
 
    // subtraindo vetor tangente do vetor unitario para encontrar as
-   // coordenadas do vetor normal situada na superficie
+   // coordenadas do vetor normal ao lado 'c' situadas na superficie
    real xNormal = xUnit - xTang;
    real yNormal = yUnit - yTang;
    real zNormal = zUnit - zTang;
@@ -227,6 +231,15 @@ clVector Interface3D::computeKappa1()
    real yNormalUnit = yNormal/len;
    real zNormalUnit = zNormal/len;
 
+   xN += xNormalUnit;
+   yN += yNormalUnit;
+   zN += zNormalUnit;
+
+   real lenU = sqrt( (xN*xN)+(yN*yN)+(zN*zN) ); 
+   real xNUnit = xNUnit/lenU;
+   real yNUnit = yNUnit/lenU;
+   real zNUnit = zNUnit/lenU;
+
    // normal integrada na distancia (MOD) dos 2 vertices medianos
    // force = resultante das componentes * tamanho da aresta que sera
    // usada como referencia no calculo da area do triangulo
@@ -238,31 +251,29 @@ clVector Interface3D::computeKappa1()
    sumLength += c;
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
 
-//--------------------------------------------------
-//   //cout << surfaceNode << endl;
-//    if( surfaceNode == 238 )
-//    {
-// 	cout << "Triangulo: ------------------------- " << c1 << endl;
-// 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
-// 	cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
-// 	cout << "RetaUnit = " << xRetaUnit << " " 
-// 	                      << yRetaUnit << " " 
-// 						  << zRetaUnit << endl;
-// 	cout << "c = " << c << endl;
-// 	cout << "Normal = " << xNormal << " " 
-// 	                    << yNormal << " " 
-// 						<< zNormal << endl;
-// 	cout << "area = " << area << endl;
-// 	cout << "force = " << force << endl;
-// 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
-// 	//cout << "sumForce = " << sumForce << endl;
-// 	//cout << "pressure = " << sumForce/sumArea << endl;
-// 	c1++;
-//    }
-//-------------------------------------------------- 
+  //cout << surfaceNode << endl;
+   if( surfaceNode == 144 )
+   {
+	cout << "Triangulo: ------------------------- " << c1 << endl;
+	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+	cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
+	cout << "RetaUnit = " << xRetaUnit << " " 
+	                      << yRetaUnit << " " 
+						  << zRetaUnit << endl;
+	cout << "c = " << c << endl;
+	cout << "Normal = " << xNormal << " " 
+	                    << yNormal << " " 
+						<< zNormal << endl;
+	cout << "area = " << area << endl;
+	cout << "force = " << force << endl;
+	cout << "sumArea = " << sumArea << endl;
+	cout << "fx = " << fx << endl;
+	cout << "fy = " << fy << endl;
+	cout << "fz = " << fz << endl;
+	//cout << "sumForce = " << sumForce << endl;
+	//cout << "pressure = " << sumForce/sumArea << endl;
+	c1++;
+   }
 
   }
   real pressure = force/sumArea;
@@ -483,6 +494,8 @@ void Interface3D::computeKappa3()
  setCloser();
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ real xNUnit,yNUnit,zNUnit;
+ real xN,yN,zN;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
 
@@ -499,6 +512,12 @@ void Interface3D::computeKappa3()
   fx = 0;
   fy = 0;
   fz = 0;
+  xNUnit = 0;
+  yNUnit = 0;
+  zNUnit = 0;
+  xN = 0;
+  yN = 0;
+  zN = 0;
   force = 0;
   sumForce = 0;
   sumArea = 0;
@@ -556,50 +575,68 @@ void Interface3D::computeKappa3()
 	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
 			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
 
-   // calculando area do trianglo 0-01medio-02medio
+   // calculando area do trianglo 0-01medio-02medio (Haron's formula)
    real s = (a+b+c)/2; //semiperimeter
    real area = sqrt( s*(s-a)*(s-b)*(s-c) );
 
    // vetores unitarios deslocados para origem do sistema (0,0,0)
-   real x1Unit = (Pm01x-P0x)/a;
-   real y1Unit = (Pm01y-P0y)/a;
-   real z1Unit = (Pm01z-P0z)/a;
+   real x1 = (Pm01x-P0x);
+   real y1 = (Pm01y-P0y);
+   real z1 = (Pm01z-P0z);
 
-   real x2Unit = (Pm02x-P0x)/b;
-   real y2Unit = (Pm02y-P0y)/b;
-   real z2Unit = (Pm02z-P0z)/b;
+   real x2 = (Pm02x-P0x);
+   real y2 = (Pm02y-P0y);
+   real z2 = (Pm02z-P0z);
 
-   real xRetaUnit = (Pm02x-Pm01x)/c;
-   real yRetaUnit = (Pm02y-Pm01y)/c;
-   real zRetaUnit = (Pm02z-Pm01z)/c;
+   real xReta = (Pm02x-Pm01x);
+   real yReta = (Pm02y-Pm01y);
+   real zReta = (Pm02z-Pm01z);
 
-   // soma dos vetores 1Unit + 2Unit = resultante
-   real xUnit = x1Unit+x2Unit;
-   real yUnit = y1Unit+y2Unit;
-   real zUnit = z1Unit+z2Unit;
+   // soma dos vetores 1Unit + 2Unit = resultante (nao eh unitario)
+   real xRes = x1+x2;
+   real yRes = y1+y2;
+   real zRes = z1+z2;
 
-   // produto escalar --> projecao do vetor Unit no segmento de reta
-   // | Unit.RetaUnit | . RetaUnit
+   // produto escalar --> projecao do vetor Res no segmento de reta
+   // | Res.RetaUnit | . RetaUnit
    // resultado = vetor tangente a reta situado na superficie
-   real prod = xUnit*xRetaUnit + yUnit*yRetaUnit + zUnit*zRetaUnit;
-   real xTang = xRetaUnit*prod;
-   real yTang = yRetaUnit*prod;
-   real zTang = zRetaUnit*prod;
+//--------------------------------------------------
+//    real prod = (xRes*xRetaUnit + yRes*yRetaUnit + zRes*zRetaUnit)/c;
+//    real xTang = xRetaUnit*prod;
+//    real yTang = yRetaUnit*prod;
+//    real zTang = zRetaUnit*prod;
+//-------------------------------------------------- 
+
+   real prod = (xRes*xReta + yRes*yReta + zRes*zReta)/c;
+   real xTang = prod*(xReta/c);
+   real yTang = prod*(yReta/c);
+   real zTang = prod*(zReta/c);
 
    // subtraindo vetor tangente do vetor unitario para encontrar as
-   // coordenadas do vetor normal situada na superficie
-   real xNormal = xUnit - xTang;
-   real yNormal = yUnit - yTang;
-   real zNormal = zUnit - zTang;
+   // coordenadas do vetor normal ao lado 'c' situadas na superficie
+   real xNormal = xRes - xTang;
+   real yNormal = yRes - yTang;
+   real zNormal = zRes - zTang;
 
-   // tamanho do vetor considerando que tem origem em 0,0,0
+   // tamanho do vetor normal considerando que tem origem em 0,0,0
    real len = sqrt( (xNormal*xNormal)+(yNormal*yNormal)+(zNormal*zNormal) ); 
 
-   // Unitario do vetor resultante do plano do triangulo
+   // Unitario do vetor normal (resultante) do plano do triangulo
    // combinacao linear dos vetores unitarios das arestas do triangulo
    real xNormalUnit = xNormal/len;
    real yNormalUnit = yNormal/len;
    real zNormalUnit = zNormal/len;
+
+   // soma de vetores normais unitarios
+   xN += xNormalUnit;
+   yN += yNormalUnit;
+   zN += zNormalUnit;
+
+   // calculo do vetor normal resultante unitario
+   real lenU = sqrt( (xN*xN)+(yN*yN)+(zN*zN) ); 
+   xNUnit = xN/lenU;
+   yNUnit = yN/lenU;
+   zNUnit = zN/lenU;
 
    // normal integrada na distancia (MOD) dos 2 vertices medianos
    // force = resultante das componentes * tamanho da aresta que sera
@@ -612,62 +649,63 @@ void Interface3D::computeKappa3()
    sumLength += c;
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
 
-//--------------------------------------------------
-//   //cout << surfaceNode << endl;
-//    if( surfaceNode == 238 )
-//    {
-// 	cout << "Triangulo: ------------------------- " << c1 << endl;
-// 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
-// 	cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
-// 	cout << "RetaUnit = " << xRetaUnit << " " 
-// 	                      << yRetaUnit << " " 
-// 						  << zRetaUnit << endl;
-// 	cout << "c = " << c << endl;
-// 	cout << "Normal = " << xNormal << " " 
-// 	                    << yNormal << " " 
-// 						<< zNormal << endl;
-// 	cout << "area = " << area << endl;
-// 	cout << "force = " << force << endl;
-// 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
-// 	//cout << "sumForce = " << sumForce << endl;
-// 	//cout << "pressure = " << sumForce/sumArea << endl;
-// 	c1++;
-//    }
-//-------------------------------------------------- 
+  //cout << surfaceNode << endl;
+   if( surfaceNode == 214 )
+   {
+	cout << "Triangulo: ------------------------- " << c1 << endl;
+	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+	cout << "Res = " << xRes << " " << yRes << " " << zRes << endl;
+	cout << "Reta = " << xReta << " " 
+	                  << yReta << " " 
+				      << zReta << endl;
+	cout << "c = " << c << endl;
+	cout << "Normal = " << xNormal << " " 
+	                    << yNormal << " " 
+						<< zNormal << endl;
+	cout << "area = " << area << endl;
+	cout << "force = " << force << endl;
+	cout << "sumArea = " << sumArea << endl;
+	cout << "fx = " << fx << endl;
+	cout << "fy = " << fy << endl;
+	cout << "fz = " << fz << endl;
+	//cout << "sumForce = " << sumForce << endl;
+	//cout << "pressure = " << sumForce/sumArea << endl;
+	c1++;
+   }
 
   }
-  real normX = fx/(force+EPS);
-  real normY = fy/(force+EPS);
-  real normZ = fz/(force+EPS);
-   fx = fx/sumArea;
-   fy = fy/sumArea;
-   fz = fz/sumArea;
-   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) ); // perdendo a direcao!
-  real pressure = force;
+  real pressure = force/sumArea;
   //real pressure = force;
-//--------------------------------------------------
-// 
-//   if( surfaceNode == 214 )
-//   {
-//   cout << surfaceNode << endl;
-//   cout << "  " << "force = " << force << endl; 
-//   cout << "  " << "fx = " << fx << endl; 
-//   cout << "  " << "fy = " << fy << endl;
-//   cout << "  " << "fz = " << fz << endl;
-//   cout << "  " << "sumArea = " << sumArea << endl;
-//   cout << "  " << "pressure = " << pressure << endl;
-//   }
-//-------------------------------------------------- 
+  
+  real testx = fx/force;
+  real testy = fy/force;
+  real testz = fz/force;
 
+  if( surfaceNode == 214 )
+  {
+  cout << surfaceNode << endl;
+  cout << "  " << "force = " << force << endl; 
+  cout << "  " << "fx = " << fx << endl; 
+  cout << "  " << "fy = " << fy << endl;
+  cout << "  " << "fz = " << fz << endl;
+  cout << "  " << "xN = " << xN << endl; 
+  cout << "  " << "yN = " << yN << endl;
+  cout << "  " << "zN = " << zN << endl;
+  cout << "  " << "xNUnit = " << xNUnit << endl; 
+  cout << "  " << "yNUnit = " << yNUnit << endl;
+  cout << "  " << "zNUnit = " << zNUnit << endl;
+  cout << "  " << "testx= " << testx << endl; 
+  cout << "  " << "testy= " << testy << endl;
+  cout << "  " << "testz= " << testz << endl;
+  cout << "  " << "sumArea = " << sumArea << endl;
+  cout << "  " << "pressure = " << pressure << endl;
+  }
+
+  kappaNx.Set(surfaceNode,pressure);
+  kappaNy.Set(surfaceNode,pressure);
+  kappaNz.Set(surfaceNode,pressure);
   distance.Set( surfaceNode,pressure );
-  kappaNx.Set( surfaceNode,fx );
-  kappaNy.Set( surfaceNode,fy );
-  kappaNz.Set( surfaceNode,fz );
  }
-
 } // fecha metodo computeKappa3
 
 clVector Interface3D::smoothing(clMatrix &_AcTilde,clVector &_b1cTilde)

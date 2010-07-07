@@ -1479,7 +1479,7 @@ void Simulator3D::setInterface()
 void Simulator3D::setInterfaceGeo()
 {
  Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa2();
+ clVector kappaAux = interface.computeKappa1();
 
  //interface.plotKappa(kappaAux);
  kappa = interface.setKappaSurface(kappaAux);
@@ -1499,15 +1499,13 @@ void Simulator3D::setInterfaceGeoTest()
  clVector kappaNy = interface.kappaNy; 
  clVector kappaNz = interface.kappaNz; 
  clVector kappaAux = interface.distance;
+ //kappaNx.Display();
 
  //kappa = interface.setKappaSurface(kappaAux);
  kappa = interface.setKappaSurface(kappaNx,kappaNy,kappaNz);
+ //kappa.Print();
 
- clVector t = GTilde*cSol;
- real tNormInv = 1.0/t.Norm();
- clVector test = tNormInv*t;
-
- fint = (1.0/We) * sigma * ( kappa*test );
+ fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
  
  //va = va + invA*fint;
 } // fecha metodo setInterface 

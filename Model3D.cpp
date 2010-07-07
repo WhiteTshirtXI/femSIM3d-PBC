@@ -172,6 +172,128 @@ void Model3D::readVTKSurface( const char* filename )
  vtkFile.close();
 } // fim do metodo vtkRead
 
+void Model3D::readMSH( const char* filename )
+{
+ char auxstr[255];
+ real coords[3];
+ int i,j,k,id;
+ int auxvtx[4];
+ int elemNumber,type,numberOfTags,region;
+
+ ifstream mshFile( filename,ios::in );
+
+ if( !mshFile )
+ {
+  cerr << "Esta faltando o arquivo de Malha!" << endl;
+  exit(1);
+ }
+
+//--------------------------------------------------
+//  int numberOfPhyNames;
+//  while( ( !mshFile.eof())&&(strcmp(auxstr,"$PhysicalNames") != 0) )
+//   mshFile >> auxstr;
+// 
+//  mshFile >> numberOfPhyNames;
+// 
+//  idRegion.resize(numberOfPhyNames);
+//  if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
+//  {
+//   for (i=0; i < numberOfPhyNames; i++)
+//   {
+//    mshFile >> auxstr;
+//    mshFile >> auxstr;
+//    mshFile >> auxstr;
+//    idRegion.at(i)=auxstr;
+//   }
+//  }
+//-------------------------------------------------- 
+
+ while( ( !mshFile.eof())&&(strcmp(auxstr,"$Nodes") != 0) )
+  mshFile >> auxstr;
+
+ if( !mshFile.eof()&&(strcmp(auxstr,"$EndNodes") != 0)   )
+ {
+  mshFile >> numVerts;
+
+  X.Dim(numVerts);
+  Y.Dim(numVerts);
+  Z.Dim(numVerts);
+
+  for (i=0; i < numVerts; i++)
+  {
+   mshFile >> auxstr;
+   for(j = 0; j < 3; j++)
+	mshFile >> coords[j];
+
+   X.Set(i,coords[0]);
+   Y.Set(i,coords[1]);
+   Z.Set(i,coords[2]);
+  }
+ }
+
+ while( (!mshFile.eof())&&(strcmp(auxstr,"$Elements") != 0) )
+  mshFile >> auxstr;
+
+ if( !mshFile.eof()&&(strcmp(auxstr,"$EndElements") != 0)   )
+ {
+  mshFile >> numElems;
+
+  IEN.Dim(numElems,4);
+  //cc.Dim(numVerts);
+  idRegion.Dim(numElems);
+
+  for( i=0; i < numElems; i++ )
+  {
+   mshFile >> elemNumber;
+   mshFile >> type; // 2-2D or 3-3D
+   mshFile >> numberOfTags;
+   mshFile >> id;
+   idRegion.Set(i,id);
+   mshFile >> auxstr;
+   mshFile >> auxstr;
+
+   for( j=0; j < type+1 ; j++ )
+   {
+	mshFile >> k;
+	k=k-1; // elem .msh comecando com 1
+	IEN.Set(i,j,k);
+	auxvtx[j] = k;
+   }
+//--------------------------------------------------
+//    if( region == 1 ) // 1 = bubble
+//    {
+// 	int v1 = IEN.Get(i,0);
+// 	int v2 = IEN.Get(i,1);
+// 	int v3 = IEN.Get(i,2);
+// 	cc.Set(v1,0.5);
+// 	cc.Set(v2,0.5);
+// 	cc.Set(v3,0.5);
+//    }
+//-------------------------------------------------- 
+  }
+ }
+ mshFile.close();
+} // fim do metodo readMsh
+
+void Model3D::setInterfaceBC()
+{
+ cc.Dim(numVerts);
+ for( int i=0;i<numElems;i++ )
+ {
+  // condicao de parede v=0
+  if( idRegion.Get(i) == 1 )
+  {
+   int v1 = IEN.Get(i,0);
+   int v2 = IEN.Get(i,1);
+   int v3 = IEN.Get(i,2);
+   real aux = 0.5;
+   cc.Set(v1,aux);
+   cc.Set(v2,aux);
+   cc.Set(v3,aux);
+  }
+ }
+}
+
 /**
  * @brief metodo para leitura de arquivo do tipo BC para condicoes de
  * contorno. O arquivo a ser lido deve conter todos os nos de condicao
@@ -3322,59 +3444,47 @@ void Model3D::setSurfaceFace()
    v2 = (int) IEN.Get(*mele,1);
    v3 = (int) IEN.Get(*mele,2);
    v4 = (int) IEN.Get(*mele,3);
+
    // pegando o elemento com 3 vertices na superfice e 1 dentro da bolha
    if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
 	   cc.Get(v3)==0.5 && cc.Get(v4)==0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
-	if( v1 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v1);
-	if( v2 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v2);
-	if( v3 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v3);
-
-	//neighbourFaceVert.at( count ).sort();
-    count = count + 1;
+	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).push_back(v2);
+	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+	count++;
    }
    if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
 	   cc.Get(v3)==0 && cc.Get(v4)==0.5 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
-	if( v1 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v1);
-	if( v2 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v2);
-	if( v4 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v4);
-
-    count = count + 1;
+	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).push_back(v2);
+	neighbourFaceVert.at( count ).push_back(v4);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+	count++;
    }
    if( cc.Get(v1)==0.5 && cc.Get(v2)==0 && 
 	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
-	if( v1 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v1);
-	if( v3 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v3);
-	if( v4 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v4);
-
-    count = count + 1;
+	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).push_back(v4);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+	count++;
    }
    if( cc.Get(v1)==0 && cc.Get(v2)==0.5 && 
 	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
-	if( v2 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v2);
-	if( v3 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v3);
-	if( v4 != surfaceNode )
-	 neighbourFaceVert.at( count ).push_back(v4);
-
-    count = count + 1;
+	neighbourFaceVert.at( count ).push_back(v2);
+	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).push_back(v4);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+	count++;
    }
   }
   //cout << "---------" << surfaceNode << "------------" << endl;
@@ -3382,6 +3492,37 @@ void Model3D::setSurfaceFace()
   //std::copy( elemSurface.at(surfaceNode).begin(), elemSurface.at(surfaceNode).end(), output );
   //std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
   //cout << endl;
+  int c1=0;
+  if( surfaceNode == 144 )
+  //if( surfaceNode == 144 )
+  {
+   list<int> plist = elemSurface.at (surfaceNode);
+   for( list<int>::iterator face=plist.begin();face!=plist.end();++face )
+   {
+	cout << "Triangulo: ------------------------- " << c1 << endl;
+	list<int> plist2 = neighbourFaceVert.at (*face);
+	list<int>::iterator vert=plist2.begin();
+	int v0 = surfaceNode;
+	int v1 = *vert;++vert;
+	int v2 = *vert;
+	vert=plist2.end();
+	cout << "v0 = " << v0 << " " << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+
+	real test = ( ( Y.Get(v1)-Y.Get(v2) )*( Z.Get(v2)-Z.Get(v0) ) )-( (Z.Get(v1)-Z.Get(v2))*(Y.Get(v2)-Y.Get(v0) ) )+
+	            ( ( Z.Get(v1)-Z.Get(v2) )*( X.Get(v2)-X.Get(v0) ) )-( (X.Get(v1)-X.Get(v2))*(Z.Get(v2)-Z.Get(v0) ) )+
+				( ( X.Get(v1)-X.Get(v2) )*( Y.Get(v2)-Y.Get(v0) ) )-( (Y.Get(v1)-Y.Get(v2))*(X.Get(v2)-X.Get(v0) ) );
+
+	if( test < 0.0 )
+	{
+	 int aux = v1;
+	 v1=v2;
+	 v2=aux;
+	}
+	cout << "v0 = " << v0 << " " << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+	c1++;
+   }
+
+  }
  }
  //neighbourFaceVert.resize (count); // trim do vector para numero real de itens
 }

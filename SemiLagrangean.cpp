@@ -213,7 +213,10 @@ void SemiLagrangean::jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R
 {
  real l1,l2,l3,l4;
  real Bl1,Bl2,Bl3;
- int v[4],v1,v2,v3,v4,vjump,ib1,ib2,ib3;
+ int v[4],v1,v2,v3,v4,vjump;
+ int ib1=0;
+ int ib2=0;
+ int ib3=0;
  if( testElement(destElem,iiVert,R2X,R2Y,R2Z,&l1,&l2,&l3,&l4) )
  {
   v[0] = v1 = (int) IEN->Get(destElem,0);
@@ -466,7 +469,10 @@ void SemiLagrangean::jumpToElem2(int destElem,int iiVert,real R2X,
 {
  real l1,l2,l3,l4;
  real Bl1,Bl2,Bl3;
- int v[4],v1,v2,v3,v4,vjump,ib1,ib2,ib3;
+ int v[4],v1,v2,v3,v4,vjump;
+ int ib1=0;
+ int ib2=0;
+ int ib3=0;
  if( testElement(destElem,iiVert,R2X,R2Y,R2Z,&l1,&l2,&l3,&l4) )
  {
   v[0] = v1 = (int) IEN->Get(destElem,0);

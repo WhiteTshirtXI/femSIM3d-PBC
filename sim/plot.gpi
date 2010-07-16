@@ -8,18 +8,18 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-set xrange [0.0:6.0]
+set xrange [0.0:4.0]
 set yrange [-0.1:1.1]
 unset grid
 
 #set terminal pdf
 #set output 'teste.pdf'
 
-N = 3480
+N = 23 
 fileObj = "vk3."
 #fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
-#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
-fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
+fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
+#fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
 plot fileObj .N using 1:2 title 'F' with lines ,\
      fileObj .N using 1:3 title 'G' with lines ,\

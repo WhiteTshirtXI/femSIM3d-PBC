@@ -20,13 +20,14 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- const char *dir  = "./";
  const char *mesh = "../../db/mesh/3d/2bubble.vtk";
  //const char *mesh = "../../db/mesh/3d/2bubble2.vtk";
- const char *txt  = "txt/txt";
- const char *bin  = "bin/bin";
- const char *vtk  = "vtk/sim";
- const char *sim  = "dat/sim";
+ const char *txtFolder  = "./txt/";
+ const char *binFolder  = "./bin/";
+ const char *vtkFolder  = "./vtk/";
+ const char *datFolder  = "./dat/";
+ const char *simFolder  = "./sim/";
+
  int iter = 0;
 
  Model3D m1,mNew;
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
  m1.setMiniElement();
  m1.set2BubbleBC(); // malha do disco
  m1.setOFace();
+ m1.setSurfaceConfig();
 
  Simulator3D s1(m1);
 
@@ -50,16 +52,19 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
- const int restart = 1;
+ const int restart = 0;
 
  if( restart == 1 )
  {
   const char *mesh2 = "./vtk/sim-last-0.vtk";
 
+  m1.readVTK(mesh2);
+  m1.setMiniElement();
   m1.readVTKCC(mesh2);
-  m1.meshRestart();
+
   Simulator3D s2(m1);
   s1 = s2; 
+
   s1.setRe(100);
   s1.setSc(2);
   s1.setWe(2);
@@ -72,39 +77,26 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
-  InOut load(m1,s1); // cria objeto de gravacao
-  load.loadSol(dir,"./vtk/sim-last",0); // set para velocidade no simulador
-  iter = load.loadIter(); 
-  load.saveVTKTri("./vtk/","sim-lastRestart",0);
+  s1.loadSolution(binFolder,"sim-last",0);
+  iter = s1.loadIteration();
+  //s1.loadSolution(binFolder,"UVWPC",22); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",22);
  }
 
- {
-  InOut save(m1,s1); // cria objeto de gravacao
-  save.saveVTK(dir,vtk);
-  save.saveInfo(dir,mesh);
-  save.printInfo(dir,mesh);
- }
- 
+ InOut save(m1,s1); // cria objeto de gravacao
+ save.saveVTK(vtkFolder,"geometry");
+ save.saveVTKTri(vtkFolder,"geometry",0);
+ save.saveInfo("./",mesh);
+ save.printInfo("./",mesh);
+
  int nIter = 1;
  int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
-   InOut save(*s1.m,s1); // cria objeto de gravacao
-
-//--------------------------------------------------
-//   clVector uAnt2(3*m1.getNumNodes()+m1.getNumVerts());
-//   s1.getUAnt()->CopyTo(0,uAnt2);
-// 
-//   save.saveSol("./vtk/","sim-last",0);
-//   save.loadSol(dir,"./vtk/sim-last",0);
-// 
-//   uAnt2.CopyTo(0,*s1.getUAnt());
-//-------------------------------------------------- 
-
   for( int j=0;j<nReMesh;j++ )
   {
    cout << "____________________________________ Iteration: " 
-	    << i*nReMesh+j+iter << endl;
+	<< i*nReMesh+j+iter << endl;
    //s1.stepLagrangian();
    s1.stepALE2();
    s1.matMount();
@@ -115,32 +107,28 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   save.saveVTK(dir,vtk,i*nReMesh+j+iter);
-   save.saveVTKTri(dir,vtk,i*nReMesh+j+iter);
-   //save.oscillating("oscillating.dat");
-   //save.oscillatingD("oscillatingD.dat");
-   //save.oscillatingKappa("oscillatingKappa.dat");
-   save.saveDistance(dir,"sim/dist",s1.getTime2());
-   cout << "tempo: " << s1.getTime2() << endl;
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
+   save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
+   save.saveDistance(simFolder,"dist",s1.getTime2());
   }
- mNew = *s1.m;
- mNew.reMeshAll();
+  mOld = m1;
+  m1.reMeshAll();
 
- Simulator3D s2(mNew,s1);
- s1 = s2; 
- s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
- s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
- s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
+  Simulator3D s2(m1,s1);
+  s2.applyLinearInterpolation();
+  s1 = s2; 
+  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
+  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
+  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
+  InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveVTK(vtkFolder,"sim-last",0);
+  saveEnd.saveSol(binFolder,"sim-last",0);
+  saveEnd.saveSimTime(iter+nReMesh*nIter);
  }
-
- InOut save(*s1.m,s1); // cria objeto de gravacao
- save.saveVTK("./vtk/","sim-last",0);
- save.saveVTKTri("./vtk/","sim-last",0);
- save.saveSol("./vtk/","sim-last",0);
- save.saveSolTXT("./vtk/","sim-last",0);
- save.saveSimTime(iter+nReMesh*nIter);
-
 
  PetscFinalize();
  return 0;

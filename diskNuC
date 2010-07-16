@@ -41,7 +41,9 @@ $(TARGET): $(OBJECTS)
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-include ${PETSC_DIR}/conf/base
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 deepclean:
 	@rm -f core

@@ -22,6 +22,7 @@ class MeshSmooth
 
   clVector compute(real _dt);
   void stepSmooth();
+  void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void stepSmoothTangent();
   void stepSmoothTangent2();
   void stepSmoothTangent3();
@@ -30,6 +31,9 @@ class MeshSmooth
   void setSurface();
   int search(int node,real _XI, real _YI,real _ZI);
 
+  clVector* getUSmooth(); 
+  clVector* getVSmooth(); 
+  clVector* getWSmooth(); 
   clVector uSmooth,vSmooth,wSmooth;
   clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
 

@@ -41,11 +41,10 @@ class Interface3D
   void setSolverSmooth(Solver *s);
   void saveSurfaceVTK();
   clVector getCloser();
+  clVector crossProd(real x1,real y1,real z1,real x2,real y2,real z2);
 
 
   Solver *solverC;
-  clVector kappaNx,kappaNy,kappaNz;
-  clVector distance,distance3;
  private:
   Model3D *m;
   int numVerts,numElems,numNodes;
@@ -56,6 +55,7 @@ class Interface3D
   clVector *X,*Y,*Z;
   clMatrix *IEN;
   clVector *cc;
+  clVector distance;
 
   vector< list<int> > *neighbourElem,*neighbourVert,*neighbourFace;
   vector< list<int> > *neighbourFaceVert,*surfaceViz,*faceIEN,*elemSurface;

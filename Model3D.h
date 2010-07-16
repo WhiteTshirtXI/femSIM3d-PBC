@@ -52,18 +52,14 @@ class Model3D
   void setCouetteBC();
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
-  void reMesh();
-  void reMesh2();
-  void reMeshHole();
   void meshAll();
   void meshAll(Model3D &_mOriginal);
   void reMeshAll();
-  void reMeshAll2();
-  void reMeshAll3();
-  void meshRestart();
+  void reMeshAllOLD();
   void setNuCteDiskBC();
   void setNuCDiskBC();
   void setNuZDiskBC();
+  void setCDiskBC();
   void setDiskFSBC();
   void setDiskCouetteBC();
   void setSphere(real _xC,real _yC,real _zC,real _r,real _eps);
@@ -78,18 +74,18 @@ class Model3D
   void setPerturbSurf2();
   void setPerturbSurfSquare();
   void setMiniElement();            
-  void setMiniElement2();            
   void setQuadElement();             
   void setNeighbour();
   void setVertNeighbour();
   void setOFace();
+  void setSurfaceConfig();
   bool testFace(int v1, int v2, int v3, int v4);
-  //clVector sortFreeVector();
   void setBubbleBubbleBC();
   void setBubbleBC2();
   void setBubble3DBC();
   void setCubeBC();
   void setCubeBC2();
+  void setWallBC();
   void set2BubbleBC();
 
   real getMaxAbsUC();
@@ -158,13 +154,13 @@ class Model3D
   list<int>* getOutElem();
   list<int>* getInElem();
   void operator=(Model3D &_mRight);
+  bool checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn);
 
 
   clMatrix IENOriginal;
   int numVertsOriginal;
-  clVector surface,nonSurface,cc;
  private:
-  clVector uc,vc,wc,pc;
+  clVector uc,vc,wc,pc,cc;
   clMatrix IEN,IENTri,IENConvexTri;
   clVector X,Y,Z;
   clVector outflow,idbcu,idbcv,idbcw,idbcp,idbcc;
@@ -172,6 +168,7 @@ class Model3D
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
   clVector idRegion;
+  clVector surface,nonSurface;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
@@ -179,7 +176,6 @@ class Model3D
   int numGLEU;                    // numero de graus de liberdade de vel.
   int numGLEP;                    // numero de graus de liberdade de P.
   int numGLEC;                    // numero de graus de liberdade de C.
-
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;

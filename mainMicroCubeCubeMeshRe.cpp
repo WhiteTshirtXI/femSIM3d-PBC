@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- const char *mesh = "../../db/mesh/3d/microCube-cube2D-5.vtk";
+ const char *mesh = "../../db/gmsh/3D/microCube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -28,25 +28,25 @@ int main(int argc, char **argv)
  int iter = 0;
 
  Model3D m1,mNew,mOld,mOriginal;
- m1.readVTKSurface(mesh);
- m1.setCube(0.4,1.6,0.4,1.6,1.5,3.5,1E-8);
+ m1.readMSH(mesh);
+ m1.setInterfaceBC();
  m1.meshAll();
  m1.setMiniElement();
  m1.setCubeBC();
  m1.setOFace();
- m1.setSurfaceTri();
+ m1.setSurfaceConfig();
 
  mOriginal = m1;
 
  Simulator3D s1(m1);
 
- s1.setRe(100);
+ s1.setRe(200);
  s1.setSc(2);
  s1.setWe(10);
  s1.setAlpha(1);
  s1.setBeta(0.0);
  //s1.setSigma(0.0);
- s1.setCflBubble(50);
+ s1.setCflBubble(500);
  s1.init();
 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
@@ -61,31 +61,21 @@ int main(int argc, char **argv)
   //const char *mesh2 = "./vtk/sim-220.vtk";
 
   m1.readVTK(mesh2);
+  m1.setMiniElement();
   m1.readVTKCC(mesh2);
-
-  m1.meshRestart();
-  m1.setMiniElement2();
-  // meshAll cria vector inElem e outElem para
-  //m1.meshAll(mOriginal);
-  //m1.setMiniElement();
-  
   m1.setCubeBC();
   m1.setOFace();
-  m1.setSurfaceTri();
-
-  //Simulator3D s2(m1,s1);
-  //s2.applyLinearInterpolation(mOriginal);
-  //s1 = s2; 
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1);
   s1 = s2; 
 
-  s1.setRe(100);
+  s1.setRe(200);
   s1.setSc(2);
   s1.setWe(10);
   s1.setAlpha(1);
   s1.setBeta(0.0);
-  s1.setCflBubble(50);
+  s1.setCflBubble(2500);
   s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
@@ -94,9 +84,6 @@ int main(int argc, char **argv)
   iter = s1.loadIteration();
   //s1.loadSolution(binFolder,"UVWPC",220); // set para velocidade no simulador
   //iter = s1.loadIteration(vtkFolder,"sim",220);
-  //m1.cc.Display();
-  //s1.cSol.Display();
-  
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -139,7 +126,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setCubeBC();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

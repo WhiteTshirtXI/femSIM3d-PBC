@@ -34,7 +34,7 @@ int main(int argc, char **argv)
  m1.setMiniElement();
  m1.setCubeBC2();
  m1.setOFace();
- m1.setSurfaceTri();
+ m1.setSurfaceConfig();
 
  mOriginal = m1;
 
@@ -60,12 +60,11 @@ int main(int argc, char **argv)
   //const char *mesh2 = "./vtk/sim-6.vtk";
 
   m1.readVTK(mesh2);
+  m1.setMiniElement();
   m1.readVTKCC(mesh2);
-  m1.meshRestart();
-  m1.setMiniElement2();
   m1.setCubeBC2();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   //Simulator3D s2(m1,s1);
   Simulator3D s2(m1);
@@ -88,8 +87,8 @@ int main(int argc, char **argv)
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTK(vtkFolder,"sim");
- save.saveVTKTri(vtkFolder,"sim-lastRestart",18);
+ save.saveVTK(vtkFolder,"geometry");
+ save.saveVTKTri(vtkFolder,"geometry",0);
  save.saveInfo("./",mesh);
  save.printInfo("./",mesh);
 
@@ -114,6 +113,7 @@ int main(int argc, char **argv)
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
    save.oscillating("oscillating.dat");
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setCubeBC2();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

@@ -27,31 +27,27 @@ int main(int argc, char **argv)
  const char *datFolder  = "./dat/";
  int iter = 0;
 
- Model3D m1,mNew,mOld,mOriginal;
+ Model3D m1,mOld,mOriginal;
 
  m1.readMSH(mesh);
  m1.setInterfaceBC();
-
- //m1.readVTKSurface(mesh);
- //m1.setCube(1.1,1.9,1E-10);
  m1.meshAll();
  m1.setMiniElement();
- m1.setCubeBC();
  m1.setOFace();
- m1.setSurfaceTri();
- return 0;
+ m1.setSurfaceConfig();
+ m1.setWallBC();
 
  mOriginal = m1;
 
  Simulator3D s1(m1);
 
- s1.setRe(400);
+ s1.setRe(100);
  s1.setSc(2);
- s1.setWe(10);
+ s1.setWe(1);
  s1.setAlpha(1);
  s1.setBeta(0.0);
  //s1.setSigma(0.0);
- s1.setCflBubble(50);
+ s1.setCflBubble(10);
  s1.init();
 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
@@ -63,45 +59,32 @@ int main(int argc, char **argv)
  if( restart == 1 )
  {
   const char *mesh2 = "./vtk/sim-last-0.vtk";
-  //const char *mesh2 = "./vtk/sim-220.vtk";
+  //const char *mesh2 = "./vtk/sim-22.vtk";
 
   m1.readVTK(mesh2);
+  m1.setMiniElement();
   m1.readVTKCC(mesh2);
-
-  m1.meshRestart();
-  m1.setMiniElement2();
-  // meshAll cria vector inElem e outElem para
-  //m1.meshAll(mOriginal);
-  //m1.setMiniElement();
-  
-  m1.setCubeBC();
+  m1.setWallBC();
   m1.setOFace();
-  m1.setSurfaceTri();
-
-  //Simulator3D s2(m1,s1);
-  //s2.applyLinearInterpolation(mOriginal);
-  //s1 = s2; 
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1);
   s1 = s2; 
 
-  s1.setRe(400);
+  s1.setRe(100);
   s1.setSc(2);
-  s1.setWe(10);
+  s1.setWe(1);
   s1.setAlpha(1);
   s1.setBeta(0.0);
-  s1.setCflBubble(50);
+  s1.setCflBubble(10);
   s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   s1.loadSolution(binFolder,"sim-last",0);
   iter = s1.loadIteration();
-  //s1.loadSolution(binFolder,"UVWPC",220); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",220);
-  //m1.cc.Display();
-  //s1.cSol.Display();
-  
+  //s1.loadSolution(binFolder,"UVWPC",22); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",22);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -111,7 +94,7 @@ int main(int argc, char **argv)
  save.printInfo("./",mesh);
 
  int nIter = 1;
- int nReMesh = 1;
+ int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -135,7 +118,6 @@ int main(int argc, char **argv)
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
-   save.saveSolTXT(datFolder,"UVWPC",i*nReMesh+j+iter);
    save.oscillating("oscillating.dat");
    save.oscillatingD("oscillatingD.dat");
    save.oscillatingKappa("oscillatingKappa.dat");
@@ -143,9 +125,9 @@ int main(int argc, char **argv)
   mOld = m1; 
   m1.meshAll(mOriginal);
   m1.setMiniElement();
-  m1.setCubeBC();
+  m1.setWallBC();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -157,7 +139,6 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim-last",0);
   saveEnd.saveSol(binFolder,"sim-last",0);
-  saveEnd.saveSolTXT(datFolder,"sim-last",0);
   saveEnd.saveSimTime(iter+nReMesh*nIter);
  }
 

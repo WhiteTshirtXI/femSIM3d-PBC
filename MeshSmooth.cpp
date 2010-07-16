@@ -54,7 +54,7 @@ clVector MeshSmooth::compute(real _dt)
  return aux;
 }
 
-// calcula velocidade euleriana em todos os vertices
+// calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSmooth()
 {
  real aux;
@@ -113,6 +113,35 @@ void MeshSmooth::stepSmooth()
  }
 } // fecha metodo stepSmooth
 
+void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
+{
+ list<int> plist;
+ list<int>::iterator vert;
+ real uSum,vSum,wSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(numNodes);
+ vSmooth.Dim(numNodes);
+ wSmooth.Dim(numNodes);
+
+ for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ {
+  plist = neighbourVert->at(*it);
+  size = plist.size();
+  uSum = 0.0;
+  vSum = 0.0;
+  wSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   uSum += _uVel.Get(*vert);
+   vSum += _vVel.Get(*vert);
+   wSum += _wVel.Get(*vert);
+  }
+  uSmooth.Set( *it,uSum/size ); 
+  vSmooth.Set( *it,vSum/size ); 
+  wSmooth.Set( *it,wSum/size ); 
+ }
+} // fecha metodo stepSmooth
+
 void MeshSmooth::setCentroid()
 {  
  // calculando os valores de uSmooth e vSmooth nos centroides
@@ -126,6 +155,7 @@ void MeshSmooth::setCentroid()
   v[1] = (int) IEN->Get(mele,1);
   v[2] = (int) IEN->Get(mele,2);
   v[3] = (int) IEN->Get(mele,3);
+
   v[4] = (int) IEN->Get(mele,4);
 
   aux = ( uSmooth.Get(v[0])+uSmooth.Get(v[1])+
@@ -307,13 +337,13 @@ void MeshSmooth::stepSmoothTangent3()
   // calculo da projecao da velocidade v na direcao da aresta 0-1
   // proj = | v.u^ | . u^
   aux = velX*xNormalUnit + velY*yNormalUnit + velZ*zNormalUnit;
-  real uProj =  aux*xNormalUnit; 
-  real vProj =  aux*yNormalUnit;
-  real wProj =  aux*zNormalUnit;
+  //real uProj =  aux*xNormalUnit; 
+  //real vProj =  aux*yNormalUnit;
+  //real wProj =  aux*zNormalUnit;
 
-  real uTang = velX-uProj;
-  real vTang = velY-vProj;
-  real wTang = velZ-wProj;
+  //real uTang = velX-uProj;
+  //real vTang = velY-vProj;
+  //real wTang = velZ-wProj;
 
 //--------------------------------------------------
 //   cout << surfaceNode << " " 
@@ -388,5 +418,9 @@ int MeshSmooth::search(int node,real _XI, real _YI, real _ZI)
  }
  return vmin;
 }
+
+clVector* MeshSmooth::getUSmooth(){ return &uSmooth; }
+clVector* MeshSmooth::getVSmooth(){ return &vSmooth; }
+clVector* MeshSmooth::getWSmooth(){ return &wSmooth; }
 
 

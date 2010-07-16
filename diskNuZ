@@ -21,8 +21,6 @@ OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
-OBJECTS += $(LIBDIR)/GMRes_Petsc.o
-OBJECTS += $(LIBDIR)/PCGSolver_Petsc.o
 OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
@@ -43,7 +41,9 @@ $(TARGET): $(OBJECTS)
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-include ${PETSC_DIR}/conf/base
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 deepclean:
 	@rm -f core

@@ -53,6 +53,7 @@ class Simulator3D
   void stepLagrangianZ();
   void stepALE();
   void stepALE2();
+  void stepALE3();
   void stepSmooth();
   void setInterfaceVel();
   void  stepMesh();
@@ -63,7 +64,6 @@ class Simulator3D
   void setGravityBoussinesq();
   void setInterface();
   void setInterfaceGeo();
-  void setInterfaceGeoTest();
 
   void coupled();
   void unCoupled();
@@ -139,6 +139,7 @@ class Simulator3D
   void loadSolution( const char* _dir,const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   real getBubbleVelocity();
+  void setALEVelBC();
 
   Solver *solverV,*solverP,*solverC;
 

@@ -267,6 +267,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  nu.Dim( numNodes );
  rho.Dim( numNodes );
 
+ // recuperando campo de velocidade e pressao da malha antiga
  uSolOld = *_s.getUSol();
  vSolOld = *_s.getVSol();
  wSolOld = *_s.getWSol();
@@ -300,6 +301,8 @@ void Simulator3D::init()
 //  for( int i=0;i<idbcw->Dim();i++ )
 //   wSol.Set( (int) idbcw->Get(i),0.0 ); 
 //-------------------------------------------------- 
+
+/* two bubbles */
 //--------------------------------------------------
 //  for( int i=0;i<numNodes;i++ )
 //  {
@@ -1006,6 +1009,12 @@ void Simulator3D::assembleK()
  
 }; // fecha metodo ASSEMBLEK
 
+//este método cria os vetores uSL, vSL e wSL relacionados ao 
+//termo convectivo da equação de Navier-Stokes. 
+//Mais precisamente u \cdot \Nabla u.
+//convUVW = uSL, vSL e wSL em um unico vetor.
+//Como o metodo eh explicito para calculo do termo convectivo, 
+//convUVW vai para setRHS.
 void Simulator3D::stepSL()
 {
 
@@ -1059,6 +1068,9 @@ void Simulator3D::step()
  vcc = vcc + convC;
 } // fecha metodo step 
 
+// metodo para movimentacao dos pontos da malha atraves da velocidade do
+// escoamento (uSol, vSol e wSol), caracterizando a movimentacao
+// puramente lagrangiana
 void Simulator3D::stepLagrangian()
 {
  m->setX(*m->getX()+(uSol*dt));
@@ -1075,6 +1087,10 @@ void Simulator3D::stepLagrangian()
 
 } // fecha metodo stepLagrangian
 
+// metodo para movimentacao dos pontos da malha na direcao Z atraves da 
+// velocidade do escoamento (wSol), caracterizando a movimentacao
+// puramente lagrangiana em Z. Para os pontos nas direcoes X e Y eh
+// utilizado o metodo explicito semi lagrangiano
 void Simulator3D::stepLagrangianZ()
 {
  m->setZ(*m->getZ()+(wSol*dt));
@@ -1233,39 +1249,42 @@ void Simulator3D::stepALE()
 
 void Simulator3D::stepALE2()
 {
- // atualiza ALE nos pontos de contorno 
- int aux;
- for( int i=0;i<idbcu->Dim();i++ )
- {
-  aux = (int) idbcu->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcv->Dim();i++ )
- {
-  aux = (int) idbcv->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcw->Dim();i++ )
- {
-  aux = (int) idbcw->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcp->Dim();i++ )
- {
-  aux = (int) idbcp->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
+ setALEVelBC();
+//--------------------------------------------------
+//  // atualiza ALE nos pontos de contorno 
+//  int aux;
+//  for( int i=0;i<idbcu->Dim();i++ )
+//  {
+//   aux = (int) idbcu->Get(i);
+//   uALE.Set( aux,0.0 ); 
+//   vALE.Set( aux,0.0 ); 
+//   wALE.Set( aux,0.0 ); 
+//  }
+// 
+//  for( int i=0;i<idbcv->Dim();i++ )
+//  {
+//   aux = (int) idbcv->Get(i);
+//   uALE.Set( aux,0.0 ); 
+//   vALE.Set( aux,0.0 ); 
+//   wALE.Set( aux,0.0 ); 
+//  }
+// 
+//  for( int i=0;i<idbcw->Dim();i++ )
+//  {
+//   aux = (int) idbcw->Get(i);
+//   uALE.Set( aux,0.0 ); 
+//   vALE.Set( aux,0.0 ); 
+//   wALE.Set( aux,0.0 ); 
+//  }
+// 
+//  for( int i=0;i<idbcp->Dim();i++ )
+//  {
+//   aux = (int) idbcp->Get(i);
+//   uALE.Set( aux,0.0 ); 
+//   vALE.Set( aux,0.0 ); 
+//   wALE.Set( aux,0.0 ); 
+//  }
+//-------------------------------------------------- 
 
  // impoe velocidade do fluido na interface
  setInterfaceVel();
@@ -1400,7 +1419,6 @@ void Simulator3D::stepSmooth()
 
 void Simulator3D::setInterfaceVel()
 {
- real vel;
  //real bubbleZVelocity = getBubbleVelocity();
 
  for( int i=0;i<surface->Dim();i++ )
@@ -1415,6 +1433,8 @@ void Simulator3D::setInterfaceVel()
  }
 } // fecha metodo setInterfaceVel 
 
+//setRHS eh o metodo que cria o vetor do lado direito (condicao de
+//contorno + termo convectivo)
 void Simulator3D::setRHS()
 {
  // sem correcao na pressao
@@ -1479,31 +1499,11 @@ void Simulator3D::setInterface()
 void Simulator3D::setInterfaceGeo()
 {
  Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa1();
+ clVector kappaAux = interface.computeKappa2();
 
  //interface.plotKappa(kappaAux);
  kappa = interface.setKappaSurface(kappaAux);
  // eu acho que eh necessario neste ponto aplicar a direcao do kappa
-
- fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
- 
- //va = va + invA*fint;
-} // fecha metodo setInterface 
-
-void Simulator3D::setInterfaceGeoTest()
-{
- Interface3D interface(*m);
- interface.computeKappa3();
-
- clVector kappaNx = interface.kappaNx; 
- clVector kappaNy = interface.kappaNy; 
- clVector kappaNz = interface.kappaNz; 
- clVector kappaAux = interface.distance;
- //kappaNx.Display();
-
- //kappa = interface.setKappaSurface(kappaAux);
- kappa = interface.setKappaSurface(kappaNx,kappaNy,kappaNz);
- //kappa.Print();
 
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
  
@@ -1638,6 +1638,8 @@ void Simulator3D::unCoupledC()
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
 
+ // comentar em caso de utilizacao de setInterface()
+ // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
 
@@ -2010,6 +2012,8 @@ clMatrix* Simulator3D::getG(){return &G;}
 clMatrix* Simulator3D::getD(){return &D;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 
+// set do centroide para o elemento mini apos a interpolacao linear
+// (applyLinearInterpolation)
 void Simulator3D::setCentroid()
 {
  int v[5];
@@ -2365,6 +2369,11 @@ int Simulator3D::loadIteration( const char* _dir,
  return iterNumber+1;
 } // fecha metodo loadIteration
 
+// interpolacao linear dos vetores velocidade e pressao calculados na
+// malha antiga (Model3D mold) para malha nova (this). Note que a
+// interpolacao eh feita somente nos vertices da malha deixando para o
+// metodo setCentroid a configuracao dos valores de cada centroide
+// pertencente aos elementos
 void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
 {
  SemiLagrangean semi(_mOld,uSol,vSol,wSol,velU,velV,velW,cSol);
@@ -2415,11 +2424,15 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
 
 } // fecha metodo applyLinearInterpolation
 
+// calcula velocidade media da bolha tomando como referencia o centro de
+// massa
 real Simulator3D::getBubbleVelocity()
 {
  real velX,velY,velZ;
- real sumVolume;
- real sumXVelVolume=0,sumYVelVolume=0,sumZVelVolume=0;
+ real sumVolume=0;
+ real sumXVelVolume=0;
+ real sumYVelVolume=0;
+ real sumZVelVolume=0;
  int count = 0;
 
  list<int> *inElem;
@@ -2454,8 +2467,8 @@ real Simulator3D::getBubbleVelocity()
   sumVolume += m->getVolume(*it);
   count++;
  }
- real bubbleXVel = sumXVelVolume/sumVolume;
- real bubbleYVel = sumYVelVolume/sumVolume;
+ //real bubbleXVel = sumXVelVolume/sumVolume;
+ //real bubbleYVel = sumYVelVolume/sumVolume;
  real bubbleZVel = sumZVelVolume/sumVolume;
  //cout << "numero de elmentos = " << count << endl;
  //cout << "bubbleYVel = " << bubbleYVel << endl;
@@ -2463,4 +2476,65 @@ real Simulator3D::getBubbleVelocity()
 
  return bubbleZVel;
 }
+
+// impoe velocidade ALE = 0 no contorno
+void Simulator3D::setALEVelBC()
+{
+ list<int> *outVert = m->getOutVert();
+
+ for (list<int>::iterator it=outVert->begin(); it!=outVert->end(); ++it)
+ {
+  int vertice = *it;
+  uALE.Set(vertice,0.0);
+  vALE.Set(vertice,0.0);
+  wALE.Set(vertice,0.0);
+ }
+}
+
+void Simulator3D::stepALE3()
+{
+ setALEVelBC();
+
+ // calcula velocidade elastica - dependente das velocidades dos pontos
+ setInterfaceVel();
+ for( int i=0;i<100;i++ )
+ {
+  MeshSmooth e1(*m); // criando objeto MeshSmooth
+  e1.stepSmooth(uALE,vALE,wALE);
+  e1.setCentroid();
+  uSmooth = *e1.getUSmooth();
+  vSmooth = *e1.getVSmooth();
+  wSmooth = *e1.getWSmooth();
+
+  // impoe velocidade do fluido na interface
+  setInterfaceVel();
+ }
+
+ c1 = 0.0; 
+ c2 = 1.0;
+ c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
+
+ uALE = c1*uSol+c2*uSmooth;
+ vALE = c1*vSol+c2*vSmooth;
+ wALE = c1*wSol+c2*wSmooth;
+
+ // impoe velocidade ALE = 0 no contorno
+ setALEVelBC();
+
+ // impoe velocidade do fluido na interface
+ setInterfaceVel();
+
+ // calcula velocidade do fluido atraves do metodo semi-lagrangeano
+ stepSL();
+
+ // movimentando os pontos da malha com velocidade ALE
+ m->setX(*m->getX()+(uALE*dt));
+ m->setY(*m->getY()+(vALE*dt));
+ m->setZ(*m->getZ()+(wALE*dt));
+ 
+ // atualizacao de todas as matrizes do sistema
+ assemble();
+ //assembleSlip();
+
+} // fecha metodo stepALE3
 

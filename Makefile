@@ -57,6 +57,8 @@ clean:
 	@rm -f ./oscillating*
 	@rm -f ./vtk/*.vtk
 	@rm -f ./sim/vk?.*
+	@rm -f ./bin/*.bin
+	@rm -f ./dat/*.dat
 
 deepclean:
 	@rm -f core

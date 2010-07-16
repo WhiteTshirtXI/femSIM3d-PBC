@@ -23,7 +23,6 @@ OBJECTS += $(LIBDIR)/clDMatrix.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
 OBJECTS += $(LIBDIR)/GMRes.o
 #OBJECTS += $(LIBDIR)/Mumps_Petsc.o
-OBJECTS += $(LIBDIR)/PCGSolver_Petsc.o
 OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
@@ -36,6 +35,7 @@ OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
+
 #OBJECTS += mainBubble.o
 #OBJECTS += main2Bubble.o
 #OBJECTS += mainTest2Bubble.o
@@ -48,9 +48,14 @@ OBJECTS += InOut.o
 #OBJECTS += mainCubeCubeMesh.o
 #OBJECTS += mainBubbleTubeMesh.o
 
+# testando o remelhamento parcial com insercao de pontos
+#OBJECTS += mainCubeCubeMesh.o
+
 # testando o remelhamento total com insercao/retirada de pontos
 #OBJECTS += mainMicroCubeCubeMeshRe.o
+#OBJECTS += mainMicroTriangleMeshRe.o
 OBJECTS += mainCubeCubeMeshRe.o
+#OBJECTS += main2BubbleMeshRe.o
 #OBJECTS += mainBubbleTubeMeshRe.o
 
 #OBJECTS += mainCubeCubeRestart.o
@@ -62,7 +67,7 @@ $(TARGET): $(OBJECTS)
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-#include ${PETSC_DIR}/conf/base
+# Petsc new config
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 

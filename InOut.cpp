@@ -355,13 +355,17 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS concentration double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
+ // este if existe pois nem todos os metodos tem cc
+ if( cc->Dim() > 0 )
+ {
+  vtkFile << "SCALARS concentration double" << endl;
+  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << cc->Get(i) << endl;
+  for( int i=0;i<numVerts;i++ )
+   vtkFile << setw(10) << cc->Get(i) << endl;
 
- vtkFile << endl;
+  vtkFile << endl;
+ }
 
  vtkFile << "SCALARS u double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
@@ -464,13 +468,17 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS concentration double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+ {
+  vtkFile << "SCALARS concentration double" << endl;
+  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << cSol->Get(i) << endl;
+  for( int i=0;i<numVerts;i++ )
+   vtkFile << cSol->Get(i) << endl;
 
- vtkFile << endl;
+  vtkFile << endl;
+ }
 
  vtkFile << "SCALARS u double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
@@ -653,13 +661,17 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS concentration double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+ {
+  vtkFile << "SCALARS concentration double" << endl;
+  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << cSol->Get(i) << endl;
+  for( int i=0;i<numVerts;i++ )
+   vtkFile << cSol->Get(i) << endl;
 
- vtkFile << endl;
+  vtkFile << endl;
+ }
 
  vtkFile << "SCALARS u double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;

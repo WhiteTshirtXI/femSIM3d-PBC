@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- const char *mesh = "../../db/mesh/3d/cube-cube2D-1.vtk";
+ const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -29,53 +29,60 @@ int main(int argc, char **argv)
 
 
  Model3D m1,mNew,mOld;
- m1.readVTKSurface(mesh);
- m1.setCube(1.1,1.9,1E-10);
+ m1.readMSH(mesh);
+ m1.setInterfaceBC();
  m1.meshAll();
  m1.setMiniElement();
  m1.setCubeBC();
  m1.setOFace();
- m1.setSurfaceTri();
+ m1.setSurfaceConfig();
 
  Simulator3D s1(m1);
 
- s1.setRe(300);
+ s1.setRe(1500);
  s1.setSc(2);
- s1.setWe(10);
+ s1.setWe(1);
  s1.setAlpha(1);
  s1.setBeta(-2.0);
  //s1.setSigma(0.0);
- s1.setCflBubble(50);
+ s1.setCflBubble(1);
  s1.init();
 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
- const int restart = 1;
-
- if( restart == 1 )
+ if( (*(argv+1)) == NULL )
  {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
   const char *mesh2 = "./vtk/sim-last-0.vtk";
 
   m1.readVTK(mesh2);
+  m1.setMiniElement();
   m1.readVTKCC(mesh2);
-  m1.meshRestart();
-  m1.setMiniElement2();
   m1.setCubeBC();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   //Simulator3D s2(m1,s1);
   Simulator3D s2(m1);
 
   s1 = s2; 
-  s1.setRe(300);
+  s1.setRe(1500);
   s1.setSc(2);
-  s1.setWe(10);
+  s1.setWe(1);
   s1.setAlpha(1);
   s1.setBeta(-2.0);
-  s1.setCflBubble(50);
+  s1.setCflBubble(1);
   s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
@@ -105,7 +112,7 @@ int main(int argc, char **argv)
 	<< i*nReMesh+j+iter << endl;
    //s1.stepLagrangian();
    //s1.stepALE();
-   s1.stepALE2();
+   s1.stepALEVel();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
@@ -120,19 +127,16 @@ int main(int argc, char **argv)
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
-   save.saveSolTXT(datFolder,"UVWPC",i*nReMesh+j+iter);
    save.oscillating("oscillating.dat");
    save.oscillatingD("oscillatingD.dat");
    save.oscillatingKappa("oscillatingKappa.dat");
-
-   cout << "________________________time: " << s1.getTime2() << endl;
   }
   mOld = m1; 
-  m1.reMeshAll2();
-  m1.setMiniElement2();
+  m1.reMeshAll();
+  m1.setMiniElement();
   m1.setCubeBC();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceConfig();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

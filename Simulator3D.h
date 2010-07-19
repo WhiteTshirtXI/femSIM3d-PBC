@@ -52,10 +52,10 @@ class Simulator3D
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
-  void stepALE2();
-  void stepALE3();
+  void stepALEVel();
   void stepSmooth();
   void setInterfaceVel();
+  void setInterfaceVel2();
   void  stepMesh();
 
   void setRHS();

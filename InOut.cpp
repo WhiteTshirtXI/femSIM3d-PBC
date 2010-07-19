@@ -1544,6 +1544,95 @@ void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
   vtkFile << "5 ";
 
  vtkFile << endl;
+ vtkFile << endl;
+
+ vtkFile << "POINT_DATA " << numVerts << endl;
+
+ vtkFile << "SCALARS pressure double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ vtkFile << setprecision(10) << fixed;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << pSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS u double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS v double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << vSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS w double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << wSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS uALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS vALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << vALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS wALE double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << wALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS kappa double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << kappa->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "SCALARS distance double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << distance->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "VECTORS velocity double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uSol->Get(i) << " " 
+          << vSol->Get(i) << " " 
+		  << wSol->Get(i) << endl;
+ vtkFile << endl;
+
+ vtkFile << "VECTORS fint double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << fint->Get(i) << " " 
+          << fint->Get(i+numVerts) << " " 
+		  << fint->Get(i+numVerts*2) << endl;
 
  vtkFile.close();
 

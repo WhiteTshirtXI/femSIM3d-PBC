@@ -20,6 +20,13 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
+ real Re = 1500;
+ real Sc = 2;
+ real We = 10;
+ real alpha = 1;
+ real beta = 0;
+ real cfl = 7;
+
  const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
@@ -41,25 +48,33 @@ int main(int argc, char **argv)
 
  Simulator3D s1(m1);
 
- s1.setRe(100);
- s1.setSc(2);
- s1.setWe(1);
- s1.setAlpha(1);
- s1.setBeta(0.0);
- //s1.setSigma(0.0);
- s1.setCflBubble(10);
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setWe(We);
+ s1.setAlpha(alpha);
+ s1.setBeta(beta);
+ //s1.setSigma(sigma);
+ s1.setCflBubble(cfl);
  s1.init();
 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
- const int restart = 0;
-
- if( restart == 1 )
+ if( (*(argv+1)) == NULL )
  {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )  
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
   const char *mesh2 = "./vtk/sim-last-0.vtk";
-  //const char *mesh2 = "./vtk/sim-22.vtk";
+  //const char *mesh2 = "./vtk/sim-565.vtk";
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
@@ -71,20 +86,21 @@ int main(int argc, char **argv)
   Simulator3D s2(m1);
   s1 = s2; 
 
-  s1.setRe(100);
-  s1.setSc(2);
-  s1.setWe(1);
-  s1.setAlpha(1);
-  s1.setBeta(0.0);
-  s1.setCflBubble(10);
+  s1.setRe(Re);
+  s1.setSc(Sc);
+  s1.setWe(We);
+  s1.setAlpha(alpha);
+  s1.setBeta(beta);
+  //s1.setSigma(sigma);
+  s1.setCflBubble(cfl);
   s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   s1.loadSolution(binFolder,"sim-last",0);
   iter = s1.loadIteration();
-  //s1.loadSolution(binFolder,"UVWPC",22); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",22);
+  //s1.loadSolution(binFolder,"UVWPC",565); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",565);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -103,7 +119,7 @@ int main(int argc, char **argv)
 	<< i*nReMesh+j+iter << endl;
    //s1.stepLagrangian();
    //s1.stepALE();
-   s1.stepALE2();
+   s1.stepALEVel();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();

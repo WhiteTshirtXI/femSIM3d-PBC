@@ -1247,96 +1247,38 @@ void Simulator3D::stepALE()
 
 } // fecha metodo stepALE
 
-void Simulator3D::stepALE2()
+void Simulator3D::stepALEVel()
 {
  setALEVelBC();
-//--------------------------------------------------
-//  // atualiza ALE nos pontos de contorno 
-//  int aux;
-//  for( int i=0;i<idbcu->Dim();i++ )
-//  {
-//   aux = (int) idbcu->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcv->Dim();i++ )
-//  {
-//   aux = (int) idbcv->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcw->Dim();i++ )
-//  {
-//   aux = (int) idbcw->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcp->Dim();i++ )
-//  {
-//   aux = (int) idbcp->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-//-------------------------------------------------- 
 
- // impoe velocidade do fluido na interface
- setInterfaceVel();
-
+ // calcula velocidade elastica - dependente das velocidades dos pontos
+ setInterfaceVel2();
  for( int i=0;i<100;i++ )
  {
-  vector< list<int> > *neighbourVert;
-  list<int> *inVert;
-  neighbourVert = m->getNeighbourVert();
-  inVert = m->getInVert();
-  list<int> plist;
-  list<int>::iterator vert;
-  real xSum,ySum,zSum;
-  real size; // numero de elementos da lista
-  clVector uALEaux(numNodes);
-  clVector vALEaux(numNodes);
-  clVector wALEaux(numNodes);
+  MeshSmooth e1(*m); // criando objeto MeshSmooth
+  e1.stepSmooth(uALE,vALE,wALE);
+  e1.setCentroid();
+  uSmooth = *e1.getUSmooth();
+  vSmooth = *e1.getVSmooth();
+  wSmooth = *e1.getWSmooth();
 
-//--------------------------------------------------
-//   for( int ii=0;ii<numVerts;ii++ )
-//   {
-//    cout << "ii = " << ii << " ";
-//    std::ostream_iterator< int > output( cout, " " );
-//    std::copy( neighbourVert->at(ii).begin(), 
-// 	 neighbourVert->at(ii).end(), output );
-//    cout << endl;
-//   }
-//-------------------------------------------------- 
-
-  for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
-  {
-   plist = neighbourVert->at(*it);
-   size = plist.size();
-   xSum = 0.0;
-   ySum = 0.0;
-   zSum = 0.0;
-   for( vert=plist.begin(); vert != plist.end(); ++vert )
-   {
-	xSum += uALE.Get(*vert);
-	ySum += vALE.Get(*vert);
-	zSum += wALE.Get(*vert);
-   }
-   uALEaux.Set( *it,xSum/size ); // X medio
-   vALEaux.Set( *it,ySum/size ); // Y medio
-   wALEaux.Set( *it,zSum/size ); // Z medio
-  }
-  uALE = uALEaux;
-  vALE = vALEaux;
-  wALE = wALEaux;
   // impoe velocidade do fluido na interface
-  setInterfaceVel();
+  setInterfaceVel2();
  }
+
+ c1 = 0.0; 
+ c2 = 1.0;
+ c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
+
+ uALE = c1*uSol+c2*uSmooth;
+ vALE = c1*vSol+c2*vSmooth;
+ wALE = c1*wSol+c2*wSmooth;
+
+ // impoe velocidade ALE = 0 no contorno
+ setALEVelBC();
+
+ // impoe velocidade do fluido na interface
+ setInterfaceVel2();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
@@ -1346,65 +1288,11 @@ void Simulator3D::stepALE2()
  m->setY(*m->getY()+(vALE*dt));
  m->setZ(*m->getZ()+(wALE*dt));
  
-//--------------------------------------------------
-//  /* BEGIN TEST */
-//  real bubbleZVelocity = getBubbleVelocity();
-//  clVector test = wALE;
-//  //for( int i=0;i<surface->Dim();i++ )
-//  for( int i=0;i<numNodes;i++ )
-//  {
-//   //int aux = surface->Get(i);
-//   //test.Set(aux,test.Get(aux)-bubbleZVelocity);
-//   test.Set(i,test.Get(i)-bubbleZVelocity);
-//  }
-// //--------------------------------------------------
-// //  clVector insideAux = *cc==1.0;
-// //  clVector inside = insideAux.Find();
-// //  for( int i=0;i<inside.Dim();i++ )
-// //  {
-// //   int aux = inside.Get(i);
-// //   test.Set(aux,test.Get(aux)-bubbleZVelocity);
-// //  }
-// //-------------------------------------------------- 
-// 
-//   // atualiza ALE nos pontos de contorno 
-//  for( int i=0;i<idbcu->Dim();i++ )
-//  {
-//   aux = (int) idbcu->Get(i);
-//   test.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcv->Dim();i++ )
-//  {
-//   aux = (int) idbcv->Get(i);
-//   test.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcw->Dim();i++ )
-//  {
-//   aux = (int) idbcw->Get(i);
-//   test.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcp->Dim();i++ )
-//  {
-//   aux = (int) idbcp->Get(i);
-//   test.Set( aux,0.0 ); 
-//  }
-//  m->setZ(*m->getZ()+(test*dt));
-//  /* END TEST */
-//-------------------------------------------------- 
-
  // atualizacao de todas as matrizes do sistema
  assemble();
  //assembleSlip();
 
- convUVW.CopyFrom(0,uSL);
- convUVW.CopyFrom(numNodes,vSL);
- convUVW.CopyFrom(2*numNodes,wSL);
- convC = cSol;
-
-} // fecha metodo stepALE2
+} // fecha metodo stepALE3
 
 void Simulator3D::stepSmooth()
 {
@@ -1432,6 +1320,97 @@ void Simulator3D::setInterfaceVel()
 
  }
 } // fecha metodo setInterfaceVel 
+
+void Simulator3D::setInterfaceVel2()
+{
+ list<int> plist,plist2;
+ list<int>::iterator face,vert;
+ vector< list<int> > *elemSurface = m->getElemSurface();
+ vector< list<int> > *neighbourFaceVert = m->getNeighbourFaceVert();
+
+ //real bubbleZVelocity = getBubbleVelocity();
+
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int surfaceNode = surface->Get(i);
+
+  real xCross = 0;
+  real yCross = 0;
+  real zCross = 0;
+
+  plist = elemSurface->at (surfaceNode);
+  for( face=plist.begin();face!=plist.end();++face )
+  {
+   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
+   //    // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
+   real P0x = X->Get(surfaceNode);
+   real P0y = Y->Get(surfaceNode);
+   real P0z = Z->Get(surfaceNode);
+   plist2 = neighbourFaceVert->at (*face);
+   vert=plist2.begin();
+   int v1 = *vert;++vert;
+   int v2 = *vert;
+   vert=plist2.end();
+   real P1x = X->Get(v1);
+   real P1y = Y->Get(v1);
+   real P1z = Z->Get(v1);
+   real P2x = X->Get(v2);
+   real P2y = Y->Get(v2);
+   real P2z = Z->Get(v2);
+
+   // vetores
+   real x1 = P1x-P0x;
+   real y1 = P1y-P0y;
+   real z1 = P1z-P0z;
+   real x2 = P2x-P0x;
+   real y2 = P2y-P0y;
+   real z2 = P2z-P0z;
+
+   // distance do ponto 0 ate ponto 1
+   real a = sqrt( (P0x-P1x)*(P0x-P1x)+
+	              (P0y-P1y)*(P0y-P1y)+
+				  (P0z-P1z)*(P0z-P1z) );
+
+   // distance do ponto 0 ate ponto 2
+   real b = sqrt( (P0x-P2x)*(P0x-P2x)+
+	              (P0y-P2y)*(P0y-P2y)+
+				  (P0z-P2z)*(P0z-P2z) );
+   
+   // vetores unitarios
+   real x1Unit = x1/a;
+   real y1Unit = y1/a;
+   real z1Unit = z1/a;
+   real x2Unit = x2/b;
+   real y2Unit = y2/b;
+   real z2Unit = z2/b;
+
+   xCross += (y1Unit*z2Unit)-(z1Unit*y2Unit);
+   yCross += -( (x1Unit*z2Unit)-(z1Unit*x2Unit) );
+   zCross += (x1Unit*y2Unit)-(y1Unit*x2Unit);
+
+   //wALE.Set(aux,wSol.Get(aux)-bubbleZVelocity);
+
+  }
+  // produto escalar --> projecao do vetor Unit no segmento de reta
+  // | Unit.RetaUnit | . RetaUnit
+  // resultado = vetor tangente a reta situado na superficie
+  real prod = uSol.Get(surfaceNode)*xCross + 
+              vSol.Get(surfaceNode)*yCross + 
+			  wSol.Get(surfaceNode)*zCross;
+  real uSolNormal = xCross*prod;
+  real vSolNormal = yCross*prod;
+  real wSolNormal = zCross*prod;
+
+  //cout << surfaceNode << endl;
+  //cout << xCross << " " << yCross << " " << zCross << endl;
+  //cout << uSolNormal << " " << vSolNormal << " " << wSolNormal << endl;
+  //cout << "-----------------------------------" << endl;
+
+  uALE.Set(surfaceNode,uSolNormal);
+  vALE.Set(surfaceNode,vSolNormal);
+  wALE.Set(surfaceNode,wSolNormal);
+ }
+} // fecha metodo setInterfaceVel2 
 
 //setRHS eh o metodo que cria o vetor do lado direito (condicao de
 //contorno + termo convectivo)
@@ -2276,9 +2255,6 @@ void Simulator3D::loadSolution( const char* _dir,
  fileUVWPC += aux + "-" + str + ".bin";
  const char* filenameUVWPC = fileUVWPC.c_str();
 
- cout << filenameUVWPC << endl;
-
- cout << "Simulator3D numVerts = " << numVerts << endl;
  clVector aux2(3*numNodes+2*numVerts); // vetor tambem carrega a concentracao
 
  ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
@@ -2490,51 +2466,4 @@ void Simulator3D::setALEVelBC()
   wALE.Set(vertice,0.0);
  }
 }
-
-void Simulator3D::stepALE3()
-{
- setALEVelBC();
-
- // calcula velocidade elastica - dependente das velocidades dos pontos
- setInterfaceVel();
- for( int i=0;i<100;i++ )
- {
-  MeshSmooth e1(*m); // criando objeto MeshSmooth
-  e1.stepSmooth(uALE,vALE,wALE);
-  e1.setCentroid();
-  uSmooth = *e1.getUSmooth();
-  vSmooth = *e1.getVSmooth();
-  wSmooth = *e1.getWSmooth();
-
-  // impoe velocidade do fluido na interface
-  setInterfaceVel();
- }
-
- c1 = 0.0; 
- c2 = 1.0;
- c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
-
- uALE = c1*uSol+c2*uSmooth;
- vALE = c1*vSol+c2*vSmooth;
- wALE = c1*wSol+c2*wSmooth;
-
- // impoe velocidade ALE = 0 no contorno
- setALEVelBC();
-
- // impoe velocidade do fluido na interface
- setInterfaceVel();
-
- // calcula velocidade do fluido atraves do metodo semi-lagrangeano
- stepSL();
-
- // movimentando os pontos da malha com velocidade ALE
- m->setX(*m->getX()+(uALE*dt));
- m->setY(*m->getY()+(vALE*dt));
- m->setZ(*m->getZ()+(wALE*dt));
- 
- // atualizacao de todas as matrizes do sistema
- assemble();
- //assembleSlip();
-
-} // fecha metodo stepALE3
 

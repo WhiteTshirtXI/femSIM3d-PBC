@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  Model3D m1,mNew,mOld,mOriginal;
  m1.readMSH(mesh);
  m1.setInterfaceBC();
- m1.meshAll();
+ m1.mesh2Dto3D();
  m1.setMiniElement();
  m1.setCubeBC();
  m1.setOFace();
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
    save.oscillatingKappa("oscillatingKappa.dat");
   }
   mOld = m1; 
-  m1.meshAll(mOriginal);
+  m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setCubeBC();
   m1.setOFace();

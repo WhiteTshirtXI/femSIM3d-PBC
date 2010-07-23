@@ -17,15 +17,14 @@
 class MeshSmooth
 {
  public:
-  MeshSmooth(Model3D &_m);
+  MeshSmooth(Model3D &_m,real _dt);
   virtual ~MeshSmooth();
 
-  clVector compute(real _dt);
+  clVector compute();
   void stepSmooth();
   void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
-  void stepSmoothTangent();
-  void stepSmoothTangent2();
-  void stepSmoothTangent3();
+  void stepSmoothSurface();
+  void stepSmoothSurface(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void setBC();
   void setCentroid();
   void setSurface();
@@ -46,8 +45,6 @@ class MeshSmooth
   clVector *idbcu,*idbcv,*idbcw,*idbcp;
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
-  clVector xAverage,yAverage,zAverage;
-  clVector *xNormalSurface,*yNormalSurface,*zNormalSurface;
 
   vector< list<int> > *neighbourVert,*surfaceViz;
   list<int> *inVert;

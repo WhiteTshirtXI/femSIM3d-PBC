@@ -44,7 +44,7 @@ SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
  oFace = m->getOFace();
 }
 
-clVector SemiLagrangean::compute(real dt)
+void SemiLagrangean::compute(real dt)
 {
  getDepartElem(dt); // procura de elemento
 
@@ -68,17 +68,9 @@ clVector SemiLagrangean::compute(real dt)
  setBC();
  setCentroid();
 
- clVector ua = uParticle;
- ua.Append(vParticle);
- ua.Append(wParticle);
- ua.Append(cParticle);
-
- // retorna clVector
- return ua; 
- 
 } // fim do metodo compute
 
-clVector SemiLagrangean::computeFreeSurface(real dt)
+void SemiLagrangean::computeFreeSurface(real dt)
 {
  getDepartElem2(dt); // procura de elemento
 
@@ -102,14 +94,6 @@ clVector SemiLagrangean::computeFreeSurface(real dt)
  setBC();
  setCentroid();
 
- clVector ua = uParticle;
- ua.Append(vParticle);
- ua.Append(wParticle);
- ua.Append(cParticle);
-
- // retorna clVector
- return ua; 
- 
 } // fim do metodo computeFreeSurface
 
 void SemiLagrangean::setCentroid()
@@ -514,4 +498,8 @@ void SemiLagrangean::jumpToElem2(int destElem,int iiVert,real R2X,
 }
 
 clMatrix* SemiLagrangean::getInterpLin(){ return &interpLin; }
+clVector* SemiLagrangean::getUSL(){ return &uParticle; }
+clVector* SemiLagrangean::getVSL(){ return &vParticle; }
+clVector* SemiLagrangean::getWSL(){ return &wParticle; }
+clVector* SemiLagrangean::getCSL(){ return &cParticle; }
 

@@ -8,7 +8,7 @@
 
 MeshSmooth::~MeshSmooth(){};
 
-MeshSmooth::MeshSmooth(Model3D &_m)
+MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
 {
  m = &_m;
  uc = m->getUC();
@@ -37,15 +37,15 @@ MeshSmooth::MeshSmooth(Model3D &_m)
  uSmoothSurface.Dim(numNodes);
  vSmoothSurface.Dim(numNodes);
  wSmoothSurface.Dim(numNodes);
+ dt = _dt;
 }
 
-clVector MeshSmooth::compute(real _dt)
+clVector MeshSmooth::compute()
 {
- dt = _dt;
  //setSurface();
 
  stepSmooth();
- //stepSmoothTangent();
+ //stepSmoothSurface();
  setCentroid();
 
  clVector aux = uSmooth;
@@ -62,9 +62,6 @@ void MeshSmooth::stepSmooth()
  list<int>::iterator vert;
  real xSum,ySum,zSum;
  real size; // numero de elementos da lista
- xAverage.Dim(numVerts);
- yAverage.Dim(numVerts);
- zAverage.Dim(numVerts);
  uSmooth.Dim(numNodes);
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
@@ -82,16 +79,16 @@ void MeshSmooth::stepSmooth()
    ySum += Y->Get(*vert);
    zSum += Z->Get(*vert);
   }
-  xAverage.Set( *it,xSum/size ); // X medio
-  aux = (xAverage.Get(*it) - X->Get(*it))/dt; // velocidade USmooth
+  real xAverage = xSum/size; // X medio
+  aux = (xAverage - X->Get(*it))/dt; // velocidade USmooth
   uSmooth.Set(*it,aux);
 
-  yAverage.Set( *it,ySum/size ); // Y medio
-  aux = (yAverage.Get(*it) - Y->Get(*it))/dt; // velocidade VSmooth
+  real yAverage = ySum/size; // Y medio
+  aux = (yAverage - Y->Get(*it))/dt; // velocidade VSmooth
   vSmooth.Set(*it,aux);
 
-  zAverage.Set( *it,zSum/size ); // Y medio
-  aux = (zAverage.Get(*it) - Z->Get(*it))/dt; // velocidade WSmooth
+  real zAverage = zSum/size; // Y medio
+  aux = (zAverage - Z->Get(*it))/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
 //--------------------------------------------------
 //   if( *it == 0 )
@@ -172,197 +169,95 @@ void MeshSmooth::setCentroid()
 
 // calcula velocidade tangencial euleriana nos vertices da interface
 // atraves da media dos vizinhos.
-void MeshSmooth::stepSmoothTangent()
-{
- // velocidade da interface eh igual a velocidade do fluido
- // para isso precisa-se encontrar os vertices da interface e impor a
- // velocidade do fluido (calculada pelo Semi-lagrangeano)
- real aux,surfaceNode;
-
- // loop nos vertices da interface
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-
-  // ******************************************************** //
-  // eh necessario pensar e refazer a estrategia!!!
-  // ******************************************************** //
-  real closer = search( i,xAverage.Get(surfaceNode),
-	                      yAverage.Get(surfaceNode),
-						  zAverage.Get(surfaceNode) );
-
-  // criando variaveis para nomear pontos e calcular vetor unitario
-  real P0x = X->Get( surfaceNode );
-  real P0y = Y->Get( surfaceNode );
-  real P0z = Z->Get( surfaceNode );
-  real P1x = X->Get( closer );
-  real P1y = Y->Get( closer );
-  real P1z = Z->Get( closer );
-
-  // calculo do vetor unitario na direcao 0-1
-  // x1Unit e y1Unit sao coordenadas do vetor unitario com origem em
-  // 0,0. Para recoloca-lo em sua posicao original eh necessario 
-  // somar P0x e P0y ao vetor unitario; 
-  real dist01 = sqrt( (P1x-P0x)*(P1x-P0x)+
-                      (P1y-P0y)*(P1y-P0y)+
-					  (P1z-P0y)*(P1z-P0y) );
-  real x1Unit = (P1x-P0x)/dist01;
-  real y1Unit = (P1y-P0y)/dist01;
-  real z1Unit = (P1z-P0z)/dist01;
-
-  // velocidade suavizada ja calculada acima
-  real velX = uSmooth.Get(surfaceNode); // velocidade na direcao x
-  real velY = vSmooth.Get(surfaceNode); // velocidade na direcao y
-  real velZ = wSmooth.Get(surfaceNode); // velocidade na direcao y
-
-  // calculo da projecao da velocidade v na direcao da aresta 0-1
-  // proj = | v.u^ | . u^
-  aux = velX*x1Unit + velY*y1Unit + velZ*z1Unit; // v.u^ (produto escalar)
-
-  //real xProj =  aux*x1Unit; 
-  //real yProj =  aux*y1Unit;
-  //real zProj =  aux*z1Unit;
-
-  uSmooth.Set(surfaceNode,0.0);
-  vSmooth.Set(surfaceNode,0.0);
-  wSmooth.Set(surfaceNode,0.0);
-  //uSmooth.Set(surfaceNode,xProj);
-  //vSmooth.Set(surfaceNode,yProj);
-  //wSmooth.Set(surfaceNode,zProj);
- }
-} // fecha metodo stepSmoothTangent
-
-// a velocidade eh calculada tomando como base a media das posicoes dos
-// vertices vizinhos pertencentes a interface. A distribuicao de pontos
-// na interface fica mais uniforme que na do metodo stepSmoothTangent.
-void MeshSmooth::stepSmoothTangent2()
-{
- real surfaceNode,aux;
- list<int> plist;
- list<int>::iterator vert;
- real xSum,ySum;
- real size; // numero de elementos da lista
-
-
- // loop nos vertices da interface
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-
-  list<int> plist;
-  list<int>::iterator vert;
-  plist = surfaceViz->at(i);
-  size = plist.size();
-  xSum = 0.0;
-  ySum = 0.0;
-  for( vert=plist.begin(); vert != plist.end(); ++vert )
-  {
-   xSum = xSum + X->Get(*vert);
-   ySum = ySum + Y->Get(*vert);
-  }
-  xAverage.Set( surfaceNode,xSum/size ); // X medio
-  aux = (xAverage.Get(surfaceNode) - X->Get(surfaceNode))/dt; // velocidade USmooth
-  uSmooth.Set(surfaceNode,aux);
-
-  yAverage.Set( surfaceNode,ySum/size ); // Y medio
-  aux = (yAverage.Get(surfaceNode) - Y->Get(surfaceNode))/dt; // velocidade VSmooth
-  vSmooth.Set(surfaceNode,aux);
-
-  real closer = search( i,xAverage.Get(surfaceNode),yAverage.Get(surfaceNode),zAverage.Get(surfaceNode) );
-
-  // criando variaveis para nomear pontos e calcular vetor unitario
-  real P0x = X->Get( surfaceNode );
-  real P0y = Y->Get( surfaceNode );
-  real P1x = X->Get( closer );
-  real P1y = Y->Get( closer );
-
-  // calculo do vetor unitario na direcao 0-1
-  // x1Unit e y1Unit sao coordenadas do vetor unitario com origem em
-  // 0,0. Para recoloca-lo em sua posicao original eh necessario 
-  // somar P0x e P0y ao vetor unitario; 
-  real dist01 = sqrt( (P1x-P0x)*(P1x-P0x)+(P1y-P0y)*(P1y-P0y) );
-  real x1Unit = (P1x-P0x)/dist01;
-  real y1Unit = (P1y-P0y)/dist01;
-
-  // velocidade suavizada ja calculada acima
-  real velX = uSmooth.Get(surfaceNode); // velocidade na direcao x
-  real velY = vSmooth.Get(surfaceNode); // velocidade na direcao y
-
-  // calculo da projecao da velocidade v na direcao da aresta 0-1
-  // proj = | v.u^ | . u^
-  aux = velX*x1Unit + velY*y1Unit; // v.u^ (produto escalar)
-  real xProj =  aux*x1Unit; 
-  real yProj =  aux*y1Unit;
-
-  //uSmooth.Set(surfaceNode,0.0);
-  //vSmooth.Set(surfaceNode,0.0);
-  uSmooth.Set(surfaceNode,xProj);
-  vSmooth.Set(surfaceNode,yProj);
- }
-} // fecha metodo stepSmoothTangent2
-
-// calcula velocidade tangencial euleriana nos vertices da interface
-// atraves da media dos vizinhos. Utiliza vetor de normais dos pontos da
-// superficie
-void MeshSmooth::stepSmoothTangent3()
+void MeshSmooth::stepSmoothSurface()
 {
  // velocidade da interface eh igual a velocidade do fluido
  // para isso precisa-se encontrar os vertices da interface e impor a
  // velocidade do fluido (calculada pelo Semi-lagrangeano)
  real aux;
+ int surfaceNode;
+ list<int> plist;
+ list<int>::iterator vert;
+ real xSum,ySum,zSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(numNodes);
+ vSmooth.Dim(numNodes);
+ wSmooth.Dim(numNodes);
 
  // loop nos vertices da interface
  for( int i=0;i<surface->Dim();i++ )
  {
-  real surfaceNode = surface->Get(i);
-
-  real xNormal = xNormalSurface->Get(surfaceNode);
-  real yNormal = yNormalSurface->Get(surfaceNode);
-  real zNormal = zNormalSurface->Get(surfaceNode);
-
-  // calculo do vetor unitario na direcao tangencial
-  // x1Unit e y1Unit sao coordenadas do vetor unitario com origem em
-  // 0,0. Para recoloca-lo em sua posicao original eh necessario 
-  // somar P0x e P0y ao vetor unitario; 
-  real len = sqrt( xNormal*xNormal+yNormal*yNormal+zNormal*zNormal );
-  real xNormalUnit = xNormal/len;
-  real yNormalUnit = yNormal/len;
-  real zNormalUnit = zNormal/len;
-	
-  // velocidade suavizada ja calculada em stepSmooth
-  real velX = uSmooth.Get(surfaceNode); // velocidade na direcao x
-  real velY = vSmooth.Get(surfaceNode); // velocidade na direcao y
-  real velZ = wSmooth.Get(surfaceNode); // velocidade na direcao y
-
-  // calculo da projecao da velocidade v na direcao da aresta 0-1
-  // proj = | v.u^ | . u^
-  aux = velX*xNormalUnit + velY*yNormalUnit + velZ*zNormalUnit;
-  //real uProj =  aux*xNormalUnit; 
-  //real vProj =  aux*yNormalUnit;
-  //real wProj =  aux*zNormalUnit;
-
-  //real uTang = velX-uProj;
-  //real vTang = velY-vProj;
-  //real wTang = velZ-wProj;
-
+  surfaceNode = surface->Get(i);
+  plist = neighbourVert->at(surfaceNode);
+  size = plist.size();
+  xSum = 0.0;
+  ySum = 0.0;
+  zSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   xSum += X->Get(*vert);
+   ySum += Y->Get(*vert);
+   zSum += Z->Get(*vert);
+  }
+  real xAverage = xSum/size; // X medio
+  aux = (xAverage - X->Get( surfaceNode ))/dt;
+  uSmooth.Set( surfaceNode,aux );
 //--------------------------------------------------
 //   cout << surfaceNode << " " 
-//        << velX << " " << velY << " " 
-// 	   << uProj << " " << vProj << " "
-// 	   << xNormalUnit << " " << yNormalUnit << " "
-//        << uTang << " " << vTang << endl;
+//        << xAverage << " "
+//        << xAverage-X->Get(surfaceNode) << " "
+//        << (xAverage-X->Get(surfaceNode)/dt) << " "
+//        << X->Get(surfaceNode) << endl;
 //-------------------------------------------------- 
 
-  uSmooth.Set(surfaceNode,0.0);
-  vSmooth.Set(surfaceNode,0.0);
-  wSmooth.Set(surfaceNode,0.0);
-  // subtraindo componente normal
-  //uSmooth.Set(surfaceNode,uTang);
-  //vSmooth.Set(surfaceNode,vTang);
-  //wSmooth.Set(surfaceNode,wTang);
- }
-} // fecha metodo stepSmoothTangent3
+  real yAverage = ySum/size; // Y medio
+  aux = (yAverage - Y->Get( surfaceNode ))/dt;
+  vSmooth.Set( surfaceNode,aux );
 
+  real zAverage = zSum/size; // Z medio
+  aux = (zAverage - Z->Get( surfaceNode))/dt;
+  wSmooth.Set( surfaceNode,aux );
+ }
+} // fecha metodo stepSmoothSurface
+
+// calcula velocidade tangencial nos vertices da interface
+// atraves da media da posicao dos vizinhos.
+void MeshSmooth::stepSmoothSurface(clVector &_uVel,
+                                   clVector &_vVel,
+								   clVector &_wVel)
+{
+ // velocidade da interface eh igual a velocidade do fluido
+ // para isso precisa-se encontrar os vertices da interface e impor a
+ // velocidade do fluido (calculada pelo Semi-lagrangeano)
+ int surfaceNode;
+ list<int> plist;
+ list<int>::iterator vert;
+ real uSum,vSum,wSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(numNodes);
+ vSmooth.Dim(numNodes);
+ wSmooth.Dim(numNodes);
+
+ // loop nos vertices da interface
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  surfaceNode = surface->Get(i);
+  plist = neighbourVert->at(surfaceNode);
+  size = plist.size();
+  uSum = 0.0;
+  vSum = 0.0;
+  wSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   uSum += _uVel.Get(*vert);
+   vSum += _vVel.Get(*vert);
+   wSum += _wVel.Get(*vert);
+  }
+  uSmooth.Set( surfaceNode,uSum/size ); 
+  vSmooth.Set( surfaceNode,vSum/size ); 
+  wSmooth.Set( surfaceNode,wSum/size ); 
+ }
+} // fecha metodo stepSmoothSurface
 
 void MeshSmooth::setSurface()
 {

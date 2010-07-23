@@ -52,10 +52,18 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
- const int restart = 0;
-
- if( restart == 1 )
+ if( (*(argv+1)) == NULL )
  {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
   const char *mesh2 = "./vtk/sim-last-0.vtk";
 
   m1.readVTK(mesh2);
@@ -115,7 +123,7 @@ int main(int argc, char **argv)
    save.saveDistance(simFolder,"dist",s1.getTime2());
   }
   mOld = m1;
-  m1.reMeshAll();
+  m1.mesh3DPoints();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation();

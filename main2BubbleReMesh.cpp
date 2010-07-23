@@ -80,7 +80,7 @@ int main(int argc, char **argv)
    //save.oscillatingD("oscillatingD.dat");
    //save.oscillatingKappa("oscillatingKappa.dat");
   }
- m1.reMeshAll();
+ m1.mesh3DPoints();
  Simulator3D s2(m1,s1);
  s1 = s2; 
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));

@@ -412,7 +412,12 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
   }
  }
 
- tetrahedralize("Q",&in,&out,NULL,NULL);
+ cout << endl;
+ cout << "----> meshing... ";
+ tetrahedralize( (char*) "Q",&in,&out,NULL,NULL );
+ cout << "finished <---- " << endl;;
+ cout << endl;
+
  //out.save_elements("out");
  //out.save_nodes("out");
  numElems = out.numberoftetrahedra;
@@ -669,7 +674,12 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   in.pointlist[3*i+2] = Z.Get(i);
  }
 
- tetrahedralize("Q",&in,&out);
+ cout << endl;
+ cout << "----> meshing... ";
+ tetrahedralize( (char*) "Q",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
+
  //out.save_elements("out");
  //out.save_nodes("out");
  numElems = out.numberoftetrahedra;
@@ -686,7 +696,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  }
 }
 
-void Model3D::meshAll()
+void Model3D::mesh2Dto3D()
 {
  // cria objeto de malha do tetgen
  tetgenio in,out;
@@ -719,10 +729,10 @@ void Model3D::meshAll()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
- in.regionlist[3] = -10;
+ in.regionlist[0] = X.Min();
+ in.regionlist[1] = Y.Min();
+ in.regionlist[2] = Z.Min();
+ in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -765,8 +775,12 @@ void Model3D::meshAll()
  cout << "numNodes IN = " << numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
- tetrahedralize("QYYApq1.4241a0.05",&in,&out);
- //tetrahedralize("QpYY",&in,&out);
+ cout << endl;
+ cout << "----> meshing... ";
+ tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
+ //tetrahedralize( (char*) "QpYY",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
  
  numElems = out.numberoftetrahedra;
  numNodes = out.numberofpoints+numElems;
@@ -781,41 +795,43 @@ void Model3D::meshAll()
  //out.save_faces("out");
 
  // varre lista de elementos e passa para estrutura IEN
- inElem.resize (0);
- outElem.resize (0);
  IEN.Dim(numElems,5);
  cc.Dim(numVerts);
+ inElem.resize (0);
+ outElem.resize (0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
-  for( int j=0;j<4;j++ )
-  {
-   int vertice = out.tetrahedronlist[i*4+j];
-   IEN.Set(i,j,vertice);
-  }
-  // setting de cc = 0 para fora da bolha
-  if( out.tetrahedronattributelist[i] == -10 )
+  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  if( out.tetrahedronattributelist[i] == 1 )
   {
    outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
-  // setting de cc = 1 para dentro da bolha respectivamente
-  if( out.tetrahedronattributelist[i] != -10 )
+  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  else 
   {
    inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
  }
 
  // atualizando valores de X,Y,Z,uc,vc,wc e pc
- // setting para cc na superficie
  X.Dim(numNodes);
  Y.Dim(numNodes);
  Z.Dim(numNodes);
@@ -824,27 +840,20 @@ void Model3D::meshAll()
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
-  //cout << out.pointmarkerlist[i] << endl;
-
-  if( out.pointmarkerlist[i] == 10 || out.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
  }
 }
  
-void Model3D::meshAll(Model3D &_mOriginal)
+void Model3D::mesh2Dto3DOriginal()
 {
- IEN = IENOriginal;
- numVerts = numVertsOriginal;
-
  // cria objeto de malha do tetgen
  tetgenio in,out;
  in.mesh_dim = 3;
- in.numberofpoints = numVerts;
+ in.numberofpoints = numVertsOriginal;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
- // adiciona na estrutura tetgen as coordenadas dos pontos
- for( int i=0;i<numVerts;i++ )
+ // adiciona na estrutura tetgen as coordenadas dos pontos atuais
+ for( int i=0;i<numVertsOriginal;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
   in.pointlist[3*i+1] = Y.Get(i);
@@ -866,25 +875,25 @@ void Model3D::meshAll(Model3D &_mOriginal)
  in.numberofregions = 1; 
  in.regionlist = new REAL[in.numberofregions*4];
 
- // fora da bolha
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
- in.regionlist[3] = -10;
+ // definindo regiao fora da bolha
+ in.regionlist[0] = X.Min();
+ in.regionlist[1] = Y.Min();
+ in.regionlist[2] = Z.Min();
+ in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
- in.numberoffacets = IEN.DimI(); 
+ in.numberoffacets = IENOriginal.DimI(); 
  in.facetlist = new tetgenio::facet[in.numberoffacets]; 
  in.facetmarkerlist = new int[in.numberoffacets];
  //in.trifacemarkerlist = new int[in.numberoffacets];
 
  // definindo a superficie da bolha e convex-hull
- for( int i=0;i<IEN.DimI();i++ )
+ for( int i=0;i<IENOriginal.DimI();i++ )
  {
-  int v1 = IEN.Get(i,0);
-  int v2 = IEN.Get(i,1);
-  int v3 = IEN.Get(i,2);
+  int v1 = IENOriginal.Get(i,0);
+  int v2 = IENOriginal.Get(i,1);
+  int v3 = IENOriginal.Get(i,2);
   f = &in.facetlist[i];
   f->numberofpolygons = 1;
   f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
@@ -901,8 +910,6 @@ void Model3D::meshAll(Model3D &_mOriginal)
    in.facetmarkerlist[i] = 10;
   else
    in.facetmarkerlist[i] = 20;
-
-  //in.trifacemarkerlist[i] = 1;
  }
 
  //in.save_poly("bubble");
@@ -912,8 +919,12 @@ void Model3D::meshAll(Model3D &_mOriginal)
  cout << "numNodes IN = " << numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
- //tetrahedralize("QYYApq1.4241",&in,&out);
- tetrahedralize("QYYApq1.4241a0.05",&in,&out);
+ cout << endl;
+ cout << "----> meshing... ";
+ //tetrahedralize( (char*) "QYYApq1.4241",&in,&out );
+ tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
 
  numElems = out.numberoftetrahedra;
  numNodes = out.numberofpoints+numElems;
@@ -934,36 +945,37 @@ void Model3D::meshAll(Model3D &_mOriginal)
  outElem.resize (0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
-  for( int j=0;j<4;j++ )
-  {
-   int vertice = out.tetrahedronlist[i*4+j];
-   IEN.Set(i,j,vertice);
-  }
-
-  // setting de cc = 0 para fora da bolha
-  if( out.tetrahedronattributelist[i] == -10 )
+  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  if( out.tetrahedronattributelist[i] == 1 )
   {
    outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
-  // setting de cc = 1 para dentro da bolha 
-  if( out.tetrahedronattributelist[i] != -10 )
+  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  else 
   {
    inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
  }
 
  // atualizando valores de X,Y,Z,uc,vc,wc e pc
- // setting para cc na superficie
  X.Dim(numNodes);
  Y.Dim(numNodes);
  Z.Dim(numNodes);
@@ -972,13 +984,10 @@ void Model3D::meshAll(Model3D &_mOriginal)
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
-
-  if( out.pointmarkerlist[i] == 10 || out.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
  }
 }
 
-void Model3D::reMeshAll()
+void Model3D::mesh3DPoints()
 {
  // cria objeto de malha do tetgen
  tetgenio in,out;
@@ -1010,6 +1019,7 @@ void Model3D::reMeshAll()
   in.pointlist[3*i+2] = Z.Get(i);
  }
 
+ // este procedimento foi substiuido pelo flag AA
  /* ESTE PROCEDIMENTO DEFINE REGIOES NA MALHA E APOS A INSERCAO/RETIRADA
   * DE PONTOS PELO TETGEN, CONSEGUIMOS RECONHECER A LOCALIZACAO DOS
   * PONTOS E ASSIM PODEMOS DEFINIR NOVAMENTE A FUNCAO MARCADORA COMO
@@ -1020,10 +1030,23 @@ void Model3D::reMeshAll()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
- in.regionlist[3] = -10;
+ in.regionlist[0] = X.Min();
+ in.regionlist[1] = Y.Min();
+ in.regionlist[2] = Z.Min();
+ in.regionlist[3] = 1;
+
+ /* as regioes do dominio (dentro e fora da bolha) sao definidas usando o 
+  * flag AA em  tetrahedralize. O tetgen marca 1 para fora da bolha e 2
+  * para dentro da bolha. Eh importante notar que esta marcacao eh em
+  * nivel de elementos e NAO de pontos. Para definir os pontos da
+  * superficie e com isso a funcao marcadora corretamente eh necessario
+  * utilizar uma funcao marcadora de pontos do tetgen: pointmarkerlist.
+  * --> este flag foi testado e nao pode ser usado sem a definicao
+  *  explicita da regiao externa a bolha (regionlist). O resultado foi
+  *  que de um passo para o outro ele inverte o tag da regiao, i.e.,
+  *  define a regiao dentro da bolha com 1 e depois de 60 passos define
+  *  a mesma regiao com 2.
+  */
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -1065,7 +1088,11 @@ void Model3D::reMeshAll()
  cout << "numNodes IN = " << numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
- tetrahedralize("QYYApq1.4241a0.05",&in,&out);
+ cout << endl;
+ cout << "----> meshing... ";
+ tetrahedralize( (char*) "QYYRAApq1.4241a0.05",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
 
  numElems = out.numberoftetrahedra;
  numNodes = out.numberofpoints+numElems;
@@ -1086,36 +1113,37 @@ void Model3D::reMeshAll()
  outElem.resize (0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
-  for( int j=0;j<4;j++ )
-  {
-   int vertice = out.tetrahedronlist[i*4+j];
-   IEN.Set(i,j,vertice);
-  }
-
-  // setting de cc = 0 para fora da bolha
-  if( out.tetrahedronattributelist[i] == -10 )
+  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  if( out.tetrahedronattributelist[i] == 1 )
   {
    outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
-  // setting de cc = 1 para dentro da bolha 
-  if( out.tetrahedronattributelist[i] != -10 )
+  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  else 
   {
    inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
+	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
+	if( out.pointmarkerlist[vertice] == 10 ||
+	    out.pointmarkerlist[vertice] == 22 )
+	 cc.Set(vertice,0.5);
    }
   }
  }
 
  // atualizando valores de X,Y,Z,uc,vc,wc e pc
- // setting para cc na superficie
  X.Dim(numNodes);
  Y.Dim(numNodes);
  Z.Dim(numNodes);
@@ -1124,9 +1152,6 @@ void Model3D::reMeshAll()
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
-
-  if( out.pointmarkerlist[i] == 10 || out.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
  }
 }
 

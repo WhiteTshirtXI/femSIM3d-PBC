@@ -42,8 +42,9 @@ class Simulator3D
   void assembleM();
   void assemble();
   void assembleSlip();
-  void assembleNuZ();
   void assembleNuCte();
+  void assembleNuZ();
+  void assembleNuC();
   void matMount();
   void matMountC();
 
@@ -55,7 +56,7 @@ class Simulator3D
   void stepALEVel();
   void stepSmooth();
   void setInterfaceVel();
-  void setInterfaceVel2();
+  void setInterfaceVelNormal();
   void  stepMesh();
 
   void setRHS();
@@ -165,7 +166,7 @@ class Simulator3D
   //clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
   clVector uSL,vSL,wSL,cSL;
   clVector uALE,vALE,wALE;
-  clVector uSmooth,vSmooth,wSmooth;
+  clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
   clVector uALEOld,vALEOld,wALEOld;
   clVector uSolOld,vSolOld,wSolOld,pSolOld;
 

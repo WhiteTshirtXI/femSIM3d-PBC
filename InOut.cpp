@@ -107,6 +107,9 @@ void InOut::saveSol( const char* _dir,const char* _filename, int iter )
  vec.Append(*wSol);
  vec.Append(*pSol);
  vec.Append(*cSol); // adicionando o vetor concentracao no vetor Vel+Pressao
+ vec.Append(*uALE);
+ vec.Append(*vALE);
+ vec.Append(*wALE);
 
  string fileUVWPC = _dir;
  string aux = _filename;
@@ -318,7 +321,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
- vtkFile << setprecision(6) << fixed; 
+ vtkFile << setprecision(10) << scientific; 
  for( int i=0;i<numVerts;i++ )
   vtkFile << setw(10) << X->Get(i) << " " 
           << setw(10) << Y->Get(i) << " " 
@@ -349,7 +352,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- vtkFile << setprecision(6) << fixed; 
+ vtkFile << setprecision(10) << scientific; 
  for( int i=0;i<numVerts;i++ )
   vtkFile << setw(10) << pc->Get(i) << endl;
 
@@ -462,7 +465,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
  vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- vtkFile << setprecision(10) << fixed;
+ vtkFile << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   vtkFile << pSol->Get(i) << endl;
 
@@ -655,7 +658,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
  vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- vtkFile << setprecision(10) << fixed;
+ vtkFile << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   vtkFile << pSol->Get(i) << endl;
 
@@ -847,7 +850,7 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int iter,
  int v1 = (int) Xaux.Get(0);
  int v2;
  //vonKarmanFile << setprecision(4) << setw(11) << setfill(' ') << scientific; 
- vonKarmanFile << setprecision(6) << fixed; 
+ vonKarmanFile << setprecision(10) << scientific; 
  vonKarmanFile << "#z         F         G         H         c         p" << endl; 
  for( int i=0;i<Xaux.Dim();i++ )
  {
@@ -1521,7 +1524,7 @@ void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
- vtkFile << setprecision(6) << fixed; 
+ vtkFile << setprecision(10) << scientific; 
  for( int i=0;i<numVerts;i++ )
   vtkFile << setw(10) << X->Get(i) << " " 
           << setw(10) << Y->Get(i) << " " 
@@ -1551,7 +1554,7 @@ void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
  vtkFile << "SCALARS pressure double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
- vtkFile << setprecision(10) << fixed;
+ vtkFile << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   vtkFile << pSol->Get(i) << endl;
 
@@ -1670,7 +1673,7 @@ void InOut::saveDistance(const char* _dir,const char* _filename,real time )
  real dist1 = Ymin1-Ymax2;
  real dist2 = Ymax1-Ymin2;
 
- dist << setprecision(10) << fixed; 
+ dist << setprecision(10) << scientific; 
  dist << setw(9) <<  time << " " << Ymin1 << " " << Ymax2 << " " 
                                  << Ymax1 << " " << Ymin2 << " " 
 								 << dist1 << " " << dist2 << endl;
@@ -1680,3 +1683,183 @@ void InOut::saveDistance(const char* _dir,const char* _filename,real time )
  cout << "2 bubbles distance iter saved in ASCII " << dist1 << endl;
 }
 
+void InOut::saveMeshInfo(const char* _dir,const char* _filename )
+{
+ real *time = s->getTime();
+ string file = _dir;
+ string aux = _filename;
+ file += aux;
+ const char* filename = file.c_str();
+
+ ofstream mesh( filename,ios::app );
+
+ mesh << setprecision(10) << scientific; 
+ mesh << setw(9) <<  *time << " " << numVerts << " " 
+                                 << numNodes << " " 
+                                 << numElems << endl; 
+
+ mesh.close();
+
+ cout << "meshing info saved" << endl;
+}
+
+//--------------------------------------------------
+// void InOut::saveVTU( const char* _dir,const char* _filename, int iter )
+// {
+//  IEN = m->getIEN();
+//  numElems = m->getNumElems();
+//  simTime = s->getTime();
+// 
+//  stringstream ss;  //convertendo int --> string
+//  string str;
+//  ss << iter;
+//  ss >> str;
+// 
+//  // concatenando nomes para o nome do arquivo final
+//  string file = _dir;
+//  string aux = _filename;
+//  file += aux + "-" + str + ".vtk";
+//  const char* filename = file.c_str();
+// 
+//  ofstream vtuFile( filename ); 
+// 
+//  vtuFile << "# vtk DataFile Version 1.0" << endl;
+//  vtuFile << "3D Simulation C++" << endl;
+//  vtuFile << "ASCII" << endl;
+//  vtuFile << "DATASET UNSTRUCTURED_GRID" << endl;
+//  vtuFile << "FIELD FieldData 2" << endl;
+//  vtuFile << "TIME 1 1 double" << endl;
+//  vtuFile << *simTime << endl;
+//  vtuFile << "ITERATION 1 1 int" << endl;
+//  vtuFile << iter << endl;
+//  vtuFile << endl;
+//  vtuFile << "POINTS " << numVerts << " double" << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtuFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
+// 
+//  vtuFile << endl;
+//  
+//  vtuFile << "CELLS " << numElems << " " << 5*numElems << endl;
+//  for( int i=0;i<numElems;i++ )
+//  {
+//   vtuFile << "4 " << IEN->Get(i,0) << " "  
+//                   << IEN->Get(i,1) << " " 
+//                   << IEN->Get(i,2) << " " 
+//                   << IEN->Get(i,3) << endl;
+//  };
+//  vtuFile << endl;
+// 
+//  vtuFile <<  "CELL_TYPES " << numElems << endl;
+//  for( int i=0;i<numElems;i++ )
+//   vtuFile << "10 ";
+// 
+//  vtuFile << endl;
+//  vtuFile << endl;
+// 
+//  vtuFile << "POINT_DATA " << numVerts << endl;
+// 
+//  vtuFile << "SCALARS pressure double" << endl;
+//  vtuFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  vtuFile << setprecision(10) << scientific;
+//  for( int i=0;i<numVerts;i++ )
+//   vtuFile << pSol->Get(i) << endl;
+// 
+//  vtuFile << endl;
+// 
+//  // este if existe pois nem todos os metodos tem cc
+//  if( cSol->Dim() > 0 )
+//  {
+//   vtuFile << "SCALARS concentration double" << endl;
+//   vtuFile << "LOOKUP_TABLE default"  << endl;
+// 
+//   for( int i=0;i<numVerts;i++ )
+//    vtuFile << cSol->Get(i) << endl;
+// 
+//   vtuFile << endl;
+//  }
+// 
+//  vtuFile << "SCALARS u double" << endl;
+//  vtuFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtuFile << uSol->Get(i) << endl;
+// 
+//  vtuFile << endl;
+// 
+//  vtkFile << "SCALARS v double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << vSol->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS w double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << wSol->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS uALE double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << uALE->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS vALE double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << vALE->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS wALE double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << wALE->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS kappa double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << kappa->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "SCALARS distance double" << endl;
+//  vtkFile << "LOOKUP_TABLE default"  << endl;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << distance->Get(i) << endl;
+// 
+//  vtkFile << endl;
+// 
+//  vtkFile << "VECTORS velocity double" << endl;
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << uSol->Get(i) << " " 
+//           << vSol->Get(i) << " " 
+// 		  << wSol->Get(i) << endl;
+//  vtkFile << endl;
+// 
+//  vtkFile << "VECTORS fint double" << endl;
+//  for( int i=0;i<numVerts;i++ )
+//   vtkFile << fint->Get(i) << " " 
+//           << fint->Get(i+numVerts) << " " 
+// 		  << fint->Get(i+numVerts*2) << endl;
+// 
+//  vtkFile.close();
+// 
+//  cout << "solution num. " << iter << " saved in VTK" << endl;
+// 
+// } // fecha metodo saveVtk
+//-------------------------------------------------- 

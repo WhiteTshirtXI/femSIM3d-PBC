@@ -157,6 +157,7 @@ class InOut
   void oscillatingD(const char* _file);
   void oscillatingKappa(const char* _file);
   void saveDistance(const char* _dir,const char* _filename,real time );
+  void saveMeshInfo(const char* _dir,const char* _filename );
 
 
 private:

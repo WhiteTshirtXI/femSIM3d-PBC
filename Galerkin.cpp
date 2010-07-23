@@ -22,7 +22,7 @@ Galerkin::Galerkin(Model3D &_m,clVector &_uSol,
  gz = _gz;
 }
 
-clVector Galerkin::compute(real dt)
+void Galerkin::compute(real dt)
 {
  clDMatrix diagU(uSol);
  clDMatrix diagV(vSol);
@@ -42,20 +42,21 @@ clVector Galerkin::compute(real dt)
  wSol.CopyTo(0,wVert);
  cSol.CopyTo(0,cVert);
 
- clVector convU = (-1)*conv * uVert; 
- clVector convV = (-1)*conv * vVert;
- clVector convW = (-1)*conv * wVert;
- clVector convC = (-1)*conv * cVert;
+ convU = (-1)*conv * uVert; 
+ convV = (-1)*conv * vVert;
+ convW = (-1)*conv * wVert;
+ convC = (-1)*conv * cVert;
+
+ // condicao de contorno
  convU = convU.MultVec(*outflow);
  convV = convV.MultVec(*outflow);
  convW = convW.MultVec(*outflow);
  //convC = convC.MultVec(*outflow);
 
- convU.Append(convV);
- convU.Append(convW);
- convU.Append(convC);
-
- return convU;
-
 } // fecha metodo compute 
+
+clVector* Galerkin::getConvU(){ return &convU; }
+clVector* Galerkin::getConvV(){ return &convV; }
+clVector* Galerkin::getConvW(){ return &convW; }
+clVector* Galerkin::getConvC(){ return &convC; }
 

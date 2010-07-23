@@ -22,7 +22,7 @@ class Interface3D
  {
   public:
    Interface3D(Model3D &_m); // construtor padrao
-   //virtual ~Interface2D(); // destrutor padrao
+   virtual ~Interface3D(); // destrutor padrao
 
   clVector curvature1();
   clVector curvature2();
@@ -39,10 +39,8 @@ class Interface3D
 	                        clVector &_kappaNy,
 							clVector &_kappaNz);
   void setSolverSmooth(Solver *s);
-  void saveSurfaceVTK();
   clVector getCloser();
   clVector crossProd(real x1,real y1,real z1,real x2,real y2,real z2);
-
 
   Solver *solverC;
  private:

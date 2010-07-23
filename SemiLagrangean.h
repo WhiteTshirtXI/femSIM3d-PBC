@@ -17,8 +17,8 @@ class SemiLagrangean
 				 clVector &_velU,clVector &_velV,clVector &_velW,
 				 clVector &_cSol);
 
-  clVector compute(real dt);
-  clVector computeFreeSurface(real dt);
+  void compute(real dt);
+  void computeFreeSurface(real dt);
   void getDepartElem(real dt);
   void getDepartElem2(real dt);
   void jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
@@ -31,6 +31,10 @@ class SemiLagrangean
   void meshInterp(clVector &_X,clVector &_Y,clVector &_Z);
   void jumpToElem2(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
   clMatrix* getInterpLin();
+  clVector* getUSL();
+  clVector* getVSL();
+  clVector* getWSL();
+  clVector* getCSL();
 
  private:
   Model3D *m;

@@ -52,10 +52,9 @@ class Model3D
   void setCouetteBC();
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
-  void meshAll();
-  void meshAll(Model3D &_mOriginal);
-  void reMeshAll();
-  void reMeshAllOLD();
+  void mesh2Dto3D();
+  void mesh2Dto3DOriginal();
+  void mesh3DPoints();
   void setNuCteDiskBC();
   void setNuCDiskBC();
   void setNuZDiskBC();

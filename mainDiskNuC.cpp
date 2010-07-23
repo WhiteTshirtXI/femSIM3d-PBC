@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
  s1.init();
- s1.assembleSlip();
+ s1.assembleNuC();
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");

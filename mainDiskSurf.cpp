@@ -25,7 +25,6 @@ int main(int argc, char **argv)
  const char *vtk  = "vtk/sim";
 
  Model3D m1;
- //m1.readVTK(mesh);
  m1.setMeshDisk(6,6,6);
  m1.setMiniElement();
  m1.setDiskFSBC();

@@ -25,20 +25,27 @@ int main(int argc, char **argv)
  real We = 10;
  real alpha = 1;
  real beta = 0;
- real cfl = 7;
+ real cfl = 120;
 
+ //const char *mesh = "../../db/gmsh/3D/cube-tube2D.msh";
  const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
+//--------------------------------------------------
+//  const char *txtFolder  = "/scratch2/gustavo/cubeCube/txt/";
+//  const char *binFolder  = "/scratch2/gustavo/cubeCube/bin/";
+//  const char *vtkFolder  = "/scratch2/gustavo/cubeCube/vtk/";
+//  const char *datFolder  = "/scratch2/gustavo/cubeCube/dat/";
+//-------------------------------------------------- 
  int iter = 0;
 
  Model3D m1,mOld,mOriginal;
 
  m1.readMSH(mesh);
  m1.setInterfaceBC();
- m1.meshAll();
+ m1.mesh2Dto3D();
  m1.setMiniElement();
  m1.setOFace();
  m1.setSurfaceConfig();
@@ -74,7 +81,9 @@ int main(int argc, char **argv)
   cout << endl;
 
   const char *mesh2 = "./vtk/sim-last-0.vtk";
-  //const char *mesh2 = "./vtk/sim-565.vtk";
+  //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-last-0.vtk";
+  //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-1740.vtk";
+  //const char *mesh2 = "./vtk/sim-50.vtk";
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
@@ -99,17 +108,18 @@ int main(int argc, char **argv)
 
   s1.loadSolution(binFolder,"sim-last",0);
   iter = s1.loadIteration();
-  //s1.loadSolution(binFolder,"UVWPC",565); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",565);
+  //s1.loadSolution(binFolder,"UVWPC",1740); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",1740);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKTri(vtkFolder,"geometry",0);
+ save.saveMeshInfo("./","meshingInfo.dat" );
  save.saveInfo("./",mesh);
  save.printInfo("./",mesh);
 
- int nIter = 1;
+ int nIter = 30;
  int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
@@ -139,7 +149,8 @@ int main(int argc, char **argv)
    save.oscillatingKappa("oscillatingKappa.dat");
   }
   mOld = m1; 
-  m1.meshAll(mOriginal);
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();
@@ -156,6 +167,7 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim-last",0);
   saveEnd.saveSol(binFolder,"sim-last",0);
   saveEnd.saveSimTime(iter+nReMesh*nIter);
+  saveEnd.saveMeshInfo("./","meshingInfo.dat" );
  }
 
  PetscFinalize();

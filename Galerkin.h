@@ -16,7 +16,7 @@ class Galerkin
 					   clMatrix &_gx,
 					   clMatrix &_gy,
 					   clMatrix &_gz);
-  clVector compute(real dt);
+  void compute(real dt);
 
   int numVerts,numNodes,numElems;
   real dt;
@@ -27,6 +27,14 @@ class Galerkin
   clMatrix IEN;
   clVector uSol,vSol,wSol,cSol;
   clMatrix gx,gy,gz;
+
+  clVector* getConvU();
+  clVector* getConvV();
+  clVector* getConvW();
+  clVector* getConvC();
+
+ private:
+  clVector convU,convV,convW,convC;
 
 };
 

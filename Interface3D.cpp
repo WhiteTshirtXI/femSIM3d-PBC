@@ -37,8 +37,11 @@ Interface3D::Interface3D(Model3D &_m)
  zCenter = m->getZCenter();
  bubbleRadius = m->getBubbleRadius();
  setSolverSmooth(new PCGSolver());
+}
 
- //saveSurfaceVTK();
+Interface3D::~Interface3D()
+{
+ delete solverC;
 }
 
 clVector Interface3D::curvature1()
@@ -623,73 +626,6 @@ clVector Interface3D::dsearchn(clVector _X,clVector _Y,clVector _Z,
 }
 
 void Interface3D::setSolverSmooth(Solver *s){ solverC = s; }
-
-// rotina nao funciona pois cada vertice da superfice tem o mapeamento
-// das faces vizinhas e com isso as faces se repetem ao longo da
-// impressao das celulas, impossibilitando a construcao da malha da
-// bolha
-void Interface3D::saveSurfaceVTK()
-{
- int v0,v1,v2,surfaceNode;
- list<int> plist,plist2;
- list<int>::iterator face,vert;
-
- const char* filename = "vtk/surface.vtk";
- ofstream vtkFile( filename ); 
-
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "Bubble Surface 3D C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "POINTS " << surface->Dim() << " float" << endl;
-
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-  vtkFile << X->Get(surfaceNode) << " " 
-          << Y->Get(surfaceNode) << " " 
-		  << Z->Get(surfaceNode) << endl;
- }
- vtkFile << endl;
- 
- vtkFile << "CELLS " << neighbourFaceVert->size() << " " 
-         << 4*neighbourFaceVert->size() << endl;
-
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-  plist = elemSurface->at (surfaceNode); 
-  for( face=plist.begin();face!=plist.end();++face )
-  {
-   v0 = surfaceNode;
-   plist2 = neighbourFaceVert->at (*face);
-   vert=plist2.begin();
-   v1 = *vert;
-   ++vert;
-   v2 = *vert;
-   vtkFile << "3 " << v0 << " " << v1 << " " << v2 << endl;
-  }
- }
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << neighbourFaceVert->size() << endl;
- for( int i=0;i<neighbourFaceVert->size();i++ )
-  vtkFile << "5 ";
-
- vtkFile << endl;
-
- vtkFile <<  "SURFACE NODES " << endl;
- for( int i=0;i<surface->Dim();i++ )
- {
-  surfaceNode = surface->Get(i);
-  vtkFile << surfaceNode << endl;
- }
- vtkFile << endl;
- vtkFile.close();
-
- cout << "malha da superfie da bolha gravada em VTK" << endl;
-
-} // fecha metodo saveSurfaceVTK
 
 clVector Interface3D::getCloser(){ return closer; }
 

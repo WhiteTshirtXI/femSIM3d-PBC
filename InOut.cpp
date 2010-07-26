@@ -122,6 +122,17 @@ void InOut::saveSol( const char* _dir,const char* _filename, int iter )
 
  UVWPC_file.close();
 
+ // copiando para arquivo sim-last.bin
+ ifstream inFile( filenameUVWPC,ios::binary ); 
+
+ string last = (string) _dir + "sim-last" + ".bin";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+
  cout << "solucao no.  " << iter << " gravada em binario" << endl;
  
 } // fecha metodo saveSol 
@@ -313,9 +324,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename ); 
-
  vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "Modelo 3D C++" << endl;
+ vtkFile << "3D Simulation C++" << endl;
  vtkFile << "ASCII" << endl;
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << endl;
@@ -561,6 +571,17 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 		  << fint->Get(i+numVerts*2) << endl;
 
  vtkFile.close();
+
+ // copiando para arquivo sim-last.bin
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + "sim-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
 
  cout << "solution num. " << iter << " saved in VTK" << endl;
 

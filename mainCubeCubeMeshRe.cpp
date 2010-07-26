@@ -25,7 +25,7 @@ int main(int argc, char **argv)
  real We = 10;
  real alpha = 1;
  real beta = 0;
- real cfl = 120;
+ real cfl = 10;
 
  //const char *mesh = "../../db/gmsh/3D/cube-tube2D.msh";
  const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
 
-  const char *mesh2 = "./vtk/sim-last-0.vtk";
+  const char *mesh2 = "./vtk/sim-last.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-last-0.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-1740.vtk";
   //const char *mesh2 = "./vtk/sim-50.vtk";
@@ -106,8 +106,8 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
-  s1.loadSolution(binFolder,"sim-last",0);
-  iter = s1.loadIteration();
+  s1.loadSolution(binFolder,"sim-last");
+  iter = s1.loadIteration(vtkFolder,"sim-last");
   //s1.loadSolution(binFolder,"UVWPC",1740); // set para velocidade no simulador
   //iter = s1.loadIteration(vtkFolder,"sim",1740);
  }
@@ -119,14 +119,14 @@ int main(int argc, char **argv)
  save.saveInfo("./",mesh);
  save.printInfo("./",mesh);
 
- int nIter = 30;
+ int nIter = 1;
  int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
   {
    cout << "____________________________________ Iteration: " 
-	<< i*nReMesh+j+iter << endl;
+	    << i*nReMesh+j+iter << endl;
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
@@ -149,8 +149,8 @@ int main(int argc, char **argv)
    save.oscillatingKappa("oscillatingKappa.dat");
   }
   mOld = m1; 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
+  m1.mesh2Dto3DOriginal();
+  //m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();
@@ -164,9 +164,9 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-last",0);
-  saveEnd.saveSol(binFolder,"sim-last",0);
-  saveEnd.saveSimTime(iter+nReMesh*nIter);
+  saveEnd.saveVTK(vtkFolder,"sim-remeshing",iter+nReMesh*nIter-1);
+  saveEnd.saveSol(binFolder,"UVWPC-remeshing",iter+nReMesh*nIter-1);
+  saveEnd.saveSimTime(iter+nReMesh*nIter-1);
   saveEnd.saveMeshInfo("./","meshingInfo.dat" );
  }
 

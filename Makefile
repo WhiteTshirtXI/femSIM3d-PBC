@@ -55,6 +55,7 @@ clean:
 	@rm -f ns3dBubble
 	@find . -name "*~" -exec rm {} \;
 	@rm -f ./oscillating*
+	@rm -f ./mesh*
 	@rm -f ./vtk/*.vtk
 	@rm -f ./sim/vk?.*
 	@rm -f ./bin/*.bin

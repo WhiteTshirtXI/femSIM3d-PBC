@@ -15,6 +15,7 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  vc = m->getVC();
  wc = m->getWC();
  pc = m->getPC();
+ cc = m->getCC();
  X = m->getX();
  Y = m->getY();
  Z = m->getZ();
@@ -219,6 +220,56 @@ void MeshSmooth::stepSmoothSurface()
   wSmooth.Set( surfaceNode,aux );
  }
 } // fecha metodo stepSmoothSurface
+
+// igual a stepSmoothSurface, porem pega apenas os vertices que estao
+// localizados na superficie
+void MeshSmooth::stepSmoothSurface2()
+{
+ // velocidade da interface eh igual a velocidade do fluido
+ // para isso precisa-se encontrar os vertices da interface e impor a
+ // velocidade do fluido (calculada pelo Semi-lagrangeano)
+ real aux;
+ int surfaceNode;
+ list<int> plist;
+ list<int>::iterator vert;
+ real xSum,ySum,zSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(numNodes);
+ vSmooth.Dim(numNodes);
+ wSmooth.Dim(numNodes);
+
+ // loop nos vertices da interface
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  surfaceNode = surface->Get(i);
+  plist = neighbourVert->at(surfaceNode);
+  size = 0.0;
+  xSum = 0.0;
+  ySum = 0.0;
+  zSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   if( cc->Get(*vert) == 0.5 )
+   {
+	xSum += X->Get(*vert);
+	ySum += Y->Get(*vert);
+	zSum += Z->Get(*vert);
+	size++;
+   }
+  }
+  real xAverage = xSum/size; // X medio
+  aux = (xAverage - X->Get( surfaceNode ))/dt;
+  uSmooth.Set( surfaceNode,aux );
+
+  real yAverage = ySum/size; // Y medio
+  aux = (yAverage - Y->Get( surfaceNode ))/dt;
+  vSmooth.Set( surfaceNode,aux );
+
+  real zAverage = zSum/size; // Z medio
+  aux = (zAverage - Z->Get( surfaceNode ))/dt;
+  wSmooth.Set( surfaceNode,aux );
+ }
+} // fecha metodo stepSmoothSurface2
 
 // calcula velocidade tangencial nos vertices da interface
 // atraves da media da posicao dos vizinhos.

@@ -24,6 +24,7 @@ class MeshSmooth
   void stepSmooth();
   void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void stepSmoothSurface();
+  void stepSmoothSurface2();
   void stepSmoothSurface(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void setBC();
   void setCentroid();
@@ -41,7 +42,7 @@ class MeshSmooth
   real dt;
   int numNodes,numVerts,numElems;
   clVector *X,*Y,*Z;
-  clVector *uc,*vc,*wc,*pc;
+  clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp;
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;

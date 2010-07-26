@@ -209,6 +209,7 @@ clVector Interface3D::computeKappa1()
    yCross += cross.Get(1);
    zCross += cross.Get(2);
 
+   // area do elemento triangular com vertices ( P0,P1m,P2m )
    real area = 0.5*sqrt( cross.Get(0)*cross.Get(0)+
                          cross.Get(1)*cross.Get(1)+
                          cross.Get(2)*cross.Get(2));
@@ -402,7 +403,7 @@ clVector Interface3D::computeKappa2()
    real yRetaUnit = yReta/c;
    real zRetaUnit = zReta/c;
 
-   // calculando o produto vetorial de cada elemento na superficie
+   // calculando o produto vetorial de cada elemento triangular da superficie
    clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
    xCross += cross.Get(0);
    yCross += cross.Get(1);
@@ -417,7 +418,7 @@ clVector Interface3D::computeKappa2()
    real yRes = y1Unit+y2Unit;
    real zRes = z1Unit+z2Unit;
 
-   // produto escalar --> projecao do vetor Unit no segmento de reta
+   // produto escalar --> projecao do vetor Res no segmento de reta
    // | Unit.RetaUnit | . RetaUnit
    // resultado = vetor tangente a reta situado na superficie
    real prod = xRes*xRetaUnit + yRes*yRetaUnit + zRes*zRetaUnit;

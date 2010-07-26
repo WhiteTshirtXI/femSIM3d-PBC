@@ -57,7 +57,6 @@ class Simulator3D
   void stepSmooth();
   void setInterfaceVel();
   void setInterfaceVelNormal();
-  void  stepMesh();
 
   void setRHS();
   void setCRHS();
@@ -137,7 +136,9 @@ class Simulator3D
   void operator=(Simulator3D &_s);
   int loadIteration();
   int loadIteration( const char* _dir,const char* _filename,int _iter );
+  int loadIteration( const char* _dir,const char* _filename );
   void loadSolution( const char* _dir,const char* _filename,int _iter );
+  void loadSolution( const char* _dir,const char* _filename );
   void applyLinearInterpolation(Model3D &_mOld);
   real getBubbleVelocity();
   void setALEVelBC();

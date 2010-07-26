@@ -1284,64 +1284,6 @@ void Simulator3D::stepLagrangianZ()
 
 } // fecha metodo stepLagragianZ
 
-void Simulator3D::stepMesh()
-{
- stepSmooth();
-
- c2 = 1.0;
-
- uALE = c2*uSmooth;
- vALE = c2*vSmooth;
- wALE = c2*wSmooth;
-
- // atualiza ALE nos pontos de contorno 
- int aux;
- for( int i=0;i<idbcu->Dim();i++ )
- {
-  aux = (int) idbcu->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcv->Dim();i++ )
- {
-  aux = (int) idbcv->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcw->Dim();i++ )
- {
-  aux = (int) idbcw->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<idbcp->Dim();i++ )
- {
-  aux = (int) idbcp->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- for( int i=0;i<surface->Dim();i++ )
- {
-  aux = (int) surface->Get(i);
-  uALE.Set( aux,0.0 ); 
-  vALE.Set( aux,0.0 ); 
-  wALE.Set( aux,0.0 ); 
- }
-
- // movimentando os pontos da malha com velocidade ALE
- m->setX(*m->getX()+(uALE*dt));
- m->setY(*m->getY()+(vALE*dt));
- m->setZ(*m->getZ()+(wALE*dt));
-}
-
 void Simulator3D::stepALE()
 {
  // calcula velocidade elastica - dependente das coordenadas dos pontos
@@ -1418,17 +1360,15 @@ void Simulator3D::stepALEVel()
  setALEVelBC();
 
  // calcula velocidade elastica - dependente das velocidades dos pontos
- //setInterfaceVelNormal();
- for( int i=0;i<1;i++ )
+ setInterfaceVelNormal();
+ for( int i=0;i<50;i++ )
  {
-//--------------------------------------------------
-//   // smoothing - coordenadas
-//   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
-//   e1.stepSmoothSurface();
-//   uSmoothCoord = *e1.getUSmooth();
-//   vSmoothCoord = *e1.getVSmooth();
-//   wSmoothCoord = *e1.getWSmooth();
-//-------------------------------------------------- 
+  // smoothing - coordenadas
+  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+  e1.stepSmoothSurface();
+  uSmoothCoord = *e1.getUSmooth();
+  vSmoothCoord = *e1.getVSmooth();
+  wSmoothCoord = *e1.getWSmooth();
 
   // smoothing - velocidade
   MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
@@ -1510,12 +1450,9 @@ void Simulator3D::setInterfaceVelNormal()
  {
   int surfaceNode = surface->Get(i);
 
-  real xCross = 0;
-  real yCross = 0;
-  real zCross = 0;
-  real xCrossUnit = 0;
-  real yCrossUnit = 0;
-  real zCrossUnit = 0;
+  real sumXCrossUnit = 0;
+  real sumYCrossUnit = 0;
+  real sumZCrossUnit = 0;
 
   plist = elemSurface->at (surfaceNode);
   for( face=plist.begin();face!=plist.end();++face )
@@ -1537,63 +1474,70 @@ void Simulator3D::setInterfaceVelNormal()
    real P2y = Y->Get(v2);
    real P2z = Z->Get(v2);
 
-   // distance do ponto 0 ate ponto 1
-   real a = sqrt( (P0x-P1x)*(P0x-P1x)+
-	              (P0y-P1y)*(P0y-P1y)+
-				  (P0z-P1z)*(P0z-P1z) );
+   // vetores
+   real x1 = P1x-P0x;
+   real y1 = P1y-P0y;
+   real z1 = P1z-P0z;
+   real x2 = P2x-P0x;
+   real y2 = P2y-P0y;
+   real z2 = P2z-P0z;
 
-   // distance do ponto 0 ate ponto 2
-   real b = sqrt( (P0x-P2x)*(P0x-P2x)+
-	              (P0y-P2y)*(P0y-P2y)+
-				  (P0z-P2z)*(P0z-P2z) );
-   
-   // vetores unitarios
-   real x1Unit = (P1x-P0x)/a;
-   real y1Unit = (P1y-P0y)/a;
-   real z1Unit = (P1z-P0z)/a;
-   real x2Unit = (P2x-P0x)/b;
-   real y2Unit = (P2y-P0y)/b;
-   real z2Unit = (P2z-P0z)/b;
+   // produto vetorial para encontrar a normal a superficie do triangulo
+   real xCross = (y1*z2)-(z1*y2);
+   real yCross = -( (x1*z2)-(z1*x2) );
+   real zCross = (x1*y2)-(y1*x2);
 
-   xCross += (y1Unit*z2Unit)-(z1Unit*y2Unit);
-   yCross += -( (x1Unit*z2Unit)-(z1Unit*x2Unit) );
-   zCross += (x1Unit*y2Unit)-(y1Unit*x2Unit);
-
+   // norma do vetor cross( xCross,yCross,zCross )
    real len = sqrt( (xCross*xCross)+(yCross*yCross)+(zCross*zCross) );
 
-   xCrossUnit = xCross/len;
-   yCrossUnit = yCross/len;
-   zCrossUnit = zCross/len;
+   // area calculada atraves da normal
+   //real area = 0.5*len;
+
+   // ponderando a normal (resultante do produto vetorial) com a area do
+   // triangulo, i.e., quem tem a menor area tem um peso maior na
+   // tangente
+   sumXCrossUnit += xCross/len;
+   sumYCrossUnit += yCross/len;
+   sumZCrossUnit += zCross/len;
 
    //wALE.Set(aux,wSol.Get(aux)-bubbleZVelocity);
 
   }
-  // produto escalar --> projecao do vetor Unit no segmento de reta
+  
+  // norma do vetor sumCrossUnit( sumXCrossUnit,sumYCrossUnit,sumZCrossUnit )
+  real len2 = sqrt( sumXCrossUnit*sumXCrossUnit +
+	                sumYCrossUnit*sumYCrossUnit +
+					sumZCrossUnit*sumZCrossUnit );
+
+  // unitario do vetor normal (ponderado com a area) resultante
+  real xNormalUnit = sumXCrossUnit/len2;
+  real yNormalUnit = sumYCrossUnit/len2;
+  real zNormalUnit = sumZCrossUnit/len2;
+
+  // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
-  // resultado = vetor tangente a reta situado na superficie
-  real prod = uSol.Get(surfaceNode)*xCrossUnit + 
-              vSol.Get(surfaceNode)*yCrossUnit + 
-			  wSol.Get(surfaceNode)*zCrossUnit;
-  real uSolNormal = xCrossUnit*prod;
-  real vSolNormal = yCrossUnit*prod;
-  real wSolNormal = zCrossUnit*prod;
+  // resultado = vetor normal a reta situado na superficie
+  real prod = uSol.Get(surfaceNode)*xNormalUnit+ 
+              vSol.Get(surfaceNode)*yNormalUnit + 
+			  wSol.Get(surfaceNode)*zNormalUnit;
+  real uSolNormal = xNormalUnit*prod;
+  real vSolNormal = yNormalUnit*prod;
+  real wSolNormal = zNormalUnit*prod;
 
   // tratamento da superficie
-//--------------------------------------------------
-//   // produto escalar --> projecao do vetor Unit no segmento de reta
-//   // | Unit.RetaUnit | . RetaUnit
-//   // resultado = vetor tangente a reta situado na superficie
-//   real prod2 = uSmoothCoord.Get(surfaceNode)*xCrossUnit + 
-//                vSmoothCoord.Get(surfaceNode)*yCrossUnit + 
-// 			   wSmoothCoord.Get(surfaceNode)*zCrossUnit;
-//   real uSmoothNormal = xCrossUnit*prod2;
-//   real vSmoothNormal = yCrossUnit*prod2;
-//   real wSmoothNormal = zCrossUnit*prod2;
-// 
-//   real uSmoothTangent = uSmoothCoord.Get(surfaceNode) - uSmoothNormal;
-//   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
-//   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
-//-------------------------------------------------- 
+  // produto escalar --> projecao do vetor normalUnit no segmento de reta
+  // | Unit.RetaUnit | . RetaUnit
+  // resultado = vetor normal a reta situado na superficie
+  real prod2 = uSmoothCoord.Get(surfaceNode)*xNormalUnit + 
+               vSmoothCoord.Get(surfaceNode)*yNormalUnit + 
+			   wSmoothCoord.Get(surfaceNode)*zNormalUnit;
+  real uSmoothNormal = xNormalUnit*prod2;
+  real vSmoothNormal = yNormalUnit*prod2;
+  real wSmoothNormal = zNormalUnit*prod2;
+
+  real uSmoothTangent = uSmoothCoord.Get(surfaceNode) - uSmoothNormal;
+  real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
+  real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
   //uALE.Set(surfaceNode,uSolNormal+uSmoothTangent);
   //vALE.Set(surfaceNode,vSolNormal+vSmoothTangent);
@@ -1675,7 +1619,7 @@ void Simulator3D::setInterface()
 void Simulator3D::setInterfaceGeo()
 {
  Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa2();
+ clVector kappaAux = interface.computeKappa1();
 
  //interface.plotKappa(kappaAux);
  kappa = interface.setKappaSurface(kappaAux);
@@ -2440,6 +2384,39 @@ void Simulator3D::operator=(Simulator3D &_sRight)
 }
 
 void Simulator3D::loadSolution( const char* _dir,
+                                const char* _filename )
+{
+ string fileUVWPC = (string) _dir + (string) _filename + ".bin";
+ const char* filenameUVWPC = fileUVWPC.c_str();
+
+ clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
+
+ ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
+
+ if( !UVWPC_file)
+ {
+  cerr << "Solution file is missing for reading!" << endl;
+  exit(1);
+ }
+
+ UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
+
+ UVWPC_file.close();
+
+ aux2.CopyTo(0,uSol);
+ aux2.CopyTo(numNodes,vSol);
+ aux2.CopyTo(2*numNodes,wSol);
+ aux2.CopyTo(3*numNodes,pSol);
+ aux2.CopyTo(3*numNodes+numVerts,cSol);
+ aux2.CopyTo(3*numNodes+2*numVerts,uALE);
+ aux2.CopyTo(4*numNodes+2*numVerts,vALE);
+ aux2.CopyTo(5*numNodes+2*numVerts,wALE);
+
+ cout << "solucao <<last>> lida em binario" << endl;
+ 
+} // fecha metodo loadSol 
+
+void Simulator3D::loadSolution( const char* _dir,
                                 const char* _filename, 
 								int _iter )
 {
@@ -2448,10 +2425,16 @@ void Simulator3D::loadSolution( const char* _dir,
  ss << _iter;
  ss >> str;
 
+ cout << _iter << endl;
+
  string fileUVWPC = _dir;
  string aux = _filename;
  fileUVWPC += aux + "-" + str + ".bin";
  const char* filenameUVWPC = fileUVWPC.c_str();
+
+ cout << endl;
+ cout << filenameUVWPC << endl;
+ cout << endl;
 
  clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
 
@@ -2485,16 +2468,57 @@ int Simulator3D::loadIteration()
  ifstream simTime( "./sim/simTime.dat",ios::in ); 
 
  real _time;
- int _iter;
+ int iterNumber;
 
- simTime >> _iter;
+ simTime >> iterNumber;
  simTime >> _time;
  time = _time;
 
  simTime.close();
 
- cout << "time = " << _time << " " << "itereracao: " << _iter << endl;
- return _iter;
+ cout << "time = " << _time << " " << "itereracao: " << iterNumber << endl;
+ return iterNumber+1;
+} // fecha metodo loadIteration
+
+int Simulator3D::loadIteration( const char* _dir, 
+                                const char* _filename )
+{
+ string filename = (string) _dir + (string) _filename  + ".vtk";
+ const char* File = filename.c_str();
+
+ ifstream vtkFile( File,ios::in );
+
+ char auxstr[255];
+ real time;
+ int iterNumber;
+
+ if( !vtkFile )
+ {
+  cerr << "VTK Mesh file is missing for TIME and ITERATION reading!" << endl;
+  exit(1);
+ }
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"TIME") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> time;
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> iterNumber;
+
+ vtkFile.close();
+
+ setTime(time); 
+
+ return iterNumber+1;
 } // fecha metodo loadIteration
 
 int Simulator3D::loadIteration( const char* _dir, 
@@ -2506,10 +2530,13 @@ int Simulator3D::loadIteration( const char* _dir,
  ss << _iter;
  ss >> str;
 
- string iteration = _dir;
- string aux = _filename;
- iteration += aux + "-" + str + ".vtk";
- const char* File = iteration.c_str();
+ string filename = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* File = filename.c_str();
+
+ cout << endl;
+ cout << File << endl;
+ cout << endl;
+
 
  ifstream vtkFile( File,ios::in );
 
@@ -2519,7 +2546,7 @@ int Simulator3D::loadIteration( const char* _dir,
 
  if( !vtkFile )
  {
-  cerr << "VTK Mesh file is missing for TIME reading!" << endl;
+  cerr << "VTK Mesh file is missing for TIME and ITERATION reading!" << endl;
   exit(1);
  }
 

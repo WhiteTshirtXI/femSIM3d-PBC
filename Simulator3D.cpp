@@ -1361,7 +1361,7 @@ void Simulator3D::stepALEVel()
 
  // calcula velocidade elastica - dependente das velocidades dos pontos
  setInterfaceVelNormal();
- for( int i=0;i<50;i++ )
+ for( int i=0;i<1;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1513,6 +1513,13 @@ void Simulator3D::setInterfaceVelNormal()
   real xNormalUnit = sumXCrossUnit/len2;
   real yNormalUnit = sumYCrossUnit/len2;
   real zNormalUnit = sumZCrossUnit/len2;
+
+//--------------------------------------------------
+//   cout << surfaceNode << " " 
+//        << len2 << " " 
+//        << sumXCrossUnit << " " << sumYCrossUnit << " " << sumZCrossUnit << " "
+//        << xNormalUnit << " " << yNormalUnit << " " << zNormalUnit << endl;
+//-------------------------------------------------- 
 
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit

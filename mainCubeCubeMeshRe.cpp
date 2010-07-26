@@ -25,7 +25,7 @@ int main(int argc, char **argv)
  real We = 10;
  real alpha = 1;
  real beta = 0;
- real cfl = 10;
+ real cfl = 50;
 
  //const char *mesh = "../../db/gmsh/3D/cube-tube2D.msh";
  const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   const char *mesh2 = "./vtk/sim-last.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-last-0.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-1740.vtk";
-  //const char *mesh2 = "./vtk/sim-50.vtk";
+  //const char *mesh2 = "./vtk/sim-1109.vtk";
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
@@ -108,8 +108,8 @@ int main(int argc, char **argv)
 
   s1.loadSolution(binFolder,"sim-last");
   iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",1740); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",1740);
+  //s1.loadSolution(binFolder,"UVWPC",1109); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",1109);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -149,8 +149,8 @@ int main(int argc, char **argv)
    save.oscillatingKappa("oscillatingKappa.dat");
   }
   mOld = m1; 
-  m1.mesh2Dto3DOriginal();
-  //m1.mesh3DPoints();
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();

@@ -20,6 +20,13 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
+ real Re = 500;
+ real Sc = 2;
+ real We = 10;
+ real alpha = 1;
+ real beta = 0;
+ real cfl = 50;
+
  const char *mesh = "../../db/gmsh/3D/microCube-cube2D.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
@@ -28,6 +35,7 @@ int main(int argc, char **argv)
  int iter = 0;
 
  Model3D m1,mNew,mOld,mOriginal;
+
  m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.mesh2Dto3D();
@@ -36,27 +44,31 @@ int main(int argc, char **argv)
  m1.setOFace();
  m1.setSurfaceConfig();
 
- mOriginal = m1;
-
  Simulator3D s1(m1);
 
- s1.setRe(200);
- s1.setSc(2);
- s1.setWe(10);
- s1.setAlpha(1);
- s1.setBeta(0.0);
- //s1.setSigma(0.0);
- s1.setCflBubble(500);
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setWe(We);
+ s1.setAlpha(alpha);
+ s1.setBeta(beta);
+ s1.setCflBubble(cfl);
  s1.init();
-
  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
- const int restart = 1;
-
- if( restart == 1 )
+ if( (*(argv+1)) == NULL )
  {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )  
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
   const char *mesh2 = "./vtk/sim-last-0.vtk";
   //const char *mesh2 = "./vtk/sim-220.vtk";
 
@@ -67,15 +79,8 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
 
-  Simulator3D s2(m1);
+  Simulator3D s2(m1,s1);
   s1 = s2; 
-
-  s1.setRe(200);
-  s1.setSc(2);
-  s1.setWe(10);
-  s1.setAlpha(1);
-  s1.setBeta(0.0);
-  s1.setCflBubble(2500);
   s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
   s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
@@ -89,6 +94,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry",0);
+ save.saveMeshInfo("./","meshingInfo" );
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
@@ -99,7 +105,8 @@ int main(int argc, char **argv)
   for( int j=0;j<nReMesh;j++ )
   {
    cout << "____________________________________ Iteration: " 
-	<< i*nReMesh+j+iter << endl;
+	    << i*nReMesh+j+iter << endl;
+
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALE2();
@@ -116,10 +123,12 @@ int main(int argc, char **argv)
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
-   save.saveSolTXT(datFolder,"UVWPC",i*nReMesh+j+iter);
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+
+   cout << "________________________________________ END of "
+	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
@@ -136,10 +145,11 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-last",0);
-  saveEnd.saveSol(binFolder,"sim-last",0);
-  saveEnd.saveSolTXT(datFolder,"sim-last",0);
-  saveEnd.saveSimTime(iter+nReMesh*nIter);
+  saveEnd.saveVTK(vtkFolder,"sim-remeshing",iter+nReMesh*nIter-1);
+  saveEnd.saveSol(binFolder,"UVWPC-remeshing",iter+nReMesh*nIter-1);
+  saveEnd.saveSimTime(iter+nReMesh*nIter-1);
+  saveEnd.saveMeshInfo("./","meshingInfo" );
+
  }
 
  PetscFinalize();

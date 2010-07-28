@@ -2399,13 +2399,9 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  rho = _sRight.rho;
  Fold = _sRight.Fold;
 
- // verificar este swap!!! Nao sei se esta correto.
- //solverV = _sRight.solverV;
- //solverP = _sRight.solverP;
- //solverC = _sRight.solverC;
- swap(solverV,_sRight.solverV);
- swap(solverP,_sRight.solverP);
- swap(solverC,_sRight.solverC);
+ solverV = _sRight.solverV;
+ solverP = _sRight.solverP;
+ solverC = _sRight.solverC;
 }
 
 void Simulator3D::loadSolution( const char* _dir,

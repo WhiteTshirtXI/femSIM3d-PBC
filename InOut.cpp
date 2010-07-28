@@ -1402,7 +1402,6 @@ void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
  }
  else
  {
-  ofstream file( filename );
   cout << "Creating file " << _filename << ".dat" << endl;
   file << "#time" << setw(22) << "velocity U" 
                   << setw(17) << "velocity V" 
@@ -1464,7 +1463,6 @@ void InOut::oscillating(int point1,int point2,int point3,const char* _filename)
  }
  else
  {
-  ofstream file( _filename );
   cout << "Creating file " << _filename << ".dat" << endl;
   file << "#time" << setw(22) << "velocity U" 
                   << setw(17) << "velocity V" 
@@ -1497,7 +1495,6 @@ void InOut::oscillatingD(int point1,int point2,int point3,int point4,
  }
  else
  {
-  ofstream file( _filename );
   cout << "Creating file " << _filename << ".dat" << endl;
   file << "#time" << setw(22) << "diameter X" 
                   << setw(17) << "diameter Y" 
@@ -1544,7 +1541,6 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
  }
  else
  {
-  ofstream file( filename );
   cout << "Creating file " << _filename << ".dat" << endl;
   file << "#time" << setw(22) << "diameter X" 
                  << setw(17) << "diameter Y" 
@@ -1621,7 +1617,6 @@ void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
  }
  else
  {
-  ofstream file( filename );
   cout << "Creating file " << _filename << ".dat" << endl;
   file << "#time" << setw(17) << "kappa" 
 				  << setw(21) << "iteration" 
@@ -1831,12 +1826,25 @@ void InOut::saveDistance(const char* _dir,const char* _filename,real time )
 void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 {
  real *time = s->getTime();
- string file = _dir;
- string aux = _filename;
- file += aux;
+ string file = (string) _dir + (string) _filename + ".dat";
  const char* filename = file.c_str();
 
+ ifstream testFile( filename );
  ofstream mesh( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  mesh << "#time" << setw(20) << "numVerts" 
+                  << setw(9) << "numNodes" 
+				  << setw(9) << "numElems"
+				  << endl;
+ }
+
 
  mesh << setprecision(10) << scientific; 
  mesh << setw(9) <<  *time << " " << numVerts << " " 

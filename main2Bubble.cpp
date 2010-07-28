@@ -93,9 +93,9 @@ int main(int argc, char **argv)
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveVTKTri(vtkFolder,"geometry",0);
- save.saveInfo("./",mesh);
- save.printInfo("./",mesh);
+ save.saveVTKSurface(vtkFolder,"geometry",0);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  int nIter = 1;
  int nReMesh = 5;
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
    save.saveDistance(simFolder,"dist",s1.getTime2());
   }

@@ -46,8 +46,8 @@ int main(int argc, char **argv)
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveInfo("./",mesh);
- save.printInfo("./",mesh);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  //save.loadSol(s1,dir,bin,count);
  for( int i=0;i<1000;i++ )

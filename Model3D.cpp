@@ -432,6 +432,7 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
+ delete[] in.pointlist;
 }
 
 void Model3D::setStepBC()
@@ -694,6 +695,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
+ delete[] in.pointlist;
 }
 
 void Model3D::mesh2Dto3D()
@@ -810,9 +812,6 @@ void Model3D::mesh2Dto3D()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
@@ -824,9 +823,6 @@ void Model3D::mesh2Dto3D()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
  }
@@ -840,6 +836,9 @@ void Model3D::mesh2Dto3D()
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
+  if( out.pointmarkerlist[i] == 10 ||
+   	  out.pointmarkerlist[i] == 22 )
+   cc.Set(i,0.5);
  }
 }
  
@@ -954,9 +953,6 @@ void Model3D::mesh2Dto3DOriginal()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
@@ -968,9 +964,6 @@ void Model3D::mesh2Dto3DOriginal()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
  }
@@ -984,6 +977,9 @@ void Model3D::mesh2Dto3DOriginal()
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
+  if( out.pointmarkerlist[i] == 10 ||
+	  out.pointmarkerlist[i] == 22 )
+   cc.Set(i,0.5);
  }
 }
 
@@ -1011,12 +1007,19 @@ void Model3D::mesh3DPoints()
    in.pointmarkerlist[i] = 33;
  }
 
- // adicionando pontos na malha original
+ // pontos da malha separados em 2 loops
+ // adicionando pontos na malha original (2D superficie)
  for( int i=numVertsOriginal;i<numVerts;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
   in.pointlist[3*i+1] = Y.Get(i);
   in.pointlist[3*i+2] = Z.Get(i);
+  if( cc.Get(i) == 0.0 )
+   in.pointmarkerlist[i] = 11;
+  if( cc.Get(i) == 0.5 )
+   in.pointmarkerlist[i] = 22;
+  if( cc.Get(i) == 1.0 )
+   in.pointmarkerlist[i] = 33;
  }
 
  // este procedimento foi substiuido pelo flag AA
@@ -1090,7 +1093,7 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  cout << "----> meshing... ";
- tetrahedralize( (char*) "QYYRAApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "QYYRApq1.4241a0.05",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -1122,9 +1125,6 @@ void Model3D::mesh3DPoints()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
@@ -1136,9 +1136,6 @@ void Model3D::mesh3DPoints()
 	int vertice = out.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
-	if( out.pointmarkerlist[vertice] == 10 ||
-	    out.pointmarkerlist[vertice] == 22 )
-	 cc.Set(vertice,0.5);
    }
   }
  }
@@ -1152,6 +1149,9 @@ void Model3D::mesh3DPoints()
   X.Set(i,out.pointlist[3*i+0]);
   Y.Set(i,out.pointlist[3*i+1]);
   Z.Set(i,out.pointlist[3*i+2]);
+  if( out.pointmarkerlist[i] == 10 ||
+	  out.pointmarkerlist[i] == 22 )
+   cc.Set(i,0.5);
  }
 }
 
@@ -2359,7 +2359,8 @@ void Model3D::setQuadElement()
    IEN.Set(elem,9,node);
   }
  }
- //delete faces;
+
+ delete[] faces;
 }
 
 void Model3D::setNeighbour()
@@ -2746,7 +2747,7 @@ void Model3D::setSurfaceTri()
   IENTri.Set(i,2,edge[it].p2 );
   it=it+3;
  }
- //delete edge;
+ delete[] edge;
 }
 
 void Model3D::setOutTri()
@@ -2880,9 +2881,6 @@ void Model3D::setOFace()
    k++;
   }
  }
-
-
-
 
 //--------------------------------------------------
 //  // ------------------ HELP
@@ -3258,7 +3256,7 @@ void Model3D::setOFace()
    }
   }
  }
- delete faces;
+ delete[] faces;
 
 }
 

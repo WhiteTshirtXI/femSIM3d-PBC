@@ -95,11 +95,11 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
 
 InOut::~InOut(){}
 
-void InOut::saveSol( const char* _dir,const char* _filename, int iter )
+void InOut::saveSol( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  clVector vec = *uSol;
@@ -133,15 +133,15 @@ void InOut::saveSol( const char* _dir,const char* _filename, int iter )
  inFile.close();
  outFile.close();
 
- cout << "solucao no.  " << iter << " gravada em binario" << endl;
+ cout << "solution No.  " << _iter << " saved in binary" << endl;
  
 } // fecha metodo saveSol 
 
-void InOut::loadSol( const char* _dir,const char* _filename, int iter )
+void InOut::loadSol( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string fileUVWPC = _dir;
@@ -174,15 +174,15 @@ void InOut::loadSol( const char* _dir,const char* _filename, int iter )
 //  s->setCSol(solC); // impondo a concentracao no simulador
 //-------------------------------------------------- 
 
- cout << "solucao no.  " << iter << " lida em binario" << endl;
+ cout << "solution No.  " << _iter << " read in binary" << endl;
  
 } // fecha metodo loadSol 
 
-void InOut::saveSolTXT( const char* _dir,const char* _filename, int iter )
+void InOut::saveSolTXT( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  clVector vec = *uSol;
@@ -206,15 +206,15 @@ void InOut::saveSolTXT( const char* _dir,const char* _filename, int iter )
  UVWPC_file << endl;
  UVWPC_file.close();
 
- cout << "solucao no.  " << iter << " gravada em TXT" << endl;
+ cout << "solucao no.  " << _iter << " gravada em TXT" << endl;
  
 } // fecha metodo saveSolTXT 
 
-void InOut::saveTXT( const char* _dir,const char* _filename, int iter )
+void InOut::saveTXT( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  clVector vec = *uSol;
@@ -284,7 +284,7 @@ void InOut::saveTXT( const char* _dir,const char* _filename, int iter )
  D_file.close();
  outflow_file.close();
 
- cout << "sistema no.  " << iter << " gravado em TXT" << endl;
+ cout << "sistema no.  " << _iter << " gravado em TXT" << endl;
 
 } // fecha metodo saveTXT 
 
@@ -417,7 +417,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 
 } // fecha metodo saveVTK 
 
-void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
+void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 {
  IEN = m->getIEN();
  numElems = m->getNumElems();
@@ -425,7 +425,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
 
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  // concatenando nomes para o nome do arquivo final
@@ -444,7 +444,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -583,15 +583,15 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int iter )
  inFile.close();
  outFile.close();
 
- cout << "solution num. " << iter << " saved in VTK" << endl;
+ cout << "solution No. " << _iter << " saved in VTK" << endl;
 
 } // fecha metodo saveVtk
 
-void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
+void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  // concatenando nomes para o nome do arquivo final
@@ -610,7 +610,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -746,7 +746,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int iter )
  vtkFile << endl;
  vtkFile.close();
 
- cout << "solution num. " << iter << " saved in VTK" << endl;
+ cout << "solution No. " << _iter << " saved in VTK" << endl;
 
 } // fecha metodo saveVtk
 
@@ -841,12 +841,12 @@ void InOut::matrixPrint( clDMatrix &_m,const char* _filename )
  matrixFile.close();
 } // fecha metodo matrixPrint para matrizes diagonais
 
-void InOut::saveVonKarman(const char* _dir,const char* _filename,int iter,
+void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
                           int vertice )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string file = _dir;
@@ -889,15 +889,15 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int iter,
 
  vonKarmanFile.close();
 
- cout << "von Karman num. " << iter << " saved in ASCII" << endl;
+ cout << "von Karman num. " << _iter << " saved in ASCII" << endl;
 }
 
-void InOut::savePert(const char* _dir,const char* _filename,int iter,
+void InOut::savePert(const char* _dir,const char* _filename,int _iter,
                      int vertice)
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string file = _dir;
@@ -955,14 +955,14 @@ void InOut::savePert(const char* _dir,const char* _filename,int iter,
 
  vonKarmanFile.close();
 
- cout << "von Karman perturb no. " << iter << " saved in ASCII" << endl;
+ cout << "von Karman perturb no. " << _iter << " saved in ASCII" << endl;
 }
 
-void InOut::saveVortX(const char* _dir,const char* _filename,int iter)
+void InOut::saveVortX(const char* _dir,const char* _filename,int _iter)
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string file = _dir;
@@ -1000,7 +1000,7 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int iter)
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -1036,15 +1036,15 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
  vtkFile.close();
 
- cout << "vorticidade em X no. " << iter << " gravada em VTK" << endl;
+ cout << "vorticidade em X no. " << _iter << " gravada em VTK" << endl;
 
 }
 
-void InOut::saveVortY(const char* _dir,const char* _filename,int iter)
+void InOut::saveVortY(const char* _dir,const char* _filename,int _iter)
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string file = _dir;
@@ -1081,7 +1081,7 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int iter)
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -1117,15 +1117,15 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
  vtkFile.close();
 
- cout << "vorticidade em Y no. " << iter << " gravada em VTK" << endl;
+ cout << "vorticidade em Y no. " << _iter << " gravada em VTK" << endl;
 
 }
 
-void InOut::saveVortZ(const char* _dir,const char* _filename,int iter)
+void InOut::saveVortZ(const char* _dir,const char* _filename,int _iter)
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  string file = _dir;
@@ -1162,7 +1162,7 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int iter)
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -1198,7 +1198,7 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int iter)
  vtkFile << endl;
  vtkFile.close();
 
- cout << "vorticidade em W no. " << iter << " gravada em VTK" << endl;
+ cout << "vorticidade em W no. " << _iter << " gravada em VTK" << endl;
 
 }
 
@@ -1207,7 +1207,7 @@ void InOut::saveTime(const char* _comment)
  ofstream file( "relatorio.dat",ios::app );
  if( !file )
  {
-  cerr << "erro na abertura do arquivo de relatorio";
+  cerr << "error to open report file";
   exit(1);
  }
 
@@ -1223,7 +1223,7 @@ void InOut::saveSimTime(int _iter)
  ofstream file( "./sim/simTime.dat",ios::trunc );
  if( !file )
  {
-  cerr << "erro na abertura do arquivo de relatorio";
+  cerr << "error to open simTime file";
   exit(1);
  }
 
@@ -1263,6 +1263,7 @@ int InOut::loadIter()
  simTime.close();
 
  cout << "time = " << time << " " << "itereracao: " << iter << endl;
+
  return iter;
 } // fecha metodo loadIter
 
@@ -1303,18 +1304,17 @@ int InOut::loadIter( const char* filename )
  return iter;
 } // fecha metodo loadIter
 
-void InOut::saveInfo(const char* _dir,const char* _mesh)
+void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
 {
- string path = _dir;
- path += + "info.dat";
+ string path = (string) _dir + (string) _filename + ".dat";
  const char* filePath = path.c_str();
  ofstream file( filePath,ios::app );
 
  time_t currentTime;
 
  time( &currentTime );
+ file << "----------------------- BEGIN ----------------------" << endl; 
  file << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
- file << "work directory:  " << _dir << endl;
  file << "mesh:            " << _mesh << endl;
  file << "numVerts:        " << numVerts << endl;
  file << "numNodes:        " << numNodes << endl;
@@ -1330,49 +1330,86 @@ void InOut::saveInfo(const char* _dir,const char* _mesh)
  file << "beta number:     " << beta << endl;
  file << "CFL number:      " << cfl << endl;
  file << "dt:              " << dt << endl;
+ file << "----------------------------------------------------" << endl; 
+ file << endl;
  file << endl;
 
  file.close();
- cout << "arquivo de informacoes da simulacao gravado!" << endl;
+ cout << "simulation INFO file saved!" << endl;
 }
 
-void InOut::printInfo(const char* _dir,const char* _mesh)
+void InOut::printInfo(const char* _mesh)
 {
- string path = _dir;
- path += + "info.dat";
- const char* filePath = path.c_str();
- ofstream file( filePath,ios::app );
-
  time_t currentTime;
 
  time( &currentTime );
- cout << "-------------- INFO ----------------" << endl; 
+ cout << endl;
+ cout << endl;
+ cout << "              ";
+ cout << "----------------------- INFO -----------------------" << endl; 
+ cout << "               ";
  cout << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
- cout << "work directory:  " << _dir << endl;
+ cout << "               ";
  cout << "mesh:            " << _mesh << endl;
+ cout << "               ";
  cout << "numVerts:        " << numVerts << endl;
+ cout << "               ";
  cout << "numNodes:        " << numNodes << endl;
+ cout << "               ";
  cout << "numElems:        " << numElems << endl;
+ cout << "               ";
  cout << "Lin Sys dim UVW: " << 3*numNodes << " x " << 3*numNodes << endl;
+ cout << "               ";
  cout << "Lin Sys dim P:   " << numVerts << " x " << numVerts << endl;
+ cout << "               ";
  cout << "Lin Sys dim C:   " << numVerts << " x " << numVerts << endl;
+ cout << "               ";
  cout << "Reynolds number: " << Re << endl;
+ cout << "               ";
  cout << "Schmidt number:  " << Sc << endl;
+ cout << "               ";
  cout << "Froud number:    " << Fr << endl;
+ cout << "               ";
  cout << "Webber number:   " << We << endl;
+ cout << "               ";
  cout << "alpha number:    " << alpha << endl;
+ cout << "               ";
  cout << "beta number:     " << beta << endl;
+ cout << "               ";
  cout << "CFL number:      " << cfl << endl;
+ cout << "               ";
  cout << "dt:              " << dt << endl;
- cout << "------------------------------------" << endl; 
+ cout << "              ";
+ cout << "----------------------------------------------------" << endl; 
+ cout << endl;
+ cout << endl;
 
- file.close();
- cout << "arquivo de informacoes da simulacao gravado!" << endl;
+ cout << "simulation INFO file saved!" << endl;
 }
 
-void InOut::oscillating(const char* _file)
+void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
 {
- ofstream file( _file,ios::app );
+ // concatenando nomes para o nome do arquivo final
+ string fileAux = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  ofstream file( filename );
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(22) << "velocity U" 
+                  << setw(17) << "velocity V" 
+				  << setw(17) << "velocity W"
+				  << setw(17) << "iteration" 
+				  << endl;
+ }
 
  real aux;
 
@@ -1405,29 +1442,68 @@ void InOut::oscillating(const char* _file)
  real pointY = vSolSurface.Get((int) ySurfaceMax.Get(0));
  real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
 
- //file << "#time xPoint yPoint" << endl;
- file << *simTime << " " << pointX << " " 
-                         << pointY << " "
-						 << pointZ << endl;
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << pointX << " " 
+                  << pointY << " " 
+                  << pointZ << " " 
+				  << setprecision(0) << fixed << _iter 
+				  << endl;
+
+ file.close();
 }
 
-void InOut::oscillating(int point1,int point2,int point3,const char* _file)
+void InOut::oscillating(int point1,int point2,int point3,const char* _filename)
 {
- ofstream file( _file,ios::app );
+ ifstream testFile( _filename );
+ ofstream file( _filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  ofstream file( _filename );
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(22) << "velocity U" 
+                  << setw(17) << "velocity V" 
+				  << setw(17) << "velocity W"
+				  << endl;
+ }
 
  // retorna o valor de maior Y da interface 
  real pointX = uSol->Get(point1);
  real pointY = vSol->Get(point2);
  real pointZ = wSol->Get(point3);
 
- //file << "#time xPoint yPoint" << endl;
- file << *simTime << " " << pointX << " " << pointY << " " << pointZ << endl;
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << pointX << " " 
+                  << pointY << " " 
+                  << pointZ << " " 
+				  << endl;
 }
 
 void InOut::oscillatingD(int point1,int point2,int point3,int point4,
-						 int point5,int point6,const char* _file)
+						 int point5,int point6,const char* _filename)
 {
- ofstream file( _file,ios::app );
+ ifstream testFile( _filename );
+ ofstream file( _filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  ofstream file( _filename );
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(22) << "diameter X" 
+                  << setw(17) << "diameter Y" 
+				  << setw(17) << "diameter Z"
+				  << endl;
+ }
 
  // retorna o valor de maior Y da interface 
  real pointX1 = X->Get(point1);
@@ -1444,17 +1520,39 @@ void InOut::oscillatingD(int point1,int point2,int point3,int point4,
  // retorna o valor do maior diametro em Y na interface 
  real diameterZ = fabs( pointZ1-pointZ2 );
                  
-
- //file << "#time Xdiameter Ydiameter" << endl;
- file << *simTime << " " << diameterX << " " 
-                         << diameterY << " " 
-			    		 << diameterZ << endl;
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << diameterX << " " 
+                  << diameterY << " " 
+                  << diameterZ << " " 
+				  << endl;
+ file.close();
 }
 
-void InOut::oscillatingD(const char* _file)
+void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
 {
- ofstream file( _file,ios::app );
+ // concatenando nomes para o nome do arquivo final
+ string fileAux = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileAux.c_str();
 
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  ofstream file( filename );
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(22) << "diameter X" 
+                 << setw(17) << "diameter Y" 
+				 << setw(17) << "diameter Z"
+				 << setw(16) << "iteration" 
+				 << endl;
+ }
+ 
  real aux;
 
  int dim = surface->Dim();
@@ -1499,36 +1597,62 @@ void InOut::oscillatingD(const char* _file)
  // retorna o valor do maior diametro em Z na interface 
  real diameterZ = zMax - zMin; 
 
- //file << "#time Xdiameter Ydiameter Zdiameter" << endl;
- file << *simTime << " " << diameterX << " " 
-                         << diameterY << " " 
-						 << diameterZ << endl;
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << diameterX << " " 
+                  << diameterY << " " 
+                  << diameterZ << " " 
+				  << setprecision(0) << fixed << _iter 
+				  << endl;
+ file.close();
 }
 
-void InOut::oscillatingKappa(const char* _file)
+void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
 {
- ofstream file( _file,ios::app );
+ string fileAux = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileAux.c_str();
 
- real norm = kappa->Norm();
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  ofstream file( filename );
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(17) << "kappa" 
+				  << setw(21) << "iteration" 
+				  << endl;
+ }
 
- //file << "#time kappaNorm" << endl;
- file << *simTime << " " << norm << endl;
+ real aux = 0;
+ for( int i=0;i<kappa->Dim();i++ )
+  aux += kappa->Get(i);
+
+ real kappaAverage = aux/kappa->Dim();
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << kappaAverage << " " 
+				  << setprecision(0) << fixed << _iter 
+				  << endl;
+ file.close();
 }
 
-void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
+void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
- ss << iter;
+ ss << _iter;
  ss >> str;
 
  // concatenando nomes para o nome do arquivo final
- string file = _dir;
- string aux = _filename;
- file += aux + "TRI" + "-" + str + ".vtk";
+ string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
  const char* filename = file.c_str();
  clMatrix *IENTri = m->getIENTri();
- //clMatrix *IENTri = m->getIENConvexTri();
  int numTri = IENTri->DimI();
 
  ofstream vtkFile( filename ); 
@@ -1541,7 +1665,7 @@ void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
  vtkFile << "TIME 1 1 double" << endl;
  vtkFile << *simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << iter << endl;
+ vtkFile << _iter << endl;
  vtkFile << endl;
  vtkFile << "POINTS " << numVerts << " double" << endl;
 
@@ -1660,9 +1784,9 @@ void InOut::saveVTKTri( const char* _dir,const char* _filename, int iter )
 
  vtkFile.close();
 
- cout << "mesh TRI saved in VTK" << endl;
+ cout << "surface mesh No. " << _iter << " saved in VTK" << endl;
 
-} // fecha metodo saveVTKTri 
+} // fecha metodo saveVTKSurface
 
 void InOut::saveDistance(const char* _dir,const char* _filename,real time )
 {
@@ -1716,8 +1840,8 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 
  mesh << setprecision(10) << scientific; 
  mesh << setw(9) <<  *time << " " << numVerts << " " 
-                                 << numNodes << " " 
-                                 << numElems << endl; 
+                                  << numNodes << " " 
+								  << numElems << endl; 
 
  mesh.close();
 
@@ -1725,7 +1849,7 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 }
 
 //--------------------------------------------------
-// void InOut::saveVTU( const char* _dir,const char* _filename, int iter )
+// void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
 // {
 //  IEN = m->getIEN();
 //  numElems = m->getNumElems();
@@ -1733,7 +1857,7 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 // 
 //  stringstream ss;  //convertendo int --> string
 //  string str;
-//  ss << iter;
+//  ss << _iter;
 //  ss >> str;
 // 
 //  // concatenando nomes para o nome do arquivo final
@@ -1752,7 +1876,7 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 //  vtuFile << "TIME 1 1 double" << endl;
 //  vtuFile << *simTime << endl;
 //  vtuFile << "ITERATION 1 1 int" << endl;
-//  vtuFile << iter << endl;
+//  vtuFile << _iter << endl;
 //  vtuFile << endl;
 //  vtuFile << "POINTS " << numVerts << " double" << endl;
 // 
@@ -1880,7 +2004,7 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
 // 
 //  vtkFile.close();
 // 
-//  cout << "solution num. " << iter << " saved in VTK" << endl;
+//  cout << "solution No. " << _iter << " saved in VTK" << endl;
 // 
 // } // fecha metodo saveVtk
 //-------------------------------------------------- 

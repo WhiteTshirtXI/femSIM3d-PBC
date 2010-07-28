@@ -15,8 +15,7 @@ class Solver
 {
   public:
    virtual void solve(real eps, clMatrix & A, clVector & x, clVector & bb) = 0;
-   //Solver();
-   //virtual ~Solver();
+   virtual ~Solver();
 };
 
 

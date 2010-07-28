@@ -88,9 +88,9 @@ int main(int argc, char **argv)
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveVTKTri(vtkFolder,"geometry",0);
- save.saveInfo("./",mesh);
- save.printInfo("./",mesh);
+ save.saveVTKSurface(vtkFolder,"geometry",0);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  int nIter = 1;
  int nReMesh = 10;
@@ -114,12 +114,12 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
    save.saveSolTXT(datFolder,"UVWPC",i*nReMesh+j+iter);
-   save.oscillating("oscillating.dat");
-   save.oscillatingD("oscillatingD.dat");
-   save.oscillatingKappa("oscillatingKappa.dat");
+   save.oscillating("./","oscillating",i*nReMesh+j+iter);
+   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
   }
   mOld = m1; 
   m1.mesh2Dto3DOriginal();

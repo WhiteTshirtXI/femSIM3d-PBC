@@ -36,7 +36,7 @@ int main(int argc, char **argv)
  m1.setMiniElement();
  m1.setCubeBC2();
  m1.setOFace();
- m1.setSurfaceTri();
+ m1.setSurfaceSurface();
 
 
  Simulator3D s1(m1);
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   m1.readVTKCC(mesh2);
   m1.setCubeBC2();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceSurface();
 
   //Simulator3D s2(m1,s1);
   Simulator3D s2(m1);
@@ -94,9 +94,9 @@ int main(int argc, char **argv)
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(dir,vtk);
- save.saveVTKTri("./vtk/","sim-lastRestart",0);
- save.saveInfo(dir,mesh);
- save.printInfo(dir,mesh);
+ save.saveVTKSurface("./vtk/","sim-lastRestart",0);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  int nIter = 10;
  int nReMesh = 5;
@@ -122,12 +122,12 @@ int main(int argc, char **argv)
 
    save.saveVTK(dir,vtk,i*nReMesh+j+iter);
    save.saveVTKTest(dir,vtk2,i*nReMesh+j+iter);
-   save.saveVTKTri(dir,vtk,i*nReMesh+j+iter);
+   save.saveVTKSurface(dir,vtk,i*nReMesh+j+iter);
    save.saveSol(dir,bin,i*nReMesh+j+iter);
    save.saveSimTime(dir,sim,i*nReMesh+j+iter+1);
-   save.oscillating("oscillating.dat");
-   save.oscillatingD("oscillatingD.dat");
-   save.oscillatingKappa("oscillatingKappa.dat");
+   save.oscillating("./","oscillating",i*nReMesh+j+iter);
+   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
    cout << "________________________time: " << s1.getTime2() << endl;
 
 
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
   m1.setMiniElement2();
   m1.setCubeBC2();
   m1.setOFace();
-  m1.setSurfaceTri();
+  m1.setSurfaceSurface();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 
  InOut saveEnd(m1,s1); // cria objeto de gravacao
  saveEnd.saveVTK("./vtk/","sim-last",0);
- saveEnd.saveVTKTri("./vtk/","sim-last",0);
+ saveEnd.saveVTKSurface("./vtk/","sim-last",0);
  saveEnd.saveSol("./vtk/","sim-last",0);
  //saveEnd.saveSolTXT("./vtk/","sim-last",0);
  saveEnd.saveSimTime(iter+nReMesh*nIter);

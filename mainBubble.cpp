@@ -56,8 +56,8 @@ int main(int argc, char **argv)
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(dir,vtk);
- save.saveInfo(dir,mesh);
- save.printInfo(dir,mesh);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  for( int i=0;i<1000;i++ )
  {
@@ -74,9 +74,9 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
    save.saveVTK(dir,vtk,i*10+j);
-   save.oscillating("oscillating.dat");
-   save.oscillatingD("oscillatingD.dat");
-   save.oscillatingKappa("oscillatingKappa.dat");
+   save.oscillating("./","oscillating",i*nReMesh+j+iter);
+   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
    //save.oscillating(0,1,4,"oscillating.dat");
    //save.oscillatingD(0,2,1,3,4,5,"oscillatingD.dat");
   }

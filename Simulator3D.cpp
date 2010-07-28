@@ -192,6 +192,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
+
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
@@ -237,17 +238,19 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  invMcLumped.Dim( numVerts );
 
  // solution vectors 
+ // vetores solucao
  uTilde.Dim( 3*numNodes );
  pTilde.Dim( numVerts );
  cTilde.Dim( numVerts );
-
- // convective term vectors (ALE)
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
+ uSol.Dim( numNodes );
+ vSol.Dim( numNodes );
+ wSol.Dim( numNodes );
+ pSol.Dim( numVerts );
+ cSol.Dim( numVerts );
 
  // auxiliar vectors
  Fold.Dim( 3*numNodes+numVerts );
+ uAnt.Dim( 3*numNodes+numVerts );
  cAnt.Dim( numVerts );
  ip.Dim( 3*numNodes,1 );
  ipc.Dim( numVerts,1 );
@@ -261,6 +264,17 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  vSL.Dim( numNodes );
  wSL.Dim( numNodes );
  cSL.Dim( numVerts );
+
+ // convective term vectors (ALE)
+ uALE.Dim( numNodes );
+ vALE.Dim( numNodes );
+ wALE.Dim( numNodes );
+ uSmooth.Dim( numNodes );
+ vSmooth.Dim( numNodes );
+ wSmooth.Dim( numNodes );
+ uSmoothCoord.Dim( numNodes );
+ vSmoothCoord.Dim( numNodes );
+ wSmoothCoord.Dim( numNodes );
 
  // interface vectors (two-phase)
  distance.Dim( numVerts );
@@ -1684,7 +1698,7 @@ void Simulator3D::coupled()
  b.Append(zeros);
  setCoupledBC();
 
- cout << " -> calculando velocidade e pressao - " << endl;
+ cout << " --> solving velocity and pressure -- " << endl;
  solverV->solve(1E-12,A,uAnt,b);
  cout << " ------------------------------------ " << endl;
  
@@ -1707,7 +1721,7 @@ void Simulator3D::unCoupled()
  b1Tilde = b1 + vaIp;
 
  // resolve sitema ATilde uTilde = b
- cout << " ----> calculando velocidade -------- " << endl;
+ cout << " --------> solving velocity --------- " << endl;
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
@@ -1719,7 +1733,7 @@ void Simulator3D::unCoupled()
  b2Tilde = (-1) * b2Tilde;
 
  // resolve sistema E pTilde = b2
- cout << " ----> calculando pressao ----------- " << endl;
+ cout << " --------> solving pressure --------- " << endl;
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
  cout << " ------------------------------------ " << endl;
  
@@ -1761,7 +1775,7 @@ void Simulator3D::unCoupledC()
  b1cTilde = b1c + vcIp;
 
  // resolve sitema ATilde uTilde = b
- cout << " ------> calculando escalar --------- " << endl;
+ cout << " --------> solving scalar ----------- " << endl;
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
 
@@ -2385,9 +2399,13 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  rho = _sRight.rho;
  Fold = _sRight.Fold;
 
- solverV = _sRight.solverV;
- solverP = _sRight.solverP;
- solverC = _sRight.solverC;
+ // verificar este swap!!! Nao sei se esta correto.
+ //solverV = _sRight.solverV;
+ //solverP = _sRight.solverP;
+ //solverC = _sRight.solverC;
+ swap(solverV,_sRight.solverV);
+ swap(solverP,_sRight.solverP);
+ swap(solverC,_sRight.solverC);
 }
 
 void Simulator3D::loadSolution( const char* _dir,
@@ -2410,6 +2428,7 @@ void Simulator3D::loadSolution( const char* _dir,
 
  UVWPC_file.close();
 
+ // setting vel+pressure+concentration
  aux2.CopyTo(0,uSol);
  aux2.CopyTo(numNodes,vSol);
  aux2.CopyTo(2*numNodes,wSol);
@@ -2418,6 +2437,9 @@ void Simulator3D::loadSolution( const char* _dir,
  aux2.CopyTo(3*numNodes+2*numVerts,uALE);
  aux2.CopyTo(4*numNodes+2*numVerts,vALE);
  aux2.CopyTo(5*numNodes+2*numVerts,wALE);
+
+ // setting uAnt
+ aux2.CopyTo(0,uAnt);
 
  cout << "solucao <<last>> lida em binario" << endl;
  

@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   const char *mesh2 = "./vtk/sim-last.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-last-0.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-1740.vtk";
-  //const char *mesh2 = "./vtk/sim-1109.vtk";
+  //const char *mesh2 = "./vtk/sim-4970.vtk";
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
 
-  Simulator3D s2(m1);
+  Simulator3D s2(m1,s1);
   s1 = s2; 
 
   s1.setRe(Re);
@@ -108,18 +108,18 @@ int main(int argc, char **argv)
 
   s1.loadSolution(binFolder,"sim-last");
   iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",1109); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",1109);
+  //s1.loadSolution(binFolder,"UVWPC",4970); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",4970);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveVTKTri(vtkFolder,"geometry",0);
+ save.saveVTKSurface(vtkFolder,"geometry",0);
  save.saveMeshInfo("./","meshingInfo.dat" );
- save.saveInfo("./",mesh);
- save.printInfo("./",mesh);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
- int nIter = 1;
+ int nIter = 10;
  int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
@@ -142,15 +142,17 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKTri(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
-   save.oscillating("oscillating.dat");
-   save.oscillatingD("oscillatingD.dat");
-   save.oscillatingKappa("oscillatingKappa.dat");
+   save.oscillating("./","oscillating",i*nReMesh+j+iter);
+   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   cout << "________________________________________ END of " 
+	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
+  m1.mesh2Dto3DOriginal();
+  //m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();
@@ -159,9 +161,6 @@ int main(int argc, char **argv)
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
   s1 = s2; 
-  s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
-  s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
-  s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim-remeshing",iter+nReMesh*nIter-1);

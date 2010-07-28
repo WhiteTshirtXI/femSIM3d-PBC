@@ -8,7 +8,7 @@
 TARGET = ns3dBubble
 LIBDIR = ../lib
 CXX = g++
-CXXFLAGS = -O2 -g
+CXXFLAGS = -O1 -g
 LIBS += -L/opt/local/lib -lgsl -lgslcblas -lm
 LIBS += -L$(HOME)/projects/cpp/tetgen/1.4.3 -ltet
 INCLUDES += -I.

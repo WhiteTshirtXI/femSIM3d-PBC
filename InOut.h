@@ -48,7 +48,7 @@ class InOut
    *
    * @return 
    **/
-  void saveTXT( const char* _dir,const char* _filename, int iter );
+  void saveTXT( const char* _dir,const char* _filename, int _iter );
 
   /**
    * @brief grava arquivo ASCII da solucao do sistema, ou seja, grava
@@ -62,10 +62,10 @@ class InOut
    *
    * @return 
    **/
-  void saveSolTXT( const char* _dir,const char* _filename, int iter );
+  void saveSolTXT( const char* _dir,const char* _filename, int _iter );
 
-  void saveSol( const char* _dir,const char* _filename,int iter );
-  void loadSol( const char* _dir,const char* _filename,int iter );
+  void saveSol( const char* _dir,const char* _filename,int _iter );
+  void loadSol( const char* _dir,const char* _filename,int _iter );
 
   /**
    * @brief grava arquivo do tipo ASCII da matriz passada como argumento 
@@ -106,9 +106,9 @@ class InOut
    *
    * @return 
    **/
-  void saveVTK( const char* _dir,const char* _filename, int iter );
-  void saveVTKTri( const char* _dir,const char* _filename, int iter );
-  void saveVTKTest( const char* _dir,const char* _filename, int iter );
+  void saveVTK( const char* _dir,const char* _filename, int _iter );
+  void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
+  void saveVTKTest( const char* _dir,const char* _filename, int _iter );
 
   /**
    * @brief imprime em arquivo ASCII a visualizacao de uma matriz
@@ -136,29 +136,28 @@ class InOut
    **/
   void matrixPrint( clDMatrix &_m,const char* _filename );
 
-  void saveVonKarman( const char* _dir,const char* _filename,int iter, 
+  void saveVonKarman( const char* _dir,const char* _filename,int _iter, 
 	                  int vertice );
-  void savePert( const char* _dir,const char* _filename,int iter, int vertice);
+  void savePert( const char* _dir,const char* _filename,int _iter, int vertice);
 
-  void saveVortX(const char* _dir,const char* _filename,int iter);
-  void saveVortY(const char* _dir,const char* _filename,int iter);
-  void saveVortZ(const char* _dir,const char* _filename,int iter);
+  void saveVortX(const char* _dir,const char* _filename,int _iter);
+  void saveVortY(const char* _dir,const char* _filename,int _iter);
+  void saveVortZ(const char* _dir,const char* _filename,int _iter);
   void saveTime(const char* _comment);
   void saveSimTime(int _iter);
   void saveSimTime( const char* _dir,const char* _filename, int _iter );
   int loadIter();
   int loadIter( const char* filename );
-  void saveInfo(const char* _dir,const char* _mesh);
-  void printInfo(const char* _dir,const char* _mesh);
-  void oscillating(int point1,int point2,int point3,const char* _file);
+  void saveInfo(const char* _dir,const char* _filename,const char* _mesh);
+  void printInfo(const char* _mesh);
+  void oscillating(int point1,int point2,int point3,const char* _filename);
   void oscillatingD(int point1,int point2,int point3,int point4,
-	                int point5,int point6,const char* _file);
-  void oscillating(const char* _file);
-  void oscillatingD(const char* _file);
-  void oscillatingKappa(const char* _file);
+	                int point5,int point6,const char* _filename);
+  void oscillating(const char* _dir,const char* _filename, int _iter);
+  void oscillatingD(const char* _dir,const char* _filename, int _iter);
+  void oscillatingKappa(const char* _dir,const char* _filename, int _iter);
   void saveDistance(const char* _dir,const char* _filename,real time );
   void saveMeshInfo(const char* _dir,const char* _filename );
-
 
 private:
   Model3D *m;

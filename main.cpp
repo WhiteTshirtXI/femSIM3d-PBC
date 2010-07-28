@@ -46,8 +46,8 @@ int main(int argc, char **argv)
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(dir,vtk);
- save.saveInfo(dir,mesh);
- save.printInfo(dir,mesh);
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
 
  //save.saveVTKFreeFace(m1,vtkDir);
  s1.init();

@@ -21,6 +21,7 @@ OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
+OBJECTS += $(LIBDIR)/GMRes.o
 OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o

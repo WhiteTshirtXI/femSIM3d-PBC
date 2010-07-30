@@ -432,7 +432,6 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
- delete[] in.pointlist;
 }
 
 void Model3D::setStepBC()
@@ -623,12 +622,16 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  rMax = r - dr;
  j=0;
  z=0;
+ real factor = 1.05 + 1.0/nZ;
  for( int jz=1;jz<=nZ;jz++ )
  {
   //if( jz<=nZ/2 ) dz=0.1;
   //else 
-  if( exp(z/nZ) <= exp(2.0/3.0) ) dz=exp(z/nZ);
-  else dz = exp(2.0/3.0);
+  //if( exp(z/nZ) <= exp(2.0/3.0) ) dz=exp(z/nZ);
+  //else dz = exp(2.0/3.0);
+  //else dz=0.1;
+  dz = (factor*exp(z/nZ));
+  //cout << z  << " " << nZ << " " << dz << endl;
   for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
   {
    if( j == X.Dim() ) 
@@ -695,7 +698,6 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
- delete[] in.pointlist;
 }
 
 void Model3D::mesh2Dto3D()
@@ -1339,6 +1341,57 @@ void Model3D::setNuCDiskBC()
   {
    idbcp.AddItem(i);
    aux = 0.0;
+   pc.Set(i,aux);
+   outflow.Set(i,aux);
+  }
+ }
+}
+
+void Model3D::readAndSetPressureDiskBC()
+{
+ // -- Leitura do perfil de pressao variavel em Z para os nos da malha -- //
+
+ int size = 2401;
+ real aux;
+ real dist1,dist2;
+ clMatrix pFile(size,2);
+
+ const char* _filename = "../../db/baseState/nuC/Sc2000/p.dat";
+ ifstream file( _filename,ios::in );
+
+ if( !file )
+ {
+  cerr << "Esta faltando o arquivo de perfil da pressao!" << endl;
+  exit(1);
+ }
+
+ // leitura do arquivo e transferencia para matriz
+ if( !file.eof() )
+ {
+  for( int i=0;i<size;i++ )
+  {
+   file >> aux;
+   pFile.Set(i,0,aux);
+   file >> aux;
+   pFile.Set(i,1,aux);
+  }
+ }
+
+ int j;
+ for( int i=0;i<numVerts;i++ )
+ {
+  for( j=0;j<size;j++ )
+  {
+   dist1 = fabs( Z.Get(i) - pFile(j,0) );
+   dist2 = fabs( Z.Get(i) - pFile(j+1,0) );
+   if( dist2 > dist1 ) break;
+  }
+  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
+	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+  {
+   idbcp.AddItem(i);
+
+   aux = pFile(j,1);
    pc.Set(i,aux);
    outflow.Set(i,aux);
   }

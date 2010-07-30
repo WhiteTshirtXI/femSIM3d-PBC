@@ -648,8 +648,6 @@ void Simulator3D::assembleNuC()
  FEMMiniElement3D miniElem(*m);
  FEMLinElement3D linElem(*m);
 
- real eme = 0.81315;
-
  for( int mele=0;mele<numElems;mele++ )
  {
   v[0]= v1 = (int) IEN->Get(mele,0);
@@ -662,6 +660,8 @@ void Simulator3D::assembleNuC()
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
 	         cSol.Get(v4) )*0.25;
+
+  real eme = 0.81315;
   real nuC = exp(eme*c);
   real dif = 1.0/nuC;
 
@@ -1093,8 +1093,6 @@ void Simulator3D::assembleK()
  FEMMiniElement3D miniElem(*m);
  FEMLinElement3D linElem(*m);
 
- real eme = 0.81315;
-
  for( int mele=0;mele<numElems;mele++ )
  {
   v[0]= v1 = (int) IEN->Get(mele,0);
@@ -1107,10 +1105,10 @@ void Simulator3D::assembleK()
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
 	         cSol.Get(v4) )*0.25;
+
+  real eme = 0.81315;
   real nuC = exp(eme*c);
   real dif = 1.0/nuC;
-  //nuC = 1.0;
-  //dif = 1.0;
 
   miniElem.getK(v1,v2,v3,v4,v5);
   linElem.getK(v1,v2,v3,v4); 
@@ -1699,7 +1697,7 @@ void Simulator3D::coupled()
  setCoupledBC();
 
  cout << " --> solving velocity and pressure -- " << endl;
- solverV->solve(1E-12,A,uAnt,b);
+ solverV->solve(1E-15,A,uAnt,b);
  cout << " ------------------------------------ " << endl;
  
  uAnt.CopyTo(0,uSol);

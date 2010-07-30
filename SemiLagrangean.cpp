@@ -280,7 +280,7 @@ bool SemiLagrangean::testElement(int mele,int ii,real xP,real yP,real zP, real *
 {
  int v[4],v1,v2,v3,v4;
  real V,V1,V2,V3;
- real EPSlocal = 10e-3;
+ real EPSlocal = 10e-6;
 
  v[0] = v1 = (int) IEN->Get(mele,0);
  v[1] = v2 = (int) IEN->Get(mele,1);

@@ -20,6 +20,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
+ int iter = 0;
  real Re = 1500;
  real Sc = 2;
  real We = 10;
@@ -42,7 +43,6 @@ int main(int argc, char **argv)
 //  const char *vtkFolder  = "/scratch2/gustavo/cubeCube/vtk/";
 //  const char *datFolder  = "/scratch2/gustavo/cubeCube/dat/";
 //-------------------------------------------------- 
- int iter = 0;
 
  Model3D m1,mOld;
 

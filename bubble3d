@@ -5,7 +5,7 @@
 ## =================================================================== ##
 
 
-TARGET = ns3dBubble
+TARGET = microTriangle
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O1 -g
@@ -53,8 +53,11 @@ OBJECTS += InOut.o
 
 # testando o remelhamento total com insercao/retirada de pontos
 #OBJECTS += mainMicroCubeCubeMeshRe.o
-#OBJECTS += mainMicroTriangleMeshRe.o
-OBJECTS += mainCubeCubeMeshRe.o
+
+OBJECTS += mainMicroTriangleMeshRe.o
+#OBJECTS += mainMicroTriangleMeshReOriginal.o
+
+#OBJECTS += mainCubeCubeMeshRe.o
 #OBJECTS += main2BubbleMeshRe.o
 #OBJECTS += mainBubbleTubeMeshRe.o
 

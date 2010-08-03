@@ -26,20 +26,17 @@ int main(int argc, char **argv)
 
 
  const char *mesh = "../../db/mesh/3d/disk5-15-60.vtk";
- const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
  const char *simFolder  = "./sim/";
- const char *pertFolder  = "./pert/";
 
  Model3D m1;
  //m1.setMeshDisk(5,25,80);
- m1.setMeshDisk(5,15,60);
+ m1.setMeshDisk(5,5,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCDiskBC();
- m1.readAndSetPressureDiskBC();
+ //m1.readAndSetPressureDiskBC("../../db/baseState/nuC/Sc2000/","p");
  m1.setCDiskBC();
  m1.setOFace();
 
@@ -52,6 +49,7 @@ int main(int argc, char **argv)
  s1.setSolverPressure(solverP);
  s1.setSolverConcentration(solverC);
  s1.init();
+ s1.assembleNuC();
 
  if( (*(argv+1)) == NULL )
  {
@@ -70,8 +68,6 @@ int main(int argc, char **argv)
   //iter = s1.loadIteration(vtkFolder,"sim",70);
  }
 
- s1.assembleNuC();
- 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
@@ -104,13 +100,12 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
    save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
+   save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
    s1.convergenceCriteria(10E-06);
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;
   }
-  save.saveVTK(vtkFolder,"sim",iter+nR+i*nR-1);
-  save.saveSol(binFolder,"UVWPC",iter+nR*+i*nR-1);
  }
 
  PetscFinalize();

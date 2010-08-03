@@ -14,20 +14,26 @@
 
 int main(int argc, char **argv)
 {
- const char *dir  = "./";
- //const char *mesh = "../../db/mesh/3d/step2-2-2.vtk";
- //const char *mesh = "../../db/mesh/3d/step5-5-2.vtk";
- //const char *mesh = "../../db/mesh/3d/step20-10-2.vtk";
- const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
- const char *txt  = "txt/txt";
- const char *bin  = "bin/bin";
- const char *vtk  = "vtk/sim";
+ int iter = 0;
+ real Re = 10000;
+ real Sc = 2000;
+ real Fr = 10;
+ real alpha = 1;
+ real beta = 0;
+ real cfl = 3;
+ Solver *solverP = new PCGSolver();
+ Solver *solverV = new PCGSolver();
+ Solver *solverC = new PCGSolver();
 
+ const char *dir  = "./";
+ const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
+ const char *txtFolder  = "./txt/";
+ const char *binFolder  = "./bin/";
+ const char *vtkFolder  = "./vtk/";
+ const char *datFolder  = "./dat/";
 
  Model3D m1;
- //m1.readVTK(mesh);
  m1.setMeshStep(40,20,2);
- //m1.setStepReservInvBC();
  m1.setAdimenStep();
  m1.setMiniElement();
  //m1.setQuadElement();
@@ -36,20 +42,15 @@ int main(int argc, char **argv)
 
  Simulator3D s1(m1);
 
- s1.setRe(10000);
- s1.setSc(2000);
- s1.setFr(10);
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setFr(Fr);
  //s1.setDt(dt);
- s1.setCfl(3);
- s1.setSolverVelocity(new PCGSolver());
- s1.setSolverPressure(new PCGSolver());
- 
- InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTK(dir,vtk);
- save.saveInfo("./","info",mesh);
- save.printInfo(mesh);
+ s1.setCfl(cfl);
+ s1.setSolverPressure(solverP);
+ s1.setSolverVelocity(solverV);
+ s1.setSolverConcentration(solverC);
 
- //save.saveVTKFreeFace(m1,vtkDir);
  s1.init();
  s1.assembleSlip();
  s1.matMount();
@@ -57,21 +58,48 @@ int main(int argc, char **argv)
  s1.setUnCoupledBC(); 
  s1.setUnCoupledCBC(); 
 
- //save.loadSol(s1,binDir,count);
- for( int i=0;i<100;i++ )
+ if( (*(argv+1)) == NULL )
  {
-  for( int j=0;j<10;j++ )
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+  s1.loadSolution(binFolder,"sim-last");
+  iter = s1.loadIteration(vtkFolder,"sim-last");
+  //s1.loadSolution(binFolder,"UVWPC",50);
+  //iter = s1.loadIteration(vtkFolder,"sim",50);
+ }
+
+ InOut save(m1,s1); // cria objeto de gravacao
+ save.saveVTK(vtkFolder,"geometry");
+ save.saveInfo("./","info",mesh);
+ save.printInfo(mesh);
+
+ int nIter = 100;
+ int nRe = 5;
+ for( int i=0;i<nIter;i++ )
+ {
+  for( int j=0;j<nRe;j++ )
   {
-   cout << "____________________________________ Iteration: " << i*10+j << endl;
+   cout << "____________________________________ Iteration: " 
+	    << i*nRe+j+iter << endl;
+
    s1.stepSL();
    s1.setRHS();
    s1.setCRHS();
    s1.unCoupled();
    s1.unCoupledC();
-   save.saveVTK(dir,vtk,i*10+j);
+   save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
+   save.saveSol(binFolder,"UVWPC",i*nRe+j+iter);
+
+   cout << "________________________________________ END of "
+	    << i*nRe+j+iter << endl;
   }
-  //save.saveSol(dir,bin,i);
-  //save.saveSolTXT(dir,bin,i);
  }
 
  return 0;

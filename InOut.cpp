@@ -318,9 +318,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  simTime = s->getTime();
 
  // concatenando nomes para o nome do arquivo final
- string file = _dir;
- string aux = _filename;
- file += aux + ".vtk";
+ string file = (string) _dir + (string) _filename + ".vtk";
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename ); 
@@ -429,9 +427,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  ss >> str;
 
  // concatenando nomes para o nome do arquivo final
- string file = _dir;
- string aux = _filename;
- file += aux + "-" + str + ".vtk";
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename ); 
@@ -594,10 +590,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  ss << _iter;
  ss >> str;
 
- // concatenando nomes para o nome do arquivo final
- string file = _dir;
- string aux = _filename;
- file += aux + "-" + str + ".vtk";
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename ); 

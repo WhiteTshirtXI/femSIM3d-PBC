@@ -367,7 +367,7 @@ void Model3D::clearBC()
  idbcv.Dim(0);
  idbcw.Dim(0);
  idbcp.Dim(0);
- //cc.Dim(numVerts);
+ cc.Dim(numVerts);
  outflow.Dim(numNodes,1); // usado no metodo Galerkin
 }
 
@@ -733,9 +733,12 @@ void Model3D::mesh2Dto3D()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- in.regionlist[0] = X.Min();
- in.regionlist[1] = Y.Min();
- in.regionlist[2] = Z.Min();
+ //in.regionlist[0] = X.Min();
+ //in.regionlist[1] = Y.Min();
+ //in.regionlist[2] = Z.Min();
+ in.regionlist[0] = 0.0;
+ in.regionlist[1] = 0.0;
+ in.regionlist[2] = 0.0;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -877,9 +880,12 @@ void Model3D::mesh2Dto3DOriginal()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // definindo regiao fora da bolha
- in.regionlist[0] = X.Min();
- in.regionlist[1] = Y.Min();
- in.regionlist[2] = Z.Min();
+ //in.regionlist[0] = X.Min();
+ //in.regionlist[1] = Y.Min();
+ //in.regionlist[2] = Z.Min();
+ in.regionlist[0] = 0.0;
+ in.regionlist[1] = 0.0;
+ in.regionlist[2] = 0.0;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -1035,9 +1041,12 @@ void Model3D::mesh3DPoints()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- in.regionlist[0] = X.Min();
- in.regionlist[1] = Y.Min();
- in.regionlist[2] = Z.Min();
+ //in.regionlist[0] = X.Min();
+ //in.regionlist[1] = Y.Min();
+ //in.regionlist[2] = Z.Min();
+ in.regionlist[0] = 0.0;
+ in.regionlist[1] = 0.0;
+ in.regionlist[2] = 0.0;
  in.regionlist[3] = 1;
 
  /* as regioes do dominio (dentro e fora da bolha) sao definidas usando o 
@@ -1347,7 +1356,7 @@ void Model3D::setNuCDiskBC()
  }
 }
 
-void Model3D::readAndSetPressureDiskBC()
+void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
 {
  // -- Leitura do perfil de pressao variavel em Z para os nos da malha -- //
 
@@ -1356,8 +1365,11 @@ void Model3D::readAndSetPressureDiskBC()
  real dist1,dist2;
  clMatrix pFile(size,2);
 
- const char* _filename = "../../db/baseState/nuC/Sc2000/p.dat";
- ifstream file( _filename,ios::in );
+ string fileConcat = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileConcat.c_str();
+
+ ifstream file( filename,ios::in );
+ cout << filename << endl;
 
  if( !file )
  {

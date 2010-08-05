@@ -367,7 +367,7 @@ void Model3D::clearBC()
  idbcv.Dim(0);
  idbcw.Dim(0);
  idbcp.Dim(0);
- cc.Dim(numVerts);
+ //cc.Dim(numVerts);
  outflow.Dim(numNodes,1); // usado no metodo Galerkin
 }
 

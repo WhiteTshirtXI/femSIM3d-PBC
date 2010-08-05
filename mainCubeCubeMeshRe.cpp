@@ -110,7 +110,7 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 10;
+ int nIter = 100;
  int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
@@ -144,8 +144,8 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
-  m1.mesh2Dto3DOriginal();
-  //m1.mesh3DPoints();
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();

@@ -10,11 +10,11 @@ LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O1 -g
 LIBS += -L/opt/local/lib -lgsl -lgslcblas -lm
-LIBS += -L$(HOME)/projects/cpp/tetgen/1.4.3 -ltet
+LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
-INCLUDES += -I$(HOME)/projects/cpp/tetgen/1.4.3
+INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
 INCLUDES += -I${PETSC_DIR}/include
 
 OBJECTS += $(LIBDIR)/clVector.o
@@ -54,10 +54,10 @@ OBJECTS += InOut.o
 # testando o remelhamento total com insercao/retirada de pontos
 #OBJECTS += mainMicroCubeCubeMeshRe.o
 
-OBJECTS += mainMicroTriangleMeshRe.o
+#OBJECTS += mainMicroTriangleMeshRe.o
 #OBJECTS += mainMicroTriangleMeshReOriginal.o
 
-#OBJECTS += mainCubeCubeMeshRe.o
+OBJECTS += mainCubeCubeMeshRe.o
 #OBJECTS += main2BubbleMeshRe.o
 #OBJECTS += mainBubbleTubeMeshRe.o
 

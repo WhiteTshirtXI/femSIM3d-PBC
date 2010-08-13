@@ -2,7 +2,7 @@
 from pylab import plot,axis,xlabel,ylabel,title,legend,savefig,show
 
 
-input = 'vk3.8'
+input = 'vk4.498'
 
 # reading file
 Z=[];F=[];G=[];H=[];C=[];

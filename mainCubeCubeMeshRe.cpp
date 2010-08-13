@@ -133,6 +133,7 @@ int main(int argc, char **argv)
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);

@@ -1849,163 +1849,145 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
  cout << "meshing info saved" << endl;
 }
 
-//--------------------------------------------------
-// void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
-// {
-//  IEN = m->getIEN();
-//  numElems = m->getNumElems();
-//  simTime = s->getTime();
-// 
-//  stringstream ss;  //convertendo int --> string
-//  string str;
-//  ss << _iter;
-//  ss >> str;
-// 
-//  // concatenando nomes para o nome do arquivo final
-//  string file = _dir;
-//  string aux = _filename;
-//  file += aux + "-" + str + ".vtk";
-//  const char* filename = file.c_str();
-// 
-//  ofstream vtuFile( filename ); 
-// 
-//  vtuFile << "# vtk DataFile Version 1.0" << endl;
-//  vtuFile << "3D Simulation C++" << endl;
-//  vtuFile << "ASCII" << endl;
-//  vtuFile << "DATASET UNSTRUCTURED_GRID" << endl;
-//  vtuFile << "FIELD FieldData 2" << endl;
-//  vtuFile << "TIME 1 1 double" << endl;
-//  vtuFile << *simTime << endl;
-//  vtuFile << "ITERATION 1 1 int" << endl;
-//  vtuFile << _iter << endl;
-//  vtuFile << endl;
-//  vtuFile << "POINTS " << numVerts << " double" << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtuFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
-// 
-//  vtuFile << endl;
-//  
-//  vtuFile << "CELLS " << numElems << " " << 5*numElems << endl;
-//  for( int i=0;i<numElems;i++ )
-//  {
-//   vtuFile << "4 " << IEN->Get(i,0) << " "  
-//                   << IEN->Get(i,1) << " " 
-//                   << IEN->Get(i,2) << " " 
-//                   << IEN->Get(i,3) << endl;
-//  };
-//  vtuFile << endl;
-// 
-//  vtuFile <<  "CELL_TYPES " << numElems << endl;
-//  for( int i=0;i<numElems;i++ )
-//   vtuFile << "10 ";
-// 
-//  vtuFile << endl;
-//  vtuFile << endl;
-// 
-//  vtuFile << "POINT_DATA " << numVerts << endl;
-// 
-//  vtuFile << "SCALARS pressure double" << endl;
-//  vtuFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  vtuFile << setprecision(10) << scientific;
-//  for( int i=0;i<numVerts;i++ )
-//   vtuFile << pSol->Get(i) << endl;
-// 
-//  vtuFile << endl;
-// 
-//  // este if existe pois nem todos os metodos tem cc
-//  if( cSol->Dim() > 0 )
-//  {
-//   vtuFile << "SCALARS concentration double" << endl;
-//   vtuFile << "LOOKUP_TABLE default"  << endl;
-// 
-//   for( int i=0;i<numVerts;i++ )
-//    vtuFile << cSol->Get(i) << endl;
-// 
-//   vtuFile << endl;
-//  }
-// 
-//  vtuFile << "SCALARS u double" << endl;
-//  vtuFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtuFile << uSol->Get(i) << endl;
-// 
-//  vtuFile << endl;
-// 
-//  vtkFile << "SCALARS v double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << vSol->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS w double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << wSol->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS uALE double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << uALE->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS vALE double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << vALE->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS wALE double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << wALE->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS kappa double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << kappa->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "SCALARS distance double" << endl;
-//  vtkFile << "LOOKUP_TABLE default"  << endl;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << distance->Get(i) << endl;
-// 
-//  vtkFile << endl;
-// 
-//  vtkFile << "VECTORS velocity double" << endl;
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << uSol->Get(i) << " " 
-//           << vSol->Get(i) << " " 
-// 		  << wSol->Get(i) << endl;
-//  vtkFile << endl;
-// 
-//  vtkFile << "VECTORS fint double" << endl;
-//  for( int i=0;i<numVerts;i++ )
-//   vtkFile << fint->Get(i) << " " 
-//           << fint->Get(i+numVerts) << " " 
-// 		  << fint->Get(i+numVerts*2) << endl;
-// 
-//  vtkFile.close();
-// 
-//  cout << "solution No. " << _iter << " saved in VTK" << endl;
-// 
-// } // fecha metodo saveVtk
-//-------------------------------------------------- 
+void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
+{
+ IEN = m->getIEN();
+ numElems = m->getNumElems();
+ simTime = s->getTime();
+
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = _dir;
+ string aux = _filename;
+ file += aux + "-" + str + ".vtu";
+ const char* filename = file.c_str();
+
+ ofstream vtuFile( filename ); 
+
+ vtuFile << "<?xml version=\"1.0\"?> " << endl;
+ vtuFile << endl;
+
+ /* comments */
+ vtuFile << "<!-- " << endl;
+ vtuFile << "3D Simulation C++ " << endl;
+ vtuFile << "ASCII " << endl;
+ vtuFile << "DATASET UNSTRUCTURED_GRID " << endl;
+ vtuFile << "FIELD FieldData 2 " << endl;
+ vtuFile << "TIME 1 1 double " << endl;
+ vtuFile << *simTime << endl;
+ vtuFile << "ITERATION 1 1 int " << endl;
+ vtuFile << _iter << endl;
+ vtuFile << "--> " << endl;
+ vtuFile << endl;
+
+ /* header */
+ vtuFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\"> " << endl;
+ vtuFile << " <UnstructuredGrid> " << endl;
+ vtuFile << "  <Piece NumberOfPoints=\""<< numVerts 
+         << "\" NumberOfCells=\"" << numElems << "\"> " << endl;
+ vtuFile << "   <Points> " << endl;
+
+ /* points */
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
+
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
+
+ vtuFile << "    </DataArray> " << endl;
+ vtuFile << "   </Points> " << endl;
+
+ /* cells */
+ vtuFile << "   <Cells> " << endl;
+ vtuFile << "    <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\"> " << endl;
+ 
+ vtuFile << setprecision(0) << fixed;
+ for( int i=0;i<numElems;i++ )
+  vtuFile << "     " << IEN->Get(i,0) << " "  
+                     << IEN->Get(i,1) << " " 
+				     << IEN->Get(i,2) << " " 
+				     << IEN->Get(i,3) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ vtuFile << "    <DataArray type=\"Int32\"  Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << endl;
+
+ vtuFile << "     ";
+ for( int i=1;i<=numElems;i++ )
+  vtuFile << 4*i << " ";
+ vtuFile << endl;
+ vtuFile << "    </DataArray> " << endl;
+
+ vtuFile << "    <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\"> " << endl;
+ vtuFile << "     ";
+ for( int i=0;i<numElems;i++ )
+  vtuFile << "10 ";
+ vtuFile << endl;
+ vtuFile << "    </DataArray> " << endl;
+ vtuFile << "   </Cells> " << endl;
+
+ /* data point header */
+ vtuFile << "   <PointData  Scalars=\"Scalars\"> " << endl;
+
+ /* data points */
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"Pressure\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << pSol->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+ {
+  vtuFile << "    <DataArray type=\"Float32\" Name=\"Concentration\" format=\"ascii\"> " << endl;
+  vtuFile << setprecision(10) << scientific;
+  for( int i=0;i<numVerts;i++ )
+   vtuFile << "     " << cSol->Get(i) << endl;
+  vtuFile << "    </DataArray>" << endl;
+ }
+
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"kappa\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << kappa->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ /* vector data points */
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << uSol->Get(i) << " " 
+                     << vSol->Get(i) << " " 
+				     << wSol->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"ALE Velocity\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << uALE->Get(i) << " " 
+                     << vALE->Get(i) << " " 
+				     << wALE->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"surface force\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << fint->Get(i) << " " 
+                     << fint->Get(i+numVerts) << " " 
+				     << fint->Get(i+numVerts*2) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
+ /* end of file */
+ vtuFile << "   </PointData> " << endl;
+ vtuFile << "  </Piece> " << endl;
+ vtuFile << " </UnstructuredGrid> " << endl;
+ vtuFile << "</VTKFile> " << endl;
+
+ vtuFile.close();
+
+ cout << "solution No. " << _iter << " saved in VTU" << endl;
+
+} // fecha metodo saveVTU

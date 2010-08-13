@@ -57,7 +57,7 @@ clean:
 	@find . -name "*~" -exec rm {} \;
 	@rm -f ./oscillating*
 	@rm -f ./mesh*
-	@rm -f ./vtk/*.vtk
+	@rm -f ./vtk/*.{vtk,vtu}
 	@rm -f ./sim/vk?.*
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat

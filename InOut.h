@@ -109,6 +109,7 @@ class InOut
   void saveVTK( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   void saveVTKTest( const char* _dir,const char* _filename, int _iter );
+  void saveVTU( const char* _dir,const char* _filename, int _iter );
 
   /**
    * @brief imprime em arquivo ASCII a visualizacao de uma matriz

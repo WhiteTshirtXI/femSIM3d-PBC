@@ -80,7 +80,7 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 100;
+ int nIter = 10;
  int nRe = 5;
  for( int i=0;i<nIter;i++ )
  {
@@ -95,6 +95,7 @@ int main(int argc, char **argv)
    s1.unCoupled();
    s1.unCoupledC();
    save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
+   save.saveVTU(vtkFolder,"sim",i*nRe+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nRe+j+iter);
 
    cout << "________________________________________ END of "

@@ -5,7 +5,7 @@
 ## =================================================================== ##
 
 
-TARGET = microTriangle
+TARGET = cube
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O1 -g

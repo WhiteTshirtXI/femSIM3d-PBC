@@ -378,30 +378,6 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
   vtkFile << endl;
  }
 
- vtkFile << "SCALARS u double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << uc->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS v double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << vc->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS w double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << wc->Get(i) << endl;
-
- vtkFile << endl;
-
  vtkFile << "VECTORS vectors double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << setw(10) << uc->Get(i) << " " 
@@ -489,54 +465,6 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkFile << endl;
  }
 
- vtkFile << "SCALARS u double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS v double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << vSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS w double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << wSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS uALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uALE->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS vALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << vALE->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS wALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << wALE->Get(i) << endl;
-
- vtkFile << endl;
-
  vtkFile << "SCALARS kappa double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
@@ -560,7 +488,14 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 		  << wSol->Get(i) << endl;
  vtkFile << endl;
 
- vtkFile << "VECTORS fint double" << endl;
+ vtkFile << "VECTORS ALE-velocity double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uALE->Get(i) << " " 
+          << vALE->Get(i) << " " 
+		  << wALE->Get(i) << endl;
+ vtkFile << endl;
+
+ vtkFile << "VECTORS surface-force double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << fint->Get(i) << " " 
           << fint->Get(i+numVerts) << " " 
@@ -690,30 +625,6 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   vtkFile << endl;
  }
 
- vtkFile << "SCALARS u double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS v double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << vSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS w double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << wSol->Get(i) << endl;
-
- vtkFile << endl;
-
  vtkFile << "SCALARS kappa double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
@@ -730,11 +641,27 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  vtkFile << endl;
 
- vtkFile << "VECTORS vectors double" << endl;
+ vtkFile << "VECTORS velocity double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << uSol->Get(i) << " " 
           << vSol->Get(i) << " " 
 		  << wSol->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "VECTORS ALE-Velocity double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uALE->Get(i) << " " 
+          << vALE->Get(i) << " " 
+		  << wALE->Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "VECTORS surface-force double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << fint->Get(i) << " " 
+          << fint->Get(i+numNodes) << " " 
+		  << fint->Get(i+numNodes*2) << endl;
 
  vtkFile << endl;
  vtkFile.close();
@@ -1693,54 +1620,6 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkFile << endl;
 
- vtkFile << "SCALARS u double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS v double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << vSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS w double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << wSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS uALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uALE->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS vALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << vALE->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS wALE double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << wALE->Get(i) << endl;
-
- vtkFile << endl;
-
  vtkFile << "SCALARS kappa double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
@@ -1764,7 +1643,14 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 		  << wSol->Get(i) << endl;
  vtkFile << endl;
 
- vtkFile << "VECTORS fint double" << endl;
+ vtkFile << "VECTORS ALE-velocity double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << uALE->Get(i) << " " 
+          << vALE->Get(i) << " " 
+		  << wALE->Get(i) << endl;
+ vtkFile << endl;
+
+ vtkFile << "VECTORS surface-force double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << fint->Get(i) << " " 
           << fint->Get(i+numVerts) << " " 

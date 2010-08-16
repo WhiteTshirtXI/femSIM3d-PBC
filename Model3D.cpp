@@ -277,7 +277,6 @@ void Model3D::setInterfaceBC()
  cc.Dim(numVerts);
  for( int i=0;i<numElems;i++ )
  {
-  // condicao de parede v=0
   if( idRegion.Get(i) == 1 )
   {
    int v1 = IEN.Get(i,0);
@@ -357,20 +356,6 @@ void Model3D::readBC( const char* filename )
  }
 } // fim do metodo readBC
 
-void Model3D::clearBC()
-{
- uc.Dim(numNodes);
- vc.Dim(numNodes);
- wc.Dim(numNodes);
- pc.Dim(numVerts);
- idbcu.Dim(0);
- idbcv.Dim(0);
- idbcw.Dim(0);
- idbcp.Dim(0);
- //cc.Dim(numVerts);
- outflow.Dim(numNodes,1); // usado no metodo Galerkin
-}
-
 // este metodo cria os pontos de forma ordenada e igualmente espacada e
 // depois utiliza a biblioteca tetgen para gerar a tetraedralizacao
 // seguida pela atualizacao da matriz de mapeamento de elementos IEN
@@ -440,7 +425,6 @@ void Model3D::setStepBC()
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
   {
-   idbcc.AddItem(i);
    idbcu.AddItem(i);
    idbcv.AddItem(i);
 
@@ -450,7 +434,6 @@ void Model3D::setStepBC()
    {
 
 	uc.Set(i,1.0);
-	cc.Set(i,1.0);
    }
   }
   if( (Z.Get(i)==Z.Min()) || (Z.Get(i) == Z.Max()) ||
@@ -464,6 +447,24 @@ void Model3D::setStepBC()
    idbcp.AddItem(i);
    pc.Set(i,0.0);
    outflow.Set(i,0);
+  }
+ }
+}
+
+void Model3D::setCStepBC()
+{
+ cc.Dim(numVerts);
+ idbcc.Dim(0);
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
+  {
+   if( (X.Get(i)==X.Min()) && (Y.Get(i)>(Y.Max()/2.0)) && (Y.Get(i)<Y.Max()) )
+   {
+	idbcc.AddItem(i);
+
+	cc.Set(i,1.0);
+   }
   }
  }
 }
@@ -1296,7 +1297,6 @@ void Model3D::setNuCteDiskBC()
    outflow.Set(i,aux);
   }
  }
-
 }
 
 void Model3D::setNuCDiskBC()
@@ -1332,7 +1332,6 @@ void Model3D::setNuCDiskBC()
    idbcu.AddItem(i);
    idbcv.AddItem(i);
    idbcw.AddItem(i);
-   idbcc.AddItem(i);
 
    omega=1.0;
 
@@ -1414,6 +1413,7 @@ void Model3D::setCDiskBC()
 {
  real aux;
  cc.Dim(numVerts);
+ idbcc.Dim(0);
 
  for( int i=0;i<numVerts;i++ )
  {
@@ -1442,6 +1442,7 @@ void Model3D::setBubbleBubbleBC()
  cout << "zCenter = " << zCenter << endl;
  cout << "bubbleRadius = " << bubbleRadius << endl;
 
+ cc.Dim(numVerts);
  cc.SetAll(0.5);
  for( int i=0;i<numVerts;i++ )
  {
@@ -1847,33 +1848,25 @@ void Model3D::readBaseStateNu( const char* _filename )
  clVector pVector(lines);
 
 
- string file = "./estadoBase/F_";
- file += _filename;
- file += ".dat";
+ string file = "../db/baseState/nuC/Sc2000/F_" + (string) _filename + ".dat";
  const char* filenameF = file.c_str();
  ifstream fFile( filenameF,ios::in );
 
- file = "./estadoBase/G_"; 
- file += _filename;
- file += ".dat";
+ file = "../db/baseState/nuC/Sc2000/G_" + (string) _filename + ".dat"; 
  const char* filenameG = file.c_str();
  ifstream gFile( filenameG,ios::in );
 
- file = "./estadoBase/H_";
- file += _filename;
- file += ".dat";
+ file = "../db/baseState/nuC/Sc2000/H_" + (string) _filename + ".dat"; 
  const char* filenameH =  file.c_str();
  ifstream hFile( filenameH,ios::in );
 
- file = "./estadoBase/dHdZ_";
- file += _filename;
- file += ".dat";
+ file = "../db/baseState/nuC/Sc2000/dHdZ_" + (string) _filename + ".dat"; 
  const char* filenamedHdZ = file.c_str();
  ifstream dHdZFile( filenamedHdZ,ios::in );
 
  if( !fFile || !gFile || !hFile || !dHdZFile )
  {
-  cerr << "Esta faltando algum arquivo do estado base para NuCte!" << endl;
+  cerr << "Esta faltando algum arquivo do estado base para NuC!" << endl;
   exit(1);
  }
 
@@ -2137,28 +2130,13 @@ void Model3D::setMiniElement()
  real centroidX,centroidY,centroidZ;
  int v1,v2,v3,v4,v5;
 
- numNodes = numVerts + numElems;
  numGLEP = 4; // triangulo linear
  numGLEU = 5; // elemento MINI
  numGLEC = 4; // elemento linear
+ numNodes = numVerts + numElems;
 
  clearBC();
-
- // realocando vetores...
- clVector aux;
- aux = X;
- X.Dim(numNodes);
- X.CopyFrom(0,aux);
- aux = Y;
- Y.Dim(numNodes);
- Y.CopyFrom(0,aux);
- aux = Z;
- Z.Dim(numNodes);
- Z.CopyFrom(0,aux);
- clMatrix IENaux;
- IENaux = IEN;
- IEN.Dim(numElems,numGLEU); // 4 nos por elemento + 1 centroide
- IEN.CopyFrom(0,0,IENaux);
+ reAllocStruct();
 
  for( int i=0;i<numElems;i++ )
  {
@@ -2226,7 +2204,7 @@ void Model3D::setQuadElement()
   {
    IEN.Set(mele,1,v3);
    IEN.Set(mele,2,v2);
-  };
+  }
   // -------------------------------------------- //
 
   faceaux.Set(0,v1);
@@ -2339,28 +2317,9 @@ void Model3D::setQuadElement()
  numGLEC = 4; // tetraedro linear
  numGLEU = 10; // tetraedro quadratico
  numNodes = numVerts+it; // atualizando numNodes
- uc.Dim(numNodes);
- vc.Dim(numNodes);
- wc.Dim(numNodes);
- pc.Dim(numVerts);
- cc.Dim(numVerts);
- outflow.Dim(numNodes,1);
 
- // realocando vetores e matriz IEN
- clVector aux;
- aux = X;
- X.Dim(numNodes);
- X.CopyFrom(0,aux);
- aux = Y;
- Y.Dim(numNodes);
- Y.CopyFrom(0,aux);
- aux = Z;
- Z.Dim(numNodes);
- Z.CopyFrom(0,aux);
- clMatrix IENaux;
- IENaux = IEN;
- IEN.Dim(numElems,numGLEU); // 10 nos por elemento
- IEN.CopyFrom(0,0,IENaux);
+ clearBC();
+ reAllocStruct();
 
  // adicionando os vertices das arestas nas estruturas X,Y,Z e IEN
  vector< list<int> > edge;
@@ -2435,7 +2394,6 @@ void Model3D::setNeighbour()
  for( int i=0;i<numElems;i++ )
   for( int j= 0;j<numGLEP;j++ )
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
-
 }
 
 void Model3D::setVertNeighbour()
@@ -3556,6 +3514,41 @@ real Model3D::getVolume(int _elem)
 								  -Y.Get(v3)*X.Get(v4) 
 								  -Y.Get(v2)*X.Get(v3) ) );
  return volume;
+}
+
+void Model3D::clearBC()
+{
+ uc.Dim(numNodes);
+ vc.Dim(numNodes);
+ wc.Dim(numNodes);
+ pc.Dim(numVerts);
+ idbcu.Dim(0);
+ idbcv.Dim(0);
+ idbcw.Dim(0);
+ idbcp.Dim(0);
+ // nos metodos com Concentracao cc.Dim(numVerts) esta definido, nao
+ // precisando defini-lo aqui.
+ //cc.Dim(numVerts);
+ outflow.Dim(numNodes,1); // usado no metodo Galerkin
+}
+
+// re-allocation of vectors and IEN matrix
+void Model3D::reAllocStruct()
+{
+ clVector aux;
+ aux = X;
+ X.Dim(numNodes);
+ X.CopyFrom(0,aux);
+ aux = Y;
+ Y.Dim(numNodes);
+ Y.CopyFrom(0,aux);
+ aux = Z;
+ Z.Dim(numNodes);
+ Z.CopyFrom(0,aux);
+ clMatrix IENaux;
+ IENaux = IEN;
+ IEN.Dim(numElems,numGLEU); // 4 nos por elemento + 1 centroide
+ IEN.CopyFrom(0,0,IENaux);
 }
 
 bool Model3D::checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn)

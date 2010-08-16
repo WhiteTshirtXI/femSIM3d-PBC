@@ -44,9 +44,9 @@ class Model3D
   void readMSH( const char* filename );
   void readBC( const char* filename );
   void readBaseStateNu(const char* _filename);
-  void clearBC();
   void setMeshStep(int nX,int nY,int nZ);
   void setStepBC();
+  void setCStepBC();
   void setStepReservBC();
   void setStepReservInvBC();
   void setCouetteBC();
@@ -130,6 +130,8 @@ class Model3D
   int getNumGLEP();
   int getNumGLEC();
   real getVolume(int _elem);
+  void clearBC();
+  void reAllocStruct();
   clMatrix* getOFace();
   clVector* getSurface();
   clVector* getNonSurface();

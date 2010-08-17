@@ -133,6 +133,8 @@ class Simulator3D
   clMatrix* getGx();
   clMatrix* getGy();
   clMatrix* getGz();
+  clVector* getNu();
+  clVector* getRho();
   void operator=(Simulator3D &_s);
   int loadIteration();
   int loadIteration( const char* _dir,const char* _filename,int _iter );

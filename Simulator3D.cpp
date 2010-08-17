@@ -2150,6 +2150,8 @@ clMatrix* Simulator3D::getGy(){return &gy;}
 clMatrix* Simulator3D::getGz(){return &gz;}
 clMatrix* Simulator3D::getG(){return &G;}
 clMatrix* Simulator3D::getD(){return &D;}
+clVector* Simulator3D::getNu(){return &nu;}
+clVector* Simulator3D::getRho(){return &rho;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 
 // set do centroide para o elemento mini apos a interpolacao linear

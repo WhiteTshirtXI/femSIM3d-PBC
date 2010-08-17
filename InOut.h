@@ -178,6 +178,7 @@ private:
   clVector *uALE,*vALE,*wALE;
   clVector *distance,*fint;
   clDMatrix *kappa;
+  clVector *nu,*rho;
 };
 
 

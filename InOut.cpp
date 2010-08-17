@@ -91,6 +91,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  kappa = s->getKappa();
  fint = s->getFint();
  distance = s->getDistance();
+ nu = s->getNu();
+ rho = s->getRho();
 }
 
 InOut::~InOut(){}
@@ -790,9 +792,8 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
 
  int v1 = (int) Xaux.Get(0);
  int v2;
- //vonKarmanFile << setprecision(4) << setw(11) << setfill(' ') << scientific; 
  vonKarmanFile << setprecision(10) << scientific; 
- vonKarmanFile << "#z         F         G         H         c         p" << endl; 
+ vonKarmanFile << "#z     F      G      H      c      p     nu" << endl; 
  for( int i=0;i<Xaux.Dim();i++ )
  {
   v2 = (int) Xaux.Get(i);
@@ -801,8 +802,8 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
 	            << setw(9) <<  vSol->Get( v2 )/X->Get( v1 ) << " " 
 		        << setw(9) <<  (-1)*wSol->Get( v2 ) << " " 
 				<< setw(9) <<  cSol->Get(v2) << " " 
-				<< setw(9) <<  pSol->Get(v2) 
-				<< endl;
+				<< setw(9) <<  pSol->Get(v2) << " "
+				<< setw(9) <<  nu->Get(v2) << endl;
  }
  vonKarmanFile << endl;
  vonKarmanFile << "X = " << X->Get( (int) Xaux.Get(0) ) << endl;

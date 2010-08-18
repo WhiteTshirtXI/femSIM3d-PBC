@@ -15,8 +15,8 @@ unset grid
 #set terminal pdf
 #set output 'teste.pdf'
 
-N = 90
-fileObj = "vk6."
+#N = 90
+#fileObj = "vk4."
 #fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"

@@ -1784,7 +1784,7 @@ void Simulator3D::unCoupledC()
 
 void Simulator3D::convergenceCriteria( real value )
 {
- clVector Fnew = uAnt;
+ clVector Fnew = uAnt; // system solution
 
  real diffSum = ( (Fnew-Fold).Abs() ).Sum();
  real FnewSum = ( Fnew.Abs() ).Sum();
@@ -2434,8 +2434,9 @@ void Simulator3D::loadSolution( const char* _dir,
  aux2.CopyTo(4*numNodes+2*numVerts,vALE);
  aux2.CopyTo(5*numNodes+2*numVerts,wALE);
 
- // setting uAnt
+ // setting uAnt, Fold
  aux2.CopyTo(0,uAnt);
+ aux2.CopyTo(0,Fold);
 
  cout << "solucao <<last>> lida em binario" << endl;
  
@@ -2450,16 +2451,10 @@ void Simulator3D::loadSolution( const char* _dir,
  ss << _iter;
  ss >> str;
 
- cout << _iter << endl;
-
  string fileUVWPC = _dir;
  string aux = _filename;
  fileUVWPC += aux + "-" + str + ".bin";
  const char* filenameUVWPC = fileUVWPC.c_str();
-
- cout << endl;
- cout << filenameUVWPC << endl;
- cout << endl;
 
  clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
 
@@ -2484,7 +2479,11 @@ void Simulator3D::loadSolution( const char* _dir,
  aux2.CopyTo(4*numNodes+2*numVerts,vALE);
  aux2.CopyTo(5*numNodes+2*numVerts,wALE);
 
- cout << "solucao no.  " << _iter << " lida em binario" << endl;
+ // setting uAnt, Fold
+ aux2.CopyTo(0,uAnt);
+ aux2.CopyTo(0,Fold);
+
+ cout << "solucao no. " << _iter << " lida em binario" << endl;
  
 } // fecha metodo loadSol 
 
@@ -2557,11 +2556,6 @@ int Simulator3D::loadIteration( const char* _dir,
 
  string filename = (string) _dir + (string) _filename + "-" + str + ".vtk";
  const char* File = filename.c_str();
-
- cout << endl;
- cout << File << endl;
- cout << endl;
-
 
  ifstream vtkFile( File,ios::in );
 

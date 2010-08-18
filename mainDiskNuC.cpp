@@ -19,7 +19,7 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real Sc = 2000;
- real cfl = 3;
+ real cfl = 1;
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
  Model3D m1;
  //m1.setMeshDisk(5,25,80);
- m1.setMeshDisk(5,5,20);
+ m1.setMeshDisk(5,6,30);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCDiskBC();
@@ -62,10 +62,11 @@ int main(int argc, char **argv)
   cout << endl;
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
-  s1.loadSolution(binFolder,"sim-last");
-  iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",70);
-  //iter = s1.loadIteration(vtkFolder,"sim",70);
+  //s1.loadSolution(binFolder,"sim-last");
+  //iter = s1.loadIteration(vtkFolder,"sim-last");
+  s1.loadSolution(binFolder,"UVWPC",10);
+  iter = s1.loadIteration(vtkFolder,"sim",10);
+  s1.assembleK();
  }
 
  InOut save(m1,s1); // cria objeto de gravacao

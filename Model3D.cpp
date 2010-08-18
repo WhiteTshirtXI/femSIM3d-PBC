@@ -623,7 +623,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  rMax = r - dr;
  j=0;
  z=0;
- real factor = 1.05 + 1.0/nZ;
+ real factor = 1.1 + 1.0/nZ;
  for( int jz=1;jz<=nZ;jz++ )
  {
   //if( jz<=nZ/2 ) dz=0.1;

@@ -9,10 +9,11 @@ set xlabel "Z"
 set ylabel "r"
 set label
 set xrange [0.0:0.5]
-set yrange [-0.02:0.06]
+#set xrange [0.0:10.0]
+set yrange [-0.01:0.1]
 unset grid
 
-N = 143
+N = 178
 fileObj1 = "vk1."
 fileObj2 = "vk2."
 fileObj3 = "vk3."
@@ -24,11 +25,11 @@ fileObj7 = "vk7."
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
-plot fileObj1 .N using 1:5 title 'C1' with lines ,\
-     fileObj2 .N using 1:5 title 'C2' with lines ,\
-     fileObj3 .N using 1:5 title 'C3' with lines ,\
-     fileObj4 .N using 1:5 title 'C4' with lines ,\
-     fileObj5 .N using 1:5 title 'C5' with lines ,\
-     fileObj6 .N using 1:5 title 'C6' with lines ,\
-     fileObj7 .N using 1:5 title 'C7' with lines ,\
+plot fileObj1 .N using 1:5 title 'C1' with points ,\
+     fileObj2 .N using 1:5 title 'C2' with points ,\
+     fileObj3 .N using 1:5 title 'C3' with points ,\
+     fileObj4 .N using 1:5 title 'C4' with points ,\
+     fileObj5 .N using 1:5 title 'C5' with points ,\
+     fileObj6 .N using 1:5 title 'C6' with points ,\
+     fileObj7 .N using 1:5 title 'C7' with points ,\
  	 fileObjAnalytic using 1:5 title 'C' with lines 

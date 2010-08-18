@@ -135,7 +135,7 @@ void InOut::saveSol( const char* _dir,const char* _filename, int _iter )
  inFile.close();
  outFile.close();
 
- cout << "solution No.  " << _iter << " saved in binary" << endl;
+ cout << "solution No. " << _iter << " saved in binary" << endl;
  
 } // fecha metodo saveSol 
 

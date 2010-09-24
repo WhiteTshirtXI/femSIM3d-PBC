@@ -40,6 +40,7 @@ class Simulator3D
   void init();
   void assembleK();
   void assembleM();
+  void assembleC();
   void assemble();
   void assembleSlip();
   void assembleNuCte();
@@ -77,7 +78,6 @@ class Simulator3D
   void setNu(real nu0, real nu1);
   void setRho(real rho0, real rho1);
   void setNuZ();
-  void convergenceCriteria( real value );
   void setRe(real _Re);
   real getRe();
   void setSc(real _Sc);

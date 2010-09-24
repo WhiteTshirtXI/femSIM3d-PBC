@@ -421,6 +421,15 @@ void SemiLagrangean::setBC()
   wParticle.Set( aux,wc->Get(aux) ); 
  }
 
+ /* APENAS UTILIZADO NAS SIMULACOES DISK (NUCTE, NUC, NUZ) */
+ /* ------------- caso com c.c. livre em w --------------- */
+ for( int i=0;i<idbcp->Dim();i++ )
+ {
+  aux = (int) idbcp->Get(i);
+  wParticle.Set( aux,wSol.Get(aux) ); 
+ }
+ /* ------------------------------------------------------ */
+
  for( int i=0;i<idbcc->Dim();i++ )
  {
   aux = (int) idbcc->Get(i);

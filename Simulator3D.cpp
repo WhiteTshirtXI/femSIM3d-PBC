@@ -523,6 +523,50 @@ void Simulator3D::assemble()
  
 }; // fecha metodo ASSEMBLE
 
+void Simulator3D::assembleC()
+{
+ int i,j,ii,jj;
+ int v1,v2,v3,v4,v[4];
+ real aux;
+ clMatrix KcMat( numVerts,numVerts );
+ clMatrix McMat( numVerts,numVerts );
+
+ FEMLinElement3D linElem(*m);
+
+ for( int mele=0;mele<numElems;mele++ )
+ {
+  v[0]= v1 = (int) IEN->Get(mele,0);
+  v[1]= v2 = (int) IEN->Get(mele,1);
+  v[2]= v3 = (int) IEN->Get(mele,2);
+  v[3]= v4 = (int) IEN->Get(mele,3);
+  //cout << (float) mele/numElems << endl;
+  //
+  real dif = 1.0;
+
+  linElem.getM(v1,v2,v3,v4); 
+
+  for( i=0;i<numGLEC;i++ )
+  {
+   ii=v[i];
+   for( j=0;j<numGLEC;j++ )
+   {
+	jj=v[j];
+	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
+	                               linElem.kyyc[i][j] + 
+								   linElem.kzzc[i][j] );
+	KcMat.Set(ii,jj,aux);
+
+	aux = McMat.Get(ii,jj) + linElem.masselec[i][j];
+	McMat.Set(ii,jj,aux);
+   }
+  }
+ }
+ 
+ Kc.CopyFrom(         0,          0,           KcMat );
+ Mc.CopyFrom(         0,          0,           McMat );
+ 
+}; // fecha metodo ASSEMBLEC
+
 void Simulator3D::assembleNuCte()
 {
  int i,j,ii,jj;
@@ -664,6 +708,12 @@ void Simulator3D::assembleNuC()
   real eme = 0.81315;
   real nuC = exp(eme*c);
   real dif = 1.0/nuC;
+
+  // saving nu in vector
+  nu.Set(v1,nuC);
+  nu.Set(v2,nuC);
+  nu.Set(v3,nuC);
+  nu.Set(v4,nuC);
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -1781,19 +1831,6 @@ void Simulator3D::unCoupledC()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
-
-void Simulator3D::convergenceCriteria( real value )
-{
- clVector Fnew = uAnt; // system solution
-
- real diffSum = ( (Fnew-Fold).Abs() ).Sum();
- real FnewSum = ( Fnew.Abs() ).Sum();
- real error = (diffSum/FnewSum)/dt;
-
- cout << "relative error: " << error << endl;
-
- Fold = Fnew;
-} // fecha metodo convergenceCriteria
 
 /**
  * @brief ESTRATEGIA PARA APLICACAO DA CONDICAO DE CONTORNO PARA SISTEMA

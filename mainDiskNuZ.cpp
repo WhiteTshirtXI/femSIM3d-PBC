@@ -21,8 +21,8 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real cfl = 10;
- Solver *solverP = new PCGSolver();
- Solver *solverV = new PCGSolver();
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
  const char *binFolder  = "./bin/";
@@ -30,6 +30,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
+ //m1.readVTK(mesh);
  m1.setMeshDisk(5,5,20);
  m1.setAdimenDisk();
  m1.setMiniElement();

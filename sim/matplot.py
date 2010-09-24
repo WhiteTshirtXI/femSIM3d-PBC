@@ -8,9 +8,8 @@ input = 'vk4.141'
 Z=[];F=[];G=[];H=[];C=[];
 file = open(input,"r")
 lastLine=len(file.readlines())-3 # numero de linhas valido para plot
-print lastLine
 file = open(input,"r")
-file.seek(13) # movendo ponteiro para 2 linha do arquivo de dados
+file.readline()
 for i in range(0,lastLine):
  aux = map(float,file.readline().split())
  Z.append(aux[0])

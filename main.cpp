@@ -81,7 +81,7 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 10;
+ int nIter = 100;
  int nRe = 5;
  for( int i=0;i<nIter;i++ )
  {

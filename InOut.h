@@ -159,6 +159,7 @@ class InOut
   void oscillatingKappa(const char* _dir,const char* _filename, int _iter);
   void saveDistance(const char* _dir,const char* _filename,real time );
   void saveMeshInfo(const char* _dir,const char* _filename );
+  void saveConvergence(const char* _dir,const char* _filename);
 
 private:
   Model3D *m;
@@ -175,6 +176,7 @@ private:
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
+  clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
   clVector *uALE,*vALE,*wALE;
   clVector *distance,*fint;
   clDMatrix *kappa;

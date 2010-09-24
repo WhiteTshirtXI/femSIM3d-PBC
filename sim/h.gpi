@@ -8,11 +8,12 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-set xrange [0.0:10.0]
-set yrange [-0.1:1.1]
+set xrange [0.0:12.0]
+#set xrange [9.0:10.0]
+#set yrange [-0.1:1.1]
 unset grid
 
-N=300
+N=1086
 fileObj1 = "vk1."
 fileObj2 = "vk2."
 fileObj3 = "vk3."
@@ -20,11 +21,11 @@ fileObj4 = "vk4."
 fileObj5 = "vk5."
 fileObj6 = "vk6."
 fileObj7 = "vk7."
-#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuCte.dat"
+fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
-fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
+#fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
-plot fileObj1 .N using 1:4 title 'H1' with lines ,\
+plot fileObj1 .N using 1:4 title 'H1' with points ,\
      fileObj2 .N using 1:4 title 'H2' with lines ,\
      fileObj3 .N using 1:4 title 'H3' with lines ,\
      fileObj4 .N using 1:4 title 'H4' with lines ,\

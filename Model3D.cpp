@@ -623,7 +623,8 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  rMax = r - dr;
  j=0;
  z=0;
- real factor = 1.1 + 1.0/nZ;
+ ///////real factor = 1.1 + 1.0/nZ;
+ //real factor = 1.02 + 1.0/nZ;
  for( int jz=1;jz<=nZ;jz++ )
  {
   //if( jz<=nZ/2 ) dz=0.1;
@@ -631,7 +632,8 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   //if( exp(z/nZ) <= exp(2.0/3.0) ) dz=exp(z/nZ);
   //else dz = exp(2.0/3.0);
   //else dz=0.1;
-  dz = (factor*exp(z/nZ));
+  ////////dz = (factor*exp(z/nZ));
+  dz = 0.1;
   //cout << z  << " " << nZ << " " << dz << endl;
   for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
   {
@@ -1257,7 +1259,8 @@ void Model3D::setNuCteDiskBC()
   {
    idbcu.AddItem(i);
    idbcv.AddItem(i);
-   idbcw.AddItem(i);
+   idbcp.AddItem(i); // caso com c.c. livre em w
+   //idbcw.AddItem(i);
 
    //uc.Set(i,radius*2.5666593e-02); // Z=4
    //vc.Set(i,radius*3.4943977e-02); // Z=4
@@ -1267,9 +1270,13 @@ void Model3D::setNuCteDiskBC()
    //vc.Set(i,radius*5.9598499e-03); // Z=6
    //wc.Set(i,-8.7414071e-01); // Z=6
 
-   uc.Set(i,radius*1.3326987e-04); // Z=10
-   vc.Set(i,radius*1.7327920e-04); // Z=10
-   wc.Set(i,-8.8416563E-01); // Z=10
+   //uc.Set(i,radius*1.3326987e-04); // Z=10
+   //vc.Set(i,radius*1.7327920e-04); // Z=10
+   //wc.Set(i,-8.8416563E-01); // Z=10
+   
+   uc.Set(i,0.0); // Z=10
+   vc.Set(i,0.0); // Z=10
+   pc.Set(i,0.0); // caso com c.c. livre em w
   }
 
   if( Z.Get(i) == Z.Min() )
@@ -1313,6 +1320,7 @@ void Model3D::setNuCDiskBC()
    idbcu.AddItem(i);
    idbcv.AddItem(i);
    idbcw.AddItem(i);
+   ////idbcp.AddItem(i); // caso com c.c. livre em w
 
    //uc.Set(i,radius*2.6505291e-02); // Sc = 2000 Z = 4
    //vc.Set(i,radius*3.6178208e-02); // Sc = 2000 Z = 4
@@ -1321,6 +1329,7 @@ void Model3D::setNuCDiskBC()
    uc.Set(i,radius*1.3690760e-04); // Sc = 2000 Z = 10
    vc.Set(i,radius*1.7819422e-04); // Sc = 2000 Z = 10
    wc.Set(i,-8.8528405e-01); // Sc = 2000 Z = 10
+   ////pc.Set(i,0.0); // caso com c.c. livre em w
    
    //wc.Set(i,-8.8559326E-01); // Sc = 2000
    //wc.Set(i,-9.1044679e-01); // Sc = 10
@@ -1938,6 +1947,7 @@ void Model3D::setNuZDiskBC()
    idbcu.AddItem(i);
    idbcv.AddItem(i);
    idbcw.AddItem(i);
+   ////idbcp.AddItem(i); // caso com c.c. livre em w
 
    //uc.Set(i,radius*4.8979239E-02); // Z=4
    //vc.Set(i,radius*7.9371092E-02); // Z=4
@@ -1950,6 +1960,7 @@ void Model3D::setNuZDiskBC()
    uc.Set(i,radius*0.11735664E-03); // Z=10
    vc.Set(i,radius*0.17501519E-03); // Z=10
    wc.Set(i,-0.10193840E+01); // Z=10
+   /////pc.Set(i,0.0); // Z=10 // caso com c.c. livre em w
   }
 
   if( Z.Get(i) == Z.Min() )
@@ -2034,6 +2045,7 @@ void Model3D::setAdimenDisk()
  real aux;
  real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
+ rMax = Y.Max();
 
  for( int i=0;i<numVerts;i++ )
  {
@@ -2043,7 +2055,7 @@ void Model3D::setAdimenDisk()
   Y.Set(i,aux);
   //aux = Z.Get(i)*factorz*4;
   //aux = Z.Get(i)*factorz*6;
-  aux = Z.Get(i)*factorz*10;
+  aux = Z.Get(i)*factorz*12;
   Z.Set(i,aux);
  }
 }

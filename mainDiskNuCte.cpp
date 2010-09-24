@@ -32,7 +32,8 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(5,5,20);
+ m1.setMeshDisk(6,10,20);
+ //m1.readVTK(mesh);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCteDiskBC();
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
 
  s1.init();
  s1.assembleNuCte();
+ //s1.assembleC();
  s1.matMount();
  //s1.matMountC();
  s1.setUnCoupledBC(); 
@@ -98,7 +100,10 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
    save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
+   save.saveVTKTest(vtkFolder,"simTest",i*nR+j+iter);
+   save.saveVTU(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
+   save.saveConvergence("./","convergence");
    s1.convergenceCriteria(10E-06);
 
    cout << "__________________________________________ End: " 

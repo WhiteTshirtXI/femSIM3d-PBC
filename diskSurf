@@ -9,12 +9,11 @@ TARGET = ns3dSurf
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O3
-LIBS += -L/opt/local/lib -lgsl -lgslcblas -lm
-LIBS += -L$(HOME)/Programs/tetgen/1.4.0 -ltet
+LIBS += -lgsl -lgslcblas -lm
+LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
-INCLUDES += -I/opt/local/include
-INCLUDES += -I$(HOME)/Programs/tetgen/1.4.0
+INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
 INCLUDES += -I${PETSC_DIR}/include
 
 OBJECTS += $(LIBDIR)/clVector.o
@@ -46,7 +45,9 @@ $(TARGET): $(OBJECTS)
 %.o : %.cpp $(wildcard *.h)
 	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-include ${PETSC_DIR}/conf/base
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 deepclean:
 	@rm -f core

@@ -93,6 +93,11 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  distance = s->getDistance();
  nu = s->getNu();
  rho = s->getRho();
+ uSolOld.Dim(numNodes);
+ vSolOld.Dim(numNodes);
+ wSolOld.Dim(numNodes);
+ pSolOld.Dim(numVerts);
+ cSolOld.Dim(numVerts);
 }
 
 InOut::~InOut(){}
@@ -1878,3 +1883,83 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
  cout << "solution No. " << _iter << " saved in VTU" << endl;
 
 } // fecha metodo saveVTU
+
+
+void InOut::saveConvergence(const char* _dir,const char* _filename)
+{
+ // concatenando nomes para o nome do arquivo final
+ string fileAux = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(18) << "uError" 
+				  << setw(17) << "vError"
+				  << setw(17) << "wError" 
+				  << setw(17) << "pError" 
+				  << setw(17) << "cError" 
+				  << setw(17) << "uvwError" 
+				  << setw(17) << "uvwpError" 
+				  << setw(17) << "uvwpcError" 
+				  << endl;
+ }
+
+ real uDiff = ( (*uSol - uSolOld).Abs() ).Sum();
+ real uSum = ( uSol->Abs() ).Sum();
+ real uError = (uDiff/uSum)/dt;
+
+ real vDiff = ( (*vSol - vSolOld).Abs() ).Sum();
+ real vSum = ( vSol->Abs() ).Sum();
+ real vError = (vDiff/vSum)/dt;
+
+ real wDiff = ( (*wSol - wSolOld).Abs() ).Sum();
+ real wSum = ( wSol->Abs() ).Sum();
+ real wError = (wDiff/wSum)/dt;
+
+ real pDiff = ( (*pSol - pSolOld).Abs() ).Sum();
+ real pSum = ( pSol->Abs() ).Sum();
+ real pError = (pDiff/pSum)/dt;
+
+ real cDiff = ( (*cSol - cSolOld).Abs() ).Sum();
+ real cSum = ( cSol->Abs() ).Sum();
+ real cError = (cDiff/cSum)/dt;
+ 
+ real uvwError = ( (uDiff+vDiff+wDiff) / (uSum+vSum+wSum) ) / dt;
+ real uvwpError = ( (uDiff+vDiff+wDiff+pDiff) / (uSum+vSum+wSum+pSum) )/dt;
+ real uvwpcError = ( (uDiff+vDiff+wDiff+pDiff+cDiff) /
+                     (uSum+vSum+wSum+pSum+cSum) ) / dt;
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << *simTime << " " 
+                  << uError << " " 
+                  << vError << " " 
+                  << wError << " " 
+                  << pError << " " 
+                  << cError << " " 
+                  << uvwError << " " 
+                  << uvwpError << " " 
+                  << uvwpcError << " " 
+				  << endl;
+
+ file.close();
+
+ uSolOld = *uSol;
+ vSolOld = *vSol;
+ wSolOld = *wSol;
+ pSolOld = *pSol;
+ cSolOld = *cSol;
+
+ cout << endl;
+ cout << "relative error: " << uvwpcError << endl;
+ cout << endl;
+
+} // fecha metodo saveConvergence
+

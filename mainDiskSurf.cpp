@@ -17,15 +17,23 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
- const char *dir  = "./";
- //const char *mesh = "../../db/mesh/3d/disk8-20-6.vtk";
- const char *mesh = "../../db/mesh/3d/disk6-6-6.vtk";
- const char *txt  = "txt/txt";
- const char *bin  = "bin/bin";
- const char *vtk  = "vtk/sim";
+ int iter = 0;
+ real Re = 100;
+ real Sc = 1;
+ real Fr = 2;
+ int beta = 1;
+ real cfl = 10;
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverV = new PCGSolver();
+ Solver *solverC = new PCGSolver();
+
+ const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
+ const char *binFolder  = "./bin/";
+ const char *vtkFolder  = "./vtk/";
+ const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,6,6);
+ m1.setMeshDisk(5,5,20);
  m1.setMiniElement();
  m1.setDiskFSBC();
  m1.setPerturbSurf();
@@ -35,22 +43,18 @@ int main(int argc, char **argv)
 
  Simulator3D s1(m1);
 
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setCflDisk(cfl);
+ s1.setFr(Fr);
+ s1.setBeta(beta);
+ s1.setSolverVelocity(solverV);
+ s1.setSolverPressure(solverP);
+
  s1.init();
 
- s1.setRe(1000);
- s1.setSc(1000);
- s1.setFr(10);
- s1.setBeta(1);
- //s1.setDt(dt);
- s1.setCfl(1);
- s1.setSolverVelocity(new PCGSolver());
- //s1.setSolverPressure(new PCGSolver());
- //s1.setSolverPressure(new GMRes());
- s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
- s1.setSolverConcentration(new PCGSolver());
- 
  InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTK(dir,vtk);
+ save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
@@ -68,7 +72,12 @@ int main(int argc, char **argv)
   s1.setGravity();
   s1.unCoupled();
   s1.unCoupledC();
-  save.saveVTK(dir,vtk,i);
+  save.saveVTK(vtkFolder,"sim",i);
+  save.saveSol(binFolder,"UVWPC",i);
+
+  cout << "__________________________________________ End: " 
+       << i << endl;
+  }
  };
 
  PetscFinalize();

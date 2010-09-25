@@ -93,7 +93,7 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
-   s1.convergenceCriteria(10E-06);
+   save.saveConvergence("./","convergence");
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;

@@ -1274,8 +1274,8 @@ void Model3D::setNuCteDiskBC()
    //vc.Set(i,radius*1.7327920e-04); // Z=10
    //wc.Set(i,-8.8416563E-01); // Z=10
    
-   uc.Set(i,0.0); // Z=10
-   vc.Set(i,0.0); // Z=10
+   uc.Set(i,0.0); // Z=12
+   vc.Set(i,0.0); // Z=12
    pc.Set(i,0.0); // caso com c.c. livre em w
   }
 
@@ -1298,10 +1298,10 @@ void Model3D::setNuCteDiskBC()
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
   {
-   idbcp.AddItem(i);
-   aux = 0.0;
-   pc.Set(i,aux);
-   outflow.Set(i,aux);
+   //idbcp.AddItem(i);
+   //aux = 0.0;
+   //pc.Set(i,aux);
+   //outflow.Set(i,aux);
   }
  }
 }
@@ -1366,8 +1366,6 @@ void Model3D::setNuCDiskBC()
 
 void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
 {
- // -- Leitura do perfil de pressao variavel em Z para os nos da malha -- //
-
  int size = 2401;
  real aux;
  real dist1,dist2;
@@ -1377,7 +1375,10 @@ void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
  const char* filename = fileConcat.c_str();
 
  ifstream file( filename,ios::in );
- cout << filename << endl;
+
+ cout << endl;
+ cout << "reading: " << filename  << " ...finished!" << endl;
+ cout << endl;
 
  if( !file )
  {
@@ -1409,8 +1410,6 @@ void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
   {
-   idbcp.AddItem(i);
-
    aux = pFile(j,1);
    pc.Set(i,aux);
    outflow.Set(i,aux);

@@ -8,12 +8,12 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-set xrange [0.0:12.0]
+#set xrange [2.0:12.0]
 #set xrange [9.0:10.0]
-#set yrange [-0.1:1.1]
+#set yrange [0.8:0.9]
 unset grid
 
-N=1086
+N= "last"
 fileObj1 = "vk1."
 fileObj2 = "vk2."
 fileObj3 = "vk3."

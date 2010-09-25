@@ -32,11 +32,12 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,10,20);
+ m1.setMeshDisk(6,12,40);
  //m1.readVTK(mesh);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCteDiskBC();
+ //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");
  //m1.setCDiskBC();
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");
@@ -104,7 +105,6 @@ int main(int argc, char **argv)
    save.saveVTU(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
    save.saveConvergence("./","convergence");
-   s1.convergenceCriteria(10E-06);
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;

@@ -6,6 +6,31 @@
 
 #include "SemiLagrangean.h"
 
+SemiLagrangean::SemiLagrangean( Model3D &_m )
+{
+ m = &_m;
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ IEN = m->getIEN();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ numVerts = m->getNumVerts();
+ numNodes = m->getNumNodes();
+ numElems = m->getNumElems();
+ convLin.Dim(numVerts,numVerts);
+ neighbourElem = m->getNeighbourElem(); 
+ oFace = m->getOFace();
+}
+
 SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
                                            clVector &_vSol,
 										   clVector &_wSol,

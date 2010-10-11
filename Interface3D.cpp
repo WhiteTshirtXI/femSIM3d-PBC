@@ -41,7 +41,7 @@ Interface3D::Interface3D(Model3D &_m)
 
 Interface3D::~Interface3D()
 {
- delete solverC;
+ //delete solverC;
 }
 
 clVector Interface3D::curvature1()

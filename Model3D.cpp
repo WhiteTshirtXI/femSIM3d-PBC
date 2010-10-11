@@ -1276,7 +1276,7 @@ void Model3D::setNuCteDiskBC()
    
    uc.Set(i,0.0); // Z=12
    vc.Set(i,0.0); // Z=12
-   pc.Set(i,0.0); // caso com c.c. livre em w
+   pc.Set(i,-0.391141); // caso com c.c. livre em w
   }
 
   if( Z.Get(i) == Z.Min() )
@@ -1364,6 +1364,63 @@ void Model3D::setNuCDiskBC()
  }
 }
 
+void Model3D::readAndSetVelocityDiskBC(const char* _dir,const char* _filename)
+{
+ int size = 2401;
+ real aux;
+ real dist1,dist2;
+ clMatrix fghMatrix(size,4);
+
+ string fileConcat = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileConcat.c_str();
+
+ ifstream file( filename,ios::in );
+
+ cout << endl;
+ cout << "reading: " << filename  << " ...finished!" << endl;
+ cout << endl;
+
+ if( !file )
+ {
+  cerr << "Esta faltando o arquivo de perfil de velocidade!" << endl;
+  exit(1);
+ }
+
+ // leitura do arquivo e transferencia para matriz
+ if( !file.eof() )
+ {
+  for( int i=0;i<size;i++ )
+  {
+   file >> aux; // Z
+   fghMatrix.Set(i,0,aux);
+   file >> aux; // F
+   fghMatrix.Set(i,1,aux);
+   file >> aux; // G
+   fghMatrix.Set(i,2,aux);
+   file >> aux; // H
+   fghMatrix.Set(i,3,aux);
+  }
+ }
+
+ int j=0;
+ real omega=1.0;
+ for( int i=0;i<numNodes;i++ )
+ {
+  for( j=0;j<size-1;j++ )
+  {
+   dist1 = fabs( Z.Get(i) - fghMatrix.Get(j,0) );
+   dist2 = fabs( Z.Get(i) - fghMatrix.Get(j+1,0) );
+   if( dist2 > dist1 ) break;
+  }
+  aux = ( fghMatrix.Get(j,1)*X.Get(i)-fghMatrix.Get(j,2)*Y.Get(i) )*omega;
+  uc.Set(i,aux);
+  aux = ( fghMatrix.Get(j,2)*X.Get(i)-fghMatrix.Get(j,1)*Y.Get(i) )*omega;
+  vc.Set(i,aux);
+  aux = fghMatrix.Get(j,3);
+  wc.Set(i,-1.0*aux);
+ }
+}
+
 void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
 {
  int size = 2401;
@@ -1407,13 +1464,19 @@ void Model3D::readAndSetPressureDiskBC(const char* _dir,const char* _filename)
    dist2 = fabs( Z.Get(i) - pFile(j+1,0) );
    if( dist2 > dist1 ) break;
   }
-  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
-	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
-  {
+//--------------------------------------------------
+//   // applying b.c. only on the sidewall
+//   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
+// 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+//   {
+//    aux = pFile(j,1);
+//    pc.Set(i,aux);
+//    outflow.Set(i,aux);
+//   }
+//-------------------------------------------------- 
    aux = pFile(j,1);
    pc.Set(i,aux);
    outflow.Set(i,aux);
-  }
  }
 }
 
@@ -2042,7 +2105,8 @@ void Model3D::setDiskFSBC()
 void Model3D::setAdimenDisk()
 {
  real aux;
- real Red = 100;
+ real Red = 50;
+ //real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
  rMax = Y.Max();
 
@@ -2054,7 +2118,7 @@ void Model3D::setAdimenDisk()
   Y.Set(i,aux);
   //aux = Z.Get(i)*factorz*4;
   //aux = Z.Get(i)*factorz*6;
-  aux = Z.Get(i)*factorz*12;
+  aux = Z.Get(i)*factorz*10;
   Z.Set(i,aux);
  }
 }

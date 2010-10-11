@@ -12,7 +12,7 @@ set xrange [1.0:2.0]
 set yrange [0.2:0.6]
 unset grid
 
-N=1095
+N=1927
 fileObj1 = "vk1."
 fileObj2 = "vk2."
 fileObj3 = "vk3."
@@ -24,20 +24,20 @@ fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 #fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
-plot "vk1.711" using 1:3 title '711' with lines ,\
-     "vk1.1095" using 1:3 title '1095' with lines ,\
-     "vk1.1166" using 1:3 title '1166' ,\
-     "vk1.1177" using 1:3 title '1177' ,\
-     "vk1.1229" using 1:3 title '1229' ,\
- 	 fileObjAnalytic using 1:3 title 'G' with lines 
-
 #--------------------------------------------------
-# plot fileObj1 .N using 1:3 title 'G1' with lines ,\
-#      fileObj2 .N using 1:3 title 'G2' with lines ,\
-#      fileObj3 .N using 1:3 title 'G3' with lines ,\
-#      fileObj4 .N using 1:3 title 'G4' with lines ,\
-#      fileObj5 .N using 1:3 title 'G5' with lines ,\
-#      fileObj6 .N using 1:3 title 'G6' with lines ,\
-#      fileObj7 .N using 1:3 title 'G7' with lines ,\
+# plot "vk1.711" using 1:3 title '711' with lines ,\
+#      "vk1.1095" using 1:3 title '1095' with lines ,\
+#      "vk1.1166" using 1:3 title '1166' ,\
+#      "vk1.1177" using 1:3 title '1177' ,\
+#      "vk1.1229" using 1:3 title '1229' ,\
 #  	 fileObjAnalytic using 1:3 title 'G' with lines 
 #-------------------------------------------------- 
+
+plot fileObj1 .N using 1:3 title 'G1' with lines ,\
+     fileObj2 .N using 1:3 title 'G2' with lines ,\
+     fileObj3 .N using 1:3 title 'G3' with lines ,\
+     fileObj4 .N using 1:3 title 'G4' with lines ,\
+     fileObj5 .N using 1:3 title 'G5' with lines ,\
+     fileObj6 .N using 1:3 title 'G6' with lines ,\
+     fileObj7 .N using 1:3 title 'G7' with lines ,\
+ 	 fileObjAnalytic using 1:3 title 'G' with lines 

@@ -21,7 +21,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 0;
- real Re = 1500;
+ real Re = 100;
  real Sc = 2;
  real We = 10;
  real alpha = 1;
@@ -31,8 +31,8 @@ int main(int argc, char **argv)
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- //const char *mesh = "../../db/gmsh/3D/cube-tube2D.msh";
  const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
+ //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
   const char *mesh2 = "./vtk/sim-last.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-last-0.vtk";
   //const char *mesh2 = "/scratch2/gustavo/cubeCube/vtk/sim-1740.vtk";
-  //const char *mesh2 = "./vtk/sim-4970.vtk";
+  //const char *mesh2 = "./vtk/sim-59.vtk";
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
   s1.loadSolution(binFolder,"sim-last");
   iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",4970); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",4970);
+  //s1.loadSolution(binFolder,"UVWPC",59); // set para velocidade no simulador
+  //iter = s1.loadIteration(vtkFolder,"sim",59);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -140,6 +140,7 @@ int main(int argc, char **argv)
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    cout << "________________________________________ END of " 
 	    << i*nReMesh+j+iter << endl;
@@ -160,9 +161,9 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-remeshing",iter+nReMesh*nIter-1);
-  saveEnd.saveSol(binFolder,"UVWPC-remeshing",iter+nReMesh*nIter-1);
-  saveEnd.saveSimTime(iter+nReMesh*nIter-1);
+  saveEnd.saveVTK(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSol(binFolder,"UVWPC-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );
  }
 

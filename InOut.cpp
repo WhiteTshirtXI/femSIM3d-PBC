@@ -5,6 +5,12 @@
 // =================================================================== //
 
 #include "InOut.h"
+// necessario para leitura do objeto triangle.o escrito em ANSI C
+extern "C"
+{
+#include "triangle.h"
+}
+
 
 //using namespace std;
 
@@ -1977,3 +1983,280 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 
 } // fecha metodo saveConvergence
 
+void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".dat";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ SemiLagrangean semi(*m);
+
+ // xVert da malha nova
+ real nPoints = 100;
+ clVector xVert(nPoints);
+ clVector yVert(nPoints);
+ clVector zVert(nPoints);
+
+ for( int i=0;i<nPoints;i++ )
+ {
+  real dx = i * (3.0-0.0)/(nPoints-1);
+  xVert.Set(i,dx);
+ }
+ yVert.SetAll(1.5);
+ zVert.SetAll(1.5);
+
+ semi.meshInterp(xVert,yVert,zVert);
+ clVector pLin(nPoints);
+
+ // interpolacao linear em numVerts
+ clMatrix* interpLin = semi.getInterpLin();
+ pLin = *interpLin*(*pSol);
+
+ for( int i=0;i<nPoints;i++ )
+  vtkFile << setw(10) << xVert.Get(i) << " " << pLin.Get(i) << endl;
+
+ vtkFile.close();
+
+ cout << "chordal pressure No. " << _iter << " saved in dat" << endl;
+
+} // fecha metodo chordalPressure
+
+void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".dat";
+ const char* filename = file.c_str();
+
+ ofstream pFile( filename ); 
+
+ SemiLagrangean semi(*m);
+
+ // xVert da malha nova
+ real nPoints = 100;
+ clVector xVert(nPoints*nPoints);
+ clVector yVert(nPoints*nPoints);
+ clVector zVert(nPoints*nPoints);
+
+ int count = 0;
+ for( int i=0;i<nPoints;i++ )
+ {
+  for( int j=0;j<nPoints;j++ )
+  {
+   real dx = i * (3.0-0.0)/(nPoints-1);
+   xVert.Set(count,dx);
+   real dy = j * (3.0-0.0)/(nPoints-1);
+   yVert.Set(count,dy);
+   count++;
+  }
+ }
+ zVert.SetAll(1.5);
+
+ semi.meshInterp(xVert,yVert,zVert);
+ clVector pLin(nPoints);
+
+ // interpolacao linear em numVerts
+ clMatrix* interpLin = semi.getInterpLin();
+ pLin = *interpLin*(*pSol);
+
+ for( int i=0;i<nPoints*nPoints;i++ )
+  pFile << setw(10) << xVert.Get(i) << " " 
+                    << yVert.Get(i) << " " 
+					<< pLin.Get(i) << endl;
+
+ pFile.close();
+
+ cout << "cross sectional pressure No. " << _iter << " saved in dat" << endl;
+
+} // fecha metodo chordalPressure
+
+void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter )
+{
+ // file output
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + ".dat";
+ const char* filename = file.c_str();
+
+ SemiLagrangean semi(*m);
+
+ // xVert da malha nova
+ real nPoints = 500;
+ clVector xVert(nPoints*nPoints);
+ clVector yVert(nPoints*nPoints);
+ clVector zVert(nPoints*nPoints);
+
+ real xi = 0;
+ real xf = 3.0;
+ real yi = 0;
+ real yf = 3.0;
+ real zi = 1.5;
+ real zf = 1.5;
+ int count = 0;
+ for( int i=0;i<nPoints;i++ )
+ {
+  for( int j=0;j<nPoints;j++ )
+  {
+   real dx = i * (xf-xi)/(nPoints-1);
+   xVert.Set(count,dx);
+   real dy = j * (yf-yi)/(nPoints-1);
+   yVert.Set(count,dy);
+   count++;
+  }
+ }
+ zVert.SetAll(zi);
+
+ // interpolacao linear em numVerts
+ semi.meshInterp(xVert,yVert,zVert);
+ clVector cLin(nPoints);
+ clMatrix* interpLin = semi.getInterpLin();
+ cLin = *interpLin*(*cc);
+
+ clVector bubble,bx,by;
+ // tratamento dos dados
+ for( int i=0;i<cLin.Dim();i++ )
+ {
+  if( cLin.Get(i) >= 0.5 )
+  {
+   cLin.Set(i,1.0);
+   bubble.AddItem(i);
+   bx.AddItem(xVert.Get(i));
+   by.AddItem(yVert.Get(i));
+  }
+  if( cLin.Get(i) < 0.5 )
+  {
+   cLin.Set(i,0.0);
+  }
+ }
+
+ // TRIANGLE Library
+ struct triangulateio in, out;
+
+ in.numberofpoints = bubble.Dim() ;
+ in.numberofpointattributes = 0;
+ in.pointlist = (REALL *) malloc(in.numberofpoints * 2 * sizeof(REALL));
+ in.pointattributelist = (REALL *) NULL;
+ in.pointmarkerlist = (int *) NULL;
+ in.numberofsegments = 0;
+ in.numberofholes = 0;
+ in.numberofregions = 0;
+ in.regionlist = (REALL *) NULL;
+
+ for( int i=0;i<bubble.Dim();i++ )
+ {
+  in.pointlist[2*i+0] = bx.Get(i);
+  in.pointlist[2*i+1] = by.Get(i);
+ }
+
+ out.pointlist = (REALL *) NULL;
+ out.pointattributelist = (REALL *) NULL;
+ out.pointmarkerlist = (int *) NULL;
+ out.trianglelist = (int *) NULL;
+ out.triangleattributelist = (REALL *) NULL;
+ out.neighborlist = (int *) NULL;
+ out.segmentlist = (int *) NULL;
+ out.segmentmarkerlist = (int *) NULL;
+ out.edgelist = (int *) NULL; out.edgemarkerlist = (int *) NULL;
+
+ triangulate( (char* ) "Qz", &in, &out, (struct triangulateio *) NULL);
+
+ real area = 0;
+ for( int i=0;i<out.numberoftriangles;i++ )
+ {
+  int v1 = out.trianglelist[3*i+0];
+  int v2 = out.trianglelist[3*i+1];
+  int v3 = out.trianglelist[3*i+2];
+
+  area+=0.5*(((bx.Get(v2)-bx.Get(v1))*(by.Get(v3)-by.Get(v1)))
+	        -((bx.Get(v3)-bx.Get(v1))*(by.Get(v2)-by.Get(v1))));
+ }
+
+ ifstream testFile( filename );
+ ofstream voidFile( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  voidFile << "#time" << setw(20) << "total c-s area" 
+				      << setw(15) << "bubble c-s area"
+					  << setw(15) << "fluid c-s area" 
+					  << setw(15) << "void fraction" 
+					  << endl;
+ }
+
+
+ // saving file
+ real totalArea = (xf-xi)*(yf-yi);
+ real fluidArea = totalArea - area;
+ real voidFraction = area/totalArea;
+ voidFile << setw(10) << *simTime << " " 
+                      << totalArea << " " 
+					  << area << " " 
+					  << fluidArea << " " 
+					  << voidFraction << endl;
+
+ voidFile.close();
+
+ cout << "cross sectional void fraction No. " << _iter << " saved in dat" << endl;
+
+
+
+ /* ---- SAVING VTK ---- */
+ // concatenando nomes para o nome do arquivo final
+ string file2 = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename2 = file2.c_str();
+
+ ofstream vtkFile( filename2 ); 
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "2D Simulation C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << endl;
+ vtkFile << "POINTS " << bx.Dim() << " double" << endl;
+
+ vtkFile << setprecision(10) << scientific; 
+ for( int i=0;i<bx.Dim();i++ )
+  vtkFile << setw(10) << bx.Get(i) << " " 
+          << setw(10) << by.Get(i) << " " 
+		  << setw(10) << zVert.Get(i) << endl;
+
+ vtkFile << endl;
+ 
+ vtkFile << "CELLS " << out.numberoftriangles << " " << 4*out.numberoftriangles<< endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<out.numberoftriangles;i++ )
+ {
+  vtkFile << "3 " << out.trianglelist[3*i+0] << " "  
+                  << out.trianglelist[3*i+1] << " " 
+                  << out.trianglelist[3*i+2] << endl;
+ };
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << out.numberoftriangles << endl;
+ for( int i=0;i<out.numberoftriangles;i++ )
+  vtkFile << "5 ";
+
+ vtkFile << endl;
+ /* --------------------- */
+
+
+} // fecha metodo crossSectionalVoidFraction

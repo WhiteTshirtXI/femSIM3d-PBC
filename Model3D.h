@@ -58,6 +58,7 @@ class Model3D
   void setNuCteDiskBC();
   void setNuCDiskBC();
   void setNuZDiskBC();
+  void readAndSetVelocityDiskBC(const char* _dir,const char* _filename);
   void readAndSetPressureDiskBC(const char* _dir,const char* _filename);
   void setCDiskBC();
   void setDiskFSBC();

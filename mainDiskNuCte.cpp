@@ -32,7 +32,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,12,40);
+ m1.setMeshDisk(6,14,70);
  //m1.readVTK(mesh);
  m1.setAdimenDisk();
  m1.setMiniElement();
@@ -99,7 +99,12 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk4",i*nR+j+iter,7);
    save.saveVonKarman(simFolder,"vk5",i*nR+j+iter,8);
    save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
-   save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
+   save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,4);
+   save.saveVonKarman(simFolder,"vk8",i*nR+j+iter,5);
+   save.saveVonKarman(simFolder,"vk9",i*nR+j+iter,6);
+   save.saveVonKarman(simFolder,"vk10",i*nR+j+iter,7);
+   save.saveVonKarman(simFolder,"vk11",i*nR+j+iter,8);
+   save.saveVonKarman(simFolder,"vk12",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveVTKTest(vtkFolder,"simTest",i*nR+j+iter);
    save.saveVTU(vtkFolder,"sim",i*nR+j+iter);

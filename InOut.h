@@ -15,6 +15,7 @@
 
 #include "Model3D.h"
 #include "Simulator3D.h"
+#include "SemiLagrangean.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "clVector.h"
@@ -160,6 +161,9 @@ class InOut
   void saveDistance(const char* _dir,const char* _filename,real time );
   void saveMeshInfo(const char* _dir,const char* _filename );
   void saveConvergence(const char* _dir,const char* _filename);
+  void chordalPressure( const char* _dir,const char* _filename, int _iter );
+  void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
+void crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter );
 
 private:
   Model3D *m;

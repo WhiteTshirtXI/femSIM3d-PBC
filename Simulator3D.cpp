@@ -297,9 +297,9 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
 
 Simulator3D::~Simulator3D()
 {
- delete solverV;
- delete solverP;
- delete solverC;
+ //delete solverV;
+ //delete solverP;
+ //delete solverC;
 }
 
 void Simulator3D::init()
@@ -1688,7 +1688,7 @@ void Simulator3D::setInterface()
 void Simulator3D::setInterfaceGeo()
 {
  Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa1();
+ clVector kappaAux = interface.computeKappa2();
 
  //interface.plotKappa(kappaAux);
  kappa = interface.setKappaSurface(kappaAux);
@@ -1773,8 +1773,8 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- //uvw = uTilde + dt*invMLumped*fint;
- uvw = uTilde + invA*fint;
+ uvw = uTilde + dt*invMLumped*fint;
+ //uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
  b2Tilde = b2 - (DTilde * uvw); // D com c.c.

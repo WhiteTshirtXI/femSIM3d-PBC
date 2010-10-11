@@ -12,6 +12,7 @@
 class SemiLagrangean
 {
  public:
+  SemiLagrangean(Model3D &_m);
   SemiLagrangean(Model3D &_m,clVector &_uSol,clVector &_vSol,
 	             clVector &_wSol,
 				 clVector &_velU,clVector &_velV,clVector &_velW,

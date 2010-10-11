@@ -8,7 +8,7 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-set xrange [0.0:12.0]
+set xrange [0.0:10.0]
 set yrange [-0.1:1.0]
 unset grid
 
@@ -16,7 +16,7 @@ unset grid
 #set output 'teste.pdf'
 
 N = "last"
-fileObj = "vk2."
+fileObj = "vk5."
 fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 #fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"

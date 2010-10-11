@@ -8,7 +8,7 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-#set xrange [2.0:12.0]
+set xrange [0.0:15.0]
 #set xrange [9.0:10.0]
 #set yrange [0.8:0.9]
 unset grid
@@ -21,6 +21,14 @@ fileObj4 = "vk4."
 fileObj5 = "vk5."
 fileObj6 = "vk6."
 fileObj7 = "vk7."
+fileObj8 = "vk8."
+fileObj9 = "vk9."
+fileObj10 = "vk10."
+fileObj11 = "vk11."
+fileObj12 = "vk12."
+fileObj13 = "vk13."
+fileObj14 = "vk14."
+fileObj15 = "vk15."
 fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 #fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
@@ -32,4 +40,12 @@ plot fileObj1 .N using 1:4 title 'H1' with points ,\
      fileObj5 .N using 1:4 title 'H5' with lines ,\
      fileObj6 .N using 1:4 title 'H6' with lines ,\
      fileObj7 .N using 1:4 title 'H7' with lines ,\
+     fileObj8 .N using 1:4 title 'H8' with lines ,\
+     fileObj9 .N using 1:4 title 'H9' with lines ,\
+     fileObj10 .N using 1:4 title 'H10' with lines ,\
+     fileObj11 .N using 1:4 title 'H11' with lines ,\
+     fileObj12 .N using 1:4 title 'H12' with lines ,\
+     fileObj13 .N using 1:4 title 'H13' with lines ,\
+     fileObj14 .N using 1:4 title 'H14' with lines ,\
+     fileObj15 .N using 1:4 title 'H15' with lines ,\
  	 fileObjAnalytic using 1:4 title 'H' with lines

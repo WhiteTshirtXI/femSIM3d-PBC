@@ -16,6 +16,7 @@
 #include "Model3D.h"
 #include "Simulator3D.h"
 #include "SemiLagrangean.h"
+#include "Interp3D.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "clVector.h"
@@ -163,7 +164,19 @@ class InOut
   void saveConvergence(const char* _dir,const char* _filename);
   void chordalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
-void crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter );
+  void crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter );
+
+  /* VTK Building Tools  */
+  void vtkHeader(ofstream& _file);
+  void vtkHeaderTime(ofstream& _file,int _iter);
+  void vtkCoords(ofstream& _file);
+  void vtkCellArray(ofstream& _file);
+  void vtkCellType(ofstream& _file);
+  void vtkScalarHeader(ofstream& _file);
+  void vtkScalar(ofstream& _file,string _name,clVector &_scalar);
+  void vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar);
+  void vtkVector(ofstream& _file,string _name,clVector &_v);
+  void vtkVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
 
 private:
   Model3D *m;

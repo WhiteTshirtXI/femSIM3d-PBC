@@ -336,69 +336,20 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename ); 
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "3D Simulation C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << endl;
- vtkFile << "POINTS " << numVerts << " double" << endl;
 
- vtkFile << setprecision(10) << scientific; 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << X->Get(i) << " " 
-          << setw(10) << Y->Get(i) << " " 
-		  << setw(10) << Z->Get(i) << endl;
-
- vtkFile << endl;
- 
- vtkFile << "CELLS " << numElems << " " << 5*numElems << endl;
- vtkFile << setprecision(0) << fixed; 
- for( int i=0;i<numElems;i++ )
- {
-  vtkFile << "4 " << IEN->Get(i,0) << " "  
-                  << IEN->Get(i,1) << " " 
-                  << IEN->Get(i,2) << " " 
-                  << IEN->Get(i,3) << endl;
- };
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << numElems << endl;
- for( int i=0;i<numElems;i++ )
-  vtkFile << "10 ";
-
- vtkFile << endl;
- vtkFile << endl;
-
- vtkFile << "POINT_DATA " << numVerts << endl;
-
- vtkFile << "SCALARS pressure double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- vtkFile << setprecision(10) << scientific; 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << pc->Get(i) << endl;
-
- vtkFile << endl;
+ vtkHeader(vtkFile);
+ vtkCoords(vtkFile);
+ vtkCellArray(vtkFile);
+ vtkCellType(vtkFile);
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pc);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
- {
-  vtkFile << "SCALARS concentration double" << endl;
-  vtkFile << "LOOKUP_TABLE default"  << endl;
+  vtkScalar(vtkFile,"concentration",*cc);
 
-  for( int i=0;i<numVerts;i++ )
-   vtkFile << setw(10) << cc->Get(i) << endl;
+ vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
-  vtkFile << endl;
- }
-
- vtkFile << "VECTORS vectors double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << uc->Get(i) << " " 
-          << setw(10) << vc->Get(i) << " " 
-		  << setw(10) << wc->Get(i) << endl;
-
- vtkFile << endl;
  vtkFile.close();
 
  cout << "mesh saved in VTK" << endl;
@@ -422,98 +373,22 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "3D Simulation C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "FIELD FieldData 2" << endl;
- vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
- vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << _iter << endl;
- vtkFile << endl;
- vtkFile << "POINTS " << numVerts << " double" << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
-
- vtkFile << endl;
- 
- vtkFile << "CELLS " << numElems << " " << 5*numElems << endl;
- for( int i=0;i<numElems;i++ )
- {
-  vtkFile << "4 " << IEN->Get(i,0) << " "  
-                  << IEN->Get(i,1) << " " 
-                  << IEN->Get(i,2) << " " 
-                  << IEN->Get(i,3) << endl;
- };
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << numElems << endl;
- for( int i=0;i<numElems;i++ )
-  vtkFile << "10 ";
-
- vtkFile << endl;
- vtkFile << endl;
-
- vtkFile << "POINT_DATA " << numVerts << endl;
-
- vtkFile << "SCALARS pressure double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- vtkFile << setprecision(10) << scientific;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << pSol->Get(i) << endl;
-
- vtkFile << endl;
+ vtkHeaderTime(vtkFile,_iter);
+ vtkCoords(vtkFile);
+ vtkCellArray(vtkFile);
+ vtkCellType(vtkFile);
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
- {
-  vtkFile << "SCALARS concentration double" << endl;
-  vtkFile << "LOOKUP_TABLE default"  << endl;
+  vtkScalar(vtkFile,"concentration",*cSol);
 
-  for( int i=0;i<numVerts;i++ )
-   vtkFile << cSol->Get(i) << endl;
-
-  vtkFile << endl;
- }
-
- vtkFile << "SCALARS kappa double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << kappa->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS distance double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << distance->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "VECTORS velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << " " 
-          << vSol->Get(i) << " " 
-		  << wSol->Get(i) << endl;
- vtkFile << endl;
-
- vtkFile << "VECTORS ALE-velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uALE->Get(i) << " " 
-          << vALE->Get(i) << " " 
-		  << wALE->Get(i) << endl;
- vtkFile << endl;
-
- vtkFile << "VECTORS surface-force double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << fint->Get(i) << " " 
-          << fint->Get(i+numVerts) << " " 
-		  << fint->Get(i+numVerts*2) << endl;
+ vtkScalar(vtkFile,"kappa",*kappa);
+ vtkScalar(vtkFile,"distance",*distance);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+ vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
 
  vtkFile.close();
 
@@ -545,23 +420,10 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "Simulacao 3D C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "FIELD FieldData 2" << endl;
- vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
- vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << _iter << endl;
- vtkFile << endl;
- vtkFile << "POINTS " << numVerts << " double" << endl;
+ vtkHeaderTime(vtkFile,_iter);
+ vtkCoords(vtkFile);
 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
 
- vtkFile << endl;
- 
  // conta numero de elementos
  real plane1 = ( X->Max()-X->Min() )/2.0;
  real plane2 = ( Y->Max()-Y->Min() )/2.0;
@@ -617,71 +479,22 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  vtkFile << endl;
  vtkFile << endl;
 
- vtkFile << "POINT_DATA " << numVerts << endl;
-
- vtkFile << "SCALARS pressure double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- vtkFile << setprecision(10) << scientific;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << pSol->Get(i) << endl;
-
- vtkFile << endl;
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
- {
-  vtkFile << "SCALARS concentration double" << endl;
-  vtkFile << "LOOKUP_TABLE default"  << endl;
+  vtkScalar(vtkFile,"concentration",*cSol);
 
-  for( int i=0;i<numVerts;i++ )
-   vtkFile << cSol->Get(i) << endl;
+ vtkScalar(vtkFile,"kappa",*kappa);
+ vtkScalar(vtkFile,"distance",*distance);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+ vtkVector(vtkFile,"surface_force",*fint);
 
-  vtkFile << endl;
- }
-
- vtkFile << "SCALARS kappa double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << kappa->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS distance double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << distance->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "VECTORS velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << " " 
-          << vSol->Get(i) << " " 
-		  << wSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "VECTORS ALE-Velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uALE->Get(i) << " " 
-          << vALE->Get(i) << " " 
-		  << wALE->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "VECTORS surface-force double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << fint->Get(i) << " " 
-          << fint->Get(i+numNodes) << " " 
-		  << fint->Get(i+numNodes*2) << endl;
-
- vtkFile << endl;
  vtkFile.close();
 
- cout << "solution No. " << _iter << " saved in VTK" << endl;
+ cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
 } // fecha metodo saveVtk
 
@@ -1593,31 +1406,14 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
  const char* filename = file.c_str();
- clMatrix *IENTri = m->getIENTri();
- int numTri = IENTri->DimI();
 
  ofstream vtkFile( filename ); 
 
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "Modelo 3D C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << "FIELD FieldData 2" << endl;
- vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
- vtkFile << "ITERATION 1 1 int" << endl;
- vtkFile << _iter << endl;
- vtkFile << endl;
- vtkFile << "POINTS " << numVerts << " double" << endl;
+ vtkHeaderTime(vtkFile,_iter);
+ vtkCoords(vtkFile);
 
- vtkFile << setprecision(10) << scientific; 
- for( int i=0;i<numVerts;i++ )
-  vtkFile << setw(10) << X->Get(i) << " " 
-          << setw(10) << Y->Get(i) << " " 
-		  << setw(10) << Z->Get(i) << endl;
-
- vtkFile << endl;
- 
+ clMatrix *IENTri = m->getIENTri();
+ int numTri = IENTri->DimI();
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  vtkFile << setprecision(0) << fixed; 
  for( int i=0;i<numTri;i++ )
@@ -1635,52 +1431,18 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkFile << endl;
  vtkFile << endl;
 
- vtkFile << "POINT_DATA " << numVerts << endl;
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
 
- vtkFile << "SCALARS pressure double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cSol);
 
- vtkFile << setprecision(10) << scientific;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << pSol->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS kappa double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << kappa->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "SCALARS distance double" << endl;
- vtkFile << "LOOKUP_TABLE default"  << endl;
-
- for( int i=0;i<numVerts;i++ )
-  vtkFile << distance->Get(i) << endl;
-
- vtkFile << endl;
-
- vtkFile << "VECTORS velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uSol->Get(i) << " " 
-          << vSol->Get(i) << " " 
-		  << wSol->Get(i) << endl;
- vtkFile << endl;
-
- vtkFile << "VECTORS ALE-velocity double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << uALE->Get(i) << " " 
-          << vALE->Get(i) << " " 
-		  << wALE->Get(i) << endl;
- vtkFile << endl;
-
- vtkFile << "VECTORS surface-force double" << endl;
- for( int i=0;i<numVerts;i++ )
-  vtkFile << fint->Get(i) << " " 
-          << fint->Get(i+numVerts) << " " 
-		  << fint->Get(i+numVerts*2) << endl;
+ vtkScalar(vtkFile,"kappa",*kappa);
+ vtkScalar(vtkFile,"distance",*distance);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+ vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
 
  vtkFile.close();
 
@@ -2093,58 +1855,183 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  string file = (string) _dir + (string) _filename + ".dat";
  const char* filename = file.c_str();
 
- SemiLagrangean semi(*m);
-
  // xVert da malha nova
- real nPoints = 500;
- clVector xVert(nPoints*nPoints);
- clVector yVert(nPoints*nPoints);
- clVector zVert(nPoints*nPoints);
+ int nX = 100;
+ int nY = 100;
+ int nTotal = nX*nY;
+ clVector xVert(nTotal);
+ clVector yVert(nTotal);
+ clVector zVert(nTotal);
 
- real xi = 0;
- real xf = 3.0;
- real yi = 0;
- real yf = 3.0;
- real zi = 1.5;
- real zf = 1.5;
+ // structured mesh points generator
+ real xi = X->Min();
+ real xf = X->Max();
+ real yi = Y->Min();
+ real yf = Y->Max();
+ real zi = (Z->Max()-Z->Min())/2.0;
+ real zf = (Z->Max()-Z->Min())/2.0;
  int count = 0;
- for( int i=0;i<nPoints;i++ )
+ for( int i=0;i<nX;i++ )
  {
-  for( int j=0;j<nPoints;j++ )
+  for( int j=0;j<nY;j++ )
   {
-   real dx = i * (xf-xi)/(nPoints-1);
+   real dx = xi + i * (xf-xi)/(nX-1);
    xVert.Set(count,dx);
-   real dy = j * (yf-yi)/(nPoints-1);
+   real dy = yi + j * (yf-yi)/(nY-1);
    yVert.Set(count,dy);
    count++;
   }
  }
  zVert.SetAll(zi);
 
- // interpolacao linear em numVerts
+ Interp3D semi(*m);
+
+ // linear interpolation on nTotal
  semi.meshInterp(xVert,yVert,zVert);
- clVector cLin(nPoints);
+ clVector cLin(nTotal);
  clMatrix* interpLin = semi.getInterpLin();
  cLin = *interpLin*(*cc);
 
- clVector bubble,bx,by;
- // tratamento dos dados
+ clVector test(nTotal);test.SetAll(1.0);
+ clVector cLin2 = *interpLin*(test);
+
+ // verificando quais os pontos estao dentro do dominio computacinal
+ // os que nao estiverem dentro serao marcados por -1
  for( int i=0;i<cLin.Dim();i++ )
  {
-  if( cLin.Get(i) >= 0.5 )
+  if(cLin2.Get(i) > 0.0 || cLin2.Get(i) < 0.0 )
   {
-   cLin.Set(i,1.0);
-   bubble.AddItem(i);
-   bx.AddItem(xVert.Get(i));
-   by.AddItem(yVert.Get(i));
+   if( cLin.Get(i) >= 0.5 )
+	cLin.Set(i,1.0);
+   if( cLin.Get(i) < 0.5 )
+	cLin.Set(i,0.0);
   }
-  if( cLin.Get(i) < 0.5 )
-  {
-   cLin.Set(i,0.0);
-  }
+  else
+   cLin.Set(i,-1); // fora do dominio
  }
 
- // TRIANGLE Library
+ // domain mesh
+ // domainX e domainY sao vetores de coordenadas X e Y dos pontos da
+ // malha struturada que estao dentro do dominio computacional
+ // domain tera apenas os pontos pertencentes ao dominio computacional
+ clVector domain,domainX,domainY;
+ for( int i=0;i<cLin.Dim();i++ )
+  if(cLin.Get(i) != -1)
+  {
+   domain.AddItem(cLin.Get(i));
+   domainX.AddItem(xVert.Get(i));
+   domainY.AddItem(yVert.Get(i));
+  }
+
+ // TRIANGLE Library - DOMAIN
+ // criando malha triangular da secao transversal do dominio completo
+ struct triangulateio in1, out1;
+
+ in1.numberofpoints = domain.Dim() ;
+ in1.numberofpointattributes = 0;
+ in1.pointlist = (REALL *) malloc(in1.numberofpoints * 2 * sizeof(REALL));
+ in1.pointattributelist = (REALL *) NULL;
+ in1.pointmarkerlist = (int *) NULL;
+ in1.numberofsegments = 0;
+ in1.numberofholes = 0;
+ in1.numberofregions = 0;
+ in1.regionlist = (REALL *) NULL;
+
+ for( int i=0;i<domain.Dim();i++ )
+ {
+  in1.pointlist[2*i+0] = domainX.Get(i);
+  in1.pointlist[2*i+1] = domainY.Get(i);
+ }
+
+ out1.pointlist = (REALL *) NULL;
+ out1.pointattributelist = (REALL *) NULL;
+ out1.pointmarkerlist = (int *) NULL;
+ out1.trianglelist = (int *) NULL;
+ out1.triangleattributelist = (REALL *) NULL;
+ out1.neighborlist = (int *) NULL;
+ out1.segmentlist = (int *) NULL;
+ out1.segmentmarkerlist = (int *) NULL;
+ out1.edgelist = (int *) NULL; out1.edgemarkerlist = (int *) NULL;
+
+ triangulate( (char* ) "Qz", &in1, &out1, (struct triangulateio *) NULL);
+
+ // somando area de todos os elementos da malha para area total da secao 
+ real areaDomain = 0;
+ for( int i=0;i<out1.numberoftriangles;i++ )
+ {
+  int v1 = out1.trianglelist[3*i+0];
+  int v2 = out1.trianglelist[3*i+1];
+  int v3 = out1.trianglelist[3*i+2];
+
+  areaDomain+=0.5*(((domainX.Get(v2)-domainX.Get(v1))*
+	                (domainY.Get(v3)-domainY.Get(v1)))
+	              -((domainX.Get(v3)-domainX.Get(v1))*
+	                (domainY.Get(v2)-domainY.Get(v1))));
+ }
+
+ // FREEing pointers
+ free(in1.pointlist);
+ free(in1.pointmarkerlist);
+ free(out1.pointlist);
+ free(out1.trianglelist);
+ free(out1.triangleattributelist);
+ free(out1.segmentlist);
+ free(out1.segmentmarkerlist);
+
+//--------------------------------------------------
+//  /* ---- SAVING VTK DOMAIN ---- */
+//  // concatenando nomes para o nome do arquivo final
+//  string file3 = (string) _dir + (string) _filename + "Domain" + "-" + str + ".vtk";
+//  const char* filename3 = file3.c_str();
+// 
+//  ofstream vtkFile2( filename3 ); 
+// 
+//  vtkHeader(vtkFile2);
+// 
+//  vtkFile2 << "POINTS " << domainX.Dim() << " double" << endl;
+// 
+//  vtkFile2 << setprecision(10) << scientific; 
+//  for( int i=0;i<domainX.Dim();i++ )
+//   vtkFile2 << setw(10) << domainX.Get(i) << " " 
+//            << setw(10) << domainY.Get(i) << " " 
+// 		   << setw(10) << zVert.Get(i) << endl;
+// 
+//  vtkFile2 << endl;
+//  
+//  vtkFile2 << "CELLS " << out1.numberoftriangles << " " << 4*out1.numberoftriangles<< endl;
+//  vtkFile2 << setprecision(0) << fixed; 
+//  for( int i=0;i<out1.numberoftriangles;i++ )
+//  {
+//   vtkFile2 << "3 " << out1.trianglelist[3*i+0] << " "  
+//                    << out1.trianglelist[3*i+1] << " " 
+//                    << out1.trianglelist[3*i+2] << endl;
+//  };
+//  vtkFile2 << endl;
+// 
+//  vtkFile2 <<  "CELL_TYPES " << out1.numberoftriangles << endl;
+//  for( int i=0;i<out1.numberoftriangles;i++ )
+//   vtkFile2 << "5 ";
+// 
+//  vtkFile2 << endl;
+//  /* --------------------- */
+//-------------------------------------------------- 
+ 
+ // bubble mesh
+ // bx e by sao vetores de coordenadas X e Y dos pontos da
+ // malha struturada que pertencem a bolha
+ // bubble tera apenas os pontos pertencentes ao dominio computacional
+ clVector bubble,bx,by;
+ for( int i=0;i<domain.Dim();i++ )
+ {
+   if( domain.Get(i) >= 0.5 )
+   {
+	bubble.AddItem(i);
+	bx.AddItem(domainX.Get(i));
+	by.AddItem(domainY.Get(i));
+   }
+ }
+
+ // TRIANGLE Library - BUBBLE
  struct triangulateio in, out;
 
  in.numberofpoints = bubble.Dim() ;
@@ -2175,17 +2062,20 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
 
  triangulate( (char* ) "Qz", &in, &out, (struct triangulateio *) NULL);
 
- real area = 0;
+ // somando area dos elementos da malha contidos na bolha para saber
+ // area bolha
+ real bubbleArea = 0;
  for( int i=0;i<out.numberoftriangles;i++ )
  {
   int v1 = out.trianglelist[3*i+0];
   int v2 = out.trianglelist[3*i+1];
   int v3 = out.trianglelist[3*i+2];
 
-  area+=0.5*(((bx.Get(v2)-bx.Get(v1))*(by.Get(v3)-by.Get(v1)))
-	        -((bx.Get(v3)-bx.Get(v1))*(by.Get(v2)-by.Get(v1))));
+  bubbleArea+=0.5*(((bx.Get(v2)-bx.Get(v1))*(by.Get(v3)-by.Get(v1)))
+	              -((bx.Get(v3)-bx.Get(v1))*(by.Get(v2)-by.Get(v1))));
  }
 
+ // saving in DAT format
  ifstream testFile( filename );
  ofstream voidFile( filename,ios::app );
  if( testFile )
@@ -2203,22 +2093,19 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
 					  << endl;
  }
 
-
- // saving file
- real totalArea = (xf-xi)*(yf-yi);
- real fluidArea = totalArea - area;
- real voidFraction = area/totalArea;
+ real totalArea = areaDomain;
+ real fluidArea = totalArea - bubbleArea;
+ real voidFraction = bubbleArea/totalArea;
  voidFile << setw(10) << *simTime << " " 
                       << totalArea << " " 
-					  << area << " " 
+					  << bubbleArea << " " 
 					  << fluidArea << " " 
 					  << voidFraction << endl;
 
  voidFile.close();
 
- cout << "cross sectional void fraction No. " << _iter << " saved in dat" << endl;
-
-
+ cout << "cross sectional void fraction No. " << _iter 
+      << " saved in dat" << endl;
 
  /* ---- SAVING VTK ---- */
  // concatenando nomes para o nome do arquivo final
@@ -2226,11 +2113,9 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  const char* filename2 = file2.c_str();
 
  ofstream vtkFile( filename2 ); 
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "2D Simulation C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << endl;
+
+ vtkHeader(vtkFile);
+
  vtkFile << "POINTS " << bx.Dim() << " double" << endl;
 
  vtkFile << setprecision(10) << scientific; 
@@ -2258,5 +2143,121 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  vtkFile << endl;
  /* --------------------- */
 
+ // FREEing pointers
+ free(in.pointlist);
+ free(in.pointmarkerlist);
+ free(out.pointlist);
+ free(out.trianglelist);
+ free(out.triangleattributelist);
+ free(out.segmentlist);
+ free(out.segmentmarkerlist);
 
 } // fecha metodo crossSectionalVoidFraction
+
+void InOut::vtkHeader(ofstream& _file)
+{
+ _file << "# vtk DataFile Version 1.0" << endl;
+ _file << "3D Simulation C++" << endl;
+ _file << "ASCII" << endl;
+ _file << "DATASET UNSTRUCTURED_GRID" << endl;
+ _file << endl;
+}
+
+void InOut::vtkHeaderTime(ofstream& _file,int _iter)
+{
+ _file << "# vtk DataFile Version 1.0" << endl;
+ _file << "3D Simulation C++" << endl;
+ _file << "ASCII" << endl;
+ _file << "DATASET UNSTRUCTURED_GRID" << endl;
+ _file << "FIELD FieldData 2" << endl;
+ _file << "TIME 1 1 double" << endl;
+ _file << *simTime << endl;
+ _file << "ITERATION 1 1 int" << endl;
+ _file << _iter << endl;
+ _file << endl;
+}
+
+void InOut::vtkCoords(ofstream& _file)
+{
+ _file << "POINTS " << numVerts << " double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  _file << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkCellArray(ofstream& _file)
+{
+ _file << "CELLS " << numElems << " " << 5*numElems << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+  _file << "4 " << IEN->Get(i,0) << " "  
+                  << IEN->Get(i,1) << " " 
+                  << IEN->Get(i,2) << " " 
+                  << IEN->Get(i,3) << endl;
+ }
+ _file << endl;
+}
+
+void InOut::vtkCellType(ofstream& _file)
+{
+ _file <<  "CELL_TYPES " << numElems << endl;
+ for( int i=0;i<numElems;i++ )
+  _file << "10 ";
+
+ _file << endl;
+ _file << endl;
+}
+
+void InOut::vtkScalarHeader(ofstream& _file)
+{
+ _file << "POINT_DATA " << numVerts << endl;
+}
+
+void InOut::vtkScalar(ofstream& _file,string _name,clVector &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkVector(ofstream& _file,string _name,clVector &_v)
+{
+ _file << "VECTORS " << _name << " double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  _file << _v.Get(i) << " " 
+        << _v.Get(i+numVerts) << " " 
+		<< _v.Get(i+numVerts*2) << endl;
+ _file << endl;
+}
+
+void InOut::vtkVector(ofstream& _file,string _name,
+                      clVector &_vx,clVector &_vy,clVector &_vz)
+{
+ _file << "VECTORS " << _name << " double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  _file << _vx.Get(i) << " " 
+        << _vy.Get(i) << " " 
+		<< _vz.Get(i) << endl;
+ _file << endl;
+}
+
+
+

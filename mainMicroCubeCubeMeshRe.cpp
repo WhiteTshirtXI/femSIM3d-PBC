@@ -98,8 +98,8 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 1;
- int nReMesh = 10;
+ int nIter = 100;
+ int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -126,12 +126,14 @@ int main(int argc, char **argv)
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   save.crossSectionalVoidFraction(datFolder,"void",i*nReMesh+j+iter);
 
    cout << "________________________________________ END of "
 	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
-  m1.mesh2Dto3DOriginal();
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setCubeBC();
   m1.setOFace();
@@ -145,9 +147,9 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-remeshing",iter+nReMesh*nIter-1);
-  saveEnd.saveSol(binFolder,"UVWPC-remeshing",iter+nReMesh*nIter-1);
-  saveEnd.saveSimTime(iter+nReMesh*nIter-1);
+  saveEnd.saveVTK(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSol(binFolder,"UVWPC-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );
 
  }

@@ -775,6 +775,7 @@ void Model3D::mesh2Dto3D()
    in.facetmarkerlist[i] = 20;
  }
 
+ // malha 3D de superfice triangular (convex hull + interface)
  numVertsOriginal = numVerts;
  IENOriginal = IEN;
 
@@ -852,6 +853,60 @@ void Model3D::mesh2Dto3D()
  
 void Model3D::mesh2Dto3DOriginal()
 {
+//--------------------------------------------------
+//  // insercao de pontos atraves da media dos vizinhos
+//  for( int i=0;i<IENOriginal.DimI();i++ )
+//   cout << getArea(i) << endl;
+// 
+//  int count = 0;
+//  real test = 0.05;
+//  clMatrix IENaux(3,3);
+//  for( int i=0;i<IENOriginal.DimI();i++ )
+//  {
+//   int v1 = IENOriginal.Get(i,0);
+//   int v2 = IENOriginal.Get(i,1);
+//   int v3 = IENOriginal.Get(i,2);
+//   if( cc.Get(v1) == 0.5 && getArea(i) > test )
+//   {
+//    cout << getArea(i) << endl;
+//    int v4 = numVertsOriginal;
+// 
+//    real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
+//    real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
+//    real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
+// 
+//    X.AddItem(v4,centroidX);
+//    Y.AddItem(v4,centroidY);
+//    Z.AddItem(v4,centroidZ);
+//    cout << v1 << " " << v2 << " " << v3 << " " << v4 << endl;
+//    cc.AddItem(v4,0.5); // pertencente a interface
+// 
+//    IENOriginal.DelLine(i); // delete elemento
+//    IENOriginal.AddRow();
+//    IENOriginal.AddRow();
+//    IENOriginal.AddRow();
+//    IENOriginal.Set(IENOriginal.DimI()+0,0,v1);
+//    IENOriginal.Set(IENOriginal.DimI()+0,0,v2);
+//    IENOriginal.Set(IENOriginal.DimI()+0,0,v4);
+//    IENOriginal.Set(IENOriginal.DimI()+1,0,v1);
+//    IENOriginal.Set(IENOriginal.DimI()+1,0,v3);
+//    IENOriginal.Set(IENOriginal.DimI()+1,0,v4);
+//    IENOriginal.Set(IENOriginal.DimI()+2,0,v2);
+//    IENOriginal.Set(IENOriginal.DimI()+2,0,v3);
+//    IENOriginal.Set(IENOriginal.DimI()+2,0,v4);
+// //--------------------------------------------------
+// //    IENaux.Set(0,0,v1);IENaux.Set(0,1,v2);IENaux.Set(0,2,v4);
+// //    IENaux.Set(1,0,v1);IENaux.Set(1,1,v3);IENaux.Set(1,2,v4);
+// //    IENaux.Set(2,0,v2);IENaux.Set(2,1,v3);IENaux.Set(2,2,v4);
+// //-------------------------------------------------- 
+//    count++;
+//   }
+//  }
+//  numVertsOriginal = numVertsOriginal+count; // update do numVertsOriginal para novo valor
+//-------------------------------------------------- 
+
+
+
  // cria objeto de malha do tetgen
  tetgenio in,out;
  in.mesh_dim = 3;
@@ -1003,8 +1058,9 @@ void Model3D::mesh3DPoints()
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
- // adiciona na estrutura tetgen as coordenadas dos pontos da superficie
- // e do convex-hull
+ /* ------------ pontos da malha separados em 2 loops ------------ */
+ // adiciona na estrutura tetgen as coordenadas dos pontos da 
+ // superficie e do convex-hull
  for( int i=0;i<numVertsOriginal;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
@@ -1018,8 +1074,7 @@ void Model3D::mesh3DPoints()
    in.pointmarkerlist[i] = 33;
  }
 
- // pontos da malha separados em 2 loops
- // adicionando pontos na malha original (2D superficie)
+ // adicionando pontos que nao sao da interface e do convex-hull
  for( int i=numVertsOriginal;i<numVerts;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
@@ -1032,6 +1087,7 @@ void Model3D::mesh3DPoints()
   if( cc.Get(i) == 1.0 )
    in.pointmarkerlist[i] = 33;
  }
+ /* -------------------------------------------------------------- */
 
  // este procedimento foi substiuido pelo flag AA
  /* ESTE PROCEDIMENTO DEFINE REGIOES NA MALHA E APOS A INSERCAO/RETIRADA
@@ -1094,9 +1150,19 @@ void Model3D::mesh3DPoints()
    in.facetmarkerlist[i] = 10;
   else
    in.facetmarkerlist[i] = 20;
-
-  //in.trifacemarkerlist[i] = 1;
  }
+
+//--------------------------------------------------
+//  // tentando remover pontos
+//  in.pointmarkerlist[0] = 0;
+//  in.pointmarkerlist[1] = 0;
+//  in.pointmarkerlist[2] = 0;
+//  in.pointmarkerlist[3] = 0;
+//  in.pointmarkerlist[4] = 0;
+// 
+//  for( int i=0;i<numVerts;i++ )
+//   cout << in.pointmarkerlist[i] << endl;
+//-------------------------------------------------- 
 
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
@@ -1107,7 +1173,7 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  cout << "----> meshing... ";
- tetrahedralize( (char*) "QYYRApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "QYYRApq1.4241q10a0.05",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -2610,6 +2676,22 @@ void Model3D::setSurface()
  }
 } // fecha metodo setSurface
 
+//--------------------------------------------------
+// void Model3D::setConvex()
+// {
+//  IENConvexTri.Dim(freeFace.DimI(),3);
+//  for(int i=0;i<freeFace.DimI();i++ )
+//  {
+//   int v1 = freeFace.Get(i,2);
+//   int v2 = freeFace.Get(i,3);
+//   int v3 = freeFace.Get(i,4);
+//   X.Get(v1);X.Get(v2);X.Get(v3);
+//   Y.Get(v1);Y.Get(v2);Y.Get(v3);
+//   Z.Get(v1);Z.Get(v2);Z.Get(v3);
+//  }
+// }
+//-------------------------------------------------- 
+
 // as faces da superficie sao numeradas de 0..n-1 onde n eh o numero de
 // faces na superficie. Para o caso 3D as faces sao triangulos. Junto a
 // esta numeracao ha um mapeamento dos vertices da superficie vizinhos de 
@@ -3589,6 +3671,56 @@ real Model3D::getVolume(int _elem)
 								  -Y.Get(v3)*X.Get(v4) 
 								  -Y.Get(v2)*X.Get(v3) ) );
  return volume;
+}
+
+real Model3D::getArea(int _elem)
+{
+ int v1=(int)IENOriginal.Get(_elem,0);
+ int v2=(int)IENOriginal.Get(_elem,1);
+ int v3=(int)IENOriginal.Get(_elem,2);
+
+ 
+ // vectors
+ real x1 = X.Get(v2) - X.Get(v1);
+ real y1 = Y.Get(v2) - Y.Get(v1);
+ real z1 = Z.Get(v2) - Z.Get(v1);
+
+ real x2 = X.Get(v3) - X.Get(v1);
+ real y2 = Y.Get(v3) - Y.Get(v1);
+ real z2 = Z.Get(v3) - Z.Get(v1);
+
+ real crossX = (y1*z2)-(z1*y2);
+ real crossY = -( (x1*z2)-(z1*x2) );
+ real crossZ = (x1*y2)-(y1*x2);
+
+ real area = 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
+
+ return area;
+}
+
+real Model3D::getAreaHeron(int _elem)
+{
+ int v1=(int)IENOriginal.Get(_elem,0);
+ int v2=(int)IENOriginal.Get(_elem,1);
+ int v3=(int)IENOriginal.Get(_elem,2);
+
+ real a = sqrt( (X.Get(v2) - X.Get(v1))*(X.Get(v2) - X.Get(v1)) +
+                (Y.Get(v2) - Y.Get(v1))*(Y.Get(v2) - Y.Get(v1)) +
+				(Z.Get(v2) - Z.Get(v1))*(Z.Get(v2) - Z.Get(v1)) );
+
+ real b = sqrt( (X.Get(v3) - X.Get(v1))*(X.Get(v3) - X.Get(v1)) +
+                (Y.Get(v3) - Y.Get(v1))*(Y.Get(v3) - Y.Get(v1)) +
+				(Z.Get(v3) - Z.Get(v1))*(Z.Get(v3) - Z.Get(v1)) );
+
+ real c = sqrt( (X.Get(v3) - X.Get(v2))*(X.Get(v3) - X.Get(v2)) +
+                (Y.Get(v3) - Y.Get(v2))*(Y.Get(v3) - Y.Get(v2)) +
+				(Z.Get(v3) - Z.Get(v2))*(Z.Get(v3) - Z.Get(v2)) );
+
+ real s = (a+b+c)/2.0;
+
+ real area = sqrt( s*(s-a)*(s-b)*(s-c) );
+
+ return area;
 }
 
 void Model3D::clearBC()

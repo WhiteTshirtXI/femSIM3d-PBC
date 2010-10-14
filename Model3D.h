@@ -131,6 +131,8 @@ class Model3D
   int getNumGLEP();
   int getNumGLEC();
   real getVolume(int _elem);
+  real getArea(int _elem);
+  real getAreaHeron(int _elem);
   void clearBC();
   void reAllocStruct();
   clMatrix* getOFace();

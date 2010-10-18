@@ -851,61 +851,47 @@ void Model3D::mesh2Dto3D()
  }
 }
  
+void Model3D::insertPoints()
+{
+ real test = 0.008;
+ for( int i=0;i<IENOriginal.DimI();i++ )
+ {
+  int v1 = IENOriginal.Get(i,0);
+  int v2 = IENOriginal.Get(i,1);
+  int v3 = IENOriginal.Get(i,2);
+  if( cc.Get(v1) == 0.5 && getArea(i) > test )
+  {
+   int v4 = numVertsOriginal;
+
+   real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
+   real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
+   real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
+
+   X.AddItem(v4,centroidX);
+   Y.AddItem(v4,centroidY);
+   Z.AddItem(v4,centroidZ);
+   cc.AddItem(v4,0.5); // pertencente a interface
+
+   IENOriginal.Set(i,0,v1);
+   IENOriginal.Set(i,1,v2);
+   IENOriginal.Set(i,2,v4);
+   IENOriginal.AddRow();
+   IENOriginal.Set(IENOriginal.DimI()-1,0,v1);
+   IENOriginal.Set(IENOriginal.DimI()-1,1,v3);
+   IENOriginal.Set(IENOriginal.DimI()-1,2,v4);
+   IENOriginal.AddRow();
+   IENOriginal.Set(IENOriginal.DimI()-1,0,v2);
+   IENOriginal.Set(IENOriginal.DimI()-1,1,v3);
+   IENOriginal.Set(IENOriginal.DimI()-1,2,v4);
+   numVertsOriginal++;
+  }
+ }
+}
+ 
 void Model3D::mesh2Dto3DOriginal()
 {
-//--------------------------------------------------
-//  // insercao de pontos atraves da media dos vizinhos
-//  for( int i=0;i<IENOriginal.DimI();i++ )
-//   cout << getArea(i) << endl;
-// 
-//  int count = 0;
-//  real test = 0.05;
-//  clMatrix IENaux(3,3);
-//  for( int i=0;i<IENOriginal.DimI();i++ )
-//  {
-//   int v1 = IENOriginal.Get(i,0);
-//   int v2 = IENOriginal.Get(i,1);
-//   int v3 = IENOriginal.Get(i,2);
-//   if( cc.Get(v1) == 0.5 && getArea(i) > test )
-//   {
-//    cout << getArea(i) << endl;
-//    int v4 = numVertsOriginal;
-// 
-//    real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
-//    real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
-//    real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
-// 
-//    X.AddItem(v4,centroidX);
-//    Y.AddItem(v4,centroidY);
-//    Z.AddItem(v4,centroidZ);
-//    cout << v1 << " " << v2 << " " << v3 << " " << v4 << endl;
-//    cc.AddItem(v4,0.5); // pertencente a interface
-// 
-//    IENOriginal.DelLine(i); // delete elemento
-//    IENOriginal.AddRow();
-//    IENOriginal.AddRow();
-//    IENOriginal.AddRow();
-//    IENOriginal.Set(IENOriginal.DimI()+0,0,v1);
-//    IENOriginal.Set(IENOriginal.DimI()+0,0,v2);
-//    IENOriginal.Set(IENOriginal.DimI()+0,0,v4);
-//    IENOriginal.Set(IENOriginal.DimI()+1,0,v1);
-//    IENOriginal.Set(IENOriginal.DimI()+1,0,v3);
-//    IENOriginal.Set(IENOriginal.DimI()+1,0,v4);
-//    IENOriginal.Set(IENOriginal.DimI()+2,0,v2);
-//    IENOriginal.Set(IENOriginal.DimI()+2,0,v3);
-//    IENOriginal.Set(IENOriginal.DimI()+2,0,v4);
-// //--------------------------------------------------
-// //    IENaux.Set(0,0,v1);IENaux.Set(0,1,v2);IENaux.Set(0,2,v4);
-// //    IENaux.Set(1,0,v1);IENaux.Set(1,1,v3);IENaux.Set(1,2,v4);
-// //    IENaux.Set(2,0,v2);IENaux.Set(2,1,v3);IENaux.Set(2,2,v4);
-// //-------------------------------------------------- 
-//    count++;
-//   }
-//  }
-//  numVertsOriginal = numVertsOriginal+count; // update do numVertsOriginal para novo valor
-//-------------------------------------------------- 
-
-
+ // insercao de pontos atraves da media dos vizinhos
+ insertPoints();
 
  // cria objeto de malha do tetgen
  tetgenio in,out;
@@ -1051,6 +1037,9 @@ void Model3D::mesh2Dto3DOriginal()
 
 void Model3D::mesh3DPoints()
 {
+ //insertPoints();
+
+
  // cria objeto de malha do tetgen
  tetgenio in,out;
  in.mesh_dim = 3;
@@ -3825,8 +3814,10 @@ clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
 clMatrix* Model3D::getIENTri(){ return &IENTri; }
+clMatrix* Model3D::getIENOriginal(){ return &IENOriginal; }
 clMatrix* Model3D::getIENConvexTri(){ return &IENConvexTri; }
 int Model3D::getNumVerts(){ return numVerts; }
+int Model3D::getNumVertsOriginal(){ return numVertsOriginal; }
 int Model3D::getNumNodes(){ return numNodes; }
 int Model3D::getNumElems(){ return numElems; }
 int Model3D::getNumGLEU(){ return numGLEU; }

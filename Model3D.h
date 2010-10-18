@@ -52,6 +52,7 @@ class Model3D
   void setCouetteBC();
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
+  void insertPoints();
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
   void mesh3DPoints();
@@ -124,7 +125,9 @@ class Model3D
   clMatrix* getIEN();
   clMatrix* getIENTri();
   clMatrix* getIENConvexTri();
+  clMatrix* getIENOriginal();
   int getNumVerts();
+  int getNumVertsOriginal();
   int getNumNodes();
   int getNumElems();
   int getNumGLEU();

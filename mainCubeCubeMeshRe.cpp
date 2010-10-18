@@ -31,6 +31,7 @@ int main(int argc, char **argv)
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
+ //const char *mesh = "./vtk/mesh.msh";
  const char *mesh = "../../db/gmsh/3D/bubble-tube1.msh";
  //const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
  //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
@@ -97,16 +98,18 @@ int main(int argc, char **argv)
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
-  s1.loadSolution(binFolder,"sim-last");
-  iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",401); // set para velocidade no simulador
-  //iter = s1.loadIteration(vtkFolder,"sim",401);
+
+  file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
  }
  else if( strcmp( *(argv+1),"remesh") == 0 )  
  {
   string aux = *(argv+2);
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *mesh2 = file.c_str();
+
   m1.readVTK(mesh2);
   m1.setMiniElement();
   m1.readVTKCC(mesh2);
@@ -115,6 +118,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
+
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();
@@ -123,12 +127,16 @@ int main(int argc, char **argv)
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
   s1 = s2; 
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
+//--------------------------------------------------
+//   file = (string) "sim-" + *(argv+2);
+//   const char *sol = file.c_str();
+//   s1.loadSolution(binFolder,sol);
+//   iter = s1.loadIteration(vtkFolder,sol);
+//-------------------------------------------------- 
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim-remeshing",atoi(*(argv+2)));
+  saveEnd.saveMSH(vtkFolder,"mesh");
   saveEnd.saveVTKSurface(vtkFolder,"sim-remeshing",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"UVWPC-remeshing",atoi(*(argv+2)));
   return 0;
@@ -142,7 +150,7 @@ int main(int argc, char **argv)
  save.printInfo(mesh);
 
  int nIter = 100;
- int nReMesh = 3;
+ int nReMesh = 5;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -167,7 +175,7 @@ int main(int argc, char **argv)
    //save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
+   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
@@ -177,8 +185,8 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
+  m1.mesh2Dto3DOriginal();
+  //m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();

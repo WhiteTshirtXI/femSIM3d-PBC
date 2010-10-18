@@ -92,6 +92,7 @@ class InOut
    *
    * @return 
    **/
+  void saveMSH( const char* _dir,const char* _filename );
   void saveVTK( const char* _dir,const char* _filename );
 
   /**

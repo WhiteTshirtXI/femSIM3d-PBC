@@ -2475,7 +2475,7 @@ void Simulator3D::loadSolution( const char* _dir,
  aux2.CopyTo(0,uAnt);
  aux2.CopyTo(0,Fold);
 
- cout << "solucao <<last>> lida em binario" << endl;
+ cout << "solucao <<" << _filename << ">> lida em binario" << endl;
  
 } // fecha metodo loadSol 
 

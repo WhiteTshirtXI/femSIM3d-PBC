@@ -26,7 +26,7 @@ int main(int argc, char **argv)
  real We = 10;
  real alpha = 1;
  real beta = -10;
- real cfl = 10;
+ real cfl = 20;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
@@ -185,8 +185,8 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
-  m1.mesh2Dto3DOriginal();
-  //m1.mesh3DPoints();
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setWallBC();
   m1.setOFace();

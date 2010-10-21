@@ -703,6 +703,110 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  }
 }
 
+/*  This method makes re-meshing test and can be modified */
+void Model3D::meshTest()
+{
+//--------------------------------------------------
+//  clVector test = cc==0.5;
+//  clVector t1 = test.Find();
+// 
+//  clVector x1,y1,z1;
+//  for( int i=0;i<t1.Dim();i++ )
+//  {
+//   x1.AddItem(X.Get(t1.Get(i)));
+//   y1.AddItem(Y.Get(t1.Get(i)));
+//   z1.AddItem(Z.Get(t1.Get(i)));
+//  }
+//  numVerts = x1.Dim();
+//-------------------------------------------------- 
+
+ // cria objeto de malha do tetgen
+ tetgenio in,out;
+ in.mesh_dim = 3;
+ in.numberofpoints = numVerts;
+ in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointmarkerlist = new int[in.numberofpoints];
+
+ // adiciona na estrutura tetgen as coordenadas dos pontos
+ for( int i=0;i<numVerts;i++ )
+ {
+  in.pointlist[3*i+0] = X.Get(i);
+  in.pointlist[3*i+1] = Y.Get(i);
+  in.pointlist[3*i+2] = Z.Get(i);
+  if( cc.Get(i) == 0.0 )
+   in.pointmarkerlist[i] = 11; // fora
+  if( cc.Get(i) == 0.5 )
+   in.pointmarkerlist[i] = 22; // interface
+  if( cc.Get(i) == 1.0 )
+   in.pointmarkerlist[i] = 33; // dentro
+ }
+
+ //in.save_poly("bubble");
+ //in.save_nodes("bubble");
+ //in.save_elements("in");
+ cout << "numElems IN = " << numElems << endl;
+ cout << "numNodes IN = " << numNodes << endl;
+ cout << "numVerts IN = " << in.numberofpoints << endl;
+
+ cout << endl;
+ cout << "----> meshing... ";
+ //tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
+ 
+ numElems = out.numberoftrifaces;
+ numNodes = out.numberofpoints+numElems;
+ numVerts = out.numberofpoints;
+ cout << "numElems OUT = " << out.numberoftetrahedra << endl;
+ cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
+ cout << "numVerts OUT = " << out.numberofpoints << endl;
+ cout << "numfacets OUT = " << out.numberoftrifaces << endl;
+ //out.save_elements("out");
+ //out.save_nodes("out");
+ //out.save_poly("out");
+ //out.save_faces("out");
+
+ IEN.Dim(numElems,4);
+ for( int i=0;i<out.numberoftrifaces;i++ )
+ {
+  for( int j=0;j<3;j++ )
+  {
+   int vertice = out.trifacelist[i*3+j];
+   IEN.Set(i,j,vertice);
+  }
+  //cout << out.trifacemarkerlist[0] << endl;
+ }
+
+//--------------------------------------------------
+//  // varre lista de elementos e passa para estrutura IEN
+//  IEN.Dim(numElems,5);
+//  cc.Dim(numVerts);
+//  inElem.resize (0);
+//  outElem.resize (0);
+//  // varre lista de elementos e passa para estrutura IEN
+//  for( int i=0;i<out.numberoftetrahedra;i++ )
+//  {
+//   for( int j=0;j<4;j++ )
+//   {
+//    int vertice = out.tetrahedronlist[i*4+j];
+//    IEN.Set(i,j,vertice);
+//   }
+//  }
+//-------------------------------------------------- 
+
+ // atualizando valores de X,Y,Z,uc,vc,wc e pc
+ X.Dim(numNodes);
+ Y.Dim(numNodes);
+ Z.Dim(numNodes);
+ for( int i=0;i<numVerts;i++ )
+ {
+  X.Set(i,out.pointlist[3*i+0]);
+  Y.Set(i,out.pointlist[3*i+1]);
+  Z.Set(i,out.pointlist[3*i+2]);
+ }
+}
+
 void Model3D::mesh2Dto3D()
 {
  // cria objeto de malha do tetgen
@@ -850,9 +954,335 @@ void Model3D::mesh2Dto3D()
    cc.Set(i,0.5);
  }
 }
- 
-void Model3D::insertPoints()
+
+void Model3D::insertPointsByRatio()
 {
+ int lastRow;
+ real test = 0.008;
+ for( int i=0;i<IENOriginal.DimI();i++ )
+ {
+  int v1 = IENOriginal.Get(i,0);
+  int v2 = IENOriginal.Get(i,1);
+  int v3 = IENOriginal.Get(i,2);
+
+  real x1 = X.Get(v1);
+  real y1 = Y.Get(v1);
+  real z1 = Z.Get(v1);
+
+  real x2 = X.Get(v2);
+  real y2 = Y.Get(v2);
+  real z2 = Z.Get(v2);
+
+  real x3 = X.Get(v3);
+  real y3 = Y.Get(v3);
+  real z3 = Z.Get(v3);
+
+  real length12 = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+  real length13 = sqrt( (x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)+(z1-z3)*(z1-z3) );
+  real length23 = sqrt( (x2-x3)*(x2-x3)+(y2-y3)*(y2-y3)+(z2-z3)*(z2-z3) );
+
+  real area = getArea(i);
+
+  /* Triangle quality measure;
+   *
+   *      4 * area*sqrt(3)
+   * q = ------------------ 
+   *     l1^2 + l2^2 + l3^2 
+   *
+   * */
+  real q = ( 4*area*1.732050801 )/( (length12*length12)+ 
+	                                (length13*length13)+
+	                                (length23*length23) );
+
+
+  //if( cc.Get(v1) == 0.5 && q < 0.6 ) 
+  if( cc.Get(v1) == 0.5 && area > test ) 
+  {
+   int v4 = numVertsOriginal;
+
+   // coords of triangle centroid
+   real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
+   real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
+   real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
+   cout << centroidX << " " << centroidY << " " << centroidZ << endl;
+
+   X.AddItem(v4,centroidX);
+   Y.AddItem(v4,centroidY);
+   Z.AddItem(v4,centroidZ);
+   cc.AddItem(v4,0.5); // interface set up
+
+   /* substitutes the original element to 3 smaller elements adding 1 
+	* point on the centroid */
+
+   // 1st. element on the same position of previous one
+   IENOriginal.Set(i,0,v1);
+   IENOriginal.Set(i,1,v2);
+   IENOriginal.Set(i,2,v4);
+
+   // 2nd. element
+   IENOriginal.AddRow();
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v1);
+   IENOriginal.Set(lastRow,1,v3);
+   IENOriginal.Set(lastRow,2,v4);
+
+   // 3rd. element
+   IENOriginal.AddRow();
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v2);
+   IENOriginal.Set(lastRow,1,v3);
+   IENOriginal.Set(lastRow,2,v4);
+   numVertsOriginal++;
+  }
+ }
+}
+
+void Model3D::mapTriEdge()
+{
+//--------------------------------------------------
+//  vector< list<int> > neighbourElemTri;  // lista de elementos de cada no
+//  neighbourElemTri.resize (0);
+//  neighbourElemTri.resize (numVertsOriginal);
+//  for( int i=0;i<IENOriginal.DimI();i++ )
+//   for( int j= 0;j<3;j++ )
+//    neighbourElemTri.at( (int)IENOriginal.Get(i,j) ).push_back(i);
+// 
+//  list<int> plist;
+//  list<int>::iterator mele;
+//  for( int ii=0;ii<numVertsOriginal;ii++ )
+//  {
+//   plist = neighbourElemTri.at(ii);
+//   cout << "vertice " << ii << ": " << endl;
+//   for( mele=plist.begin(); mele != plist.end();++mele )
+//   {
+//    int v1 = (int) IENOriginal.Get(*mele,0);
+//    int v2 = (int) IENOriginal.Get(*mele,1);
+//    int v3 = (int) IENOriginal.Get(*mele,2);
+//    cout << "elem " << *mele << ": " << v1 << " " << v2 << " " << v3 << endl;
+//   }
+//   cout << endl;
+//  }
+//-------------------------------------------------- 
+
+ int v1,v2,v3;
+ real numTris = IENOriginal.DimI();
+ int numFace = 3; // triangulo tem 3 arestas
+ clVector faceaux(2);
+ IFACE3DSurface *faces = NULL;
+ int listSize = numFace*numTris;
+ faces = new IFACE3DSurface[listSize];
+ for( int mele=0;mele<numTris;mele++ )
+ {
+  v1 = (int) IENOriginal.Get(mele,0);
+  v2 = (int) IENOriginal.Get(mele,1);
+  v3 = (int) IENOriginal.Get(mele,2);
+
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v2);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+0].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+0].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+0].p3 = v3;
+  faces[numFace*mele+0].p4 = mele;
+
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v3);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+1].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+1].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+1].p3 = v2;
+  faces[numFace*mele+1].p4 = mele;
+
+  faceaux.Set(0,v2);
+  faceaux.Set(1,v3);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFace*mele+2].p1 = (int) faceaux.Get(0);
+  faces[numFace*mele+2].p2 = (int) faceaux.Get(1);
+  faces[numFace*mele+2].p3 = v1;
+  faces[numFace*mele+2].p4 = mele;
+ }
+
+ // ordena uma estrutura (faces) em ordem crescente na linha e coluna
+ // as faces continuam repetidas neste ponto, porem ordenadas e prontas
+ // para serem excluidas.
+ qsort(faces,listSize,sizeof(IFACE3DSurface),IFACE2DCompare);
+
+ /*        - nome: mapTriEdge
+           - definicao: matrix com mapeamento de arestas da superficie e
+		                convex hull, a dimensao da matrix eh o numero de 
+						total de arestas.
+
+  ---   +---+---+---+---+---+---+---+
+   |    | a | b | c | d | e | f | g |   a = coordenada X do ponto 
+   |    +---+---+---+---+---+---+---+       medio da aresta
+   |    .   .   .   .   .   .   .   .   b = coordenada Y do ponto  
+   |    .   .   .   .   .   .   .   .       medio da aresta
+   h    .   .   .   .   .   .   .   .   c = coordenada Z do ponto 
+   |    +---+---+---+---+---+---+---=       media da aresta                    
+   |    | a | b | c | d | e | f | g |   d = 1o. vertice da aresta 
+   |    +---+---+---+---+---+---+---+
+   |    | a | b | c | d | e | f | g |   e = 2o. vertice da aresta
+  ---   +---+---+---+---+---+---+---+
+                                        f = 3o. vertice do 1o. elemento
+        |____________ i ____________|
+	    |                           |   g = 3o. vertice do 2o. elemento
+		
+		                                h = numero de arestas e numercao
+      
+		                                i = 7 colunas
+ 
+ */
+
+ int j=0;
+ mapEdgeTri.Dim(listSize/2,9);
+
+ // numeracao de arestas a partir de numVerts e associacao das arestas
+ // aos elementos para inclusao na IEN
+ for( int i=0;i<listSize/2;i++ )
+ {
+  // coordenada do ponto medio
+  real x=X.Get(faces[j].p1)+(X.Get(faces[j].p2)-X.Get(faces[j].p1))*0.5;
+  real y=Y.Get(faces[j].p1)+(Y.Get(faces[j].p2)-Y.Get(faces[j].p1))*0.5;
+  real z=Z.Get(faces[j].p1)+(Z.Get(faces[j].p2)-Z.Get(faces[j].p1))*0.5;
+
+  mapEdgeTri.Set(i,0,x ); // coordenada X do ponto medio da aresta
+  mapEdgeTri.Set(i,1,y ); // coordenada Y do ponto medio da aresta
+  mapEdgeTri.Set(i,2,z ); // coordenada Y do ponto medio da aresta
+  mapEdgeTri.Set(i,3,faces[j].p1 ); // numero do 1o. vertice da aresta
+  mapEdgeTri.Set(i,4,faces[j].p2 ); // numero do 2o. vertice da areata
+  mapEdgeTri.Set(i,5,faces[j].p3 );   // numero do 3o. vertice do 1o. elemento
+  mapEdgeTri.Set(i,6,faces[j+1].p3 ); // numero do 3o. vertice do 2o. elemento
+  mapEdgeTri.Set(i,7,faces[j].p4 ); // 1o. elemento
+  mapEdgeTri.Set(i,8,faces[j+1].p4 ); // 2o. elemento 
+  j=j+2; // pois cada aresta eh dividida com apenas 2 elementos
+ }
+}
+
+void Model3D::insertPointsByRatioLength()
+{
+ mapTriEdge();
+
+ int lastRow;
+ real test = 0.157;
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge vertices
+  int v1 = mapEdgeTri.Get(i,3);
+  int v2 = mapEdgeTri.Get(i,4);
+
+  // 1st. vertice coordinate
+  real x1 = X.Get(v1);
+  real y1 = Y.Get(v1);
+  real z1 = Z.Get(v1);
+
+  // 2nd. vertice coordinate
+  real x2 = X.Get(v2);
+  real y2 = Y.Get(v2);
+  real z2 = Z.Get(v2);
+
+  // edge length
+  real length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+
+  if( cc.Get(v1) == 0.5 && length > test )
+  {
+   cout << "adding point and elements..." << endl;
+
+   // edge mid point coordinates
+   real xCenter = mapEdgeTri.Get(i,0);
+   real yCenter = mapEdgeTri.Get(i,1);
+   real zCenter = mapEdgeTri.Get(i,2);
+
+   int v3elem1 = mapEdgeTri.Get(i,5);
+   int v3elem2 = mapEdgeTri.Get(i,6);
+   int v4 = numVertsOriginal; // aditional vertice
+   int elem1 = mapEdgeTri.Get(i,7);
+   int elem2 = mapEdgeTri.Get(i,8);
+
+   // aditional vertice coordinate
+   X.AddItem(v4,xCenter);
+   Y.AddItem(v4,yCenter);
+   Z.AddItem(v4,zCenter);
+   cc.AddItem(v4,0.5); // interface set up
+
+   /* by adding 1 point on the edge it is necessary to divide the
+	* original element and also the oposite element by 2, becoming 4
+	* elements in total. */
+
+   // 1st. new element on the same position of the OLD 1st. element
+   IENOriginal.Set(elem1,0,v1);
+   IENOriginal.Set(elem1,1,v4);
+   IENOriginal.Set(elem1,2,v3elem1);
+
+   // 2nd. new element
+   IENOriginal.AddRow();
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v2);
+   IENOriginal.Set(lastRow,1,v4);
+   IENOriginal.Set(lastRow,2,v3elem1);
+
+   // 3rd. new element on the same position of the OLD 2nd. element
+   IENOriginal.Set(elem2,0,v1);
+   IENOriginal.Set(elem2,1,v4);
+   IENOriginal.Set(elem2,2,v3elem2);
+
+   // 4nd. new element
+   IENOriginal.AddRow();
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v2);
+   IENOriginal.Set(lastRow,1,v4);
+   IENOriginal.Set(lastRow,2,v3elem2);
+
+   /* ******************* */
+   /* updating mapTriEdge */
+
+   // EMERGENCY - reconstructing the matrix again //
+   // mapTriEdge();
+   // ------------------------------------------- //
+
+   // mid point coordinate
+   real xEdge1=X.Get(v1)+(X.Get(v4)-X.Get(v1))*0.5;
+   real yEdge1=Y.Get(v1)+(Y.Get(v4)-Y.Get(v1))*0.5;
+   real zEdge1=Z.Get(v1)+(Z.Get(v4)-Z.Get(v1))*0.5;
+   real xEdge2=X.Get(v2)+(X.Get(v4)-X.Get(v2))*0.5;
+   real yEdge2=Y.Get(v2)+(Y.Get(v4)-Y.Get(v2))*0.5;
+   real zEdge2=Z.Get(v2)+(Z.Get(v4)-Z.Get(v2))*0.5;
+
+   // 1st. new edge on the same place as the old edge
+   mapTriEdge.Set(i,0,xEdge1);
+   mapTriEdge.Set(i,1,yEdge1);
+   mapTriEdge.Set(i,2,zEdge1);
+   mapTriEdge.Set(i,3,v1);
+   mapTriEdge.Set(i,4,v4);
+   mapTriEdge.Set(i,5,v3elem1);
+   mapTriEdge.Set(i,6,v3elme2);
+   mapTriEdge.Set(i,7,elem1);
+   mapTriEdge.Set(i,8,elem2);
+   
+   // 2nd. new edge on the end of the mapTriEdge matrix
+   mapTriEdge.AddRow();
+   lastRow = mapTriEdge.DimI()-1;
+   mapTriEdge.Set(i,0,xEdge2);
+   mapTriEdge.Set(i,1,yEdge2);
+   mapTriEdge.Set(i,2,zEdge2);
+   mapTriEdge.Set(i,3,v2);
+   mapTriEdge.Set(i,4,v4);
+   mapTriEdge.Set(i,5,v3elem1);
+   mapTriEdge.Set(i,6,v3elme2);
+   mapTriEdge.Set(i,7,lastRow-1); // before last row element
+   mapTriEdge.Set(i,8,lastRow); // last row element
+
+   /* ******************* */
+
+   // incremeting the number of points
+   numVertsOriginal++;
+
+  }
+ }
+}
+ 
+void Model3D::insertPointsByArea()
+{
+ int lastRow;
  real test = 0.008;
  for( int i=0;i<IENOriginal.DimI();i++ )
  {
@@ -863,6 +1293,7 @@ void Model3D::insertPoints()
   {
    int v4 = numVertsOriginal;
 
+   // coords of triangle centroid
    real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
    real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
    real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
@@ -870,37 +1301,51 @@ void Model3D::insertPoints()
    X.AddItem(v4,centroidX);
    Y.AddItem(v4,centroidY);
    Z.AddItem(v4,centroidZ);
-   cc.AddItem(v4,0.5); // pertencente a interface
+   cc.AddItem(v4,0.5); // interface set up
 
+   /* substitutes the original element to 3 smaller elements adding 1 
+	* point on the centroid */
+
+   // 1st. element on the same position of previous one
    IENOriginal.Set(i,0,v1);
    IENOriginal.Set(i,1,v2);
    IENOriginal.Set(i,2,v4);
+
+   // 2nd. element
    IENOriginal.AddRow();
-   IENOriginal.Set(IENOriginal.DimI()-1,0,v1);
-   IENOriginal.Set(IENOriginal.DimI()-1,1,v3);
-   IENOriginal.Set(IENOriginal.DimI()-1,2,v4);
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v1);
+   IENOriginal.Set(lastRow,1,v3);
+   IENOriginal.Set(lastRow,2,v4);
+
+   // 3rd. element
    IENOriginal.AddRow();
-   IENOriginal.Set(IENOriginal.DimI()-1,0,v2);
-   IENOriginal.Set(IENOriginal.DimI()-1,1,v3);
-   IENOriginal.Set(IENOriginal.DimI()-1,2,v4);
+   lastRow = IENOriginal.DimI()-1;
+   IENOriginal.Set(lastRow,0,v2);
+   IENOriginal.Set(lastRow,1,v3);
+   IENOriginal.Set(lastRow,2,v4);
    numVertsOriginal++;
   }
  }
 }
  
+/* This method re-mesh the entire domain preserving only the points of
+ * the surface and the convex-hull. To do it, numVertsOriginal and
+ * IENOriginal need to be set on the beginning of the running program,
+ * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
- // insercao de pontos atraves da media dos vizinhos
- insertPoints();
+ // point insertion by neighbour averages
+ insertPointsByArea();
 
- // cria objeto de malha do tetgen
+ // tetgen mesh object 
  tetgenio in,out;
  in.mesh_dim = 3;
  in.numberofpoints = numVertsOriginal;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
- // adiciona na estrutura tetgen as coordenadas dos pontos atuais
+ // add to tetgen struct the point coords
  for( int i=0;i<numVertsOriginal;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
@@ -909,17 +1354,18 @@ void Model3D::mesh2Dto3DOriginal()
   if( cc.Get(i) == 0.0 )
    in.pointmarkerlist[i] = 11;
   if( cc.Get(i) == 0.5 )
-   in.pointmarkerlist[i] = 22; // mesma id de facetmarker
+   in.pointmarkerlist[i] = 22; // same id of facetmarker
   if( cc.Get(i) == 1.0 )
    in.pointmarkerlist[i] = 33;
  }
 
- /* ESTE PROCEDIMENTO DEFINE REGIOES NA MALHA E APOS A INSERCAO/RETIRADA
-  * DE PONTOS PELO TETGEN, CONSEGUIMOS RECONHECER A LOCALIZACAO DOS
-  * PONTOS E ASSIM PODEMOS DEFINIR NOVAMENTE A FUNCAO MARCADORA COMO
-  * SENDO 1.0 DENTRO DA BOLHA, 0.5 NA SUPERFICIE E 0.0 FORA 
-  * E NECESSARIO DEFINIR 1 PONTO EM CADA REGIAO */
- // fluido interior + fluido exterior + superficie
+ /* This procedure defines regions on the mesh and after
+  * insertion/deletion of points by the tetgen program we can easily
+  * recognize the point locations by the regionlist array and then we
+  * can define the points relied inside the bubble (1.0), on the surface
+  * (0.5) and outside the bubble (0.0). To do so it is necessery to
+  * define AT LEAST one region. For instance we have chosen to define
+  * the region between the interface and convex hull. */
  in.numberofregions = 1; 
  in.regionlist = new REAL[in.numberofregions*4];
 
@@ -939,6 +1385,7 @@ void Model3D::mesh2Dto3DOriginal()
  in.facetmarkerlist = new int[in.numberoffacets];
  //in.trifacemarkerlist = new int[in.numberoffacets];
 
+ // defining the interface and convex-hull
  // definindo a superficie da bolha e convex-hull
  for( int i=0;i<IENOriginal.DimI();i++ )
  {
@@ -973,7 +1420,7 @@ void Model3D::mesh2Dto3DOriginal()
  cout << endl;
  cout << "----> meshing... ";
  //tetrahedralize( (char*) "QYYApq1.4241",&in,&out );
- tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "QYApq1.4241a0.05",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -1037,8 +1484,10 @@ void Model3D::mesh2Dto3DOriginal()
 
 void Model3D::mesh3DPoints()
 {
- //insertPoints();
-
+ // point insertion by neighbour averages
+ insertPointsByRatioLength();
+ // updating numVerts
+ numVerts = cc.Dim();
 
  // cria objeto de malha do tetgen
  tetgenio in,out;
@@ -1062,7 +1511,7 @@ void Model3D::mesh3DPoints()
   if( cc.Get(i) == 1.0 )
    in.pointmarkerlist[i] = 33;
  }
-
+ 
  // adicionando pontos que nao sao da interface e do convex-hull
  for( int i=numVertsOriginal;i<numVerts;i++ )
  {
@@ -1078,7 +1527,18 @@ void Model3D::mesh3DPoints()
  }
  /* -------------------------------------------------------------- */
 
- // este procedimento foi substiuido pelo flag AA
+ /* as regioes do dominio (dentro e fora da bolha) sao definidas usando o 
+  * flag AA em  tetrahedralize. O tetgen marca 1 para fora da bolha e 2
+  * para dentro da bolha. Eh importante notar que esta marcacao eh em
+  * nivel de elementos e NAO de pontos. Para definir os pontos da
+  * superficie e com isso a funcao marcadora corretamente eh necessario
+  * utilizar uma funcao marcadora de pontos do tetgen: pointmarkerlist.
+  * --> este flag foi testado e nao pode ser usado sem a definicao
+  *  explicita da regiao externa a bolha (regionlist). O resultado foi
+  *  que de um passo para o outro ele inverte o tag da regiao, i.e.,
+  *  define a regiao dentro da bolha com 1 e depois de 60 passos define
+  *  a mesma regiao com 2.
+  */
  /* ESTE PROCEDIMENTO DEFINE REGIOES NA MALHA E APOS A INSERCAO/RETIRADA
   * DE PONTOS PELO TETGEN, CONSEGUIMOS RECONHECER A LOCALIZACAO DOS
   * PONTOS E ASSIM PODEMOS DEFINIR NOVAMENTE A FUNCAO MARCADORA COMO
@@ -1097,18 +1557,6 @@ void Model3D::mesh3DPoints()
  in.regionlist[2] = 0.0;
  in.regionlist[3] = 1;
 
- /* as regioes do dominio (dentro e fora da bolha) sao definidas usando o 
-  * flag AA em  tetrahedralize. O tetgen marca 1 para fora da bolha e 2
-  * para dentro da bolha. Eh importante notar que esta marcacao eh em
-  * nivel de elementos e NAO de pontos. Para definir os pontos da
-  * superficie e com isso a funcao marcadora corretamente eh necessario
-  * utilizar uma funcao marcadora de pontos do tetgen: pointmarkerlist.
-  * --> este flag foi testado e nao pode ser usado sem a definicao
-  *  explicita da regiao externa a bolha (regionlist). O resultado foi
-  *  que de um passo para o outro ele inverte o tag da regiao, i.e.,
-  *  define a regiao dentro da bolha com 1 e depois de 60 passos define
-  *  a mesma regiao com 2.
-  */
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -1141,21 +1589,10 @@ void Model3D::mesh3DPoints()
    in.facetmarkerlist[i] = 20;
  }
 
-//--------------------------------------------------
-//  // tentando remover pontos
-//  in.pointmarkerlist[0] = 0;
-//  in.pointmarkerlist[1] = 0;
-//  in.pointmarkerlist[2] = 0;
-//  in.pointmarkerlist[3] = 0;
-//  in.pointmarkerlist[4] = 0;
-// 
-//  for( int i=0;i<numVerts;i++ )
-//   cout << in.pointmarkerlist[i] << endl;
-//-------------------------------------------------- 
-
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+ cout << endl;
  cout << "numElems IN = " << numElems << endl;
  cout << "numNodes IN = " << numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
@@ -1173,6 +1610,7 @@ void Model3D::mesh3DPoints()
  cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
  cout << "numVerts OUT = " << out.numberofpoints << endl;
  cout << "numfacets OUT = " << out.numberoftrifaces << endl;
+ cout << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");

@@ -52,7 +52,11 @@ class Model3D
   void setCouetteBC();
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
-  void insertPoints();
+  void mapTriEdge();
+  void insertPointsByRatio();
+  void insertPointsByRatioLength();
+  void insertPointsByArea();
+  void meshTest();
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
   void mesh3DPoints();
@@ -177,6 +181,7 @@ class Model3D
   clVector V; // vetor de volumes dos elementos de malha 
   clVector idRegion;
   clVector surface,nonSurface;
+  clMatrix mapEdgeTri;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha

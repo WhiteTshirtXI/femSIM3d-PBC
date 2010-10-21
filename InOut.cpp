@@ -2192,9 +2192,9 @@ void InOut::vtkCellArray(ofstream& _file)
  for( int i=0;i<numElems;i++ )
  {
   _file << "4 " << IEN->Get(i,0) << " "  
-                  << IEN->Get(i,1) << " " 
-                  << IEN->Get(i,2) << " " 
-                  << IEN->Get(i,3) << endl;
+                << IEN->Get(i,1) << " " 
+                << IEN->Get(i,2) << " " 
+                << IEN->Get(i,3) << endl;
  }
  _file << endl;
 }

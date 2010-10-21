@@ -15,7 +15,9 @@ LIBS += -L$(HOME)/Programs/tetgen/1.4.0 -ltet
 INCLUDES += -I$(DIR) 
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I$(HOME)/Programs/tetgen/1.4.0
+INCLUDES += -I$(HOME)/Programs/triangle
 
+OBJECTS += $(HOME)/Programs/triangle/triangle.o
 OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o
@@ -32,6 +34,7 @@ OBJECTS += TElement.o
 OBJECTS += Galerkin.o
 OBJECTS += Interface3D.o
 OBJECTS += MeshSmooth.o
+OBJECTS += Interp3D.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o

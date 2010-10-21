@@ -1235,7 +1235,7 @@ void Model3D::insertPointsByRatioLength()
    /* ******************* */
    /* updating mapTriEdge */
 
-   // EMERGENCY - reconstructing the matrix again //
+   // EMERGENCY - reconstructing all the matrix again //
    // mapTriEdge();
    // ------------------------------------------- //
 
@@ -1248,28 +1248,28 @@ void Model3D::insertPointsByRatioLength()
    real zEdge2=Z.Get(v2)+(Z.Get(v4)-Z.Get(v2))*0.5;
 
    // 1st. new edge on the same place as the old edge
-   mapTriEdge.Set(i,0,xEdge1);
-   mapTriEdge.Set(i,1,yEdge1);
-   mapTriEdge.Set(i,2,zEdge1);
-   mapTriEdge.Set(i,3,v1);
-   mapTriEdge.Set(i,4,v4);
-   mapTriEdge.Set(i,5,v3elem1);
-   mapTriEdge.Set(i,6,v3elme2);
-   mapTriEdge.Set(i,7,elem1);
-   mapTriEdge.Set(i,8,elem2);
+   mapEdgeTri.Set(i,0,xEdge1);
+   mapEdgeTri.Set(i,1,yEdge1);
+   mapEdgeTri.Set(i,2,zEdge1);
+   mapEdgeTri.Set(i,3,v1);
+   mapEdgeTri.Set(i,4,v4);
+   mapEdgeTri.Set(i,5,v3elem1);
+   mapEdgeTri.Set(i,6,v3elem2);
+   mapEdgeTri.Set(i,7,elem1);
+   mapEdgeTri.Set(i,8,elem2);
    
-   // 2nd. new edge on the end of the mapTriEdge matrix
-   mapTriEdge.AddRow();
-   lastRow = mapTriEdge.DimI()-1;
-   mapTriEdge.Set(i,0,xEdge2);
-   mapTriEdge.Set(i,1,yEdge2);
-   mapTriEdge.Set(i,2,zEdge2);
-   mapTriEdge.Set(i,3,v2);
-   mapTriEdge.Set(i,4,v4);
-   mapTriEdge.Set(i,5,v3elem1);
-   mapTriEdge.Set(i,6,v3elme2);
-   mapTriEdge.Set(i,7,lastRow-1); // before last row element
-   mapTriEdge.Set(i,8,lastRow); // last row element
+   // 2nd. new edge on the end of the mapEdgeTri matrix
+   mapEdgeTri.AddRow();
+   lastRow = mapEdgeTri.DimI()-1;
+   mapEdgeTri.Set(lastRow,0,xEdge2);
+   mapEdgeTri.Set(lastRow,1,yEdge2);
+   mapEdgeTri.Set(lastRow,2,zEdge2);
+   mapEdgeTri.Set(lastRow,3,v2);
+   mapEdgeTri.Set(lastRow,4,v4);
+   mapEdgeTri.Set(lastRow,5,v3elem1);
+   mapEdgeTri.Set(lastRow,6,v3elem2);
+   mapEdgeTri.Set(lastRow,7,IENOriginal.DimI()-2); // before last row element
+   mapEdgeTri.Set(lastRow,8,IENOriginal.DimI()-1); // last row element
 
    /* ******************* */
 

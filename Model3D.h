@@ -53,9 +53,25 @@ class Model3D
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void mapTriEdge();
+
+  // surface treatment
   void insertPointsByRatio();
   void insertPointsByRatioLength();
+  void removePointsByRatioLength();
+  void remove2();
   void insertPointsByArea();
+  void surfaceTriangulator(int _v);
+  void surfaceTriangulatorEarClipping(int _v);
+  void surfaceTriangulatorQualityEarClipping(int _v);
+  clVector triangleQuality(int _v);
+  void deleteSurfacePoint(int _v);
+  void deleteSurfaceElementByPoint(int _v);
+  void setPolyedron(int _v);
+  void insertDeletePointsByRatioLength();
+  void insertPoint(int _v);
+  void deletePoint(int _v);
+  int findEdge(int _v1,int _v2);
+
   void meshTest();
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
@@ -82,6 +98,7 @@ class Model3D
   void setMiniElement();            
   void setQuadElement();             
   void setNeighbour();
+  void setNeighbourSurface();
   void setVertNeighbour();
   void setOFace();
   void setSurfaceConfig();
@@ -138,6 +155,7 @@ class Model3D
   int getNumGLEP();
   int getNumGLEC();
   real getVolume(int _elem);
+  real getArea(int _v1,int _v2,int _v3);
   real getArea(int _elem);
   real getAreaHeron(int _elem);
   void clearBC();
@@ -186,6 +204,7 @@ class Model3D
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
+  int numTriangles;
   int numGLEU;                    // numero de graus de liberdade de vel.
   int numGLEP;                    // numero de graus de liberdade de P.
   int numGLEC;                    // numero de graus de liberdade de C.
@@ -203,10 +222,12 @@ class Model3D
   vector< list<int> > xSurfaceViz; // lista de coords X de vizinhos na interface
   vector< list<int> > ySurfaceViz; // lista de coords Y de vizinhos na interface
   vector< list<int> > zSurfaceViz; // lista de coords Z de vizinhos na interface
+  vector< list<int> > neighbourSurfaceElem; // lista de elementos triangulares
+  vector< list<int> > neighbourPoint;  // lista de pontos vizinhos da superficie
   list<int> outVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
-  //vector< string > idRegion; // lista de coords Z de vizinhos na interface
 
+  void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
 };
 
 #endif

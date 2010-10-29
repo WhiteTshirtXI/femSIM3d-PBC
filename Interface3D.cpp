@@ -333,7 +333,7 @@ clVector Interface3D::computeKappa2()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  //int c1 = 0;
+  int c1 = 0;
   xCross = 0;
   yCross = 0;
   zCross = 0;
@@ -458,36 +458,34 @@ clVector Interface3D::computeKappa2()
    sumLength += c;
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
-//--------------------------------------------------
-//    if( surfaceNode == 214 )
-//    {
-// 	cout << "Triangulo: ------------------------- " << c1 << endl;
-// 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
-// 	cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
-// 	cout << "RetaUnit = " << xRetaUnit << " " 
-// 	                      << yRetaUnit << " " 
-// 						  << zRetaUnit << endl;
-// 	cout << "c = " << c << endl;
-// 	cout << "Cross  = " << cross.Get(0) << " " 
-// 	                    << cross.Get(1) << " " 
-// 						<< cross.Get(2) << endl;
-// 	cout << "xCross = " << xCross << endl;
-// 	cout << "yCross = " << yCross << endl;
-// 	cout << "zCross = " << zCross << endl;
-// 	cout << "Normal = " << xNormal << " " 
-// 	                    << yNormal << " " 
-// 						<< zNormal << endl;
-// 	cout << "area = " << area << endl;
-// 	cout << "force = " << force << endl;
-// 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
-// 	//cout << "sumForce = " << sumForce << endl;
-// 	//cout << "pressure = " << sumForce/sumArea << endl;
-// 	c1++;
-//    }
-//-------------------------------------------------- 
+   if( surfaceNode == 531 || surfaceNode == 528 || surfaceNode == 525 )
+   {
+	cout << "Triangulo: ------------------------- " << c1 << endl;
+	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+	//cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
+	cout << "RetaUnit = " << xRetaUnit << " " 
+	                      << yRetaUnit << " " 
+						  << zRetaUnit << endl;
+	cout << "c = " << c << endl;
+	cout << "Cross  = " << cross.Get(0) << " " 
+	                    << cross.Get(1) << " " 
+						<< cross.Get(2) << endl;
+	cout << "xCross = " << xCross << endl;
+	cout << "yCross = " << yCross << endl;
+	cout << "zCross = " << zCross << endl;
+	cout << "Normal = " << xNormal << " " 
+	                    << yNormal << " " 
+						<< zNormal << endl;
+	cout << "area = " << area << endl;
+	cout << "force = " << force << endl;
+	cout << "sumArea = " << sumArea << endl;
+	cout << "fx = " << fx << endl;
+	cout << "fy = " << fy << endl;
+	cout << "fz = " << fz << endl;
+	//cout << "sumForce = " << sumForce << endl;
+	//cout << "pressure = " << sumForce/sumArea << endl;
+	c1++;
+   }
   }
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.

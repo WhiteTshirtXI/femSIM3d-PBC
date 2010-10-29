@@ -9,6 +9,12 @@
 #include "compare.h"
 #include "tetgen.h"
 
+// necessario para leitura do objeto triangle.o escrito em ANSI C
+extern "C"
+{
+#include "triangle.h"
+}
+
 using namespace std;
 
 Model3D::Model3D(){}
@@ -965,21 +971,23 @@ void Model3D::insertPointsByRatio()
   int v2 = IENOriginal.Get(i,1);
   int v3 = IENOriginal.Get(i,2);
 
-  real x1 = X.Get(v1);
-  real y1 = Y.Get(v1);
-  real z1 = Z.Get(v1);
-
-  real x2 = X.Get(v2);
-  real y2 = Y.Get(v2);
-  real z2 = Z.Get(v2);
-
-  real x3 = X.Get(v3);
-  real y3 = Y.Get(v3);
-  real z3 = Z.Get(v3);
-
-  real length12 = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
-  real length13 = sqrt( (x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)+(z1-z3)*(z1-z3) );
-  real length23 = sqrt( (x2-x3)*(x2-x3)+(y2-y3)*(y2-y3)+(z2-z3)*(z2-z3) );
+//--------------------------------------------------
+//   real x1 = X.Get(v1);
+//   real y1 = Y.Get(v1);
+//   real z1 = Z.Get(v1);
+// 
+//   real x2 = X.Get(v2);
+//   real y2 = Y.Get(v2);
+//   real z2 = Z.Get(v2);
+// 
+//   real x3 = X.Get(v3);
+//   real y3 = Y.Get(v3);
+//   real z3 = Z.Get(v3);
+// 
+//   real length12 = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+//   real length13 = sqrt( (x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)+(z1-z3)*(z1-z3) );
+//   real length23 = sqrt( (x2-x3)*(x2-x3)+(y2-y3)*(y2-y3)+(z2-z3)*(z2-z3) );
+//-------------------------------------------------- 
 
   real area = getArea(i);
 
@@ -990,9 +998,11 @@ void Model3D::insertPointsByRatio()
    *     l1^2 + l2^2 + l3^2 
    *
    * */
-  real q = ( 4*area*1.732050801 )/( (length12*length12)+ 
-	                                (length13*length13)+
-	                                (length23*length23) );
+//--------------------------------------------------
+//   real q = ( 4*area*1.732050801 )/( (length12*length12)+ 
+// 	                                (length13*length13)+
+// 	                                (length23*length23) );
+//-------------------------------------------------- 
 
 
   //if( cc.Get(v1) == 0.5 && q < 0.6 ) 
@@ -1039,39 +1049,13 @@ void Model3D::insertPointsByRatio()
 
 void Model3D::mapTriEdge()
 {
-//--------------------------------------------------
-//  vector< list<int> > neighbourElemTri;  // lista de elementos de cada no
-//  neighbourElemTri.resize (0);
-//  neighbourElemTri.resize (numVertsOriginal);
-//  for( int i=0;i<IENOriginal.DimI();i++ )
-//   for( int j= 0;j<3;j++ )
-//    neighbourElemTri.at( (int)IENOriginal.Get(i,j) ).push_back(i);
-// 
-//  list<int> plist;
-//  list<int>::iterator mele;
-//  for( int ii=0;ii<numVertsOriginal;ii++ )
-//  {
-//   plist = neighbourElemTri.at(ii);
-//   cout << "vertice " << ii << ": " << endl;
-//   for( mele=plist.begin(); mele != plist.end();++mele )
-//   {
-//    int v1 = (int) IENOriginal.Get(*mele,0);
-//    int v2 = (int) IENOriginal.Get(*mele,1);
-//    int v3 = (int) IENOriginal.Get(*mele,2);
-//    cout << "elem " << *mele << ": " << v1 << " " << v2 << " " << v3 << endl;
-//   }
-//   cout << endl;
-//  }
-//-------------------------------------------------- 
-
  int v1,v2,v3;
- real numTris = IENOriginal.DimI();
  int numFace = 3; // triangulo tem 3 arestas
  clVector faceaux(2);
  IFACE3DSurface *faces = NULL;
- int listSize = numFace*numTris;
+ int listSize = numFace*IENOriginal.DimI();
  faces = new IFACE3DSurface[listSize];
- for( int mele=0;mele<numTris;mele++ )
+ for( int mele=0;mele<IENOriginal.DimI();mele++ )
  {
   v1 = (int) IENOriginal.Get(mele,0);
   v2 = (int) IENOriginal.Get(mele,1);
@@ -1107,6 +1091,12 @@ void Model3D::mapTriEdge()
  // para serem excluidas.
  qsort(faces,listSize,sizeof(IFACE3DSurface),IFACE2DCompare);
 
+//--------------------------------------------------
+//  for( int i=0;i<listSize;i++ )
+//   cout << faces[i].p1 << " " << faces[i].p2 << " " 
+//        << faces[i].p3 << " " << faces[i].p4 << endl;
+//-------------------------------------------------- 
+
  /*        - nome: mapTriEdge
            - definicao: matrix com mapeamento de arestas da superficie e
 		                convex hull, a dimensao da matrix eh o numero de 
@@ -1134,41 +1124,59 @@ void Model3D::mapTriEdge()
  */
 
  int j=0;
- mapEdgeTri.Dim(listSize/2,9);
+ mapEdgeTri.Dim(listSize/2,7);
 
  // numeracao de arestas a partir de numVerts e associacao das arestas
  // aos elementos para inclusao na IEN
  for( int i=0;i<listSize/2;i++ )
  {
-  // coordenada do ponto medio
-  real x=X.Get(faces[j].p1)+(X.Get(faces[j].p2)-X.Get(faces[j].p1))*0.5;
-  real y=Y.Get(faces[j].p1)+(Y.Get(faces[j].p2)-Y.Get(faces[j].p1))*0.5;
-  real z=Z.Get(faces[j].p1)+(Z.Get(faces[j].p2)-Z.Get(faces[j].p1))*0.5;
+  real x1=X.Get(faces[j].p1);
+  real y1=Y.Get(faces[j].p1);
+  real z1=Z.Get(faces[j].p1);
+  real x2=X.Get(faces[j].p2);
+  real y2=Y.Get(faces[j].p2);
+  real z2=Z.Get(faces[j].p2);
+  real length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
 
-  mapEdgeTri.Set(i,0,x ); // coordenada X do ponto medio da aresta
-  mapEdgeTri.Set(i,1,y ); // coordenada Y do ponto medio da aresta
-  mapEdgeTri.Set(i,2,z ); // coordenada Y do ponto medio da aresta
-  mapEdgeTri.Set(i,3,faces[j].p1 ); // numero do 1o. vertice da aresta
-  mapEdgeTri.Set(i,4,faces[j].p2 ); // numero do 2o. vertice da areata
-  mapEdgeTri.Set(i,5,faces[j].p3 );   // numero do 3o. vertice do 1o. elemento
-  mapEdgeTri.Set(i,6,faces[j+1].p3 ); // numero do 3o. vertice do 2o. elemento
-  mapEdgeTri.Set(i,7,faces[j].p4 ); // 1o. elemento
-  mapEdgeTri.Set(i,8,faces[j+1].p4 ); // 2o. elemento 
+  mapEdgeTri.Set(i,0,length); // tamanho da aresta
+  mapEdgeTri.Set(i,1,faces[j].p1 ); // numero do 1o. vertice da aresta
+  mapEdgeTri.Set(i,2,faces[j].p2 ); // numero do 2o. vertice da areata
+  mapEdgeTri.Set(i,3,faces[j].p3 );   // numero do 3o. vertice do 1o. elemento
+
+ // mapEdgeTri.Set(i,3,faces[j].p3 );   // posicao de mapEdgeTri da aresta 1o-3o1
+
+  mapEdgeTri.Set(i,4,faces[j+1].p3 ); // numero do 3o. vertice do 2o. elemento
+  mapEdgeTri.Set(i,5,faces[j].p4 ); // 1o. elemento
+  mapEdgeTri.Set(i,6,faces[j+1].p4 ); // 2o. elemento 
   j=j+2; // pois cada aresta eh dividida com apenas 2 elementos
  }
+}
+
+int Model3D::findEdge(int _v1,int _v2)
+{
+ int aux=0;
+ for( int i=0;mapEdgeTri.DimI();i++ )
+  if( (mapEdgeTri.Get(i,1) == _v1 && mapEdgeTri.Get(i,2) == _v2) ||
+	  (mapEdgeTri.Get(i,1) == _v2 && mapEdgeTri.Get(i,2) == _v1) )
+  {
+   aux = i;
+   break;
+  }
+
+ return aux;
 }
 
 void Model3D::insertPointsByRatioLength()
 {
  mapTriEdge();
 
- int lastRow;
+ int numEdges = mapEdgeTri.DimI();
  real test = 0.157;
- for( int i=0;i<mapEdgeTri.DimI();i++ )
+ for( int i=0;i<numEdges;i++ )
  {
   // edge vertices
-  int v1 = mapEdgeTri.Get(i,3);
-  int v2 = mapEdgeTri.Get(i,4);
+  int v1 = mapEdgeTri.Get(i,1);
+  int v2 = mapEdgeTri.Get(i,2);
 
   // 1st. vertice coordinate
   real x1 = X.Get(v1);
@@ -1180,106 +1188,942 @@ void Model3D::insertPointsByRatioLength()
   real y2 = Y.Get(v2);
   real z2 = Z.Get(v2);
 
-  // edge length
-  real length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
-
-  if( cc.Get(v1) == 0.5 && length > test )
+  if( cc.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) > test )
   {
    cout << "adding point and elements..." << endl;
 
    // edge mid point coordinates
-   real xCenter = mapEdgeTri.Get(i,0);
-   real yCenter = mapEdgeTri.Get(i,1);
-   real zCenter = mapEdgeTri.Get(i,2);
-
-   int v3elem1 = mapEdgeTri.Get(i,5);
-   int v3elem2 = mapEdgeTri.Get(i,6);
+   int v3elem1 = mapEdgeTri.Get(i,3);
+   int v3elem2 = mapEdgeTri.Get(i,4);
    int v4 = numVertsOriginal; // aditional vertice
-   int elem1 = mapEdgeTri.Get(i,7);
-   int elem2 = mapEdgeTri.Get(i,8);
+
+   int elem1 = mapEdgeTri.Get(i,5);
+   int elem2 = mapEdgeTri.Get(i,6);
+
+   real xMid = x1+( x2-x1 )*0.5;
+   real yMid = y1+( y2-y1 )*0.5;
+   real zMid = z1+( z2-z1 )*0.5;
 
    // aditional vertice coordinate
-   X.AddItem(v4,xCenter);
-   Y.AddItem(v4,yCenter);
-   Z.AddItem(v4,zCenter);
+   X.AddItem(v4,xMid);
+   Y.AddItem(v4,yMid);
+   Z.AddItem(v4,zMid);
    cc.AddItem(v4,0.5); // interface set up
 
    /* by adding 1 point on the edge it is necessary to divide the
 	* original element and also the oposite element by 2, becoming 4
 	* elements in total. */
 
-   // 1st. new element on the same position of the OLD 1st. element
+   // 1st. new element (v1 - v2 - v3elem1) 
+   // on the same position of the OLD 1st. element
    IENOriginal.Set(elem1,0,v1);
    IENOriginal.Set(elem1,1,v4);
    IENOriginal.Set(elem1,2,v3elem1);
 
-   // 2nd. new element
-   IENOriginal.AddRow();
-   lastRow = IENOriginal.DimI()-1;
-   IENOriginal.Set(lastRow,0,v2);
-   IENOriginal.Set(lastRow,1,v4);
-   IENOriginal.Set(lastRow,2,v3elem1);
-
-   // 3rd. new element on the same position of the OLD 2nd. element
+   // 2nd. new element (v1 - v2 - v3elem2) 
+   // on the same position of the OLD 2nd. element
    IENOriginal.Set(elem2,0,v1);
    IENOriginal.Set(elem2,1,v4);
    IENOriginal.Set(elem2,2,v3elem2);
 
-   // 4nd. new element
+   // 3rd. new element (v2 - v1 - v3elem1)
    IENOriginal.AddRow();
-   lastRow = IENOriginal.DimI()-1;
-   IENOriginal.Set(lastRow,0,v2);
-   IENOriginal.Set(lastRow,1,v4);
-   IENOriginal.Set(lastRow,2,v3elem2);
+   int elem3 = IENOriginal.DimI()-1;
+   IENOriginal.Set(elem3,0,v2);
+   IENOriginal.Set(elem3,1,v4);
+   IENOriginal.Set(elem3,2,v3elem1);
+
+   // 4th. new element (v2 - v1 - v3elem2)
+   IENOriginal.AddRow();
+   int elem4 = IENOriginal.DimI()-1;
+   IENOriginal.Set(elem4,0,v2);
+   IENOriginal.Set(elem4,1,v4);
+   IENOriginal.Set(elem4,2,v3elem2);
 
    /* ******************* */
    /* updating mapTriEdge */
+   /* eh necessario atualizar as 4 arestas externas dos 2 triangulos 
+	* trabalhados, atualizar 1 aresta interna e acrescentar 3 arestas novas
+	* */
 
    // EMERGENCY - reconstructing all the matrix again //
-   // mapTriEdge();
+    mapTriEdge();
    // ------------------------------------------- //
 
-   // mid point coordinate
-   real xEdge1=X.Get(v1)+(X.Get(v4)-X.Get(v1))*0.5;
-   real yEdge1=Y.Get(v1)+(Y.Get(v4)-Y.Get(v1))*0.5;
-   real zEdge1=Z.Get(v1)+(Z.Get(v4)-Z.Get(v1))*0.5;
-   real xEdge2=X.Get(v2)+(X.Get(v4)-X.Get(v2))*0.5;
-   real yEdge2=Y.Get(v2)+(Y.Get(v4)-Y.Get(v2))*0.5;
-   real zEdge2=Z.Get(v2)+(Z.Get(v4)-Z.Get(v2))*0.5;
+//--------------------------------------------------
+//    // 1st. new edge on the same place as the old edge
+//    real length = 0;
+//    mapEdgeTri.Set(i,0,length);
+//    mapEdgeTri.Set(i,1,v1);
+//    mapEdgeTri.Set(i,2,v4);
+//    mapEdgeTri.Set(i,3,v3elem1);
+//    mapEdgeTri.Set(i,4,v3elem2);
+//    mapEdgeTri.Set(i,5,elem1);
+//    mapEdgeTri.Set(i,6,elem2);
+// 
+//    // 2nd. new edge on the end of the mapEdgeTri matrix
+//    mapEdgeTri.AddRow();
+//    lastRow = mapEdgeTri.DimI()-1;
+//    length = 0;
+//    mapEdgeTri.Set(lastRow,0,length);
+//    mapEdgeTri.Set(lastRow,1,v2);
+//    mapEdgeTri.Set(lastRow,2,v4);
+//    mapEdgeTri.Set(lastRow,3,v3elem1);
+//    mapEdgeTri.Set(lastRow,4,v3elem2);
+//    mapEdgeTri.Set(lastRow,5,elem3); 
+//    mapEdgeTri.Set(lastRow,6,elem4); // last row element
+// 
+//    // 3rd. new edge on the end of the mapEdgeTri matrix
+//    mapEdgeTri.AddRow();
+//    lastRow = mapEdgeTri.DimI()-1;
+//    length = 0;
+//    mapEdgeTri.Set(lastRow,1,v3elem1);
+//    mapEdgeTri.Set(lastRow,2,v4);
+//    mapEdgeTri.Set(lastRow,3,v1);
+//    mapEdgeTri.Set(lastRow,4,v2);
+//    mapEdgeTri.Set(lastRow,5,elem1); 
+//    mapEdgeTri.Set(lastRow,6,elem3); // last row element
+// 
+//    // 4th. new edge on the end of the mapEdgeTri matrix
+//    mapEdgeTri.AddRow();
+//    lastRow = mapEdgeTri.DimI()-1;
+//    length = 0;
+//    mapEdgeTri.Set(lastRow,1,v3elem2);
+//    mapEdgeTri.Set(lastRow,2,v4);
+//    mapEdgeTri.Set(lastRow,3,v1);
+//    mapEdgeTri.Set(lastRow,4,v2);
+//    mapEdgeTri.Set(lastRow,5,elem2); 
+//    mapEdgeTri.Set(lastRow,6,elem4); // last row element
+// 
+//    // 1st. updated edge 
+//    length = 0;
+//    int edge = findEdge(v1,v3elem2);
+//    if( mapEdgeTri.Get(edge,5) == elem1 )
+//    {
+//     mapEdgeTri.Set(edge,3,v4);
+//     mapEdgeTri.Set(edge,5,elem1);
+//     }
+//     else
+//     {
+//     mapEdgeTri.Set(edge,4,v4);
+//     mapEdgeTri.Set(edge,5,elem1);
+//     }
+//
+//    // 2nd. updated edge 
+//    length = 0;
+//    int edge = findEdge(v1,v3elem2);
+//    if( mapEdgeTri.Get(edge,5) == elem2 )
+//    {
+//     mapEdgeTri.Set(edge,3,v4);
+//     mapEdgeTri.Set(edge,5,elem2);
+//     }
+//     else
+//     {
+//     mapEdgeTri.Set(edge,4,v4);
+//     mapEdgeTri.Set(edge,5,elem2);
+//     }
+//
+//    // 3rd. updated edge 
+//    length = 0;
+//    int edge = findEdge(v2,v3elem1);
+//    if( mapEdgeTri.Get(edge,5) == elem1 )
+//    {
+//     mapEdgeTri.Set(edge,3,v4);
+//     mapEdgeTri.Set(edge,5,elem3);
+//     }
+//     else
+//     {
+//     mapEdgeTri.Set(edge,4,v4);
+//     mapEdgeTri.Set(edge,5,elem3);
+//     }
+//
+//    // 4th. updated edge 
+//    length = 0;
+//    int edge = findEdge(v2,v3elem2);
+//    if( mapEdgeTri.Get(edge,5) == elem2 )
+//    {
+//     mapEdgeTri.Set(edge,3,v4);
+//     mapEdgeTri.Set(edge,5,elem4);
+//     }
+//     else
+//     {
+//     mapEdgeTri.Set(edge,4,v4);
+//     mapEdgeTri.Set(edge,5,elem3);
+//     }
+//    /* ******************* */
+//-------------------------------------------------- 
 
-   // 1st. new edge on the same place as the old edge
-   mapEdgeTri.Set(i,0,xEdge1);
-   mapEdgeTri.Set(i,1,yEdge1);
-   mapEdgeTri.Set(i,2,zEdge1);
-   mapEdgeTri.Set(i,3,v1);
-   mapEdgeTri.Set(i,4,v4);
-   mapEdgeTri.Set(i,5,v3elem1);
-   mapEdgeTri.Set(i,6,v3elem2);
-   mapEdgeTri.Set(i,7,elem1);
-   mapEdgeTri.Set(i,8,elem2);
-   
-   // 2nd. new edge on the end of the mapEdgeTri matrix
-   mapEdgeTri.AddRow();
-   lastRow = mapEdgeTri.DimI()-1;
-   mapEdgeTri.Set(lastRow,0,xEdge2);
-   mapEdgeTri.Set(lastRow,1,yEdge2);
-   mapEdgeTri.Set(lastRow,2,zEdge2);
-   mapEdgeTri.Set(lastRow,3,v2);
-   mapEdgeTri.Set(lastRow,4,v4);
-   mapEdgeTri.Set(lastRow,5,v3elem1);
-   mapEdgeTri.Set(lastRow,6,v3elem2);
-   mapEdgeTri.Set(lastRow,7,IENOriginal.DimI()-2); // before last row element
-   mapEdgeTri.Set(lastRow,8,IENOriginal.DimI()-1); // last row element
-
-   /* ******************* */
-
-   // incremeting the number of points
+   // incremeting the number of points and edges
    numVertsOriginal++;
-
+   numVerts++;
+   numEdges++;
   }
  }
 }
+
+void Model3D::surfaceTriangulator(int _v)
+{
+ int listSize = neighbourPoint.at(_v).size();
+ list<int> plist = neighbourPoint.at(_v);
+ list<int>::iterator point=plist.begin();
+ int vert0 = *point;++point;
+
+ for( int i=0;i<listSize-2;i++ )
+ {
+  int vert1 = *point;++point;
+  int vert2 = *point;
+
+  // adding new element
+  IENOriginal.AddRow();
+  int elem = IENOriginal.DimI()-1;
+  IENOriginal.Set(elem,0,vert0);
+  IENOriginal.Set(elem,1,vert1);
+  IENOriginal.Set(elem,2,vert2);
+ }
+}
+
+void Model3D::surfaceTriangulatorEarClipping(int _v)
+{
+ // removing last element that is equal to the first one
+ neighbourPoint.at(_v).pop_back();
+
+ int listSize = neighbourPoint.at(_v).size();
+ list<int> plist = neighbourPoint.at(_v);
+ list<int>::iterator point=plist.begin();
+ int vert1,vert2,vert3;
+
+ for( int j=0;j<listSize;j++ )
+ {
+  cout << *point << " ";
+  ++point;
+ }
+ cout << endl;
+ point=plist.begin();
+
+ while( listSize>2 )
+ {
+  vert1 = *point;
+  point=neighbourPoint.at(_v).erase(point); // removing 2nd vertice
+  plist.push_back(vert1); // moving to last position
+  vert2 = *point;
+  point=neighbourPoint.at(_v).erase(point); // removing 2nd vertice
+  vert3 = *point;
+
+  // adding new element
+  IENOriginal.AddRow();
+  int elem = IENOriginal.DimI()-1;
+  IENOriginal.Set(elem,0,vert1);
+  IENOriginal.Set(elem,1,vert2);
+  IENOriginal.Set(elem,2,vert3);
+  cout << vert1 << " " << vert2 << " " << vert3 << endl;
+
+  listSize--;
+ }
+}
+
+// input: vertex to be deleted
+// output: vector with 3 nodes to create 1 element
+// description: this method check the quality of all ear triangles that
+// can be created from the resulting polyhedron after deletion of vertex
+// _v.
+clVector Model3D::triangleQuality(int _v)
+{
+ // adding 2nd element to end of the list
+ list<int> plist2 = neighbourPoint.at(_v);
+ list<int>::iterator mele2=plist2.begin();
+ ++mele2;neighbourPoint.at(_v).push_back(*mele2);
+
+ int listSize = neighbourPoint.at(_v).size();
+ list<int> plist = neighbourPoint.at(_v);
+ list<int>::iterator point=plist.begin();
+ int vert1,vert2,vert3;
+ real qMax = 0; 
+ clVector vertexMax(3);
+
+ for( int j=0;j<listSize;j++ )
+ {
+  cout << *point << " ";
+  ++point;
+ }
+ cout << endl;
+ point=plist.begin();
+
+ for( int i=0;i<listSize-2;i++ )
+ {
+  vert1 = *point;++point;
+  vert2 = *point;++point;
+  vert3 = *point;--point;
+
+  // Triangle quality measure;
+  real x1 = X.Get(vert1);
+  real y1 = Y.Get(vert1);
+  real z1 = Z.Get(vert1);
+
+  real x2 = X.Get(vert2);
+  real y2 = Y.Get(vert2);
+  real z2 = Z.Get(vert2);
+
+  real x3 = X.Get(vert3);
+  real y3 = Y.Get(vert3);
+  real z3 = Z.Get(vert3);
+
+  real length12 = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+  real length13 = sqrt( (x1-x3)*(x1-x3)+(y1-y3)*(y1-y3)+(z1-z3)*(z1-z3) );
+  real length23 = sqrt( (x2-x3)*(x2-x3)+(y2-y3)*(y2-y3)+(z2-z3)*(z2-z3) );
+
+  real semiPerimeter = 0.5*(length12+length13+length23);
+  real area = getArea(vert1,vert2,vert3);
+  real inRadius = area/semiPerimeter;
+
+  /* Triangle quality measure;
+   *
+   *        6          r(t)       r -> in-radius
+   * q = -------- * --------- 
+   *      sqrt(3)      h(t)       h -> longest edge length
+   *
+   * Frey,P.,Borouchaki,H.:Surfacemeshevaluation.In:Int¿lMesh- ing
+   * Roundtable, pp. 363¿374 (1997)
+   * */
+
+  real h = length12;
+  if( h<length13 )
+   h = length13;
+  if( h<length23 )
+   h = length23;
+
+  real q = 3.4641*inRadius/h;
+  cout << "triangle: " << i << " " << "quality: " << q << endl;
+
+  if( qMax<q )
+  {
+   qMax = q; 
+   vertexMax.Set(0,vert1);
+   vertexMax.Set(1,vert2);
+   vertexMax.Set(2,vert3);
+  }
+ }
+
+ return vertexMax;
+}
+
+void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
+{
+ int listSize = neighbourPoint.at(_v).size();
+ int vert1,vert2,vert3;
+
+ while( listSize>3 )
+ {
+  clVector vertex = triangleQuality(_v);
+
+  vert1 = vertex.Get(0);
+  vert2 = vertex.Get(1);
+  vert3 = vertex.Get(2);
+  neighbourPoint.at(_v).remove(vert2); // removing 2nd vertice
+
+  // adding new element
+  IENOriginal.AddRow();
+  int elem = IENOriginal.DimI()-1;
+  IENOriginal.Set(elem,0,vert1);
+  IENOriginal.Set(elem,1,vert2);
+  IENOriginal.Set(elem,2,vert3);
+  cout << vert1 << " " << vert2 << " " << vert3 << endl;
+
+  listSize--;
+ }
+}
+
+void Model3D::deleteSurfacePoint(int _v)
+{
+ X.Delete(_v);
+ Y.Delete(_v);
+ Z.Delete(_v);
+ cc.Delete(_v);
+ numVertsOriginal--;
+ numVerts = cc.Dim();
+
+ // updating IENOriginal
+ for( int i=0;i<IENOriginal.DimI();i++ )
+  for( int j=0;j<IENOriginal.DimJ();j++ )
+   if( IENOriginal.Get(i,j)>_v )
+	IENOriginal.Set(i,j,IENOriginal.Get(i,j)-1);
+}
+
+void Model3D::deleteSurfaceElementByPoint(int _v)
+{
+ // marking the desired elements for deletion
+ list<int> plist = neighbourSurfaceElem.at(_v);
+ for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+ {
+  IENOriginal.Set(*mele,0,-1);
+  IENOriginal.Set(*mele,1,-1);
+  IENOriginal.Set(*mele,2,-1);
+ }
+
+ // deleting elements
+ for( int i=0;i<IENOriginal.DimI();i++ )
+  if( IENOriginal.Get(i,0) == -1 && 
+	IENOriginal.Get(i,1) == -1 && 
+	IENOriginal.Get(i,2) == -1 )
+  {
+   IENOriginal.DelLine(i);
+   i--; // should go back to verify the next element as well
+  }
+}
+
+void Model3D::setPolyedron(int _v)
+{
+ /* esta rotina nao esta otimizada; criamos uma matriz clMatrix para
+ // organizar e ordenar os vertices do poliedro resultante da retirada
+ // de um ponto da malha de superficie. Para isso configuramos a tal
+ // matriz com as linhas representando cada aresta do poliedro sendo que
+ // as 2 colunas representam o 1o. vertice e o 2o. vertice da aresta.
+ // Esta aresta por sinal nao esta ordenada em algum sentido (horario ou
+ // anti-horario) e para isso eh preciso organiza-la e ordenar as linhas
+ // da matriz. Isto eh feito buscando o 2 vertice da 1a linha e
+ // verificando nas linhas remanescentes da matriz qual delas contem o
+ // mesmo vertices. Se for a 1a coluna basta substituir a 2a. linha da
+ // matriz pela linha em que o elemento se encontra. Caso esteja na 2a.
+ // coluna fazemos o mesmo passo acima porem invertemos tambem o vertice
+ // da 1a. coluna com o da 2o coluna. Fazemos este loop ate a ultima
+ // linha e suprimimos os elementos repetidos. No final temos uma matriz
+ // organizada por arestas e nos.
+ // Exemplo:
+ //
+ // test = [ 0  1 ]   -->   [ 0  1 ]
+ //        [ 3  1 ]   -->   [ 1  3 ]
+ //        [ 2  0 ]   -->   [ 3  2 ]
+ //        [ 3  2 ]   -->   [ 2  0 ]                               
+ */
+  int listSize = neighbourPoint.at(_v).size();
+  clMatrix test(listSize/2,2);
+  list<int> plist = neighbourPoint.at(_v);
+  list<int>::iterator mele=plist.begin();
+  for( int i=0;i<listSize/2;i++ )
+  {
+   test.Set(i,0,*mele);++mele;
+   test.Set(i,1,*mele);++mele;
+  }
+//--------------------------------------------------
+//   if( ii == 309 )
+//   {
+//    cout << "-------- " << ii << endl;
+//    test.Display();
+//    cout << endl;
+//   }
+//-------------------------------------------------- 
+
+  for( int k=0;k<test.DimI()-1;k++ )
+  {
+   int node2 = test.Get(k,1);
+   //--------------------------------------------------
+   // if( ii == 325 )
+   //  cout << "== " << k << endl;
+   //-------------------------------------------------- 
+   for( int z=k+1;z<test.DimI();z++ )
+   {
+	int v2 = test.Get(k+1,0);
+	int v3 = test.Get(k+1,1);
+	int vSwap1 = test.Get(z,0);
+	int vSwap2 = test.Get(z,1);
+	//--------------------------------------------------
+	// if( ii == 325 )
+	// {
+	//  cout << "---- " << node2 << " ----" << endl;
+	//  cout << k+1 << " " << v2 << " " << v3 << endl;
+	//  cout << z << " " << vSwap1 << " " << vSwap2 << endl;
+	//  cout << "---------" << endl;
+	// }
+	//-------------------------------------------------- 
+	if( vSwap1 == node2 )
+	{
+	 test.Set(k+1,0,vSwap1);
+	 test.Set(k+1,1,vSwap2);
+	 test.Set(z,0,v2);
+	 test.Set(z,1,v3);
+	 break;
+	}
+	if( vSwap2 == node2 )
+	{
+	 test.Set(k+1,0,vSwap2);
+	 test.Set(k+1,1,vSwap1);
+	 test.Set(z,0,v3);
+	 test.Set(z,1,v2);
+	 break;
+	}
+   }
+//--------------------------------------------------
+//    if( ii == 309 )
+//    {
+//    cout << "-------- " << ii << endl;
+//    test.Display();
+//    cout << endl;
+//    }
+//-------------------------------------------------- 
+  }
+  neighbourPoint.at(_v).clear();
+  for( int i=0;i<test.DimI();i++ )
+   for( int j=0;j<test.DimJ();j++ )
+	neighbourPoint.at(_v).push_back(test.Get(i,j));
+
+  // removing the last element that is equal to the first
+  /////////////neighbourPoint.at(_v).pop_back();
+  // removing duplicated elements
+  neighbourPoint.at(_v).unique();
+  //--------------------------------------------------
+  //   cout << "---------" << ii << "------------" << endl;
+  //   std::ostream_iterator< int > output( cout, " " );
+  //   std::copy( neighbourPoint.at(ii).begin(), 
+  //              neighbourPoint.at(ii).end(), output );
+  //   cout << endl;
+  //-------------------------------------------------- 
+}
+
+void Model3D::setNeighbourSurface()
+{
+ // list of element neighbours
+ neighbourSurfaceElem.resize (0);
+ neighbourSurfaceElem.resize (numVertsOriginal);
+ for( int i=0;i<IENOriginal.DimI();i++ )
+  for( int j=0;j<3;j++ )
+   neighbourSurfaceElem.at( (int)IENOriginal.Get(i,j) ).push_back(i);
+
+ // list of point neighbours
+ neighbourPoint.resize (0);
+ neighbourPoint.resize (numVertsOriginal);
+ for( int ii=0;ii<numVertsOriginal;ii++ )
+ {
+  list<int> plist = neighbourSurfaceElem.at(ii);
+  for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+  {
+   int v1 = (int) IENOriginal.Get(*mele,0);
+   int v2 = (int) IENOriginal.Get(*mele,1);
+   int v3 = (int) IENOriginal.Get(*mele,2);
+
+   neighbourPoint.at( ii ).push_back(v1);
+   neighbourPoint.at( ii ).push_back(v2);
+   neighbourPoint.at( ii ).push_back(v3);
+   neighbourPoint.at( ii ).remove(ii);
+  }
+ }
+}
+
+void Model3D::insertDeletePointsByRatioLength()
+{
+ // creating edge matrix
+ mapTriEdge();
+
+ // creating list of surface neighbours (points and edges)
+ setNeighbourSurface();
+
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge length
+  real edgeLength = mapEdgeTri.Get(i,0);
+
+  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 57 ) 
+   insertPoint(i);
+
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength < 0.05 ) 
+  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength < 0.06 ) 
+  {
+   // edge vertices
+   int v1 = mapEdgeTri.Get(i,1);
+   int v2 = mapEdgeTri.Get(i,2);
+
+   // sum of all neighbour edge length of the 1st. point
+   real sumLength1=0;
+   list<int> plist = neighbourPoint.at(v1);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   {
+	// node to be removed
+	int vert1 = v1;
+	// oposite node
+	int vert2 = *mele;
+	sumLength1 += sqrt( ( X.Get(vert1)-X.Get(vert2) )*( X.Get(vert1)-X.Get(vert2) )+
+	                    ( Y.Get(vert1)-Y.Get(vert2) )*( Y.Get(vert1)-Y.Get(vert2) )+
+						( Z.Get(vert1)-Z.Get(vert2) )*( Z.Get(vert1)-Z.Get(vert2) ) );
+   }
+
+   // sum of all neighbour edge length of the 2nd. point
+   real sumLength2=0;
+   plist = neighbourPoint.at(v2);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   {
+	// node to be removed
+	int vert1 = v1;
+	// oposite node
+	int vert2 = *mele;
+	sumLength2 += sqrt( ( X.Get(vert1)-X.Get(vert2) )*( X.Get(vert1)-X.Get(vert2) )+
+	                    ( Y.Get(vert1)-Y.Get(vert2) )*( Y.Get(vert1)-Y.Get(vert2) )+
+						( Z.Get(vert1)-Z.Get(vert2) )*( Z.Get(vert1)-Z.Get(vert2) ) );
+   }
+   if( sumLength1 < sumLength2 )
+	deletePoint(v1);
+   else
+	deletePoint(v2);
+  }
+ }
+}
+
+void Model3D::insertPoint(int _edge)
+{
+ int vAdd = numVertsOriginal; // aditional vertice
+ cout << "-------------------- inserting vertice: " << vAdd << endl;
+
+ // edge vertices
+ int v1 = mapEdgeTri.Get(_edge,1);
+ int v2 = mapEdgeTri.Get(_edge,2);
+
+ // 1st. vertice coordinate
+ real x1 = X.Get(v1);
+ real y1 = Y.Get(v1);
+ real z1 = Z.Get(v1);
+
+ // 2nd. vertice coordinate
+ real x2 = X.Get(v2);
+ real y2 = Y.Get(v2);
+ real z2 = Z.Get(v2);
+
+ // edge mid point coordinates
+ int v3elem1 = mapEdgeTri.Get(_edge,3);
+ int v3elem2 = mapEdgeTri.Get(_edge,4);
+
+ int elem1 = mapEdgeTri.Get(_edge,5);
+ int elem2 = mapEdgeTri.Get(_edge,6);
+
+ real xMid = x1+( x2-x1 )*0.5;
+ real yMid = y1+( y2-y1 )*0.5;
+ real zMid = z1+( z2-z1 )*0.5;
+
+ // aditional vertice coordinate
+ X.AddItem(vAdd,xMid);
+ Y.AddItem(vAdd,yMid);
+ Z.AddItem(vAdd,zMid);
+ cc.AddItem(vAdd,0.5); // interface set up
+
+ /* by adding 1 point on the edge it is necessary to divide the
+  * original element and also the oposite element by 2, becoming 4
+  * elements in total. */
+
+ // 1st. new element (v1 - vAdd - v3elem1) 
+ // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
+ IENOriginal.Set(elem1,0,v1);
+ IENOriginal.Set(elem1,1,vAdd);
+ IENOriginal.Set(elem1,2,v3elem1);
+
+ // 2nd. new element (v1 - vAdd - v3elem2) 
+ // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
+ IENOriginal.Set(elem2,0,v1);
+ IENOriginal.Set(elem2,1,vAdd);
+ IENOriginal.Set(elem2,2,v3elem2);
+
+ // 3rd. new element (v2 - vAdd - v3elem1) on the last row
+ IENOriginal.AddRow();
+ int elem3 = IENOriginal.DimI()-1;
+ IENOriginal.Set(elem3,0,v2);
+ IENOriginal.Set(elem3,1,vAdd);
+ IENOriginal.Set(elem3,2,v3elem1);
+
+ // 4th. new element (v2 - vAdd - v3elem2) on the last row
+ IENOriginal.AddRow();
+ int elem4 = IENOriginal.DimI()-1;
+ IENOriginal.Set(elem4,0,v2);
+ IENOriginal.Set(elem4,1,vAdd);
+ IENOriginal.Set(elem4,2,v3elem2);
+
+ /* ******************* */
+ /* updating mapTriEdge */
+ /* eh necessario atualizar as 4 arestas dos 2 triangulos trabalhados
+  * */
+ // ------------------------------------------- //
  
+ int lastRow,length;
+
+ // 1st. new edge on the same place as the old edge
+ x1=X.Get(v1);
+ y1=Y.Get(v1);
+ z1=Z.Get(v1);
+ x2=X.Get(vAdd);
+ y2=Y.Get(vAdd);
+ z2=Z.Get(vAdd);
+ length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+ mapEdgeTri.Set(_edge,0,length);
+ mapEdgeTri.Set(_edge,1,v1);
+ mapEdgeTri.Set(_edge,2,vAdd);
+ mapEdgeTri.Set(_edge,3,v3elem1);
+ mapEdgeTri.Set(_edge,4,v3elem2);
+ mapEdgeTri.Set(_edge,5,elem1);
+ mapEdgeTri.Set(_edge,6,elem2);
+
+ // 2nd. new edge on the end of the mapEdgeTri matrix
+ mapEdgeTri.AddRow();
+ lastRow = mapEdgeTri.DimI()-1;
+ x1=X.Get(v2);
+ y1=Y.Get(v2);
+ z1=Z.Get(v2);
+ x2=X.Get(vAdd);
+ y2=Y.Get(vAdd);
+ z2=Z.Get(vAdd);
+ length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+ mapEdgeTri.Set(lastRow,0,length);
+ mapEdgeTri.Set(lastRow,1,v2);
+ mapEdgeTri.Set(lastRow,2,vAdd);
+ mapEdgeTri.Set(lastRow,3,v3elem1);
+ mapEdgeTri.Set(lastRow,4,v3elem2);
+ mapEdgeTri.Set(lastRow,5,elem3); 
+ mapEdgeTri.Set(lastRow,6,elem4); // last row element
+
+ // 3rd. new edge on the end of the mapEdgeTri matrix
+ x1=X.Get(v3elem1);
+ y1=Y.Get(v3elem1);
+ z1=Z.Get(v3elem1);
+ x2=X.Get(vAdd);
+ y2=Y.Get(vAdd);
+ z2=Z.Get(vAdd);
+ length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+ mapEdgeTri.AddRow();
+ lastRow = mapEdgeTri.DimI()-1;
+ mapEdgeTri.Set(lastRow,1,v3elem1);
+ mapEdgeTri.Set(lastRow,2,vAdd);
+ mapEdgeTri.Set(lastRow,3,v1);
+ mapEdgeTri.Set(lastRow,4,v2);
+ mapEdgeTri.Set(lastRow,5,elem1); 
+ mapEdgeTri.Set(lastRow,6,elem3); // last row element
+
+ // 4th. new edge on the end of the mapEdgeTri matrix
+ mapEdgeTri.AddRow();
+ lastRow = mapEdgeTri.DimI()-1;
+ x1=X.Get(v3elem2);
+ y1=Y.Get(v3elem2);
+ z1=Z.Get(v3elem2);
+ x2=X.Get(vAdd);
+ y2=Y.Get(vAdd);
+ z2=Z.Get(vAdd);
+ length = sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) );
+ mapEdgeTri.Set(lastRow,1,v3elem2);
+ mapEdgeTri.Set(lastRow,2,vAdd);
+ mapEdgeTri.Set(lastRow,3,v1);
+ mapEdgeTri.Set(lastRow,4,v2);
+ mapEdgeTri.Set(lastRow,5,elem2); 
+ mapEdgeTri.Set(lastRow,6,elem4); // last row element
+
+ // 1st. updated edge 
+ int edgeUpdate = findEdge(v1,v3elem1);
+ if( mapEdgeTri.Get(edgeUpdate,5) == elem1 )
+ {
+  mapEdgeTri.Set(edgeUpdate,3,vAdd);
+  mapEdgeTri.Set(edgeUpdate,5,elem1);
+ }
+ else
+ {
+  mapEdgeTri.Set(edgeUpdate,4,vAdd);
+  mapEdgeTri.Set(edgeUpdate,6,elem1);
+ }
+
+ // 2nd. updated edge 
+ edgeUpdate = findEdge(v1,v3elem2);
+ if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
+ {
+  mapEdgeTri.Set(edgeUpdate,3,vAdd);
+  mapEdgeTri.Set(edgeUpdate,5,elem2);
+ }
+ else
+ {
+  mapEdgeTri.Set(edgeUpdate,4,vAdd);
+  mapEdgeTri.Set(edgeUpdate,6,elem2);
+ }
+
+ // 3rd. updated edge 
+ edgeUpdate = findEdge(v2,v3elem1);
+ if( mapEdgeTri.Get(edgeUpdate,5) == elem1 )
+ {
+  mapEdgeTri.Set(edgeUpdate,3,vAdd);
+  mapEdgeTri.Set(edgeUpdate,5,elem3);
+ }
+ else
+ {
+  mapEdgeTri.Set(edgeUpdate,4,vAdd);
+  mapEdgeTri.Set(edgeUpdate,6,elem3);
+ }
+
+ // 4th. updated edge 
+ edgeUpdate = findEdge(v2,v3elem2);
+ if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
+ {
+  mapEdgeTri.Set(edgeUpdate,3,vAdd);
+  mapEdgeTri.Set(edgeUpdate,5,elem4);
+ }
+ else
+ {
+  mapEdgeTri.Set(edgeUpdate,4,vAdd);
+  mapEdgeTri.Set(edgeUpdate,6,elem4);
+ }
+ /* ******************* */
+
+ /* ******************* */
+ /* updating neighbourPoint */
+ // ------------------------------------------- //
+ 
+ // point v3elem1
+ neighbourPoint.at(v3elem1).push_back(vAdd);
+ // point v3elem2
+ neighbourPoint.at(v3elem2).push_back(vAdd);
+ // add vAdd
+ list<int> myNewList;myNewList.resize(0);
+ myNewList.push_back(v1);
+ myNewList.push_back(v2);
+ myNewList.push_back(v3elem1);
+ myNewList.push_back(v3elem2);
+ neighbourPoint.push_back(myNewList);
+
+ // incremeting the number of points and edges
+ numVertsOriginal++;
+ numVerts++;
+}
+
+void Model3D::deletePoint(int _v)
+{
+ cout << "--------------------- removing vertice: " << _v << endl;
+ saveVTKSurface("./vtk/","test",_v);
+
+ // deleting elements
+ deleteSurfaceElementByPoint(_v);
+
+ // after the deletion process it's necessary to create new elements
+ // to fullfill the space left by the deletion of elements
+ setPolyedron(_v);
+ //surfaceTriangulator(_v);
+ //surfaceTriangulatorEarClipping(_v);
+ surfaceTriangulatorQualityEarClipping(_v);
+
+ // deleting X,Y and Z coordinate; deleting the point maker funcition
+ deleteSurfacePoint(_v);
+
+ //--------------------------------------------------
+ //   // updating edge matrix
+ mapTriEdge();
+
+
+//--------------------------------------------------
+//  // 2nd. updated edge 
+//  edgeUpdate = findEdge(v1,v3elem2);
+//  if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
+//  {
+//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
+//   mapEdgeTri.Set(edgeUpdate,5,elem2);
+//  }
+//  else
+//  {
+//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
+//   mapEdgeTri.Set(edgeUpdate,6,elem2);
+//  }
+//-------------------------------------------------- 
+
+
+
+
+ //   // updating surface neighbours
+ setNeighbourSurface();
+ //-------------------------------------------------- 
+ 
+
+}
+
+void Model3D::removePointsByRatioLength()
+{
+ // creating edge matrix
+ mapTriEdge();
+
+ // creating list of surface neighbours (points and edges)
+ setNeighbourSurface();
+
+ real test = 0.07;
+ //real test = 0.05995;
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge vertices
+  int v1 = mapEdgeTri.Get(i,1);
+  int v2 = mapEdgeTri.Get(i,2);
+
+  // verifying the length of each surface edge
+  if( cc.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test )
+  {
+   // sum of all neighbour edge length of the 1st. point
+   real sumLength1=0;
+   list<int> plist = neighbourPoint.at(v1);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   {
+	// node to be removed
+	int vert1 = v1;
+	// oposite node
+	int vert2 = *mele;
+	sumLength1 += sqrt( ( X.Get(vert1)-X.Get(vert2) )*( X.Get(vert1)-X.Get(vert2) )+
+						( Y.Get(vert1)-Y.Get(vert2) )*( Y.Get(vert1)-Y.Get(vert2) )+
+						( Z.Get(vert1)-Z.Get(vert2) )*( Z.Get(vert1)-Z.Get(vert2) ) );
+   }
+
+   // sum of all neighbour edge length of the 1st. point
+   real sumLength2=0;
+   plist = neighbourPoint.at(v2);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   {
+	// node to be removed
+	int vert1 = v1;
+	// oposite node
+	int vert2 = *mele;
+	sumLength2 += sqrt( ( X.Get(vert1)-X.Get(vert2) )*( X.Get(vert1)-X.Get(vert2) )+
+						( Y.Get(vert1)-Y.Get(vert2) )*( Y.Get(vert1)-Y.Get(vert2) )+
+						( Z.Get(vert1)-Z.Get(vert2) )*( Z.Get(vert1)-Z.Get(vert2) ) );
+   }
+
+   // check which node has the smallest length sum and proceed
+   if( sumLength1 < sumLength2 )
+   {
+	cout << "removing 1st. vertice "  << v1 << endl;
+
+	// deleting elements
+	deleteSurfaceElementByPoint(v1);
+
+	// after the deletion process it's necessary to create new elements
+	// to fullfill the space left by the deletion of elements
+	setPolyedron(v1);
+	surfaceTriangulator(v1);
+	//surfaceTriangulatorEarClipping(v1);
+
+	// deleting X,Y and Z coordinate; deleting the point maker funcition
+	deleteSurfacePoint(v1);
+
+	// updating edge matrix
+	mapTriEdge();
+	// updating surface neighbours
+	setNeighbourSurface();
+   }
+   else // if the 2nd. node has the smallest edge length sum
+   {
+	cout << "removing 2nd. vertice " << v2 << endl;
+
+	// deleting elements
+	deleteSurfaceElementByPoint(v2);
+
+	// after the deletion process it's necessary to create new elements
+	// to fullfill the space left by the deletion of elements
+	setPolyedron(v2);
+	surfaceTriangulator(v2);
+	//surfaceTriangulatorEarClipping(v2);
+
+	// deleting X,Y and Z coordinate; deleting the point maker funcition
+	deleteSurfacePoint(v2);
+
+	// updating edge matrix
+	mapTriEdge();
+	// updating surface neighbours
+	setNeighbourSurface();
+   }
+  }
+ }
+}
+
 void Model3D::insertPointsByArea()
 {
  int lastRow;
@@ -1336,7 +2180,9 @@ void Model3D::insertPointsByArea()
 void Model3D::mesh2Dto3DOriginal()
 {
  // point insertion by neighbour averages
- insertPointsByArea();
+ //insertPointsByRatioLength();
+ //removePointsByRatioLength();
+ insertDeletePointsByRatioLength();
 
  // tetgen mesh object 
  tetgenio in,out;
@@ -1485,9 +2331,10 @@ void Model3D::mesh2Dto3DOriginal()
 void Model3D::mesh3DPoints()
 {
  // point insertion by neighbour averages
- insertPointsByRatioLength();
+ //insertPointsByRatioLength();
+ //removePointsByRatioLength();
+ insertDeletePointsByRatioLength();
  // updating numVerts
- numVerts = cc.Dim();
 
  // cria objeto de malha do tetgen
  tetgenio in,out;
@@ -1593,8 +2440,8 @@ void Model3D::mesh3DPoints()
  //in.save_nodes("bubble");
  //in.save_elements("in");
  cout << endl;
- cout << "numElems IN = " << numElems << endl;
- cout << "numNodes IN = " << numNodes << endl;
+ cout << "numElems IN = " << in.numberoffacets << endl;
+ cout << "numNodes IN = " << in.numberoffacets+in.numberofpoints << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
  cout << endl;
@@ -4100,6 +4947,26 @@ real Model3D::getVolume(int _elem)
  return volume;
 }
 
+real Model3D::getArea(int _v1,int _v2,int _v3)
+{
+ // vectors
+ real x1 = X.Get(_v2) - X.Get(_v1);
+ real y1 = Y.Get(_v2) - Y.Get(_v1);
+ real z1 = Z.Get(_v2) - Z.Get(_v1);
+
+ real x2 = X.Get(_v3) - X.Get(_v1);
+ real y2 = Y.Get(_v3) - Y.Get(_v1);
+ real z2 = Z.Get(_v3) - Z.Get(_v1);
+
+ real crossX = (y1*z2)-(z1*y2);
+ real crossY = -( (x1*z2)-(z1*x2) );
+ real crossZ = (x1*y2)-(y1*x2);
+
+ real area = 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
+
+ return area;
+}
+
 real Model3D::getArea(int _elem)
 {
  int v1=(int)IENOriginal.Get(_elem,0);
@@ -4185,6 +5052,12 @@ void Model3D::reAllocStruct()
  IEN.CopyFrom(0,0,IENaux);
 }
 
+// this method checks the orientation of a triangular surface
+// _surfaceNode = surface node
+// _v1 = 1st vertice of triangle
+// _v2 = 2nd vertice of triangle
+// _v3 = vertice of tetrahedra inside the bubble that contanis 
+// the triangle of surface
 bool Model3D::checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn)
 {
  real xSurfaceNode = X.Get(_surfaceNode);
@@ -4213,11 +5086,14 @@ bool Model3D::checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn)
  real yVec2 = yV2 - ySurfaceNode; 
  real zVec2 = zV2 - zSurfaceNode; 
 
+ // normal vector
  // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
  real x2 = (yVec1*zVec2)-(zVec1*yVec2);
  real y2 = -( (xVec1*zVec2)-(zVec1*xVec2) );
  real z2 = (xVec1*yVec2)-(yVec1*xVec2);
 
+ // scalar product of the normal vector and surfaceNode->in to check if
+ // they have the value < 90 degrees
  // produto escalar para saber se os vetores estao no mesmo sentido
  real prodEsc = x1*x2 + y1*y2 + z1*z2;
 
@@ -4341,4 +5217,46 @@ void Model3D::operator=(Model3D &_mRight)
   inElem = _mRight.inElem;
 }
 
+void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
 
+ string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename );
+
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "3D Simulation C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << endl;
+
+
+ vtkFile << "POINTS " << numVertsOriginal << " double" << endl;
+ for( int i=0;i<numVertsOriginal;i++ )
+  vtkFile << X.Get(i) << " " << Y.Get(i) << " " << Z.Get(i) << endl;
+
+ vtkFile << endl;
+
+
+
+ int numTri = IENOriginal.DimI();
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "3 " << IENOriginal.Get(i,0) << " "
+                  << IENOriginal.Get(i,1) << " "
+				  << IENOriginal.Get(i,2) << endl;
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "5 ";
+
+ vtkFile.close();
+
+
+}

@@ -31,24 +31,30 @@ int main(int argc, char **argv)
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- //const char *mesh = "./vtk/mesh.msh";
- const char *mesh = "../../db/gmsh/3D/bubble-tube1.msh";
- //const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
- //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
  const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
-//--------------------------------------------------
-//  const char *txtFolder  = "/scratch2/gustavo/cubeCube/txt/";
-//  const char *binFolder  = "/scratch2/gustavo/cubeCube/bin/";
-//  const char *vtkFolder  = "/scratch2/gustavo/cubeCube/vtk/";
-//  const char *datFolder  = "/scratch2/gustavo/cubeCube/dat/";
-//-------------------------------------------------- 
+ //--------------------------------------------------
+ //  const char *txtFolder  = "/scratch2/gustavo/cubeCube/txt/";
+ //  const char *binFolder  = "/scratch2/gustavo/cubeCube/bin/";
+ //  const char *vtkFolder  = "/scratch2/gustavo/cubeCube/vtk/";
+ //  const char *datFolder  = "/scratch2/gustavo/cubeCube/dat/";
+ //-------------------------------------------------- 
+
+ //const char *mesh = "./vtk/mesh.msh";
+ const char *mesh = "../../db/gmsh/3D/bubble-tube1.msh";
+ //const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
+ //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
+
 
  Model3D m1,mOld;
 
- m1.readMSH(mesh);
+ if( *(argv+1) == NULL )     
+  m1.readMSH(mesh);
+ else if( strcmp( *(argv+1),"restart") == 0 ) 
+  m1.readMSH("./vtk/newMesh.msh");
+
  m1.setInterfaceBC();
  m1.mesh2Dto3D();
  m1.setMiniElement();
@@ -201,6 +207,8 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(vtkFolder,"newMesh");
   saveEnd.saveSol(binFolder,"UVWPC-remeshing",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );

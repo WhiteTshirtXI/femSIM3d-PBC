@@ -1869,7 +1869,7 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  real yi = Y->Min();
  real yf = Y->Max();
  real zi = (Z->Max()-Z->Min())/2.0;
- real zf = (Z->Max()-Z->Min())/2.0;
+ //real zf = (Z->Max()-Z->Min())/2.0;
  int count = 0;
  for( int i=0;i<nX;i++ )
  {
@@ -2254,8 +2254,8 @@ void InOut::vtkVector(ofstream& _file,string _name,
  _file << "VECTORS " << _name << " double" << endl;
  for( int i=0;i<numVerts;i++ )
   _file << _vx.Get(i) << " " 
-        << _vy.Get(i) << " " 
-		<< _vz.Get(i) << endl;
+        << _vy.Get(i+numVerts) << " " 
+		<< _vz.Get(i+numVerts*2) << endl;
  _file << endl;
 }
 
@@ -2323,4 +2323,84 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
 
 } // fecha metodo saveMSH
 
+void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
+{
+ IEN = m->getIEN();
+ clMatrix *IENOriginal = m->getIENOriginal();
+ int numVertsOriginal = m->getNumVertsOriginal();
+ numElems = m->getNumElems();
+ simTime = s->getTime();
+
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".msh";
+ const char* filename = file.c_str();
+
+ ofstream mshFile( filename ); 
+
+ mshFile << "$MeshFormat" << endl;
+ mshFile << "2.1 0 8" << endl;
+ mshFile << "$EndMeshFormat" << endl;
+ mshFile << "$PhysicalNames" << endl;
+ mshFile << "2" << endl;
+ mshFile << "2 1 \"bubble\""<< endl;
+ mshFile << "2 2 \"wall\""<< endl;
+ mshFile << "$EndPhysicalNames" << endl;
+ mshFile << "$Nodes" << endl;
+ mshFile << numVertsOriginal << endl;
+
+ for( int i=0;i<numVertsOriginal;i++ )
+  mshFile << i+1 << " " << X->Get(i) << " " 
+                        << Y->Get(i) << " " 
+						<< Z->Get(i) << endl;
+
+ mshFile << "$EndNodes" << endl;
+ mshFile << "$Elements" << endl;
+ mshFile << IENOriginal->DimI() << endl;
+
+ for( int i=0;i<IENOriginal->DimI();i++ )
+ {
+  int v1 = IENOriginal->Get(i,0);
+  int v2 = IENOriginal->Get(i,1);
+  int v3 = IENOriginal->Get(i,2);
+
+  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 & cc->Get(v3) == 0.5 )
+   mshFile << i+1 << " " << "2" << " " 
+	                     << "3" << " " 
+						 << "1" << " " 
+						 << "14" << " " 
+						 << "0" << " " 
+						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+  else
+   mshFile << i+1 << " " << "2" << " " 
+	                     << "3" << " " 
+						 << "2" << " " 
+						 << "14" << " " 
+						 << "0" << " " 
+						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+
+ }
+ mshFile << "$EndElements" << endl;
+
+ mshFile.close();
+
+ /* --------- copying to file sim-last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + "newMesh-last" + ".msh";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
+ cout << "mesh saved in MSH" << endl;
+
+} // fecha metodo saveMSH
 

@@ -1489,13 +1489,11 @@ void Simulator3D::setInterfaceVel()
 
  for( int i=0;i<surface->Dim();i++ )
  {
-  int aux = surface->Get(i);
-  uALE.Set(aux,uSol.Get(aux));
-  vALE.Set(aux,vSol.Get(aux));
-  wALE.Set(aux,wSol.Get(aux));
-  
+  int surfaceNode = surface->Get(i);
+  uALE.Set(surfaceNode,uSol.Get(surfaceNode));
+  vALE.Set(surfaceNode,vSol.Get(surfaceNode));
+  wALE.Set(surfaceNode,wSol.Get(surfaceNode));
   //wALE.Set(aux,wSol.Get(aux)-bubbleZVelocity);
-
  }
 } // fecha metodo setInterfaceVel 
 

@@ -53,7 +53,12 @@ int main(int argc, char **argv)
  if( *(argv+1) == NULL )     
   m1.readMSH(mesh);
  else if( strcmp( *(argv+1),"restart") == 0 ) 
-  m1.readMSH("./vtk/newMesh.msh");
+ {
+  string aux = *(argv+2);
+  string file = (string) "./vtk/newMesh-" + *(argv+2) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
+ }
 
  m1.setInterfaceBC();
  m1.mesh2Dto3D();
@@ -179,6 +184,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    //save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveMSH(vtkFolder,"newMesh",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
@@ -194,9 +200,9 @@ int main(int argc, char **argv)
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();
-  m1.setWallBC();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setWallBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -208,7 +214,7 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(vtkFolder,"newMesh");
+  saveEnd.saveMSH(vtkFolder,"newMesh-remeshing",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"UVWPC-remeshing",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );

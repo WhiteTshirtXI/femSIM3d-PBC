@@ -71,6 +71,7 @@ class Model3D
   void insertPoint(int _v);
   void deletePoint(int _v);
   int findEdge(int _v1,int _v2);
+  void flipTriangleEdge( int _edge );
 
   void meshTest();
   void mesh2Dto3D();

@@ -175,7 +175,6 @@ void SemiLagrangean::getDepartElem(real dt)
   yP = yParticle.Get(ii);
   zP = zParticle.Get(ii);
 
-  //cout << "vertice de origem = " << ii << endl;
   jumpToElem(*mele,ii,xP,yP,zP);
  } 
 } // fim do metodo compute -> getDepartElem
@@ -305,7 +304,7 @@ bool SemiLagrangean::testElement(int mele,int ii,real xP,real yP,real zP, real *
 {
  int v[4],v1,v2,v3,v4;
  real V,V1,V2,V3;
- real EPSlocal = 10e-6;
+ real EPSlocal = 10e-3;
 
  v[0] = v1 = (int) IEN->Get(mele,0);
  v[1] = v2 = (int) IEN->Get(mele,1);

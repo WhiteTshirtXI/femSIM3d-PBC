@@ -292,7 +292,8 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  uALEOld = *_s.getUALE();
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
-
+ kappaOld = *_s.getKappa();
+ fintOld = *_s.getFint();
 }
 
 Simulator3D::~Simulator3D()
@@ -1423,7 +1424,7 @@ void Simulator3D::stepALEVel()
 
  // calcula velocidade elastica - dependente das velocidades dos pontos
  setInterfaceVelNormal();
- for( int i=0;i<1;i++ )
+ for( int i=0;i<100;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -2191,56 +2192,24 @@ void Simulator3D::updateIEN(){IEN = m->getIEN();}
 
 // set do centroide para o elemento mini apos a interpolacao linear
 // (applyLinearInterpolation)
-void Simulator3D::setCentroid()
+clVector Simulator3D::setCentroid(clVector &_vector)
 {
- int v[5];
  real aux;
+ clVector zerosConv(numNodes-numVerts);
+ _vector.Append(zerosConv);
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0] = (int) IEN->Get(mele,0);
-  v[1] = (int) IEN->Get(mele,1);
-  v[2] = (int) IEN->Get(mele,2);
-  v[3] = (int) IEN->Get(mele,3);
-  v[4] = (int) IEN->Get(mele,4);
-
-  aux = ( uSol.Get(v[0])+
-	      uSol.Get(v[1])+
-		  uSol.Get(v[2])+
-		  uSol.Get(v[3]) )*0.25;
-  uSol.Set(v[4],aux);
-
-  aux = ( vSol.Get(v[0])+
-          vSol.Get(v[1])+
-          vSol.Get(v[2])+
-	 	  vSol.Get(v[3]) )*0.25;
-  vSol.Set(v[4],aux);
-
-  aux = ( wSol.Get(v[0])+
-	      wSol.Get(v[1])+
-          wSol.Get(v[2])+
-		  wSol.Get(v[3]) )*0.25;
-  wSol.Set(v[4],aux);
-
-  aux = ( uALE.Get(v[0])+
-	      uALE.Get(v[1])+
-		  uALE.Get(v[2])+
-		  uALE.Get(v[3]) )*0.25;
-  uALE.Set(v[4],aux);
-
-  aux = ( vALE.Get(v[0])+
-	      vALE.Get(v[1])+
-		  vALE.Get(v[2])+
-		  vALE.Get(v[3]) )*0.25;
-  vALE.Set(v[4],aux);
-
-  aux = ( wALE.Get(v[0])+
-	      wALE.Get(v[1])+
-		  wALE.Get(v[2])+
-		  wALE.Get(v[3]) )*0.25;
-  wALE.Set(v[4],aux);
+  int v1 = (int) IEN->Get(mele,0);
+  int v2 = (int) IEN->Get(mele,1);
+  int v3 = (int) IEN->Get(mele,2);
+  int v4 = (int) IEN->Get(mele,3);
+  int v5 = (int) IEN->Get(mele,4);
+  aux = ( _vector.Get(v1)+_vector.Get(v2)+_vector.Get(v3)+_vector.Get(v4) );
+  aux = aux*0.25;
+  _vector.Set(v5,aux);
  }
-
+  return _vector;
 }// fim do metodo compute -> setCentroid
 
 // Atribui o Simulator3D do argumento no corrente
@@ -2653,6 +2622,20 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
 
+ // only 1 component because the 2 others are exactly the same
+ clVector xKappaOld(_mOld.getNumVerts());
+ for( int i=0;i<_mOld.getNumVerts();i++ )
+ {
+  real aux = kappaOld.Get(i);
+  xKappaOld.Set(i,aux);
+ }
+ clVector xFintOld(_mOld.getNumVerts());
+ clVector yFintOld(_mOld.getNumVerts());
+ clVector zFintOld(_mOld.getNumVerts());
+ fintOld.CopyTo(_mOld.getNumNodes()*0,xFintOld);
+ fintOld.CopyTo(_mOld.getNumNodes()*1,yFintOld);
+ fintOld.CopyTo(_mOld.getNumNodes()*2,zFintOld);
+
  // interpolacao linear em numVerts
  clMatrix* interpLin = semi.getInterpLin();
  uSol = *interpLin*(uSolOld);
@@ -2662,18 +2645,24 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE = *interpLin*(uALEOld);
  vALE = *interpLin*(vALEOld);
  wALE = *interpLin*(wALEOld);
+ clVector xKappa = *interpLin*(xKappaOld);
+ clVector xFint = *interpLin*(xFintOld);
+ clVector yFint = *interpLin*(yFintOld);
+ clVector zFint = *interpLin*(zFintOld);
 
  cSol.CopyFrom( 0,*cc ); // copying new cc
 
  // set do centroid
- clVector zerosConv(numNodes-numVerts);
- uSol.Append(zerosConv);
- vSol.Append(zerosConv);
- wSol.Append(zerosConv);
- uALE.Append(zerosConv);
- vALE.Append(zerosConv);
- wALE.Append(zerosConv);
- setCentroid();
+ uSol = setCentroid(uSol);
+ vSol = setCentroid(vSol);
+ wSol = setCentroid(wSol);
+ uALE = setCentroid(uALE);
+ vALE = setCentroid(vALE);
+ wALE = setCentroid(wALE);
+ xKappa = setCentroid(xKappa);
+ xFint = setCentroid(xFint);
+ yFint = setCentroid(yFint);
+ zFint = setCentroid(zFint);
 
  // setting uAnt
  uAnt.Dim( 3*numNodes+numVerts );
@@ -2681,6 +2670,22 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uAnt.CopyFrom(numNodes*1,vSol);
  uAnt.CopyFrom(numNodes*2,wSol);
  uAnt.CopyFrom(numNodes*3,pSol);
+
+ // setting kappa
+ kappa.Dim(3*numNodes);
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = xKappa.Get(i);
+  kappa.Set(i,aux);
+  kappa.Set(i+numNodes,aux);
+  kappa.Set(i+numNodes*2,aux);
+ }
+
+ // setting fint
+ fint.Dim(3*numNodes);
+ fint.CopyFrom(numNodes*0,xFint);
+ fint.CopyFrom(numNodes*1,yFint);
+ fint.CopyFrom(numNodes*2,zFint);
 
 } // fecha metodo applyLinearInterpolation
 

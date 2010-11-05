@@ -54,24 +54,25 @@ class Model3D
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void mapTriEdge();
 
-  // surface treatment
-  void insertPointsByRatio();
-  void insertPointsByRatioLength();
-  void removePointsByRatioLength();
-  void remove2();
+  // surface points treatment
+  void insertPointsByLength();
+  void removePointsByLength();
+  void insertRemovePointsByLength();
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
   void surfaceTriangulatorEarClipping(int _v);
   void surfaceTriangulatorQualityEarClipping(int _v);
-  clVector triangleQuality(int _v);
   void deleteSurfacePoint(int _v);
   void deleteSurfaceElementByPoint(int _v);
-  void setPolyedron(int _v);
-  void insertDeletePointsByRatioLength();
   void insertPoint(int _v);
   void deletePoint(int _v);
-  int findEdge(int _v1,int _v2);
+  void setPolyedron(int _v);
   void flipTriangleEdge( int _edge );
+  int findEdge(int _v1,int _v2);
+  void removePointsByInterfaceDistance();
+  clVector triangleQuality(int _v);
+  clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
+	                clVector &_XI,clVector &_YI,clVector &_ZI);
 
   void meshTest();
   void mesh2Dto3D();
@@ -138,6 +139,7 @@ class Model3D
   clVector* getWC();
   clVector* getPC();
   clVector* getCC();
+  clVector* getCCOriginal();
   clVector* getOutflow();
   clVector* getIdbcu();
   clVector* getIdbcv();
@@ -159,6 +161,7 @@ class Model3D
   real getArea(int _v1,int _v2,int _v3);
   real getArea(int _elem);
   real getAreaHeron(int _elem);
+  real getLength(int _v1,int _v2);
   void clearBC();
   void reAllocStruct();
   clMatrix* getOFace();

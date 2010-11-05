@@ -25,8 +25,8 @@ int main(int argc, char **argv)
  real Sc = 2;
  real We = 10;
  real alpha = 1;
- real beta = -10;
- real cfl = 20;
+ real beta = 0;
+ real cfl = 40;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
@@ -160,8 +160,8 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 100;
- int nReMesh = 5;
+ int nIter = 1;
+ int nReMesh = 3;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   //save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveMSH(vtkFolder,"newMesh",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
@@ -212,10 +212,10 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim-remeshing",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(vtkFolder,"newMesh-remeshing",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSol(binFolder,"UVWPC-remeshing",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(vtkFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );
  }

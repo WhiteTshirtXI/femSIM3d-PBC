@@ -107,7 +107,7 @@ class Simulator3D
   void setVSol(clVector &_vSol);
   void setWSol(clVector &_wSol);
   void updateIEN();
-  void setCentroid();
+  clVector setCentroid(clVector &_vector);
 
   void setSolverVelocity(Solver *s);
   void setSolverPressure(Solver *s);
@@ -172,6 +172,8 @@ class Simulator3D
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
   clVector uALEOld,vALEOld,wALEOld;
   clVector uSolOld,vSolOld,wSolOld,pSolOld;
+  clVector fintOld;
+  clDMatrix kappaOld;
 
   clMatrix gx,gy,gz;
   clVector uAnt,cAnt;

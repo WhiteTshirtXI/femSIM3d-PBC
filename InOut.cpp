@@ -426,18 +426,20 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  // conta numero de elementos
  real plane1 = ( X->Max()-X->Min() )/2.0;
- real plane2 = ( Y->Max()-Y->Min() )/2.0;
+ real plane2 = ( Y->Max()-Y->Min() )+1;
+ //real plane2 = ( Y->Max()-Y->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
-  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
-      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
    count++;
  }
  
@@ -445,14 +447,15 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  vtkFile << setprecision(0) << fixed; 
  for( int i=0;i<numElems;i++ )
  {
-  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
-      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -465,14 +468,15 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  vtkFile <<  "CELL_TYPES " << count << endl;
  for( int i=0;i<numElems;i++ )
  {
-  if( (X->Get( IEN->Get(i,0) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,1) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,2) ) <  plane1) && 
-	  (X->Get( IEN->Get(i,3) ) <  plane1) &&
-      (Y->Get( IEN->Get(i,0) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,1) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,2) ) <  plane2) && 
-	  (Y->Get( IEN->Get(i,3) ) <  plane2) ) 
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
    vtkFile << "10 ";
  }
 
@@ -2254,8 +2258,8 @@ void InOut::vtkVector(ofstream& _file,string _name,
  _file << "VECTORS " << _name << " double" << endl;
  for( int i=0;i<numVerts;i++ )
   _file << _vx.Get(i) << " " 
-        << _vy.Get(i+numVerts) << " " 
-		<< _vz.Get(i+numVerts*2) << endl;
+        << _vy.Get(i) << " " 
+		<< _vz.Get(i) << endl;
  _file << endl;
 }
 
@@ -2264,8 +2268,6 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  IEN = m->getIEN();
  clMatrix *IENOriginal = m->getIENOriginal();
  int numVertsOriginal = m->getNumVertsOriginal();
- numElems = m->getNumElems();
- simTime = s->getTime();
 
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + ".msh";
@@ -2325,11 +2327,8 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
 
 void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 {
- IEN = m->getIEN();
  clMatrix *IENOriginal = m->getIENOriginal();
  int numVertsOriginal = m->getNumVertsOriginal();
- numElems = m->getNumElems();
- simTime = s->getTime();
 
  stringstream ss;  //convertendo int --> string
  string str;
@@ -2400,7 +2399,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  outFile.close();
  /* ------------------------------------------------ */ 
 
- cout << "mesh saved in MSH" << endl;
+ cout << "mesh No. " << _iter << " saved in MSH" << endl;
 
 } // fecha metodo saveMSH
 

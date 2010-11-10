@@ -6,13 +6,11 @@
 
 #include <cmath>
 #include "Model3D.h"
+#include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
-#include "Simulator3D.h"
-#include "Interface3D.h"
 #include "InOut.h"
-#include "Mumps_Petsc.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 
@@ -21,41 +19,35 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 0;
- real Re = 10;
+ real Re = 5;
  real Sc = 2;
- real We = 10;
+ real We = 2;
  real alpha = 1;
- real beta = 0;
- real cfl = 40;
+ real beta = -20;
+ real cfl = 10;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
- //--------------------------------------------------
- //  const char *txtFolder  = "/scratch2/gustavo/cubeCube/txt/";
- //  const char *binFolder  = "/scratch2/gustavo/cubeCube/bin/";
- //  const char *vtkFolder  = "/scratch2/gustavo/cubeCube/vtk/";
- //  const char *datFolder  = "/scratch2/gustavo/cubeCube/dat/";
- //-------------------------------------------------- 
-
- //const char *mesh = "./vtk/mesh.msh";
+ const char *mshFolder  = "./msh/";
  const char *mesh = "../../db/gmsh/3D/bubble-tube1.msh";
- //const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
- //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
-
 
  Model3D m1,mOld;
 
  if( *(argv+1) == NULL )     
-  m1.readMSH(mesh);
- else if( strcmp( *(argv+1),"restart") == 0 ) 
+ {
+  const char *mesh1 = mesh;
+  //const char *mesh = "../../db/gmsh/3D/cube-cube2D.msh";
+  //const char *mesh = "../../db/gmsh/3D/3D-bubble-cube1.msh";
+  m1.readMSH(mesh1);
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 || 
+          strcmp( *(argv+1),"remesh") == 0  ) 
  {
   string aux = *(argv+2);
-  string file = (string) "./vtk/newMesh-" + *(argv+2) + (string) ".msh";
+  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
  }
@@ -95,14 +87,14 @@ int main(int argc, char **argv)
 
   string aux = *(argv+2);
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *mesh2 = file.c_str();
+  const char *vtkFile = file.c_str();
 
-  m1.readVTK(mesh2);
+  m1.readVTK(vtkFile);
   m1.setMiniElement();
-  m1.readVTKCC(mesh2);
-  m1.setWallBC();
+  m1.readVTKCC(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setWallBC();
 
   Simulator3D s2(m1,s1);
   s1 = s2; 
@@ -117,39 +109,42 @@ int main(int argc, char **argv)
  }
  else if( strcmp( *(argv+1),"remesh") == 0 )  
  {
+  cout << endl;
+  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
+  cout << endl;
+
   string aux = *(argv+2);
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *mesh2 = file.c_str();
+  const char *vtkFile = file.c_str();
 
-  m1.readVTK(mesh2);
+  m1.readVTK(vtkFile);
   m1.setMiniElement();
-  m1.readVTKCC(mesh2);
-  m1.setWallBC();
+  m1.readVTKCC(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setWallBC();
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
-
   m1.setMiniElement();
-  m1.setWallBC();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
 
   Simulator3D s2(m1,s1);
+
   s2.applyLinearInterpolation(mOld);
-  s1 = s2; 
-//--------------------------------------------------
-//   file = (string) "sim-" + *(argv+2);
-//   const char *sol = file.c_str();
-//   s1.loadSolution(binFolder,sol);
-//   iter = s1.loadIteration(vtkFolder,sol);
-//-------------------------------------------------- 
+  s1 = s2;
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim-remeshing",atoi(*(argv+2)));
-  saveEnd.saveMSH(vtkFolder,"mesh");
-  saveEnd.saveVTKSurface(vtkFolder,"sim-remeshing",atoi(*(argv+2)));
-  saveEnd.saveSol(binFolder,"UVWPC-remeshing",atoi(*(argv+2)));
+  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
+  saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
 
@@ -161,7 +156,7 @@ int main(int argc, char **argv)
  save.printInfo(mesh);
 
  int nIter = 1;
- int nReMesh = 3;
+ int nReMesh = 1;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -183,8 +178,7 @@ int main(int argc, char **argv)
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveVTU(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveMSH(vtkFolder,"newMesh",i*nReMesh+j+iter);
+   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
@@ -214,7 +208,7 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(vtkFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo("./","meshingInfo" );

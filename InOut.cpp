@@ -5,12 +5,6 @@
 // =================================================================== //
 
 #include "InOut.h"
-// necessario para leitura do objeto triangle.o escrito em ANSI C
-extern "C"
-{
-#include "triangle.h"
-}
-
 
 //using namespace std;
 
@@ -1076,8 +1070,10 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  time_t currentTime;
 
  time( &currentTime );
+ file << endl;
+ file << endl;
  file << "----------------------- BEGIN ----------------------" << endl; 
- file << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
+ file << "start process:   " << asctime( localtime( &currentTime ) );
  file << "mesh:            " << _mesh << endl;
  file << "numVerts:        " << numVerts << endl;
  file << "numNodes:        " << numNodes << endl;
@@ -1106,12 +1102,17 @@ void InOut::printInfo(const char* _mesh)
  time_t currentTime;
 
  time( &currentTime );
+
+ // ATTRIBUTES  :none,underscore,blink,reverse,concealed
+ // COLORS      :black,red,green,yellow,blue,magenta,cyan,white
+ cout << color(bold,cyan,black);
  cout << endl;
  cout << endl;
  cout << "              ";
  cout << "----------------------- INFO -----------------------" << endl; 
+ cout << endl;
  cout << "               ";
- cout << "start process:   " << asctime( localtime( &currentTime ) ) << endl;
+ cout << "start process:   " << asctime( localtime( &currentTime ) );
  cout << "               ";
  cout << "mesh:            " << _mesh << endl;
  cout << "               ";
@@ -1142,12 +1143,12 @@ void InOut::printInfo(const char* _mesh)
  cout << "CFL number:      " << cfl << endl;
  cout << "               ";
  cout << "dt:              " << dt << endl;
+ cout << endl;
  cout << "              ";
  cout << "----------------------------------------------------" << endl; 
  cout << endl;
  cout << endl;
-
- cout << "simulation INFO file saved!" << endl;
+ cout << resetColor();
 }
 
 void InOut::oscillating(const char* _dir,const char* _filename, int _iter)

@@ -6,7 +6,6 @@
 
 
 #include "Model3D.h"
-#include "compare.h"
 #include "tetgen.h"
 
 // necessario para leitura do objeto triangle.o escrito em ANSI C
@@ -249,11 +248,20 @@ void Model3D::readMSH( const char* filename )
   {
    mshFile >> elemNumber;
    mshFile >> type; // 2-2D or 3-3D
-   mshFile >> numberOfTags;
-   mshFile >> id;
-   idRegion.Set(i,id);
-   mshFile >> auxstr;
-   mshFile >> auxstr;
+   mshFile >> numberOfTags;  
+   if( numberOfTags == 3 ) // msh file version 2.1
+   {
+	mshFile >> id;
+	idRegion.Set(i,id);
+	mshFile >> auxstr;
+	mshFile >> auxstr;
+   }
+   else // msh file vertion 2.2
+   {
+	mshFile >> id;
+	idRegion.Set(i,id);
+	mshFile >> auxstr;
+   }
 
    for( j=0; j < type+1 ; j++ )
    {
@@ -898,7 +906,9 @@ void Model3D::mesh2Dto3D()
 
  cout << endl;
  cout << "----> meshing... ";
- tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
+ //tetrahedralize( (char*) "QYYApq1.4241a0.1",&in,&out );
+ //tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
  //tetrahedralize( (char*) "QpYY",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
@@ -961,7 +971,7 @@ void Model3D::mesh2Dto3D()
  }
 }
 
-void Model3D::mapTriEdge()
+void Model3D::setTriEdge()
 {
  int v1,v2,v3;
  int numFace = 3; // triangulo tem 3 arestas
@@ -1011,7 +1021,7 @@ void Model3D::mapTriEdge()
 //        << faces[i].p3 << " " << faces[i].p4 << endl;
 //-------------------------------------------------- 
 
- /*        - nome: mapTriEdge
+ /*        - nome: mapEdgeTri
            - definicao: matrix com mapeamento de arestas da superficie e
 		                convex hull, a dimensao da matrix eh o numero de 
 						total de arestas.
@@ -1063,7 +1073,19 @@ void Model3D::mapTriEdge()
   mapEdgeTri.Set(i,5,faces[j].p4 ); // 1o. elemento
   mapEdgeTri.Set(i,6,faces[j+1].p4 ); // 2o. elemento 
   j=j+2; // pois cada aresta eh dividida com apenas 2 elementos
+
  }
+}
+
+// procura o tamanho da menor aresta na superficie
+void Model3D::setTriangleMinEdge()
+{
+ minEdge = 1E10; // initil minimum edge length
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+  if( minEdge>mapEdgeTri.Get(i,0) && cc.Get(mapEdgeTri.Get(i,1) == 0.5) )
+   minEdge = mapEdgeTri.Get(i,0); // setting the min edge of 3d surface
+ //minEdge = 0.0600023; // tamanho minimo da malha bubble-tube-1
+ minEdge = 0.2; // tamanho minimo da malha bubble-tube-4
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -1082,22 +1104,15 @@ int Model3D::findEdge(int _v1,int _v2)
 
 void Model3D::insertPointsByLength()
 {
- // creating edge matrix
- mapTriEdge();
-
- // creating list of surface neighbours (points and edges)
- setNeighbourSurface();
-
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 1.5*minEdge ) 
+  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
-  {
    insertPoint(i);
-  }
  }
 }
 
@@ -1461,12 +1476,6 @@ void Model3D::setNeighbourSurface()
 
 void Model3D::insertRemovePointsByLength()
 {
- // creating edge matrix
- mapTriEdge();
-
- // creating list of surface neighbours (points and edges)
- setNeighbourSurface();
-
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
@@ -1588,11 +1597,13 @@ void Model3D::flipTriangleEdge( int _edge )
    h4 = length23_2;
   real q4 = 3.4641*inRadius4/h4;
 
+  // this works, but is not consistent!!! CHANGE IT SOON!
   if( cc.Get(v1)==0.5 && q1+q2 < q3+q4 && area1+area2>=area3+area4 )
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
    //cout << q1 << " " << q2 << " " << q3 << " " << q4 << endl;
-   cout << "flipping edge " << _edge << endl;
+   cout << "------------- " << color(none,green,black) << "flipping edge: "
+	    << resetColor() << _edge << endl;
    IENOriginal.Set(elem1,0,v1);
    IENOriginal.Set(elem1,1,v3elem1);
    IENOriginal.Set(elem1,2,v3elem2);
@@ -1600,7 +1611,7 @@ void Model3D::flipTriangleEdge( int _edge )
    IENOriginal.Set(elem2,0,v2);
    IENOriginal.Set(elem2,1,v3elem1);
    IENOriginal.Set(elem2,2,v3elem2);
-   mapTriEdge();
+   setTriEdge();
    setNeighbourSurface();
 
   }
@@ -1610,8 +1621,8 @@ void Model3D::flipTriangleEdge( int _edge )
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = numVertsOriginal; // aditional vertice
- cout << "--------------------------------------------- inserting vertex: " 
-      << vAdd << endl;
+ cout << "---------- " << color(none,yellow,black) << "inserting vertex: "
+      << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
  // edge vertices
@@ -1670,12 +1681,12 @@ void Model3D::insertPoint(int _edge)
  IENOriginal.Set(elem4,2,v3elem2);
  //saveVTKSurface("./vtk/","insertAfter",vAdd);
  
- mapTriEdge();
+ setTriEdge();
  setNeighbourSurface();
 
 //--------------------------------------------------
 //  /* ********************************************************************* */
-//  /* updating mapTriEdge */
+//  /* updating mapEdgeTri */
 //  /* eh necessario atualizar as 4 arestas dos 2 triangulos trabalhados */
 //  int lastRow;
 //  real length;
@@ -1846,8 +1857,8 @@ void Model3D::insertPoint(int _edge)
 
 void Model3D::deletePoint(int _v)
 {
- cout << "---------------------------------------------- removing vertex: " 
-      << _v << endl;
+ cout << "----------- " << color(none,red,black) << "removing vertex: "
+      << resetColor() << _v << endl;
  //saveVTKSurface("./vtk/","deleteBefore",_v);
 
  // deleting elements
@@ -1863,10 +1874,10 @@ void Model3D::deletePoint(int _v)
  // deleting X,Y and Z coordinate; deleting the point maker funcition
  deleteSurfacePoint(_v);
 
- //--------------------------------------------------
- //   // updating edge matrix
- mapTriEdge();
-
+ // updating edge matrix
+ setTriEdge();
+ // updating surface neighbours
+ setNeighbourSurface();
 
 //--------------------------------------------------
 //  // 2nd. updated edge 
@@ -1883,27 +1894,14 @@ void Model3D::deletePoint(int _v)
 //  }
 //-------------------------------------------------- 
 
-
-
-
- //   // updating surface neighbours
- setNeighbourSurface();
- //-------------------------------------------------- 
- 
-
  //saveVTKSurface("./vtk/","deleteAfter",_v);
 }
 
 void Model3D::removePointsByLength()
 {
- // creating edge matrix
- mapTriEdge();
-
- // creating list of surface neighbours (points and edges)
- setNeighbourSurface();
-
  //real test = 0.08;
- real test = 0.05;
+ //real test = 0.05;
+ real test = 0.4*minEdge; // 40% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -1996,10 +1994,10 @@ void Model3D::removePointsByInterfaceDistance()
  for( int i=0;i<numVerts;i++ )
  {
   real d = distance.Get(i);
-  if( d>0 && d<0.1 && cc.Get(i)!=0.5 )
+  if( d>0 && d<1.2*minEdge && cc.Get(i)!=0.5 )
   {
-   cout << "---------------------------------------------- removing vertex: " 
-        << i << endl;
+   cout << "----------- " << color(none,red,black) << "removing vertex: "
+	    << resetColor() << i << endl;
 
    X.Delete(i);
    Y.Delete(i);
@@ -2008,6 +2006,25 @@ void Model3D::removePointsByInterfaceDistance()
    distance.Delete(i);
    numVerts--;
    i--;
+  }
+ }
+}
+
+void Model3D::breakup()
+{
+ for( int i=0;i<IEN.DimI();i++ )
+ {
+  int v1 = IEN.Get(i,0);
+  int v2 = IEN.Get(i,1);
+  int v3 = IEN.Get(i,2);
+  int v4 = IEN.Get(i,3);
+  if( cc.Get(v1) == 0.5 && cc.Get(v2) == 0.5 &&
+	  cc.Get(v3) == 0.5 && cc.Get(v4) == 0.5 )
+  {
+   cc.Set(v1,0.0);
+   cc.Set(v2,0.0);
+   cc.Set(v3,0.0);
+   cc.Set(v4,0.0);
   }
  }
 }
@@ -2160,8 +2177,9 @@ void Model3D::mesh2Dto3DOriginal()
  cout << endl;
  cout << "----> complete re-meshing the domain... ";
  //tetrahedralize( (char*) "VYYApq1.4241",&in,&out );
- //tetrahedralize( (char*) "VYYCApq1.4241a0.05",&in,&out );
- tetrahedralize( (char*) "VYYCApq1.414q10a0.005",&in,&out );
+ //tetrahedralize( (char*) "QYYCApq1.4241a0.05",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.4241a0.1",&in,&out );
+ //tetrahedralize( (char*) "QYYCApq1.414q10a0.005",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -2346,8 +2364,8 @@ void Model3D::mesh3DPoints()
  cout << endl;
  cout << "----> re-meshing 3D points... ";
  //tetrahedralize( (char*) "VYYCRApq1.4241q10a0.005",&in,&out );
- //tetrahedralize( (char*) "VYYCApq1.414q10a0.01",&in,&out );
- tetrahedralize( (char*) "VYYCApq1.414q10a0.005",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
+ //tetrahedralize( (char*) "QYYCApq1.414q10a0.005",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -2408,6 +2426,8 @@ void Model3D::mesh3DPoints()
 	  out.pointmarkerlist[i] == 22 )
    cc.Set(i,0.5);
  }
+
+ //breakup();
 }
 
 
@@ -4051,7 +4071,7 @@ void Model3D::setSurfaceFace()
 
 // cria matriz IEN para os elementos da superficie que no caso 3D sao
 // triagulos. Este metodo utiliza neighbourFaceVert e elemSurface 
-// como input e a funcao qsort para ordenacao da matriz.
+// como input e a funcao qsort para ordenacao de arestas.
 void Model3D::setSurfaceTri()
 {
  clVector edgeaux(3);
@@ -4623,6 +4643,9 @@ void Model3D::setSurfaceConfig()
  setSurface(); // surface e nonSurface
  setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // IENTri para superficie
+ setTriEdge();
+ setNeighbourSurface();
+ setTriangleMinEdge();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)

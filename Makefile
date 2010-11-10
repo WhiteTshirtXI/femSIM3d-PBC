@@ -60,6 +60,7 @@ clean:
 	@rm -f ./oscillating*
 	@rm -f ./mesh*
 	@rm -f ./vtk/*.{vtk,vtu}
+	@rm -f ./msh/*.msh
 	@rm -f ./sim/vk?.*
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat
@@ -75,6 +76,7 @@ deepclean:
 	@rm -f ./sim/sim*.dat
 	@rm -f ./relatorio.dat
 	@rm -f ./info.dat
+	@rm -f ./msh/*.msh
 
 # -- BUILD SPECIFIC SIMULATION -- #
 

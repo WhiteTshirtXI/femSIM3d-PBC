@@ -6,80 +6,241 @@
 
 #include <cmath>
 #include "Model3D.h"
+#include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
-#include "Simulator3D.h"
-#include "Interface3D.h"
 #include "InOut.h"
-#include "Mumps_Petsc.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
+#include "colors.h"
 
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
- const char *dir  = "./";
- //const char *mesh = "../../db/mesh/3d/cube-cube1.vtk";
- //const char *mesh = "../../db/mesh/3d/bubble-bubble1.vtk";
- const char *mesh = "../../db/mesh/3d/bubble4-9-20.vtk";
- //const char *mesh = "../../db/mesh/3d/bubble8-31-2.vtk";
- const char *txt  = "txt/txt";
- const char *bin  = "bin/bin";
- const char *vtk  = "vtk/sim";
- const char *sim  = "dat/sim";
 
- Model3D m1;
- m1.readVTK(mesh);
- m1.setMiniElement();
- //m1.setCubeCubeBC(1.5);
- //m1.setBubbleBubbleBC();
- m1.setBubbleBC2(); // malha do disco
- //m1.setBubble3DBC();
- m1.setOFace();
+ int iter = 0;
+ real Re = 5;
+ real Sc = 2;
+ real We = 2;
+ real alpha = 1;
+ real beta = -20;
+ real cfl = 2;
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- Simulator3D s1(m1);
+ const char *binFolder  = "./bin/";
+ const char *vtkFolder  = "./vtk/";
+ const char *mshFolder  = "./msh/";
+ const char *mesh = "../../db/gmsh/3D/bubble-tube4.msh";
 
- s1.setRe(100);
- s1.setSc(2);
- s1.setWe(10);
- s1.setAlpha(1);
- s1.setBeta(-2.0);
- //s1.setDt(0.1);
- s1.setCflBubble(10);
- s1.init();
+ Model3D m1,mOld;
+ Simulator3D s1,s2;
 
- s1.setSolverPressure(new PetscSolver(KSPGMRES,PCILU));
- //s1.setSolverPressure(new PetscSolver(KSPGMRES,PCJACOBI));
- s1.setSolverVelocity(new PetscSolver(KSPCG,PCICC));
- s1.setSolverConcentration(new PetscSolver(KSPCG,PCICC));
- 
+ if( *(argv+1) == NULL )     
+ {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+
+  const char *mesh1 = mesh;
+  m1.readMSH(mesh1);
+  m1.setInterfaceBC();
+  m1.mesh2Dto3D();
+  m1.setMiniElement();
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s1(m1);
+
+  s1.setRe(Re);
+  s1.setSc(Sc);
+  s1.setWe(We);
+  s1.setAlpha(alpha);
+  s1.setBeta(beta);
+  //s1.setSigma(sigma);
+  s1.setCflBubble(cfl);
+  s1.init();
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 ) 
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
+  string aux = *(argv+2);
+  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
+
+  m1.setInterfaceBC();
+  m1.mesh2Dto3D();
+  m1.setMiniElement();
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s1(m1);
+
+  s1.setRe(Re);
+  s1.setSc(Sc);
+  s1.setWe(We);
+  s1.setAlpha(alpha);
+  s1.setBeta(beta);
+  //s1.setSigma(sigma);
+  s1.setCflBubble(cfl);
+  s1.init();
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
+  const char *vtkFile = file.c_str();
+
+  m1.readVTK(vtkFile);
+  m1.setMiniElement();
+  m1.readVTKCC(vtkFile);
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s2(m1,s1);
+  s1 = s2;
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
+ }
+ else if( strcmp( *(argv+1),"remesh") == 0 )  
+ {
+  cout << endl;
+  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
+  cout << endl;
+
+  string aux = *(argv+2);
+  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
+  m1.setInterfaceBC();
+  m1.mesh2Dto3D();
+  m1.setMiniElement();
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s1(m1);
+
+  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
+  const char *vtkFile = file.c_str();
+  m1.readVTK(vtkFile);
+  m1.setMiniElement();
+  m1.readVTKCC(vtkFile);
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s2(m1,s1);
+  s1 = s2;
+
+  file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
+
+  mOld = m1; 
+  m1.mesh2Dto3DOriginal();
+
+  s2(m1,s1);
+  s2.applyLinearInterpolation(mOld);
+  s1 = s2;
+
+  InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
+  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
+  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
+  return 0;
+ }
+
  InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTK(dir,vtk);
+ save.saveVTK(vtkFolder,"geometry");
+ save.saveVTKSurface(vtkFolder,"geometry",0);
+ save.saveMeshInfo("./","meshingInfo" );
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- for( int i=0;i<1000;i++ )
+ int nIter = 1;
+ int nReMesh = 1;
+ for( int i=0;i<nIter;i++ )
  {
-  for( int j=0;j<10;j++ )
+  for( int j=0;j<nReMesh;j++ )
   {
-   cout << "____________________________________ Iteration: " << i*10+j << endl;
+
+   cout << color(none,magenta,black);
+   cout << "____________________________________ Iteration: " 
+	    << i*nReMesh+j+iter << endl << endl;
+   cout << resetColor();
+
    //s1.stepLagrangian();
-   s1.stepALE();
+   //s1.stepALE();
+   s1.stepALEVel();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravityBoussinesq();
-   //s1.setInterface();
+   //s1.setGravity();
+   s1.setGravityBoussinesq();
    s1.setInterfaceGeo();
+   //s1.setInterfaceGeoTest();
    s1.unCoupled();
-   save.saveVTK(dir,vtk,i*10+j);
+
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
+   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
-   //save.oscillating(0,1,4,"oscillating.dat");
-   //save.oscillatingD(0,2,1,3,4,5,"oscillatingD.dat");
+   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+
+   cout << color(none,magenta,black);
+   cout << "________________________________________ END of " 
+	    << i*nReMesh+j+iter << endl << endl;;
+   cout << resetColor();
   }
+  mOld = m1; 
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
+  m1.setMiniElement();
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  s2(m1,s1);
+  s2.applyLinearInterpolation(mOld);
+  s1 = s2;
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMeshInfo("./","meshingInfo" );
  }
 
  PetscFinalize();

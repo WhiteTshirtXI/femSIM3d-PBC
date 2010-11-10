@@ -28,11 +28,13 @@
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "Interface3D.h"
+#include "colors.h"
 
 class Simulator3D
 {
  public:
-  Simulator3D( Model3D &_m ); // construtor padrao
+  Simulator3D(); // construtor padrao
+  Simulator3D( Model3D &_m ); // construtor 
   Simulator3D( Model3D &_m, Simulator3D &_s );  // copia
   Simulator3D( Model3D &_mNew, Model3D &_mOld, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
@@ -136,11 +138,13 @@ class Simulator3D
   clVector* getNu();
   clVector* getRho();
   void operator=(Simulator3D &_s);
+  void operator()(Model3D &_m);
+  void operator()(Model3D &_m,Simulator3D &_s);
   int loadIteration();
-  int loadIteration( const char* _dir,const char* _filename,int _iter );
   int loadIteration( const char* _dir,const char* _filename );
-  void loadSolution( const char* _dir,const char* _filename,int _iter );
+  int loadIteration( const char* _dir,const char* _filename,int _iter );
   void loadSolution( const char* _dir,const char* _filename );
+  void loadSolution( const char* _dir,const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   real getBubbleVelocity();
   void setALEVelBC();

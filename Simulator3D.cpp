@@ -8,6 +8,8 @@
 
 using namespace std;
 
+Simulator3D::Simulator3D(){}
+
 Simulator3D::Simulator3D( Model3D &_m )  
 {
  // mesh information vectors
@@ -1505,7 +1507,7 @@ void Simulator3D::setInterfaceVelNormal()
  vector< list<int> > *elemSurface = m->getElemSurface();
  vector< list<int> > *neighbourFaceVert = m->getNeighbourFaceVert();
 
- //real bubbleZVelocity = getBubbleVelocity();
+ real bubbleZVelocity = getBubbleVelocity();
 
  for( int i=0;i<surface->Dim();i++ )
  {
@@ -1618,6 +1620,9 @@ void Simulator3D::setInterfaceVelNormal()
   uALE.Set(surfaceNode,uSolNormal);
   vALE.Set(surfaceNode,vSolNormal);
   wALE.Set(surfaceNode,wSolNormal);
+  
+  //cout << bubbleZVelocity << " " << wSolNormal << endl;
+  //wALE.Set(surfaceNode,wSolNormal-bubbleZVelocity);
  }
 } // fecha metodo setInterfaceVelNormal 
 
@@ -1858,7 +1863,7 @@ void Simulator3D::setCoupledBC()
   A.Set(j,j,1);
   b.Set(j,uc->Get(j));
  }
- cout << "imposta c.c. de U " << endl;
+ cout << " boundary condition U --> SET " << endl;
 
  nbc = idbcv->Dim();
  for( i=0;i<nbc;i++ )
@@ -1868,7 +1873,7 @@ void Simulator3D::setCoupledBC()
   A.Set( j+numNodes, j+numNodes, 1 );
   b.Set( j+numNodes, vc->Get(j) );
  }
- cout << "imposta c.c de V " << endl;
+ cout << " boundary condition V --> SET " << endl;
 
  nbc = idbcw->Dim();
  for( i=0;i<nbc;i++ )
@@ -1878,7 +1883,7 @@ void Simulator3D::setCoupledBC()
   A.Set( j+numNodes*2,j+numNodes*2, 1);
   b.Set( j+numNodes*2,wc->Get(j) );
  }
- cout << "imposta c.c. de W " << endl;
+ cout << " boundary condition W --> SET " << endl;
 
  nbc = idbcp->Dim();
  for( i=0;i<nbc;i++ )
@@ -1889,7 +1894,7 @@ void Simulator3D::setCoupledBC()
   b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
   //b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
  }
- cout << "imposta c.c. de P " << endl;
+ cout << " boundary condition P --> SET " << endl;
  
 } // fecha metodo setCoupledBC 
 
@@ -1920,7 +1925,7 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j,uc->Get(j));
   ip.Set(j,0);
  }
- cout << "imposta c.c. de U " << endl;
+ cout << " boundary condition U --> SET " << endl;
 
  nbc = idbcv->Dim();
  for( i=0;i<nbc;i++ )
@@ -1932,7 +1937,7 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j+numNodes,vc->Get(j));
   ip.Set(j+numNodes,0);
  }
- cout << "imposta c.c. de V " << endl;
+ cout << " boundary condition V --> SET " << endl;
 
  nbc = idbcw->Dim();
  for( i=0;i<nbc;i++ )
@@ -1944,7 +1949,7 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j+numNodes*2,wc->Get(j));
   ip.Set(j+numNodes*2,0);
  }
- cout << "imposta c.c. de W " << endl;
+ cout << " boundary condition W --> SET " << endl;
 
  E.Dim(numVerts,numVerts);
  nbc = idbcp->Dim();
@@ -1956,7 +1961,7 @@ void Simulator3D::setUnCoupledBC()
   b2.Set(j,-pc->Get(j));  // sem correcao na pressao
   //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
  }
- cout << "imposta c.c. de P " << endl;
+ cout << " boundary condition P --> SET " << endl;
 
  ETilde = E - ((DTilde * invA) * GTilde); 
  //ETilde = E - dt*((DTilde * invMLumped) * GTilde); 
@@ -1979,7 +1984,7 @@ void Simulator3D::setUnCoupledCBC()
   b1c.Set(j,cc->Get(j));
   ipc.Set(j,0);
  }
- cout << "imposta c.c. de C " << endl;
+ cout << " boundary condition C --> SET " << endl;
 
 } // fecha metodo setUnCoupledCBC 
 
@@ -2253,6 +2258,119 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  c2 = _sRight.c2;
  c3 = _sRight.c3;
 
+ K = _sRight.K;
+ Kc = _sRight.Kc;
+ M = _sRight.M;
+ Mc = _sRight.Mc;
+ G = _sRight.G;
+ D = _sRight.D;
+ mat = _sRight.mat;
+ matc = _sRight.matc;
+ MLumped = _sRight.MLumped;
+ McLumped = _sRight.McLumped;
+ gx = _sRight.gx;
+ gy = _sRight.gy;
+ gz = _sRight.gz;
+ A = _sRight.A;
+ b = _sRight.b;
+ ATilde = _sRight.ATilde;
+ AcTilde = _sRight.AcTilde;
+ GTilde = _sRight.GTilde;
+ DTilde = _sRight.DTilde;
+ ETilde = _sRight.ETilde;
+ E = _sRight.E;
+ invA = _sRight.invA;
+ invC = _sRight.invC;
+ invMLumped = _sRight.invMLumped;
+ invMcLumped = _sRight.invMcLumped;
+
+ uSol = _sRight.uSol;
+ vSol = _sRight.vSol;
+ wSol = _sRight.wSol;
+ pSol = _sRight.pSol;
+ cSol = _sRight.cSol;
+ velU = _sRight.velU;
+ velV = _sRight.velV;
+ velW = _sRight.velW;
+ uALE = _sRight.uALE;
+ vALE = _sRight.vALE;
+ wALE = _sRight.wALE;
+ uSL = _sRight.uSL;
+ vSL = _sRight.vSL;
+ wSL = _sRight.wSL;
+ cSL = _sRight.cSL;
+ uSmooth = _sRight.uSmooth;
+ vSmooth = _sRight.vSmooth;
+ wSmooth = _sRight.wSmooth;
+
+ uAnt = _sRight.uAnt;
+ cAnt = _sRight.cAnt;
+ va = _sRight.va;
+ vcc = _sRight.vcc;
+ convUVW = _sRight.convUVW;
+ convC = _sRight.convC;
+ uTilde = _sRight.uTilde;
+ cTilde = _sRight.cTilde;
+ pTilde = _sRight.pTilde;
+ b1 = _sRight.b1;
+ b1c = _sRight.b1c;
+ b2 = _sRight.b2;
+ ip = _sRight.ip;
+ ipc = _sRight.ipc;
+ distance = _sRight.distance;
+ kappa = _sRight.kappa;
+ fint = _sRight.fint;
+ Hsmooth = _sRight.Hsmooth;
+ nu = _sRight.nu;
+ rho = _sRight.rho;
+ Fold = _sRight.Fold;
+
+ solverV = _sRight.solverV;
+ solverP = _sRight.solverP;
+ solverC = _sRight.solverC;
+}
+
+void Simulator3D::operator()(Model3D &_m) 
+{
+ // mesh information vectors
+ m = &_m;
+ numVerts = m->getNumVerts();
+ numElems = m->getNumElems();
+ numNodes = m->getNumNodes();
+ numGLEP = m->getNumGLEP();
+ numGLEU = m->getNumGLEU();
+ numGLEC = m->getNumGLEC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
+
+ Re    = 10;
+ Sc    = 2;
+ Fr    = 0.1;
+ We    = 10;
+ sigma = 1;
+ alpha = 1;
+ beta  = 0;
+ dt    = 0.01;
+ time  = 0.0;
+ cfl   = 0.5;
+ setSolverVelocity( new PCGSolver() );
+ setSolverPressure( new PCGSolver() );
+ setSolverConcentration( new PCGSolver() );
+
  // assembly matrix
  K.Dim( 3*numNodes,3*numNodes );
  Kc.Dim( numVerts,numVerts );
@@ -2327,6 +2445,139 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  uSmooth.Dim( numNodes );
  vSmooth.Dim( numNodes );
  wSmooth.Dim( numNodes );
+ uSmoothCoord.Dim( numNodes );
+ vSmoothCoord.Dim( numNodes );
+ wSmoothCoord.Dim( numNodes );
+
+ // interface vectors (two-phase)
+ distance.Dim( numVerts );
+ kappa.Dim( 3*numNodes );
+ fint.Dim ( 3*numNodes );
+ Hsmooth.Dim( numNodes );
+ nu.Dim( numNodes );
+ rho.Dim( numNodes );
+}
+
+void Simulator3D::operator()(Model3D &_m,Simulator3D &_s) 
+{
+ // mesh information vectors
+ m = &_m;
+ numVerts = m->getNumVerts();
+ numElems = m->getNumElems();
+ numNodes = m->getNumNodes();
+ numGLEP = m->getNumGLEP();
+ numGLEU = m->getNumGLEU();
+ numGLEC = m->getNumGLEC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
+
+ Re    = _s.getRe();
+ Sc    = _s.getSc();
+ Fr    = _s.getFr();
+ We    = _s.getWe();
+ sigma = _s.getSigma();
+ alpha = _s.getAlpha();
+ beta  = _s.getBeta();
+ dt    = _s.getDt();
+ time  = _s.getTime2();
+ cfl   = _s.getCfl();
+
+ setSolverVelocity( new PCGSolver() );
+ setSolverPressure( new PCGSolver() );
+ setSolverConcentration( new PCGSolver() );
+
+ // assembly matrix
+ K.Dim( 3*numNodes,3*numNodes );
+ Kc.Dim( numVerts,numVerts );
+ M.Dim( 3*numNodes,3*numNodes );
+ Mc.Dim( numVerts,numVerts );
+ MLumped.Dim( 3*numNodes );
+ McLumped.Dim( numVerts );
+ G.Dim( 3*numNodes,numVerts );
+ D.Dim( numVerts,3*numNodes );
+ gx.Dim( numNodes,numVerts );
+ gy.Dim( numNodes,numVerts );
+ gz.Dim( numNodes,numVerts );
+
+ // COUPLED method matrix and vector
+ A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
+ b.Dim( 3*numNodes+numVerts );
+
+ // right hand side vectors
+ va.Dim( 3*numNodes );
+ vcc.Dim( numVerts );
+ b1.Dim( 3*numNodes );
+ b1c.Dim( numVerts );
+ b2.Dim( numVerts );
+
+ // boundary condiction configured matrix
+ ATilde.Dim( 3*numNodes,3*numNodes );
+ AcTilde.Dim( numVerts,numVerts );
+ GTilde.Dim( 3*numNodes,numVerts );
+ DTilde.Dim( numVerts,3*numNodes );
+ ETilde.Dim( numVerts,numVerts );
+ E.Dim( numVerts, numVerts );
+
+ // K + M matrix set
+ mat.Dim( 3*numNodes,3*numNodes );
+ matc.Dim( numVerts,numVerts );
+ invA.Dim( 3*numNodes );
+ invMLumped.Dim( 3*numNodes );
+ invC.Dim( numVerts );
+ invMcLumped.Dim( numVerts );
+
+ // solution vectors 
+ // vetores solucao
+ uTilde.Dim( 3*numNodes );
+ pTilde.Dim( numVerts );
+ cTilde.Dim( numVerts );
+ uSol.Dim( numNodes );
+ vSol.Dim( numNodes );
+ wSol.Dim( numNodes );
+ pSol.Dim( numVerts );
+ cSol.Dim( numVerts );
+
+ // auxiliar vectors
+ Fold.Dim( 3*numNodes+numVerts );
+ uAnt.Dim( 3*numNodes+numVerts );
+ cAnt.Dim( numVerts );
+ ip.Dim( 3*numNodes,1 );
+ ipc.Dim( numVerts,1 );
+
+ // convective term vectors
+ convUVW.Dim( 3*numNodes );
+ convC.Dim( numVerts );
+
+ // convective term vectors (semi-lagrangian)
+ uSL.Dim( numNodes );
+ vSL.Dim( numNodes );
+ wSL.Dim( numNodes );
+ cSL.Dim( numVerts );
+
+ // convective term vectors (ALE)
+ uALE.Dim( numNodes );
+ vALE.Dim( numNodes );
+ wALE.Dim( numNodes );
+ uSmooth.Dim( numNodes );
+ vSmooth.Dim( numNodes );
+ wSmooth.Dim( numNodes );
+ uSmoothCoord.Dim( numNodes );
+ vSmoothCoord.Dim( numNodes );
+ wSmoothCoord.Dim( numNodes );
 
  // interface vectors (two-phase)
  distance.Dim( numVerts );
@@ -2336,76 +2587,16 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  nu.Dim( numNodes );
  rho.Dim( numNodes );
 
- K = _sRight.K;
- Kc = _sRight.Kc;
- M = _sRight.M;
- Mc = _sRight.Mc;
- G = _sRight.G;
- D = _sRight.D;
- mat = _sRight.mat;
- matc = _sRight.matc;
- MLumped = _sRight.MLumped;
- McLumped = _sRight.McLumped;
- velU = _sRight.velU;
- velV = _sRight.velV;
- velW = _sRight.velW;
-
- uSol = _sRight.uSol;
- vSol = _sRight.vSol;
- wSol = _sRight.wSol;
- pSol = _sRight.pSol;
- cSol = _sRight.cSol;
- uALE = _sRight.uALE;
- vALE = _sRight.vALE;
- wALE = _sRight.wALE;
- uSL = _sRight.uSL;
- vSL = _sRight.vSL;
- wSL = _sRight.wSL;
- cSL = _sRight.cSL;
- uSmooth = _sRight.uSmooth;
- vSmooth = _sRight.vSmooth;
- wSmooth = _sRight.wSmooth;
-
- gx = _sRight.gx;
- gy = _sRight.gy;
- gz = _sRight.gz;
- uAnt = _sRight.uAnt;
- cAnt = _sRight.cAnt;
- va = _sRight.va;
- vcc = _sRight.vcc;
- convUVW = _sRight.convUVW;
- convC = _sRight.convC;
- A = _sRight.A;
- b = _sRight.b;
- ATilde = _sRight.ATilde;
- AcTilde = _sRight.AcTilde;
- GTilde = _sRight.GTilde;
- DTilde = _sRight.DTilde;
- ETilde = _sRight.ETilde;
- E = _sRight.E;
- invA = _sRight.invA;
- invC = _sRight.invC;
- invMLumped = _sRight.invMLumped;
- invMcLumped = _sRight.invMcLumped;
- uTilde = _sRight.uTilde;
- cTilde = _sRight.cTilde;
- pTilde = _sRight.pTilde;
- b1 = _sRight.b1;
- b1c = _sRight.b1c;
- b2 = _sRight.b2;
- ip = _sRight.ip;
- ipc = _sRight.ipc;
- distance = _sRight.distance;
- kappa = _sRight.kappa;
- fint = _sRight.fint;
- Hsmooth = _sRight.Hsmooth;
- nu = _sRight.nu;
- rho = _sRight.rho;
- Fold = _sRight.Fold;
-
- solverV = _sRight.solverV;
- solverP = _sRight.solverP;
- solverC = _sRight.solverC;
+ // recuperando campo de velocidade e pressao da malha antiga
+ uSolOld = *_s.getUSol();
+ vSolOld = *_s.getVSol();
+ wSolOld = *_s.getWSol();
+ pSolOld = *_s.getPSol();
+ uALEOld = *_s.getUALE();
+ vALEOld = *_s.getVALE();
+ wALEOld = *_s.getWALE();
+ kappaOld = *_s.getKappa();
+ fintOld = *_s.getFint();
 }
 
 void Simulator3D::loadSolution( const char* _dir,
@@ -2704,27 +2895,26 @@ real Simulator3D::getBubbleVelocity()
  inElem = m->getInElem();
  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
  {
-  int v0 = IEN->Get(*it,0);
-  int v1 = IEN->Get(*it,1);
-  int v2 = IEN->Get(*it,2);
-  int v3 = IEN->Get(*it,3);
+  int v1 = IEN->Get(*it,0);
+  int v2 = IEN->Get(*it,1);
+  int v3 = IEN->Get(*it,2);
+  int v4 = IEN->Get(*it,3);
 
-  velX = ( uALE.Get(v0)+
-	       uALE.Get(v1)+
-		   uALE.Get(v2)+
-		   uALE.Get(v3) )*0.25;
+  velX = ( uALE.Get(v1)+
+	       uALE.Get(v2)+
+		   uALE.Get(v3)+
+		   uALE.Get(v4) )*0.25;
 
-  velY = ( vALE.Get(v0)+
-           vALE.Get(v1)+
+  velY = ( vALE.Get(v1)+
            vALE.Get(v2)+
-	 	   vALE.Get(v3) )*0.25;
+           vALE.Get(v3)+
+	 	   vALE.Get(v4) )*0.25;
 
   // modificado
-  velZ = ( wSol.Get(v0)+
-           wSol.Get(v1)+
-           wSol.Get(v2)+
-	 	   wSol.Get(v3) )*0.25;
-  velZ = wSol.Get(5);
+  velZ = ( wALE.Get(v1)+
+           wALE.Get(v2)+
+           wALE.Get(v3)+
+	 	   wALE.Get(v4) )*0.25;
 
   sumXVelVolume += velX * m->getVolume(*it);
   sumYVelVolume += velY * m->getVolume(*it);

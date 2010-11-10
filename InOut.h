@@ -25,6 +25,14 @@
 #include <iomanip>
 #include <fstream>
 #include <cmath>
+#include "colors.h" 
+
+// necessario para leitura do objeto triangle.o escrito em ANSI C
+extern "C"
+{
+#include "triangle.h"
+}
+
 
 /**
  * @brief classe responsavel pela manipulacao de entrada e saida de

@@ -24,6 +24,8 @@
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "math.h"
+#include "compare.h"
+#include "colors.h"
 
 /**
  * @brief classe responsavel pela preparacao da malha para entrada no
@@ -52,9 +54,10 @@ class Model3D
   void setCouetteBC();
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
-  void mapTriEdge();
+  void setTriEdge();
 
   // surface points treatment
+  void setTriangleMinEdge();
   void insertPointsByLength();
   void removePointsByLength();
   void insertRemovePointsByLength();
@@ -70,6 +73,7 @@ class Model3D
   void flipTriangleEdge( int _edge );
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
+  void breakup();
   clVector triangleQuality(int _v);
   clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
 	                clVector &_XI,clVector &_YI,clVector &_ZI);
@@ -191,8 +195,6 @@ class Model3D
   bool checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn);
 
 
-  clMatrix IENOriginal;
-  int numVertsOriginal;
  private:
   clVector uc,vc,wc,pc,cc;
   clMatrix IEN,IENTri,IENConvexTri;
@@ -204,8 +206,10 @@ class Model3D
   clVector idRegion;
   clVector surface,nonSurface;
   clMatrix mapEdgeTri;
+  clMatrix IENOriginal;
 
   int numVerts;                   // numero total de vertices da malha
+  int numVertsOriginal;
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
   int numTriangles;
@@ -215,6 +219,7 @@ class Model3D
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
+  real minEdge;
 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

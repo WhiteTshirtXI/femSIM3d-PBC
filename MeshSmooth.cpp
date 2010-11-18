@@ -121,9 +121,10 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
 
- for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ //for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ for (int it=0;it<numVerts;it++ ) 
  {
-  plist = neighbourVert->at(*it);
+  plist = neighbourVert->at(it);
   size = plist.size();
   uSum = 0.0;
   vSum = 0.0;
@@ -133,10 +134,28 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
    uSum += _uVel.Get(*vert);
    vSum += _vVel.Get(*vert);
    wSum += _wVel.Get(*vert);
+//--------------------------------------------------
+//   if( it == 3361 )
+//   {
+//   cout << "-------- " << *vert << " --------" << endl;
+//   cout << "u: " << _uVel.Get(*vert) << endl;
+//   cout << "v: " << _vVel.Get(*vert) << endl;
+//   cout << "w: " << _wVel.Get(*vert) << endl;
+//   cout << "uSum: " << uSum << endl;
+//   cout << "vSum: " << vSum << endl;
+//   cout << "wSum: " << wSum << endl;
+//   cout << "X: " << X->Get(it) << endl;
+//   cout << "Y: " << Y->Get(it) << endl;
+//   cout << "Z: " << Z->Get(it) << endl;
+//   cout << "dt: " << dt << endl;
+//   cout << "--------------------" << endl;
+//   }
+//-------------------------------------------------- 
   }
-  uSmooth.Set( *it,uSum/size ); 
-  vSmooth.Set( *it,vSum/size ); 
-  wSmooth.Set( *it,wSum/size ); 
+  uSmooth.Set( it,uSum/size ); 
+  vSmooth.Set( it,vSum/size ); 
+  wSmooth.Set( it,wSum/size ); 
+
  }
 } // fecha metodo stepSmooth
 

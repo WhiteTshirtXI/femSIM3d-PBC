@@ -57,6 +57,12 @@ class Model3D
   void setTriEdge();
 
   // surface points treatment
+  void setSurface();
+  void setSurfaceFace();
+  void setSurfaceTri();
+  void setOutTri();
+  void setInOutVert();
+  void setInOutElem();
   void setTriangleMinEdge();
   void insertPointsByLength();
   void removePointsByLength();
@@ -115,6 +121,7 @@ class Model3D
   void setCubeBC();
   void setCubeBC2();
   void setWallBC();
+  void setWallAnnularBC();
   void set2BubbleBC();
 
   real getMaxAbsUC();
@@ -175,11 +182,6 @@ class Model3D
   real getYCenter();
   real getZCenter();
   real getBubbleRadius();
-  void setSurface();
-  void setSurfaceFace();
-  void setSurfaceTri();
-  void setOutTri();
-  void setInOutVert();
   vector< list<int> >* getNeighbourElem();
   vector< list<int> >* getNeighbourVert();
   vector< list<int> >* getNeighbourFace();

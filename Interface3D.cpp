@@ -454,12 +454,15 @@ clVector Interface3D::computeKappa2()
    fy += yNormalUnit*e;
    fz += zNormalUnit*e;
 
+   if( Z->Get(surfaceNode) == Z->Max() || Z->Get(surfaceNode) == Z->Min() )
+	fz = 0;
+
    sumArea += area/2.0;
    sumLength += c;
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
 //--------------------------------------------------
-//    if( surfaceNode == 531 || surfaceNode == 528 || surfaceNode == 525 )
+//    if( surfaceNode == 0 )
 //    {
 // 	cout << "Triangulo: ------------------------- " << c1 << endl;
 // 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;

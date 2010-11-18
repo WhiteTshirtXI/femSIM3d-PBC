@@ -12,30 +12,7 @@ Simulator3D::Simulator3D(){}
 
 Simulator3D::Simulator3D( Model3D &_m )  
 {
- // mesh information vectors
- m = &_m;
- numVerts = m->getNumVerts();
- numElems = m->getNumElems();
- numNodes = m->getNumNodes();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
- X = m->getX();
- Y = m->getY();
- Z = m->getZ();
- uc = m->getUC();
- vc = m->getVC();
- wc = m->getWC();
- pc = m->getPC();
- cc = m->getCC();
- idbcu = m->getIdbcu();
- idbcv = m->getIdbcv();
- idbcw = m->getIdbcw();
- idbcp = m->getIdbcp();
- idbcc = m->getIdbcc();
- outflow = m->getOutflow();
- IEN = m->getIEN();
- surface = m->getSurface();
+ getModel3DAttrib(_m);
 
  // Simulator3D pre-configures parameters
  // =================================================================== //
@@ -65,124 +42,21 @@ Simulator3D::Simulator3D( Model3D &_m )
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
+ mu_l  = 1.0;
+ mu_g  = 1.0;
+ rho_l = 1.0;
+ rho_g = 1.0;
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
 
- // assembly matrix
- K.Dim( 3*numNodes,3*numNodes );
- Kc.Dim( numVerts,numVerts );
- M.Dim( 3*numNodes,3*numNodes );
- Mc.Dim( numVerts,numVerts );
- MLumped.Dim( 3*numNodes );
- McLumped.Dim( numVerts );
- G.Dim( 3*numNodes,numVerts );
- D.Dim( numVerts,3*numNodes );
- gx.Dim( numNodes,numVerts );
- gy.Dim( numNodes,numVerts );
- gz.Dim( numNodes,numVerts );
-
- // COUPLED method matrix and vector
- A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
- b.Dim( 3*numNodes+numVerts );
-
- // right hand side vectors
- va.Dim( 3*numNodes );
- vcc.Dim( numVerts );
- b1.Dim( 3*numNodes );
- b1c.Dim( numVerts );
- b2.Dim( numVerts );
-
-
- // boundary condiction configured matrix
- ATilde.Dim( 3*numNodes,3*numNodes );
- AcTilde.Dim( numVerts,numVerts );
- GTilde.Dim( 3*numNodes,numVerts );
- DTilde.Dim( numVerts,3*numNodes );
- ETilde.Dim( numVerts,numVerts );
- E.Dim( numVerts, numVerts );
-
- // K + M matrix set
- mat.Dim( 3*numNodes,3*numNodes );
- matc.Dim( numVerts,numVerts );
- invA.Dim( 3*numNodes );
- invMLumped.Dim( 3*numNodes );
- invC.Dim( numVerts );
- invMcLumped.Dim( numVerts );
-
- // vetores solucao
- uTilde.Dim( 3*numNodes );
- pTilde.Dim( numVerts );
- cTilde.Dim( numVerts );
- uSol.Dim( numNodes );
- vSol.Dim( numNodes );
- wSol.Dim( numNodes );
- pSol.Dim( numVerts );
- cSol.Dim( numVerts );
-
- // vetores do termo de conveccao
- convUVW.Dim( 3*numNodes );
- convC.Dim( numVerts );
-
- // auxiliar vectors
- Fold.Dim( 3*numNodes+numVerts );
- uAnt.Dim( 3*numNodes+numVerts );
- cAnt.Dim( numVerts );
- ip.Dim( 3*numNodes,1 );
- ipc.Dim( numVerts,1 );
-
- // convective term vectors (semi-lagrangian)
- uSL.Dim( numNodes );
- vSL.Dim( numNodes );
- wSL.Dim( numNodes );
- cSL.Dim( numVerts );
-
- // convective term vectors (ALE)
- uALE.Dim( numNodes );
- vALE.Dim( numNodes );
- wALE.Dim( numNodes );
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
- uSmoothCoord.Dim( numNodes );
- vSmoothCoord.Dim( numNodes );
- wSmoothCoord.Dim( numNodes );
-
- // interface vectors (two-phase)
- distance.Dim( numVerts );
- kappa.Dim( 3*numNodes );
- fint.Dim ( 3*numNodes );
- Hsmooth.Dim( numNodes );
- nu.Dim( numNodes );
- rho.Dim( numNodes );
+ allocateMemoryToAttrib();
 }
 
 Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)  
 {
  // mesh information vectors
- m = &_m;
- numVerts = m->getNumVerts();
- numElems = m->getNumElems();
- numNodes = m->getNumNodes();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
- X = m->getX();
- Y = m->getY();
- Z = m->getZ();
- uc = m->getUC();
- vc = m->getVC();
- wc = m->getWC();
- pc = m->getPC();
- cc = m->getCC();
- idbcu = m->getIdbcu();
- idbcv = m->getIdbcv();
- idbcw = m->getIdbcw();
- idbcp = m->getIdbcp();
- idbcc = m->getIdbcc();
- outflow = m->getOutflow();
- IEN = m->getIEN();
- surface = m->getSurface();
+ getModel3DAttrib(_m);
 
  Re    = _s.getRe();
  Sc    = _s.getSc();
@@ -194,97 +68,16 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
+ mu_l  = _s.getMu_l();
+ mu_g  = _s.getMu_g();
+ rho_l = _s.getRho_l();
+ rho_g = _s.getRho_g();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
 
- // assembly matrix
- K.Dim( 3*numNodes,3*numNodes );
- Kc.Dim( numVerts,numVerts );
- M.Dim( 3*numNodes,3*numNodes );
- Mc.Dim( numVerts,numVerts );
- MLumped.Dim( 3*numNodes );
- McLumped.Dim( numVerts );
- G.Dim( 3*numNodes,numVerts );
- D.Dim( numVerts,3*numNodes );
- gx.Dim( numNodes,numVerts );
- gy.Dim( numNodes,numVerts );
- gz.Dim( numNodes,numVerts );
-
- // COUPLED method matrix and vector
- A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
- b.Dim( 3*numNodes+numVerts );
-
- // right hand side vectors
- va.Dim( 3*numNodes );
- vcc.Dim( numVerts );
- b1.Dim( 3*numNodes );
- b1c.Dim( numVerts );
- b2.Dim( numVerts );
-
- // boundary condiction configured matrix
- ATilde.Dim( 3*numNodes,3*numNodes );
- AcTilde.Dim( numVerts,numVerts );
- GTilde.Dim( 3*numNodes,numVerts );
- DTilde.Dim( numVerts,3*numNodes );
- ETilde.Dim( numVerts,numVerts );
- E.Dim( numVerts, numVerts );
-
- // K + M matrix set
- mat.Dim( 3*numNodes,3*numNodes );
- matc.Dim( numVerts,numVerts );
- invA.Dim( 3*numNodes );
- invMLumped.Dim( 3*numNodes );
- invC.Dim( numVerts );
- invMcLumped.Dim( numVerts );
-
- // solution vectors 
- // vetores solucao
- uTilde.Dim( 3*numNodes );
- pTilde.Dim( numVerts );
- cTilde.Dim( numVerts );
- uSol.Dim( numNodes );
- vSol.Dim( numNodes );
- wSol.Dim( numNodes );
- pSol.Dim( numVerts );
- cSol.Dim( numVerts );
-
- // auxiliar vectors
- Fold.Dim( 3*numNodes+numVerts );
- uAnt.Dim( 3*numNodes+numVerts );
- cAnt.Dim( numVerts );
- ip.Dim( 3*numNodes,1 );
- ipc.Dim( numVerts,1 );
-
- // convective term vectors
- convUVW.Dim( 3*numNodes );
- convC.Dim( numVerts );
-
- // convective term vectors (semi-lagrangian)
- uSL.Dim( numNodes );
- vSL.Dim( numNodes );
- wSL.Dim( numNodes );
- cSL.Dim( numVerts );
-
- // convective term vectors (ALE)
- uALE.Dim( numNodes );
- vALE.Dim( numNodes );
- wALE.Dim( numNodes );
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
- uSmoothCoord.Dim( numNodes );
- vSmoothCoord.Dim( numNodes );
- wSmoothCoord.Dim( numNodes );
-
- // interface vectors (two-phase)
- distance.Dim( numVerts );
- kappa.Dim( 3*numNodes );
- fint.Dim ( 3*numNodes );
- Hsmooth.Dim( numNodes );
- nu.Dim( numNodes );
- rho.Dim( numNodes );
+ allocateMemoryToAttrib();
 
  // recuperando campo de velocidade e pressao da malha antiga
  uSolOld = *_s.getUSol();
@@ -294,6 +87,8 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  uALEOld = *_s.getUALE();
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
+ nuOld = *_s.getNu();
+ rhoOld = *_s.getRho();
  kappaOld = *_s.getKappa();
  fintOld = *_s.getFint();
 }
@@ -351,6 +146,7 @@ void Simulator3D::assemble()
  clMatrix Kzy( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
  clMatrix Mx( numNodes,numNodes );
+ clMatrix Mx_no( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -359,7 +155,7 @@ void Simulator3D::assemble()
  FEMMiniElement3D miniElem(*m);
  FEMLinElement3D linElem(*m);
 
- real eme = 0.81315;
+ setMuRho( mu_l,mu_g,rho_l,rho_g );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -369,14 +165,14 @@ void Simulator3D::assemble()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  real c = ( cSol.Get(v1)+
-	         cSol.Get(v2)+
-	         cSol.Get(v3)+
-	         cSol.Get(v4) )*0.25;
-  real nuC = exp(eme*c);
-  real dif = 1.0/nuC;
-  nuC=1.0;
-  dif=1.0;
+  real nuValue = ( nu.Get(v1)+
+	               nu.Get(v2)+
+	               nu.Get(v3)+
+	               nu.Get(v4) )*0.25;
+  real rhoValue = ( rho.Get(v1)+
+	                rho.Get(v2)+
+	                rho.Get(v3)+
+	                rho.Get(v4) )*0.25;
 
   miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -389,58 +185,41 @@ void Simulator3D::assemble()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuC*( 2*miniElem.kxx[i][j] + 
-	                               miniElem.kyy[i][j] + 
-								   miniElem.kzz[i][j] ); 
+	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
+	                                   miniElem.kyy[i][j] + 
+									   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
+	aux = Mx.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
 	Mx.Set(ii,jj,aux); // matriz de massa
 
+	aux = Mx_no.Get(ii,jj) + miniElem.massele[i][j];
+	Mx_no.Set(ii,jj,aux); // matriz de massa sem rho
+
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuC*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuC*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
-	//--------------------------------------------------
-	// // bloco 21
-	// aux = Kyx.Get(ii,jj) + nuC*( miniElem.kyx[i][j] ); 
-	// Kyx.Set(ii,jj,aux);
-	//-------------------------------------------------- 
-
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
-	                           2*miniElem.kyy[i][j] + 
-							     miniElem.kzz[i][j] ); 
+	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	                               2*miniElem.kyy[i][j] + 
+							         miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuC*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
-	//--------------------------------------------------
-	// // bloco 31
-	// aux = Kzx.Get(ii,jj) + nuC*( miniElem.kzx[i][j] ); 
-	// Kzx.Set(ii,jj,aux);
-	//-------------------------------------------------- 
-
-	//--------------------------------------------------
-	// // bloco 32
-	// aux = Kzy.Get(ii,jj) + nuC*( miniElem.kzy[i][j] ); 
-	// Kzy.Set(ii,jj,aux);
-	//-------------------------------------------------- 
-
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
-	                             miniElem.kyy[i][j] + 
-							   2*miniElem.kzz[i][j] ); 
+	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	                                 miniElem.kyy[i][j] + 
+								   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
-
-   };
-
+   }
    for( j=0;j<numGLEP;j++ )
    {
 	jj=v[j];
@@ -462,9 +241,9 @@ void Simulator3D::assemble()
    for( j=0;j<numGLEC;j++ )
    {
 	jj=v[j];
-	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
-	                               linElem.kyyc[i][j] + 
-								   linElem.kzzc[i][j] );
+	aux = KcMat.Get(ii,jj) + ( linElem.kxxc[i][j] + 
+	                           linElem.kyyc[i][j] + 
+							   linElem.kzzc[i][j] );
 	KcMat.Set(ii,jj,aux);
 
 	aux = McMat.Get(ii,jj) + linElem.masselec[i][j];
@@ -481,17 +260,9 @@ void Simulator3D::assemble()
  M.CopyFrom(   numNodes,   numNodes,              Mx );
  M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
 
-//--------------------------------------------------
-//  K.CopyFrom(          0,          0,             Kxx );
-//  K.CopyFrom(          0,   numNodes,             Kxy );
-//  K.CopyFrom(          0, 2*numNodes,             Kxz );
-//  K.CopyFrom(   numNodes,          0,             Kyx );
-//  K.CopyFrom(   numNodes,   numNodes,             Kyy );
-//  K.CopyFrom(   numNodes, 2*numNodes,             Kyz );
-//  K.CopyFrom( 2*numNodes,          0,             Kzx );
-//  K.CopyFrom( 2*numNodes,   numNodes,             Kzy );
-//  K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
-//-------------------------------------------------- 
+ M_no.CopyFrom(          0,          0,        Mx_no );
+ M_no.CopyFrom(   numNodes,   numNodes,        Mx_no );
+ M_no.CopyFrom( 2*numNodes, 2*numNodes,        Mx_no );
 
  K.CopyFrom(          0,          0,             Kxx );
  K.CopyFrom(          0,   numNodes,             Kxy );
@@ -503,28 +274,17 @@ void Simulator3D::assemble()
  K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
  K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
 
-//--------------------------------------------------
-//  K.CopyFrom(          0,          0,             Kxx );
-//  K.CopyFrom(          0,   numNodes, Kyx.Transpose() );
-//  K.CopyFrom(          0, 2*numNodes, Kzx.Transpose() );
-//  K.CopyFrom(   numNodes,          0,             Kyx );
-//  K.CopyFrom(   numNodes,   numNodes,             Kyy );
-//  K.CopyFrom(   numNodes, 2*numNodes, Kzy.Transpose() );
-//  K.CopyFrom( 2*numNodes,          0,             Kzx );
-//  K.CopyFrom( 2*numNodes,   numNodes,             Kzy );
-//  K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
-//-------------------------------------------------- 
-
  G.CopyFrom(          0,          0,              Gx );
  G.CopyFrom(   numNodes,          0,              Gy );
  G.CopyFrom( 2*numNodes,          0,              Gz );
  D.CopyFrom(          0,          0,  Gx.Transpose() );
  D.CopyFrom(          0,   numNodes,  Gy.Transpose() );
  D.CopyFrom(          0, 2*numNodes,  Gz.Transpose() );
+
  Kc.CopyFrom(         0,          0,           KcMat );
  Mc.CopyFrom(         0,          0,           McMat );
  
-}; // fecha metodo ASSEMBLE
+} // fecha metodo ASSEMBLE
 
 void Simulator3D::assembleC()
 {
@@ -568,7 +328,7 @@ void Simulator3D::assembleC()
  Kc.CopyFrom(         0,          0,           KcMat );
  Mc.CopyFrom(         0,          0,           McMat );
  
-}; // fecha metodo ASSEMBLEC
+} // fecha metodo ASSEMBLEC
 
 void Simulator3D::assembleNuCte()
 {
@@ -852,6 +612,7 @@ void Simulator3D::assembleSlip()
  clMatrix Kyz( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
  clMatrix Mx( numNodes,numNodes );
+ clMatrix Mx_no( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -860,8 +621,11 @@ void Simulator3D::assembleSlip()
  clMatrix Dz( numVerts,numNodes );
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
+
  FEMMiniElement3D miniElem(*m);
  FEMLinElement3D linElem(*m);
+
+ setMuRho( mu_l,mu_g,rho_l,rho_g );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -872,8 +636,14 @@ void Simulator3D::assembleSlip()
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
 
-  real nuC = 1.0;
-  real dif = 1.0;
+  real nuValue = ( nu.Get(v1)+
+	               nu.Get(v2)+
+	               nu.Get(v3)+
+	               nu.Get(v4) )*0.25;
+  real rhoValue = ( rho.Get(v1)+
+	                rho.Get(v2)+
+	                rho.Get(v3)+
+	                rho.Get(v4) )*0.25;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -886,34 +656,37 @@ void Simulator3D::assembleSlip()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuC*( 2*miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
 	                               miniElem.kyy[i][j] + 
 								   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
+	aux = Mx.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
 	Mx.Set(ii,jj,aux); // matriz de massa
 
+	aux = Mx_no.Get(ii,jj) + miniElem.massele[i][j];
+	Mx_no.Set(ii,jj,aux); // matriz de massa sem rho
+
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuC*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuC*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
 	                           2*miniElem.kyy[i][j] + 
 							     miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuC*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
 	                             miniElem.kyy[i][j] + 
 							   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
@@ -959,9 +732,9 @@ void Simulator3D::assembleSlip()
    for( j=0;j<numGLEC;j++ )
    {
 	jj=v[j];
-	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
-	                               linElem.kyyc[i][j] + 
-								   linElem.kzzc[i][j] );
+	aux = KcMat.Get(ii,jj) + ( linElem.kxxc[i][j] + 
+	                           linElem.kyyc[i][j] + 
+							   linElem.kzzc[i][j] );
 	KcMat.Set(ii,jj,aux);
 
 	aux = McMat.Get(ii,jj) + linElem.masselec[i][j];
@@ -977,6 +750,11 @@ void Simulator3D::assembleSlip()
  M.CopyFrom(          0,          0,              Mx );
  M.CopyFrom(   numNodes,   numNodes,              Mx );
  M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
+
+ M_no.CopyFrom(          0,          0,        Mx_no );
+ M_no.CopyFrom(   numNodes,   numNodes,        Mx_no );
+ M_no.CopyFrom( 2*numNodes, 2*numNodes,        Mx_no );
+
  K.CopyFrom(          0,          0,             Kxx );
  K.CopyFrom(          0,   numNodes,             Kxy );
  K.CopyFrom(          0, 2*numNodes,             Kxz );
@@ -986,12 +764,15 @@ void Simulator3D::assembleSlip()
  K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
  K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
  K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
+
  G.CopyFrom(          0,          0,              Gx );
  G.CopyFrom(   numNodes,          0,              Gy );
  G.CopyFrom( 2*numNodes,          0,              Gz );
+
  D.CopyFrom(          0,          0,              Dx );
  D.CopyFrom(          0,   numNodes,              Dy );
  D.CopyFrom(          0, 2*numNodes,              Dz );
+
  Kc.CopyFrom(         0,          0,           KcMat );
  Mc.CopyFrom(         0,          0,           McMat );
  
@@ -1351,55 +1132,26 @@ void Simulator3D::stepLagrangianZ()
 
 void Simulator3D::stepALE()
 {
- // calcula velocidade elastica - dependente das coordenadas dos pontos
- stepSmooth();
+ // smoothing - coordenadas
+ MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ e1.stepSmoothSurface();
+ uSmoothCoord = *e1.getUSmooth();
+ vSmoothCoord = *e1.getVSmooth();
+ wSmoothCoord = *e1.getWSmooth();
 
  c1 = 1.0; 
  c2 = 1.0;
  c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
 
- uALE = c1*uSol+c2*uSmooth;
- vALE = c1*vSol+c2*vSmooth;
- wALE = c1*wSol+c2*wSmooth;
+ uALE = c1*uSol+c2*uSmoothCoord;
+ vALE = c1*vSol+c2*vSmoothCoord;
+ wALE = c1*wSol+c2*wSmoothCoord;
 
-//--------------------------------------------------
-//  // atualiza ALE nos pontos de contorno 
-//  int aux;
-//  for( int i=0;i<idbcu->Dim();i++ )
-//  {
-//   aux = (int) idbcu->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcv->Dim();i++ )
-//  {
-//   aux = (int) idbcv->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcw->Dim();i++ )
-//  {
-//   aux = (int) idbcw->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-// 
-//  for( int i=0;i<idbcp->Dim();i++ )
-//  {
-//   aux = (int) idbcp->Get(i);
-//   uALE.Set( aux,0.0 ); 
-//   vALE.Set( aux,0.0 ); 
-//   wALE.Set( aux,0.0 ); 
-//  }
-//-------------------------------------------------- 
+ // impoe velocidade (componente normal) do fluido na interface
+ setInterfaceVelNormal();
 
- // impoe velocidade do fluido na interface
- //setInterfaceVel();
+ // impoe velocidade ALE = 0 no contorno
+ setALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
@@ -1410,23 +1162,18 @@ void Simulator3D::stepALE()
  m->setZ(*m->getZ()+(wALE*dt));
 
  // atualizacao de todas as matrizes do sistema
- //assemble();
- assembleSlip();
-
- convUVW.CopyFrom(0,uSL);
- convUVW.CopyFrom(numNodes,vSL);
- convUVW.CopyFrom(2*numNodes,wSL);
- convC = cSol;
+ assemble();
+ //assembleSlip();
 
 } // fecha metodo stepALE
 
 void Simulator3D::stepALEVel()
 {
- setALEVelBC();
-
  // calcula velocidade elastica - dependente das velocidades dos pontos
  setInterfaceVelNormal();
- for( int i=0;i<100;i++ )
+
+ setALEVelBC();
+ for( int i=0;i<1;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1455,11 +1202,11 @@ void Simulator3D::stepALEVel()
  vALE = c1*vSol+c2*vSmooth;
  wALE = c1*wSol+c2*wSmooth;
 
- // impoe velocidade ALE = 0 no contorno
- setALEVelBC();
-
  // impoe velocidade (componente normal) do fluido na interface
  setInterfaceVelNormal();
+
+ // impoe velocidade ALE = 0 no contorno
+ setALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
@@ -1473,18 +1220,7 @@ void Simulator3D::stepALEVel()
  assemble();
  //assembleSlip();
 
-} // fecha metodo stepALE3
-
-void Simulator3D::stepSmooth()
-{
- MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
-
- clVector smooth = e1.compute();
- smooth.CopyTo(0,uSmooth);
- smooth.CopyTo(numNodes,vSmooth);
- smooth.CopyTo(2*numNodes,wSmooth);
-
-} // fecha metodo stepSmooth
+} // fecha metodo stepALEVel
 
 void Simulator3D::setInterfaceVel()
 {
@@ -1646,13 +1382,17 @@ void Simulator3D::setCRHS()
 
 void Simulator3D::setGravity()
 {
+ real rhoAdimen_l = 1.0;
+ real g = 1.0;
  clVector uvwOne(2*numNodes);
  uvwOne.SetAll(0.0);
  clVector wOne(numNodes);
  wOne.SetAll(-1.0);
  uvwOne.Append(wOne);
 
- va = va + M * ( (1.0/(Fr*Fr)) * uvwOne );
+ //va = va + M * ( (1.0/(Fr*Fr)) * uvwOne );
+ //va = va + ( 1.0/(Fr*Fr) * uvwOne ) * ( (rho_l * g * M) - (M_no * g) )  ;
+ va = va + ( (g * (rhoAdimen_l * M) ) - (g * M_no) )*( 1.0/(Fr*Fr) * uvwOne );
 }
 
 void Simulator3D::setGravityBoussinesq()
@@ -1711,10 +1451,14 @@ void Simulator3D::matMount()
   MLumped.Set(i, M.SumLine(i));
 
  for( int i = 0; i < 3*numNodes; i++ )
+  MLumped_no.Set(i, M_no.SumLine(i));
+
+ for( int i = 0; i < 3*numNodes; i++ )
   invA.Set(i, mat.SumLine(i));
 
  invA = invA.Inverse();
  invMLumped = MLumped.Inverse();
+ invMLumped_no = MLumped_no.Inverse();
 }
 
 void Simulator3D::matMountC()
@@ -1777,7 +1521,7 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- uvw = uTilde + dt*invMLumped*fint;
+ uvw = uTilde + dt*invMLumped_no*fint;
  //uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
@@ -2081,20 +1825,104 @@ void Simulator3D::setHsmooth()
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setNu(real nu0, real nu1)
+void Simulator3D::setMuRho(real _muLiquid,real _muGas,
+                           real _rhoLiquid,real _rhoGas)
 {
-//--------------------------------------------------
-//  clVector ones(numNodes);ones.SetAll(1.0);
-//  nu = nu1*Hsmooth + nu0*(ones-Hsmooth);
-//-------------------------------------------------- 
-}
+ // Since we are working here with non-dimensional equations and also
+ // because the referential Reynolds used in two-phase flow is the one
+ // from the liquid phase, we set the liquid viscosity (mu_fluid) as
+ // equal to 1.0.
+ //
+ //          rho_ref * v_ref * D     
+ // Re_ref = -------------------     
+ //                mu_ref            
+ //
+ //                rho_l                     rho_g
+ // rhoAdimen_l = -------     rhoAdimen_g = -------
+ //               rho_ref                   rho_ref
+ //
+ //               mu_l                      mu_g
+ // muAdimen_l = ------       muAdimen_g = ------
+ //              mu_ref                    mu_ref
+ //
+ //
+ //        rho_l * v_l * D          rho_g * v_g * D 
+ // Re_l = ---------------   Re_g = --------------- 
+ //             mu_l                     mu_g       
+ //
+ // Navier-Stokes Viscous Term (liquid):
+ //
+ //    mu_ref                 [            (                       ) ]
+ // ----------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
+ // rho_ref*v*D               [            (                       ) ]
+ //
+ //
+ // Navier-Stokes Viscous Term (gas - bubble):
+ //
+ //    mu_ref                 [  mu_g    rho_ref   (                       ) ]
+ // ----------- * \nabla \dot [ ------ * ------- * ( \nabla u + \nabla u^T ) ]
+ // rho_ref*v*D               [ mu_ref    rho_g    (                       ) ]
+ //
+ //
+ // Navier-Stokes Viscous Term (liquid):
+ //
+ //    mu_ref                 [  mu_l    rho_ref   (                       ) ]
+ // ----------- * \nabla \dot [ ------ * ------- * ( \nabla u + \nabla u^T ) ]
+ // rho_ref*v*D               [ mu_ref    rho_l    (                       ) ]
+ //
+ //
+ // Considering the liquid as the referential frame we can define the
+ // Reynolds number, i.e., Re = 20 (for example):
+ //
+ // rho_ref = rho_l     mu_ref = mu_l 
+ //
+ 
+ real rhoReference = _rhoLiquid; 
+ real rhoLiquidAdimen = _rhoLiquid/rhoReference; 
+ real rhoGasAdimen = _rhoGas/rhoReference;
 
-void Simulator3D::setRho(real rho0, real rho1)
-{
-//--------------------------------------------------
-//  clVector ones(numNodes);ones.SetAll(1.0);
-//  rho = rho1*Hsmooth + rho0*(ones-Hsmooth);
-//-------------------------------------------------- 
+ real muReference = _muLiquid;
+ real muLiquidAdimen = (_muLiquid/muReference)*(rhoReference/_rhoLiquid);
+ real muGasAdimen = (_muGas/muReference)*(rhoReference/_rhoGas); 
+
+ // gas phase (bubble)
+ list<int> *inElem;
+ inElem = m->getInElem();
+ for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
+ {
+  int v1 = IEN->Get(*it,0); 
+  int v2 = IEN->Get(*it,1); 
+  int v3 = IEN->Get(*it,2); 
+  int v4 = IEN->Get(*it,3); 
+  int v5 = IEN->Get(*it,3); 
+  nu.Set(v1,muGasAdimen); rho.Set(v1,rhoGasAdimen);
+  nu.Set(v2,muGasAdimen); rho.Set(v2,rhoGasAdimen);
+  nu.Set(v3,muGasAdimen); rho.Set(v3,rhoGasAdimen);
+  nu.Set(v4,muGasAdimen); rho.Set(v4,rhoGasAdimen);
+  nu.Set(v5,muGasAdimen); rho.Set(v5,rhoGasAdimen);  }
+ // liquid phase
+ list<int> *outElem;
+ outElem = m->getOutElem();
+ for (list<int>::iterator it=outElem->begin(); it!=outElem->end(); ++it)
+ {
+  int v1 = IEN->Get(*it,0); 
+  int v2 = IEN->Get(*it,1); 
+  int v3 = IEN->Get(*it,2); 
+  int v4 = IEN->Get(*it,3); 
+  int v5 = IEN->Get(*it,3); 
+  nu.Set(v1,muLiquidAdimen); rho.Set(v1,rhoLiquidAdimen);
+  nu.Set(v2,muLiquidAdimen); rho.Set(v2,rhoLiquidAdimen);
+  nu.Set(v3,muLiquidAdimen); rho.Set(v3,rhoLiquidAdimen);
+  nu.Set(v4,muLiquidAdimen); rho.Set(v4,rhoLiquidAdimen);
+  nu.Set(v5,muLiquidAdimen); rho.Set(v5,rhoLiquidAdimen);
+ }
+ // interface as average value
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int surfaceNode = surface->Get(i);
+  nu.Set(surfaceNode,(muGasAdimen+muLiquidAdimen)*0.5);
+  rho.Set(surfaceNode,(rhoGasAdimen+rhoLiquidAdimen)*0.5);
+ }
 }
 
 void Simulator3D::setCSol(clVector &_cSol)
@@ -2167,6 +1995,14 @@ void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
 real Simulator3D::getTime2(){return time;}
 real Simulator3D::getCfl(){return cfl;}
+void Simulator3D::setMu_l(real _mu_l){mu_l = _mu_l;}
+real Simulator3D::getMu_l(){return mu_l;}
+void Simulator3D::setMu_g(real _mu_g){mu_g = _mu_g;}
+real Simulator3D::getMu_g(){return mu_g;}
+void Simulator3D::setRho_l(real _rho_l){rho_l = _rho_l;}
+real Simulator3D::getRho_l(){return rho_l;}
+void Simulator3D::setRho_g(real _rho_g){rho_g = _rho_g;}
+real Simulator3D::getRho_g(){return rho_g;}
 real* Simulator3D::getTime(){return &time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 void Simulator3D::setUSol(clVector &_uSol){uSol = _uSol;}
@@ -2257,16 +2093,22 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  c1 = _sRight.c1;
  c2 = _sRight.c2;
  c3 = _sRight.c3;
+ mu_l = _sRight.mu_l;
+ mu_g = _sRight.mu_g;
+ rho_l = _sRight.rho_l;
+ rho_g = _sRight.rho_g;
 
  K = _sRight.K;
  Kc = _sRight.Kc;
  M = _sRight.M;
+ M_no = _sRight.M_no;
  Mc = _sRight.Mc;
  G = _sRight.G;
  D = _sRight.D;
  mat = _sRight.mat;
  matc = _sRight.matc;
  MLumped = _sRight.MLumped;
+ MLumped_no = _sRight.MLumped_no;
  McLumped = _sRight.McLumped;
  gx = _sRight.gx;
  gy = _sRight.gy;
@@ -2282,6 +2124,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  invA = _sRight.invA;
  invC = _sRight.invC;
  invMLumped = _sRight.invMLumped;
+ invMLumped_no = _sRight.invMLumped_no;
  invMcLumped = _sRight.invMcLumped;
 
  uSol = _sRight.uSol;
@@ -2333,29 +2176,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
 void Simulator3D::operator()(Model3D &_m) 
 {
  // mesh information vectors
- m = &_m;
- numVerts = m->getNumVerts();
- numElems = m->getNumElems();
- numNodes = m->getNumNodes();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
- X = m->getX();
- Y = m->getY();
- Z = m->getZ();
- uc = m->getUC();
- vc = m->getVC();
- wc = m->getWC();
- pc = m->getPC();
- cc = m->getCC();
- idbcu = m->getIdbcu();
- idbcv = m->getIdbcv();
- idbcw = m->getIdbcw();
- idbcp = m->getIdbcp();
- idbcc = m->getIdbcc();
- outflow = m->getOutflow();
- IEN = m->getIEN();
- surface = m->getSurface();
+ getModel3DAttrib(_m);
 
  Re    = 10;
  Sc    = 2;
@@ -2367,123 +2188,23 @@ void Simulator3D::operator()(Model3D &_m)
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
+ mu_l  = 1.0;
+ mu_g  = 1.0;
+ rho_l = 1.0;
+ rho_g = 1.0;
+
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
 
- // assembly matrix
- K.Dim( 3*numNodes,3*numNodes );
- Kc.Dim( numVerts,numVerts );
- M.Dim( 3*numNodes,3*numNodes );
- Mc.Dim( numVerts,numVerts );
- MLumped.Dim( 3*numNodes );
- McLumped.Dim( numVerts );
- G.Dim( 3*numNodes,numVerts );
- D.Dim( numVerts,3*numNodes );
- gx.Dim( numNodes,numVerts );
- gy.Dim( numNodes,numVerts );
- gz.Dim( numNodes,numVerts );
+ allocateMemoryToAttrib();
 
- // COUPLED method matrix and vector
- A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
- b.Dim( 3*numNodes+numVerts );
-
- // right hand side vectors
- va.Dim( 3*numNodes );
- vcc.Dim( numVerts );
- b1.Dim( 3*numNodes );
- b1c.Dim( numVerts );
- b2.Dim( numVerts );
-
- // boundary condiction configured matrix
- ATilde.Dim( 3*numNodes,3*numNodes );
- AcTilde.Dim( numVerts,numVerts );
- GTilde.Dim( 3*numNodes,numVerts );
- DTilde.Dim( numVerts,3*numNodes );
- ETilde.Dim( numVerts,numVerts );
- E.Dim( numVerts, numVerts );
-
- // K + M matrix set
- mat.Dim( 3*numNodes,3*numNodes );
- matc.Dim( numVerts,numVerts );
- invA.Dim( 3*numNodes );
- invMLumped.Dim( 3*numNodes );
- invC.Dim( numVerts );
- invMcLumped.Dim( numVerts );
-
- // vetores solucao
- uTilde.Dim( 3*numNodes );
- pTilde.Dim( numVerts );
- cTilde.Dim( numVerts );
- uSol.Dim( numNodes );
- vSol.Dim( numNodes );
- wSol.Dim( numNodes );
- pSol.Dim( numVerts );
- cSol.Dim( numVerts );
-
- // vetores do termo de conveccao
- convUVW.Dim( 3*numNodes );
- convC.Dim( numVerts );
-
- // auxiliar vectors
- Fold.Dim( 3*numNodes+numVerts );
- uAnt.Dim( 3*numNodes+numVerts );
- cAnt.Dim( numVerts );
- ip.Dim( 3*numNodes,1 );
- ipc.Dim( numVerts,1 );
-
- // convective term vectors (semi-lagrangian)
- uSL.Dim( numNodes );
- vSL.Dim( numNodes );
- wSL.Dim( numNodes );
- cSL.Dim( numVerts );
-
- // convective term vectors (ALE)
- uALE.Dim( numNodes );
- vALE.Dim( numNodes );
- wALE.Dim( numNodes );
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
- uSmoothCoord.Dim( numNodes );
- vSmoothCoord.Dim( numNodes );
- wSmoothCoord.Dim( numNodes );
-
- // interface vectors (two-phase)
- distance.Dim( numVerts );
- kappa.Dim( 3*numNodes );
- fint.Dim ( 3*numNodes );
- Hsmooth.Dim( numNodes );
- nu.Dim( numNodes );
- rho.Dim( numNodes );
 }
 
 void Simulator3D::operator()(Model3D &_m,Simulator3D &_s) 
 {
  // mesh information vectors
- m = &_m;
- numVerts = m->getNumVerts();
- numElems = m->getNumElems();
- numNodes = m->getNumNodes();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
- X = m->getX();
- Y = m->getY();
- Z = m->getZ();
- uc = m->getUC();
- vc = m->getVC();
- wc = m->getWC();
- pc = m->getPC();
- cc = m->getCC();
- idbcu = m->getIdbcu();
- idbcv = m->getIdbcv();
- idbcw = m->getIdbcw();
- idbcp = m->getIdbcp();
- idbcc = m->getIdbcc();
- outflow = m->getOutflow();
- IEN = m->getIEN();
- surface = m->getSurface();
+ getModel3DAttrib(_m);
 
  Re    = _s.getRe();
  Sc    = _s.getSc();
@@ -2495,97 +2216,16 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
+ mu_l = _s.getMu_l();
+ mu_g = _s.getMu_g();
+ rho_l = _s.getRho_l();
+ rho_g = _s.getRho_g();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
 
- // assembly matrix
- K.Dim( 3*numNodes,3*numNodes );
- Kc.Dim( numVerts,numVerts );
- M.Dim( 3*numNodes,3*numNodes );
- Mc.Dim( numVerts,numVerts );
- MLumped.Dim( 3*numNodes );
- McLumped.Dim( numVerts );
- G.Dim( 3*numNodes,numVerts );
- D.Dim( numVerts,3*numNodes );
- gx.Dim( numNodes,numVerts );
- gy.Dim( numNodes,numVerts );
- gz.Dim( numNodes,numVerts );
-
- // COUPLED method matrix and vector
- A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
- b.Dim( 3*numNodes+numVerts );
-
- // right hand side vectors
- va.Dim( 3*numNodes );
- vcc.Dim( numVerts );
- b1.Dim( 3*numNodes );
- b1c.Dim( numVerts );
- b2.Dim( numVerts );
-
- // boundary condiction configured matrix
- ATilde.Dim( 3*numNodes,3*numNodes );
- AcTilde.Dim( numVerts,numVerts );
- GTilde.Dim( 3*numNodes,numVerts );
- DTilde.Dim( numVerts,3*numNodes );
- ETilde.Dim( numVerts,numVerts );
- E.Dim( numVerts, numVerts );
-
- // K + M matrix set
- mat.Dim( 3*numNodes,3*numNodes );
- matc.Dim( numVerts,numVerts );
- invA.Dim( 3*numNodes );
- invMLumped.Dim( 3*numNodes );
- invC.Dim( numVerts );
- invMcLumped.Dim( numVerts );
-
- // solution vectors 
- // vetores solucao
- uTilde.Dim( 3*numNodes );
- pTilde.Dim( numVerts );
- cTilde.Dim( numVerts );
- uSol.Dim( numNodes );
- vSol.Dim( numNodes );
- wSol.Dim( numNodes );
- pSol.Dim( numVerts );
- cSol.Dim( numVerts );
-
- // auxiliar vectors
- Fold.Dim( 3*numNodes+numVerts );
- uAnt.Dim( 3*numNodes+numVerts );
- cAnt.Dim( numVerts );
- ip.Dim( 3*numNodes,1 );
- ipc.Dim( numVerts,1 );
-
- // convective term vectors
- convUVW.Dim( 3*numNodes );
- convC.Dim( numVerts );
-
- // convective term vectors (semi-lagrangian)
- uSL.Dim( numNodes );
- vSL.Dim( numNodes );
- wSL.Dim( numNodes );
- cSL.Dim( numVerts );
-
- // convective term vectors (ALE)
- uALE.Dim( numNodes );
- vALE.Dim( numNodes );
- wALE.Dim( numNodes );
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
- uSmoothCoord.Dim( numNodes );
- vSmoothCoord.Dim( numNodes );
- wSmoothCoord.Dim( numNodes );
-
- // interface vectors (two-phase)
- distance.Dim( numVerts );
- kappa.Dim( 3*numNodes );
- fint.Dim ( 3*numNodes );
- Hsmooth.Dim( numNodes );
- nu.Dim( numNodes );
- rho.Dim( numNodes );
+ allocateMemoryToAttrib();
 
  // recuperando campo de velocidade e pressao da malha antiga
  uSolOld = *_s.getUSol();
@@ -2595,6 +2235,8 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  uALEOld = *_s.getUALE();
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
+ nuOld = *_s.getNu();
+ rhoOld = *_s.getRho();
  kappaOld = *_s.getKappa();
  fintOld = *_s.getFint();
 }
@@ -2812,6 +2454,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE.Dim( numVerts );
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
+ nu.Dim( numVerts );
+ rho.Dim( numVerts );
 
  // only 1 component because the 2 others are exactly the same
  clVector xKappaOld(_mOld.getNumVerts());
@@ -2836,6 +2480,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE = *interpLin*(uALEOld);
  vALE = *interpLin*(vALEOld);
  wALE = *interpLin*(wALEOld);
+ nu = *interpLin*(nuOld);
+ rho = *interpLin*(rhoOld);
  clVector xKappa = *interpLin*(xKappaOld);
  clVector xFint = *interpLin*(xFintOld);
  clVector yFint = *interpLin*(yFintOld);
@@ -2940,9 +2586,138 @@ void Simulator3D::setALEVelBC()
  for (list<int>::iterator it=outVert->begin(); it!=outVert->end(); ++it)
  {
   int vertice = *it;
-  uALE.Set(vertice,0.0);
-  vALE.Set(vertice,0.0);
-  wALE.Set(vertice,0.0);
+  if( Z->Get(vertice) == Z->Max() || Z->Get(vertice) == Z->Min() )
+  {
+   wALE.Set(vertice,0.0);
+  }
+  else 
+  {
+   uALE.Set(vertice,0.0);
+   vALE.Set(vertice,0.0);
+   wALE.Set(vertice,0.0);
+  }
  }
+}
+
+void Simulator3D::getModel3DAttrib(Model3D &_m)
+{
+ m = &_m;
+ // mesh information vectors
+ numVerts = m->getNumVerts();
+ numElems = m->getNumElems();
+ numNodes = m->getNumNodes();
+ numGLEP = m->getNumGLEP();
+ numGLEU = m->getNumGLEU();
+ numGLEC = m->getNumGLEC();
+ X = m->getX();
+ Y = m->getY();
+ Z = m->getZ();
+ uc = m->getUC();
+ vc = m->getVC();
+ wc = m->getWC();
+ pc = m->getPC();
+ cc = m->getCC();
+ idbcu = m->getIdbcu();
+ idbcv = m->getIdbcv();
+ idbcw = m->getIdbcw();
+ idbcp = m->getIdbcp();
+ idbcc = m->getIdbcc();
+ outflow = m->getOutflow();
+ IEN = m->getIEN();
+ surface = m->getSurface();
+}
+
+
+void Simulator3D::allocateMemoryToAttrib()
+{
+ // assembly matrix
+ K.Dim( 3*numNodes,3*numNodes );
+ Kc.Dim( numVerts,numVerts );
+ M.Dim( 3*numNodes,3*numNodes );
+ M_no.Dim( 3*numNodes,3*numNodes );
+ Mc.Dim( numVerts,numVerts );
+ MLumped.Dim( 3*numNodes );
+ MLumped_no.Dim( 3*numNodes );
+ McLumped.Dim( numVerts );
+ G.Dim( 3*numNodes,numVerts );
+ D.Dim( numVerts,3*numNodes );
+ gx.Dim( numNodes,numVerts );
+ gy.Dim( numNodes,numVerts );
+ gz.Dim( numNodes,numVerts );
+
+ // COUPLED method matrix and vector
+ A.Dim( 3*numNodes+numVerts,3*numNodes+numVerts );
+ b.Dim( 3*numNodes+numVerts );
+
+ // right hand side vectors
+ va.Dim( 3*numNodes );
+ vcc.Dim( numVerts );
+ b1.Dim( 3*numNodes );
+ b1c.Dim( numVerts );
+ b2.Dim( numVerts );
+
+ // boundary condiction configured matrix
+ ATilde.Dim( 3*numNodes,3*numNodes );
+ AcTilde.Dim( numVerts,numVerts );
+ GTilde.Dim( 3*numNodes,numVerts );
+ DTilde.Dim( numVerts,3*numNodes );
+ ETilde.Dim( numVerts,numVerts );
+ E.Dim( numVerts, numVerts );
+
+ // K + M matrix set
+ mat.Dim( 3*numNodes,3*numNodes );
+ matc.Dim( numVerts,numVerts );
+ invA.Dim( 3*numNodes );
+ invMLumped.Dim( 3*numNodes );
+ invMLumped_no.Dim( 3*numNodes );
+ invC.Dim( numVerts );
+ invMcLumped.Dim( numVerts );
+
+ // solution vectors 
+ // vetores solucao
+ uTilde.Dim( 3*numNodes );
+ pTilde.Dim( numVerts );
+ cTilde.Dim( numVerts );
+ uSol.Dim( numNodes );
+ vSol.Dim( numNodes );
+ wSol.Dim( numNodes );
+ pSol.Dim( numVerts );
+ cSol.Dim( numVerts );
+
+ // auxiliar vectors
+ Fold.Dim( 3*numNodes+numVerts );
+ uAnt.Dim( 3*numNodes+numVerts );
+ cAnt.Dim( numVerts );
+ ip.Dim( 3*numNodes,1 );
+ ipc.Dim( numVerts,1 );
+
+ // convective term vectors
+ convUVW.Dim( 3*numNodes );
+ convC.Dim( numVerts );
+
+ // convective term vectors (semi-lagrangian)
+ uSL.Dim( numNodes );
+ vSL.Dim( numNodes );
+ wSL.Dim( numNodes );
+ cSL.Dim( numVerts );
+
+ // convective term vectors (ALE)
+ uALE.Dim( numNodes );
+ vALE.Dim( numNodes );
+ wALE.Dim( numNodes );
+ uSmooth.Dim( numNodes );
+ vSmooth.Dim( numNodes );
+ wSmooth.Dim( numNodes );
+ uSmoothCoord.Dim( numNodes );
+ vSmoothCoord.Dim( numNodes );
+ wSmoothCoord.Dim( numNodes );
+
+ // interface vectors (two-phase)
+ distance.Dim( numVerts );
+ kappa.Dim( 3*numNodes );
+ fint.Dim ( 3*numNodes );
+ Hsmooth.Dim( numNodes );
+ nu.Dim( numVerts );
+ rho.Dim( numVerts );
 }
 

@@ -20,13 +20,13 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 0;
- real Re = 15;
+ real Re = 1475;
  real Sc = 2;
  real We = 2;
  real Fr = 0.4;
  real alpha = 1;
  real beta = -40;
- real cfl = 20;
+ real cfl = 140;
  real mu_l = 0.001;
  real mu_g = 1.7894E-05;
  real rho_l = 1000;
@@ -39,7 +39,8 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
- const char *mesh = "../../db/gmsh/3D/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3D/squareAnnular.msh";
+ //const char *mesh = "../../db/gmsh/3D/cylinderAnnular.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s1(m1);
 
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s1(m1);
 
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
   m1.readVTKCC(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s2(m1,s1);
   s1 = s2;
@@ -151,7 +152,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s1(m1);
 
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
   m1.readVTKCC(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s2(m1,s1);
   s1 = s2;
@@ -196,7 +197,7 @@ int main(int argc, char **argv)
  save.printInfo(mesh);
 
  int nIter = 1;
- int nReMesh = 1;
+ int nReMesh = 3;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -213,7 +214,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity();
+   //s1.setGravity();
    //s1.setGravityBoussinesq();
    s1.setInterfaceGeo();
    //s1.setInterfaceGeoTest();
@@ -241,7 +242,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setWallAnnularBC();
 
   s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

@@ -39,11 +39,13 @@ class Simulator3D
   Simulator3D( Model3D &_mNew, Model3D &_mOld, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
 
+  void getModel3DAttrib(Model3D &_m);
+  void allocateMemoryToAttrib();
   void init();
+  void assemble();
   void assembleK();
   void assembleM();
   void assembleC();
-  void assemble();
   void assembleSlip();
   void assembleNuCte();
   void assembleNuZ();
@@ -77,8 +79,7 @@ class Simulator3D
   void setUnCoupledCBC();
 
   void setHsmooth();
-  void setNu(real nu0, real nu1);
-  void setRho(real rho0, real rho1);
+  void setMuRho(real _muFluid,real _muBubble,real _rhoFluid,real _rhoBubble);
   void setNuZ();
   void setRe(real _Re);
   real getRe();
@@ -103,6 +104,14 @@ class Simulator3D
   void setCflDisk(real _cfl);
   void setCflBubble(real _cfl);
   real getCfl();
+  void setMu_l(real _mu_l);
+  real getMu_l();
+  void setMu_g(real _mu_g);
+  real getMu_g();
+  void setRho_l(real _rho_l);
+  real getRho_l();
+  void setRho_g(real _rho_g);
+  real getRho_g();
   void setUAnt(clVector &_uAnt);
   void setCSol(clVector &_cSol);
   void setUSol(clVector &_uSol);
@@ -158,6 +167,7 @@ class Simulator3D
   int numGLEU,numGLEP,numGLEC;
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
   real c1,c2,c3;
+  real rho_l,rho_g,mu_l,mu_g;
 
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
@@ -165,7 +175,7 @@ class Simulator3D
   clVector *outflow,*surface;
   clMatrix *IEN;
 
-  clMatrix K,Kc,M,Mc,G,D;
+  clMatrix K,Kc,M,M_no,Mc,G,D;
   clMatrix mat,matc;
 
   clDMatrix MLumped,McLumped;
@@ -190,12 +200,13 @@ class Simulator3D
   
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
   clDMatrix invA,invC,invMLumped,invMcLumped;
+  clDMatrix MLumped_no,invMLumped_no;
   clVector uTilde,cTilde,pTilde,b1,b1c,b2,ip,ipc;
  
   clVector distance;
   clDMatrix kappa;
   clVector fint;
-  clVector Hsmooth,nu,rho;
+  clVector Hsmooth,nu,rho,nuOld,rhoOld;
   clVector Fold;
 
 };

@@ -71,6 +71,11 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  alpha = s->getAlpha();
  beta = s->getBeta();
  simTime = s->getTime();
+ mu_l = s->getMu_l();
+ mu_g = s->getMu_g();
+ rho_l = s->getRho_l();
+ rho_g = s->getRho_g();
+
  uAnt = s->getUAnt();
  cAnt = s->getCAnt();
  K = s->getK();
@@ -383,6 +388,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+ vtkScalar(vtkFile,"viscosity",*nu);
+ vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
 
@@ -489,6 +496,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint);
+ vtkScalar(vtkFile,"viscosity",*nu);
+ vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
 
@@ -1073,22 +1082,26 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  file << endl;
  file << endl;
  file << "----------------------- BEGIN ----------------------" << endl; 
- file << "start process:   " << asctime( localtime( &currentTime ) );
- file << "mesh:            " << _mesh << endl;
- file << "numVerts:        " << numVerts << endl;
- file << "numNodes:        " << numNodes << endl;
- file << "numElems:        " << numElems << endl;
- file << "Lin Sys dim UVW: " << 3*numNodes << " x " << 3*numNodes << endl;
- file << "Lin Sys dim P:   " << numVerts << " x " << numVerts << endl;
- file << "Lin Sys dim C:   " << numVerts << " x " << numVerts << endl;
- file << "Reynolds number: " << Re << endl;
- file << "Schmidt number:  " << Sc << endl;
- file << "Froud number:    " << Fr << endl;
- file << "Webber number:   " << We << endl;
- file << "alpha number:    " << alpha << endl;
- file << "beta number:     " << beta << endl;
- file << "CFL number:      " << cfl << endl;
- file << "dt:              " << dt << endl;
+ file << "start process:    " << asctime( localtime( &currentTime ) );
+ file << "mesh:             " << _mesh << endl;
+ file << "numVerts:         " << numVerts << endl;
+ file << "numNodes:         " << numNodes << endl;
+ file << "numElems:         " << numElems << endl;
+ file << "Lin Sys dim UVW:  " << 3*numNodes << " x " << 3*numNodes << endl;
+ file << "Lin Sys dim P:    " << numVerts << " x " << numVerts << endl;
+ file << "Lin Sys dim C:    " << numVerts << " x " << numVerts << endl;
+ file << "Reynolds number:  " << Re << endl;
+ file << "Schmidt number:   " << Sc << endl;
+ file << "Froud number:     " << Fr << endl;
+ file << "Webber number:    " << We << endl;
+ file << "alpha number:     " << alpha << endl;
+ file << "beta number:      " << beta << endl;
+ file << "liquid viscosity: " << mu_l << endl;
+ file << "gas viscosity:    " << mu_g << endl;
+ file << "liquid density:   " << rho_l << endl;
+ file << "gas density:      " << rho_g << endl;
+ file << "CFL number:       " << cfl << endl;
+ file << "dt:               " << dt << endl;
  file << "----------------------------------------------------" << endl; 
  file << endl;
  file << endl;
@@ -1112,33 +1125,41 @@ void InOut::printInfo(const char* _mesh)
  cout << "----------------------- INFO -----------------------" << endl; 
  cout << endl;
  cout << "               ";
- cout << "start process:   " << asctime( localtime( &currentTime ) );
+ cout << "start process:    " << asctime( localtime( &currentTime ) );
  cout << "               ";
- cout << "mesh:            " << _mesh << endl;
+ cout << "mesh:             " << _mesh << endl;
  cout << "               ";
- cout << "numVerts:        " << numVerts << endl;
+ cout << "numVerts:         " << numVerts << endl;
  cout << "               ";
- cout << "numNodes:        " << numNodes << endl;
+ cout << "numNodes:         " << numNodes << endl;
  cout << "               ";
- cout << "numElems:        " << numElems << endl;
+ cout << "numElems:         " << numElems << endl;
  cout << "               ";
- cout << "Lin Sys dim UVW: " << 3*numNodes << " x " << 3*numNodes << endl;
+ cout << "Lin Sys dim UVW:  " << 3*numNodes << " x " << 3*numNodes << endl;
  cout << "               ";
- cout << "Lin Sys dim P:   " << numVerts << " x " << numVerts << endl;
+ cout << "Lin Sys dim P:    " << numVerts << " x " << numVerts << endl;
  cout << "               ";
- cout << "Lin Sys dim C:   " << numVerts << " x " << numVerts << endl;
+ cout << "Lin Sys dim C:    " << numVerts << " x " << numVerts << endl;
  cout << "               ";
- cout << "Reynolds number: " << Re << endl;
+ cout << "Reynolds number:  " << Re << endl;
  cout << "               ";
- cout << "Schmidt number:  " << Sc << endl;
+ cout << "Schmidt number:   " << Sc << endl;
  cout << "               ";
- cout << "Froud number:    " << Fr << endl;
+ cout << "Froud number:     " << Fr << endl;
  cout << "               ";
- cout << "Webber number:   " << We << endl;
+ cout << "Webber number:    " << We << endl;
  cout << "               ";
- cout << "alpha number:    " << alpha << endl;
+ cout << "alpha number:     " << alpha << endl;
  cout << "               ";
- cout << "beta number:     " << beta << endl;
+ cout << "beta number:      " << beta << endl;
+ cout << "               ";
+ cout << "liquid viscosity: " << mu_l << endl;
+ cout << "               ";
+ cout << "gas viscosity:    " << mu_g << endl;
+ cout << "               ";
+ cout << "liquid density:   " << rho_l << endl;
+ cout << "               ";
+ cout << "gas density:      " << rho_g << endl;
  cout << "               ";
  cout << "CFL number:      " << cfl << endl;
  cout << "               ";
@@ -1448,6 +1469,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+ vtkScalar(vtkFile,"viscosity",*nu);
+ vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
 
@@ -2301,11 +2324,21 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
   int v1 = IENOriginal->Get(i,0);
   int v2 = IENOriginal->Get(i,1);
   int v3 = IENOriginal->Get(i,2);
+  cout << cc->Get(v1) << " "
+       << cc->Get(v2) << " "
+       << cc->Get(v3) << endl;
 
-  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 & cc->Get(v3) == 0.5 )
+  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 && cc->Get(v3) == 0.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "1" << " " 
+						 << "14" << " " 
+						 << "0" << " " 
+						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+  else if( cc->Get(v1) + cc->Get(v2) + cc->Get(v3) > 1.5 )
+   mshFile << i+1 << " " << "2" << " " 
+	                     << "3" << " " 
+						 << "3" << " " 
 						 << "14" << " " 
 						 << "0" << " " 
 						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
@@ -2368,10 +2401,17 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
   int v2 = IENOriginal->Get(i,1);
   int v3 = IENOriginal->Get(i,2);
 
-  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 & cc->Get(v3) == 0.5 )
+  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 && cc->Get(v3) == 0.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "1" << " " 
+						 << "14" << " " 
+						 << "0" << " " 
+						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+  else if( cc->Get(v1) + cc->Get(v2) + cc->Get(v3) > 1.5 )
+   mshFile << i+1 << " " << "2" << " " 
+	                     << "3" << " " 
+						 << "3" << " " 
 						 << "14" << " " 
 						 << "0" << " " 
 						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 

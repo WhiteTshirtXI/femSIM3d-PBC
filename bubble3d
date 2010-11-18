@@ -8,7 +8,7 @@
 TARGET = cube
 LIBDIR = ../lib
 CXX = g++
-CXXFLAGS = -O1
+CXXFLAGS = -O1 -g
 LIBS += -lgsl -lgslcblas -lm
 LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I.
@@ -39,7 +39,8 @@ OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
 
-OBJECTS += mainBubble.o
+#OBJECTS += mainBubble.o
+OBJECTS += mainAnnular.o
 #OBJECTS += main2Bubble.o
 #OBJECTS += mainTest2Bubble.o
 #OBJECTS += main2BubbleReMesh.o

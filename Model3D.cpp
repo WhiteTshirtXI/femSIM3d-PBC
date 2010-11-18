@@ -251,6 +251,9 @@ void Model3D::readMSH( const char* filename )
    mshFile >> numberOfTags;  
    if( numberOfTags == 3 ) // msh file version 2.1
    {
+	// idRegion 1 = surface
+	// idRegion 2 = wall
+	// idRegion 3 = bubble
 	mshFile >> id;
 	idRegion.Set(i,id);
 	mshFile >> auxstr;
@@ -271,7 +274,7 @@ void Model3D::readMSH( const char* filename )
 	auxvtx[j] = k;
    }
 //--------------------------------------------------
-//    if( region == 1 ) // 1 = bubble
+//    if( region == 1 ) // 1 = interface 
 //    {
 // 	int v1 = IEN.Get(i,0);
 // 	int v2 = IEN.Get(i,1);
@@ -296,6 +299,7 @@ void Model3D::setInterfaceBC()
    int v1 = IEN.Get(i,0);
    int v2 = IEN.Get(i,1);
    int v3 = IEN.Get(i,2);
+
    real aux = 0.5;
    cc.Set(v1,aux);
    cc.Set(v2,aux);
@@ -928,14 +932,11 @@ void Model3D::mesh2Dto3D()
  // varre lista de elementos e passa para estrutura IEN
  IEN.Dim(numElems,5);
  cc.Dim(numVerts);
- inElem.resize (0);
- outElem.resize (0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
   // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
   if( out.tetrahedronattributelist[i] == 1 )
   {
-   outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -946,7 +947,6 @@ void Model3D::mesh2Dto3D()
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
   else 
   {
-   inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -1080,12 +1080,33 @@ void Model3D::setTriEdge()
 // procura o tamanho da menor aresta na superficie
 void Model3D::setTriangleMinEdge()
 {
- minEdge = 1E10; // initil minimum edge length
+//--------------------------------------------------
+//  minEdge = 1E10; // initil minimum edge length
+//  for( int i=0;i<mapEdgeTri.DimI();i++ )
+//   if( minEdge>mapEdgeTri.Get(i,0) && cc.Get(mapEdgeTri.Get(i,1) == 0.5) )
+//    minEdge = mapEdgeTri.Get(i,0); // setting the min edge of 3d surface
+//  //minEdge = 0.0600023; // tamanho minimo da malha bubble-tube-1
+//  minEdge = 0.09; // tamanho minimo da malha bubble-tube-4
+//-------------------------------------------------- 
+ 
+ // norm
+ int count = 0;
+ real aux  = 0;
  for( int i=0;i<mapEdgeTri.DimI();i++ )
-  if( minEdge>mapEdgeTri.Get(i,0) && cc.Get(mapEdgeTri.Get(i,1) == 0.5) )
-   minEdge = mapEdgeTri.Get(i,0); // setting the min edge of 3d surface
- //minEdge = 0.0600023; // tamanho minimo da malha bubble-tube-1
- minEdge = 0.2; // tamanho minimo da malha bubble-tube-4
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 )
+  {
+   aux += mapEdgeTri.Get(i,0); 
+   count++;
+  }
+ minEdge = aux/count;
+ 
+ cout << endl;
+ cout << "       ****************** " << endl;
+ cout << "       |    "    << minEdge << "    |" << endl;
+ cout << "       ****************** " << endl;
+ cout << endl;
+
+ minEdge = 0.25;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -1108,7 +1129,7 @@ void Model3D::insertPointsByLength()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 1.5*minEdge ) 
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 1.6*minEdge ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
@@ -1621,7 +1642,7 @@ void Model3D::flipTriangleEdge( int _edge )
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = numVertsOriginal; // aditional vertice
- cout << "---------- " << color(none,yellow,black) << "inserting vertex: "
+ cout << "-------------- " << color(none,yellow,black) << "inserting vertex: "
       << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
@@ -1857,7 +1878,7 @@ void Model3D::insertPoint(int _edge)
 
 void Model3D::deletePoint(int _v)
 {
- cout << "----------- " << color(none,red,black) << "removing vertex: "
+ cout << "--------------- " << color(none,red,black) << "removing vertex: "
       << resetColor() << _v << endl;
  //saveVTKSurface("./vtk/","deleteBefore",_v);
 
@@ -1901,7 +1922,7 @@ void Model3D::removePointsByLength()
 {
  //real test = 0.08;
  //real test = 0.05;
- real test = 0.4*minEdge; // 40% of minEdge
+ real test = 0.4*minEdge; // 60% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -1994,9 +2015,9 @@ void Model3D::removePointsByInterfaceDistance()
  for( int i=0;i<numVerts;i++ )
  {
   real d = distance.Get(i);
-  if( d>0 && d<1.2*minEdge && cc.Get(i)!=0.5 )
+  if( d>0 && d<0.4*minEdge )
   {
-   cout << "----------- " << color(none,red,black) << "removing vertex: "
+   cout << "--- " << color(none,red,black) << "removing vertex by distance: "
 	    << resetColor() << i << endl;
 
    X.Delete(i);
@@ -2085,13 +2106,12 @@ void Model3D::insertPointsByArea()
 void Model3D::mesh2Dto3DOriginal()
 {
  saveVTKSurface("./vtk/","before",0);
- // point insertion by neighbour averages
  insertPointsByLength();
  saveVTKSurface("./vtk/","between",0);
- removePointsByLength();
+ //removePointsByLength();
  saveVTKSurface("./vtk/","flipBetween",0);
  //insertRemovePointsByLength();
- flipTriangleEdge(0);
+ //flipTriangleEdge(0);
  saveVTKSurface("./vtk/","after",0);
 
 
@@ -2198,14 +2218,11 @@ void Model3D::mesh2Dto3DOriginal()
  // varre lista de elementos e passa para estrutura IEN
  IEN.Dim(numElems,5);
  cc.Dim(numVerts);
- inElem.resize (0);
- outElem.resize (0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
   // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
   if( out.tetrahedronattributelist[i] == 1 )
   {
-   outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -2216,7 +2233,6 @@ void Model3D::mesh2Dto3DOriginal()
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
   else 
   {
-   inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -2245,11 +2261,11 @@ void Model3D::mesh3DPoints()
 {
  saveVTKSurface("./vtk/","before",0);
  // point insertion by neighbour averages
- insertPointsByLength();
+ //insertPointsByLength();
  removePointsByLength();
  //insertRemovePointsByLength();
  saveVTKSurface("./vtk/","between",0);
- flipTriangleEdge(0);
+ //flipTriangleEdge(0);
  saveVTKSurface("./vtk/","after",0);
  removePointsByInterfaceDistance();
 
@@ -2316,9 +2332,9 @@ void Model3D::mesh3DPoints()
  //in.regionlist[0] = X.Min();
  //in.regionlist[1] = Y.Min();
  //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
+ in.regionlist[0] = 0.1;
+ in.regionlist[1] = 0.1;
+ in.regionlist[2] = 0.1;
  in.regionlist[3] = 1;
 
 
@@ -2385,14 +2401,12 @@ void Model3D::mesh3DPoints()
  // varre lista de elementos e passa para estrutura IEN
  IEN.Dim(numElems,5);
  cc.Dim(numVerts);
- inElem.resize (0);
- outElem.resize (0);
+ cc.SetAll(0.0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
  {
   // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
   if( out.tetrahedronattributelist[i] == 1 )
   {
-   outElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -2403,7 +2417,6 @@ void Model3D::mesh3DPoints()
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
   else 
   {
-   inElem.push_back(i);
    for( int j=0;j<4;j++ )
    {
 	int vertice = out.tetrahedronlist[i*4+j];
@@ -2923,6 +2936,31 @@ void Model3D::setWallBC()
   uc.Set(*it,aux);
   vc.Set(*it,aux);
   wc.Set(*it,aux);
+ }
+}
+
+void Model3D::setWallAnnularBC()
+{    
+ for (list<int>::iterator it=outVert.begin(); it!=outVert.end(); ++it)
+ {
+  if(Z.Get(*it) > Z.Min() || Z.Get(*it) < Z.Max() )
+  {
+   idbcw.AddItem(*it);
+
+   real aux = 0.0;
+   wc.Set(*it,aux);
+  }
+  else
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux);
+  }
  }
 }
 
@@ -4025,11 +4063,13 @@ void Model3D::setSurfaceFace()
 	}
    }
   }
-  //cout << "---------" << surfaceNode << "------------" << endl;
-  //std::ostream_iterator< int > output( cout, " " );
-  //std::copy( elemSurface.at(surfaceNode).begin(), elemSurface.at(surfaceNode).end(), output );
-  //std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
-  //cout << endl;
+//--------------------------------------------------
+//   cout << "---------" << surfaceNode << "------------" << endl;
+//   std::ostream_iterator< int > output( cout, " " );
+//   std::copy( elemSurface.at(surfaceNode).begin(), elemSurface.at(surfaceNode).end(), output );
+//   std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
+//   cout << endl;
+//-------------------------------------------------- 
   //
 //--------------------------------------------------
 //   int c1=0;
@@ -4168,7 +4208,24 @@ void Model3D::setInOutVert()
 //   cout << " " << *it;
 //  cout << endl;
 //-------------------------------------------------- 
+}
 
+void Model3D::setInOutElem()
+{
+ inElem.resize (0);
+ outElem.resize (0);
+ for(int i=0;i<IEN.DimI();i++ )
+ {
+  int v1 = IEN.Get(i,0);
+  int v2 = IEN.Get(i,1);
+  int v3 = IEN.Get(i,2);
+  int v4 = IEN.Get(i,3);
+  if( cc.Get(v1) < 0.5 || cc.Get(v2) < 0.5 || 
+	  cc.Get(v3) < 0.5 || cc.Get(v4) < 0.5 )
+   outElem.push_back(i);
+  else
+   inElem.push_back(i);
+ }
 }
 	   
 // cria matrizes de mapeamentos de vizinhos opostos ao vertice em
@@ -4640,6 +4697,7 @@ void Model3D::setSurfaceConfig()
 {
  setVertNeighbour(); // neighbourVert
  setInOutVert(); // inVert e outVert
+ setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // IENTri para superficie
@@ -5184,7 +5242,9 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  int j=0;
  for( int i=0;i<IENOriginal.DimI();i++ )
  {
-  if( cc.Get( IENOriginal.Get(i,0) ) == 0.5 )
+  if( cc.Get( IENOriginal.Get(i,0) ) == 0.5 &&
+      cc.Get( IENOriginal.Get(i,1) ) == 0.5 &&
+      cc.Get( IENOriginal.Get(i,2) ) == 0.5 )
    j++;
  }
  int numTri = j;
@@ -5192,7 +5252,9 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  for( int i=0;i<IENOriginal.DimI();i++ )
  {
-  if( cc.Get( IENOriginal.Get(i,0) ) == 0.5 )
+  if( cc.Get( IENOriginal.Get(i,0) ) == 0.5 &&
+      cc.Get( IENOriginal.Get(i,1) ) == 0.5 &&
+      cc.Get( IENOriginal.Get(i,2) ) == 0.5 )
    vtkFile << "3 " << IENOriginal.Get(i,0) << " "
 	               << IENOriginal.Get(i,1) << " "
 				   << IENOriginal.Get(i,2) << endl;

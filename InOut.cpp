@@ -1161,9 +1161,9 @@ void InOut::printInfo(const char* _mesh)
  cout << "               ";
  cout << "gas density:      " << rho_g << endl;
  cout << "               ";
- cout << "CFL number:      " << cfl << endl;
+ cout << "CFL number:       " << cfl << endl;
  cout << "               ";
- cout << "dt:              " << dt << endl;
+ cout << "dt:               " << dt << endl;
  cout << endl;
  cout << "              ";
  cout << "----------------------------------------------------" << endl; 

@@ -1173,7 +1173,7 @@ void Simulator3D::stepALEVel()
  setInterfaceVelNormal();
 
  setALEVelBC();
- for( int i=0;i<1;i++ )
+ for( int i=0;i<100;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1196,11 +1196,11 @@ void Simulator3D::stepALEVel()
 
  c1 = 0.0; 
  c2 = 1.0;
- c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
+ c3 = 1.0; 
 
- uALE = c1*uSol+c2*uSmooth;
- vALE = c1*vSol+c2*vSmooth;
- wALE = c1*wSol+c2*wSmooth;
+ uALE = c1*uSol+c2*uSmooth+c3*uSmoothCoord;
+ vALE = c1*vSol+c2*vSmooth+c3*vSmoothCoord;
+ wALE = c1*wSol+c2*wSmooth+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
  setInterfaceVelNormal();

@@ -861,9 +861,9 @@ void Model3D::mesh2Dto3D()
  //in.regionlist[0] = X.Min();
  //in.regionlist[1] = Y.Min();
  //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
+ in.regionlist[0] = 0.1;
+ in.regionlist[1] = 0.1;
+ in.regionlist[2] = 0.1;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -2106,9 +2106,9 @@ void Model3D::insertPointsByArea()
 void Model3D::mesh2Dto3DOriginal()
 {
  saveVTKSurface("./vtk/","before",0);
- insertPointsByLength();
+ //insertPointsByLength();
  saveVTKSurface("./vtk/","between",0);
- //removePointsByLength();
+ removePointsByLength();
  saveVTKSurface("./vtk/","flipBetween",0);
  //insertRemovePointsByLength();
  //flipTriangleEdge(0);
@@ -2150,9 +2150,9 @@ void Model3D::mesh2Dto3DOriginal()
  //in.regionlist[0] = X.Min();
  //in.regionlist[1] = Y.Min();
  //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.0;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 0.0;
+ in.regionlist[0] = 0.1;
+ in.regionlist[1] = 0.1;
+ in.regionlist[2] = 0.1;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 

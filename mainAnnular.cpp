@@ -32,8 +32,9 @@ int main(int argc, char **argv)
  real rho_l = 1000;
  real rho_g = 1.225;
 
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU); 
+ //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU); // MUMPS
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
@@ -205,8 +206,7 @@ int main(int argc, char **argv)
 
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
-	    << i*nReMesh+j+iter << endl << endl;
-   cout << resetColor();
+	    << resetColor() << i*nReMesh+j+iter << endl;
 
    //s1.stepLagrangian();
    //s1.stepALE();
@@ -233,8 +233,7 @@ int main(int argc, char **argv)
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
-	    << i*nReMesh+j+iter << endl << endl;;
-   cout << resetColor();
+	    << resetColor() << i*nReMesh+j+iter << endl;
   }
   mOld = m1; 
   //m1.mesh2Dto3DOriginal();

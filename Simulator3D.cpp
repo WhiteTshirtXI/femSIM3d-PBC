@@ -1769,13 +1769,6 @@ void Simulator3D::setCflDisk(real _cfl)
 void Simulator3D::setCflBubble(real _cfl)
 {
  cfl = _cfl;
-//--------------------------------------------------
-//  real dx = m->getDeltaXMin();
-//  real dy = m->getDeltaYMin();
-//  real dz = m->getDeltaZMin();
-// 
-//  dt = cfl*sqrt( dx*dy*dz/(2*PI*sigma) );
-//-------------------------------------------------- 
 
  real xMax = X->Max();
  real xMin = X->Min();
@@ -1783,7 +1776,7 @@ void Simulator3D::setCflBubble(real _cfl)
  real yMin = Y->Min();
  real zMax = Z->Max();
  real zMin = Z->Min();
- real L = ( (xMax-xMin)*(yMax-yMin)*(zMax-zMin) )/numNodes;
+ real L = ( (xMax-xMin)*(yMax-yMin)*(zMax-zMin) )/numVerts;
 
  dt = cfl*sqrt( 1.0*L*L*L/(3.141592*sigma) );
 }
@@ -2556,7 +2549,6 @@ real Simulator3D::getBubbleVelocity()
            vALE.Get(v3)+
 	 	   vALE.Get(v4) )*0.25;
 
-  // modificado
   velZ = ( wALE.Get(v1)+
            wALE.Get(v2)+
            wALE.Get(v3)+
@@ -2568,12 +2560,7 @@ real Simulator3D::getBubbleVelocity()
   sumVolume += m->getVolume(*it);
   count++;
  }
- //real bubbleXVel = sumXVelVolume/sumVolume;
- //real bubbleYVel = sumYVelVolume/sumVolume;
  real bubbleZVel = sumZVelVolume/sumVolume;
- //cout << "numero de elmentos = " << count << endl;
- //cout << "bubbleYVel = " << bubbleYVel << endl;
- //cout << "bubbleZVel = " << bubbleZVel << endl;
 
  return bubbleZVel;
 }
@@ -2586,16 +2573,20 @@ void Simulator3D::setALEVelBC()
  for (list<int>::iterator it=outVert->begin(); it!=outVert->end(); ++it)
  {
   int vertice = *it;
-  if( Z->Get(vertice) == Z->Max() || Z->Get(vertice) == Z->Min() )
-  {
-   wALE.Set(vertice,0.0);
-  }
-  else 
-  {
+//--------------------------------------------------
+//   if( (Y->Get(vertice) == Y->Max() || Y->Get(vertice) == Y->Min()) &&
+//        X->Get(vertice) < X->Max() && X->Get(vertice) > X->Min() &&
+//        Z->Get(vertice) < Z->Max() && Z->Get(vertice) > Z->Min() )
+//   {
+//    vALE.Set(vertice,0.0);
+//   }
+//   else 
+//   {
+//-------------------------------------------------- 
    uALE.Set(vertice,0.0);
    vALE.Set(vertice,0.0);
    wALE.Set(vertice,0.0);
-  }
+ // }
  }
 }
 

@@ -454,8 +454,10 @@ clVector Interface3D::computeKappa2()
    fy += yNormalUnit*e;
    fz += zNormalUnit*e;
 
-   if( Z->Get(surfaceNode) == Z->Max() || Z->Get(surfaceNode) == Z->Min() )
-	fz = 0;
+//--------------------------------------------------
+//    if( Y->Get(surfaceNode) == Y->Max() || Y->Get(surfaceNode) == Y->Min() )
+// 	fy = 0;
+//-------------------------------------------------- 
 
    sumArea += area/2.0;
    sumLength += c;

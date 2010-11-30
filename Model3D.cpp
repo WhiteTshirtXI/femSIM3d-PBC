@@ -1106,7 +1106,7 @@ void Model3D::setTriangleMinEdge()
  cout << "       ****************** " << endl;
  cout << endl;
 
- minEdge = 0.25;
+ minEdge = 0.11;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -1129,7 +1129,13 @@ void Model3D::insertPointsByLength()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 1.6*minEdge ) 
+  if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 1.5*minEdge )//&&
+	//--------------------------------------------------
+	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
+	//-------------------------------------------------- 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
@@ -1619,12 +1625,18 @@ void Model3D::flipTriangleEdge( int _edge )
   real q4 = 3.4641*inRadius4/h4;
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  if( cc.Get(v1)==0.5 && q1+q2 < q3+q4 && area1+area2>=area3+area4 )
+  if( cc.Get(v1)==0.5 && q1+q2 < q3+q4 && area1+area2>=area3+area4 ) //&&
+	//--------------------------------------------------
+	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
+	//-------------------------------------------------- 
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
    //cout << q1 << " " << q2 << " " << q3 << " " << q4 << endl;
-   cout << "------------- " << color(none,green,black) << "flipping edge: "
-	    << resetColor() << _edge << endl;
+   cout << "----------------- " << color(none,green,black) 
+	    << "flipping edge: " << resetColor() << _edge << endl;
    IENOriginal.Set(elem1,0,v1);
    IENOriginal.Set(elem1,1,v3elem1);
    IENOriginal.Set(elem1,2,v3elem2);
@@ -1920,9 +1932,7 @@ void Model3D::deletePoint(int _v)
 
 void Model3D::removePointsByLength()
 {
- //real test = 0.08;
- //real test = 0.05;
- real test = 0.4*minEdge; // 60% of minEdge
+ real test = 0.5*minEdge; // 50% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -1930,7 +1940,13 @@ void Model3D::removePointsByLength()
   int v2 = mapEdgeTri.Get(i,2);
 
   // verifying the length of each surface edge
-  if( cc.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test )
+  if( cc.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test ) //&&
+	//--------------------------------------------------
+	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
+	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
+	//-------------------------------------------------- 
   {
    // sum of all neighbour edge length of the 1st. point
    real sumLength1=0;
@@ -2261,16 +2277,16 @@ void Model3D::mesh3DPoints()
 {
  saveVTKSurface("./vtk/","before",0);
  // point insertion by neighbour averages
- //insertPointsByLength();
+ insertPointsByLength();
  removePointsByLength();
  //insertRemovePointsByLength();
  saveVTKSurface("./vtk/","between",0);
- //flipTriangleEdge(0);
+ flipTriangleEdge(0);
  saveVTKSurface("./vtk/","after",0);
  removePointsByInterfaceDistance();
 
  // cria objeto de malha do tetgen
- tetgenio in,out;
+ tetgenio in,mid,out;
  in.mesh_dim = 3;
  in.numberofpoints = numVerts;
  in.pointlist = new REAL[in.numberofpoints * 3];
@@ -2379,9 +2395,8 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  cout << "----> re-meshing 3D points... ";
- //tetrahedralize( (char*) "VYYCRApq1.4241q10a0.005",&in,&out );
- tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
- //tetrahedralize( (char*) "QYYCApq1.414q10a0.005",&in,&out );
+ tetrahedralize( (char*) "VYYRCAipq1.414q5a0.5",&in,&out );
+ //tetrahedralize( (char*) "VYYRCAipq1.414q5a1.5",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -2943,12 +2958,12 @@ void Model3D::setWallAnnularBC()
 {    
  for (list<int>::iterator it=outVert.begin(); it!=outVert.end(); ++it)
  {
-  if(Z.Get(*it) > Z.Min() || Z.Get(*it) < Z.Max() )
+  if(Y.Get(*it) > Y.Min() || Y.Get(*it) < Y.Max() )
   {
-   idbcw.AddItem(*it);
+   idbcv.AddItem(*it);
 
    real aux = 0.0;
-   wc.Set(*it,aux);
+   vc.Set(*it,aux);
   }
   else
   {
@@ -3909,22 +3924,6 @@ void Model3D::setSurface()
  }
 } // fecha metodo setSurface
 
-//--------------------------------------------------
-// void Model3D::setConvex()
-// {
-//  IENConvexTri.Dim(freeFace.DimI(),3);
-//  for(int i=0;i<freeFace.DimI();i++ )
-//  {
-//   int v1 = freeFace.Get(i,2);
-//   int v2 = freeFace.Get(i,3);
-//   int v3 = freeFace.Get(i,4);
-//   X.Get(v1);X.Get(v2);X.Get(v3);
-//   Y.Get(v1);Y.Get(v2);Y.Get(v3);
-//   Z.Get(v1);Z.Get(v2);Z.Get(v3);
-//  }
-// }
-//-------------------------------------------------- 
-
 // as faces da superficie sao numeradas de 0..n-1 onde n eh o numero de
 // faces na superficie. Para o caso 3D as faces sao triangulos. Junto a
 // esta numeracao ha um mapeamento dos vertices da superficie vizinhos de 
@@ -4067,7 +4066,7 @@ void Model3D::setSurfaceFace()
 //   cout << "---------" << surfaceNode << "------------" << endl;
 //   std::ostream_iterator< int > output( cout, " " );
 //   std::copy( elemSurface.at(surfaceNode).begin(), elemSurface.at(surfaceNode).end(), output );
-//   std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
+//   ///std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
 //   cout << endl;
 //-------------------------------------------------- 
   //
@@ -4165,9 +4164,77 @@ void Model3D::setSurfaceTri()
  delete[] edge;
 }
 
-void Model3D::setOutTri()
+/*
+ * este metodo organiza uma estrutura do tipo IEN ordenando a partir de
+ * um numero todos os outros vertices sem deixar 'buracos' na estrutura.
+ * Isso quer dizer que podemos recriar uma malha comecando a numeracao
+ * dos vertices a partir de um numero qualquer.
+ * Para isso eh necessario criar um vetor de listas do tipo setNeighbour()
+ * e entao fazer um mapeamento de cada vertice para o numero
+ * correspondente.
+ * !!!metodo ainda nao testado!!!
+ * */
+void Model3D::setConvexTri(clMatrix &_IENSent,int _nVerts,int _begin)
 {
- // implementar IENTri dos pontos do convex hull
+ int nElems = _IENSent.DimI();
+ int end = _IENSent.Max();
+ IENMod.Dim(nElems,3);
+ xMod.Dim(_nVerts);
+ yMod.Dim(_nVerts);
+ zMod.Dim(_nVerts);
+
+ // lista de elementos que contem o vertice indicado pela linha do array
+ vector< list<int> > test;  
+ test.resize (0);
+ test.resize (end+1);
+ for( int i=0;i<nElems;i++ )
+  for( int j= 0;j<3;j++ )
+   test.at( (int) _IENSent.Get(i,j) ).push_back(i);
+
+ int count = 0;
+ for( int i=0;i<end+1;i++ )
+ {
+  // este teste serve para pular todos os 'buracos' da triangulacao
+  if( test.at(i).size() > 0 ) 
+  {
+   //--------------------------------------------------
+   //    cout << count << " " << i << " ";
+   //    std::ostream_iterator< int > output( cout, " " );
+   //    std::copy( test.at(i).begin(),test.at(i).end(), output );
+   //    cout << endl;
+   //-------------------------------------------------- 
+
+   list<int>::iterator it;
+   for( it=test.at(i).begin();it!=test.at(i).end();++it )
+   {
+	int v1 = _IENSent.Get(*it,0);
+	int v2 = _IENSent.Get(*it,1);
+	int v3 = _IENSent.Get(*it,2);
+	if (v1 == i )
+	{
+	 IENMod.Set(*it,0,count+_begin);
+	 xMod.Set(count,X.Get(v1));
+	 yMod.Set(count,Y.Get(v1));
+	 zMod.Set(count,Z.Get(v1));
+	}
+	else if (v2 == i )
+	{
+	 IENMod.Set(*it,1,count+_begin);
+	 xMod.Set(count,X.Get(v2));
+	 yMod.Set(count,Y.Get(v2));
+	 zMod.Set(count,Z.Get(v2));
+	}
+	else 
+	{
+	 IENMod.Set(*it,2,count+_begin);
+	 xMod.Set(count,X.Get(v3));
+	 yMod.Set(count,Y.Get(v3));
+	 zMod.Set(count,Z.Get(v3));
+	}
+   }
+   count++;
+  }
+ }
 }
 
 // este metodo cria duas listas com os vertices do convex hull (outVert)
@@ -4210,6 +4277,12 @@ void Model3D::setInOutVert()
 //-------------------------------------------------- 
 }
 
+/*
+ * cc inside = 1.0  |  cc interface = 0.5 | cc outside = 0.0
+ * if sum of cc (element) > 2.0, the element is inside of bubble
+ * if sum of cc (element) < 2.0, the element is outside
+ * if sum of cc (element) = 2.0, by convention, the element is inside
+*/ 
 void Model3D::setInOutElem()
 {
  inElem.resize (0);
@@ -4220,8 +4293,7 @@ void Model3D::setInOutElem()
   int v2 = IEN.Get(i,1);
   int v3 = IEN.Get(i,2);
   int v4 = IEN.Get(i,3);
-  if( cc.Get(v1) < 0.5 || cc.Get(v2) < 0.5 || 
-	  cc.Get(v3) < 0.5 || cc.Get(v4) < 0.5 )
+  if( cc.Get(v1) + cc.Get(v2) + cc.Get(v3) + cc.Get(v4) < 2.0 )
    outElem.push_back(i);
   else
    inElem.push_back(i);
@@ -4704,6 +4776,24 @@ void Model3D::setSurfaceConfig()
  setTriEdge();
  setNeighbourSurface();
  setTriangleMinEdge();
+
+ int nVertsSurface = surface.Dim();
+ setConvexTri(IENTri,nVertsSurface,0);
+ xVert.Dim(0);
+ yVert.Dim(0);
+ zVert.Dim(0);
+ xVert.Append(xMod);
+ yVert.Append(yMod);
+ zVert.Append(zMod);
+ IEN2DMesh = IENMod;
+
+ int nVertsConvex = outVert.size();
+ setConvexTri(IENConvexTri,nVertsConvex,nVertsSurface);
+ xVert.Append(xMod);
+ yVert.Append(yMod);
+ zVert.Append(zMod);
+ IEN2DMesh.Append(IENMod);
+ saveVTKConvex("./vtk/","conv",0);
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -4711,30 +4801,7 @@ bool Model3D::testFace(int v1, int v2, int v3, int v4)
  real V,Ax1,Ax2,Ay1,Ay2,Az1,Az2;
  real prodEsc;
 
-  V = (-1.0/6.0) * (+1*( (X.Get(v2)*Y.Get(v3)*Z.Get(v4)) 
-	                  +(Y.Get(v2)*Z.Get(v3)*X.Get(v4)) 
-	                  +(Z.Get(v2)*X.Get(v3)*Y.Get(v4)) 
-	                  -(Y.Get(v2)*X.Get(v3)*Z.Get(v4)) 
-	                  -(X.Get(v2)*Z.Get(v3)*Y.Get(v4)) 
-	                  -(Z.Get(v2)*Y.Get(v3)*X.Get(v4)) )
-	      -X.Get(v1)*( +Y.Get(v3)*Z.Get(v4)
-		               +Y.Get(v2)*Z.Get(v3) 
-			           +Z.Get(v2)*Y.Get(v4)
-		               -Y.Get(v2)*Z.Get(v4)
-					   -Z.Get(v3)*Y.Get(v4) 
-					   -Z.Get(v2)*Y.Get(v3) )
-	      +Y.Get(v1)*( +X.Get(v3)*Z.Get(v4)
-					   +X.Get(v2)*Z.Get(v3)
-					   +Z.Get(v2)*X.Get(v4)
-		               -X.Get(v2)*Z.Get(v4)
-					   -Z.Get(v3)*X.Get(v4) 
-					   -Z.Get(v2)*X.Get(v3) )
-		  -Z.Get(v1)*( +X.Get(v3)*Y.Get(v4)
-			           +X.Get(v2)*Y.Get(v3) 
-					   +Y.Get(v2)*X.Get(v4)
-		               -X.Get(v2)*Y.Get(v4)
-				       -Y.Get(v3)*X.Get(v4) 
-					   -Y.Get(v2)*X.Get(v3) ) );
+ V = getVolume(v1,v2,v3,v4);
 
   if( fabs(V)<1e-10)
   {
@@ -4895,38 +4962,65 @@ real Model3D::getMinAbsWC()
  return r;
 }
 
+real Model3D::getVolume(int _v1,int _v2,int _v3,int _v4)
+{
+ return (-1.0/6.0) * (+1*( (X.Get(_v2)*Y.Get(_v3)*Z.Get(_v4)) 
+	                      +(Y.Get(_v2)*Z.Get(_v3)*X.Get(_v4)) 
+						  +(Z.Get(_v2)*X.Get(_v3)*Y.Get(_v4)) 
+						  -(Y.Get(_v2)*X.Get(_v3)*Z.Get(_v4)) 
+						  -(X.Get(_v2)*Z.Get(_v3)*Y.Get(_v4)) 
+						  -(Z.Get(_v2)*Y.Get(_v3)*X.Get(_v4)) )
+	         -X.Get(_v1)*( +Y.Get(_v3)*Z.Get(_v4)
+		                   +Y.Get(_v2)*Z.Get(_v3) 
+						   +Z.Get(_v2)*Y.Get(_v4)
+						   -Y.Get(_v2)*Z.Get(_v4)
+						   -Z.Get(_v3)*Y.Get(_v4) 
+						   -Z.Get(_v2)*Y.Get(_v3) )
+		     +Y.Get(_v1)*( +X.Get(_v3)*Z.Get(_v4)
+	            	       +X.Get(_v2)*Z.Get(_v3)
+						   +Z.Get(_v2)*X.Get(_v4)
+						   -X.Get(_v2)*Z.Get(_v4)
+						   -Z.Get(_v3)*X.Get(_v4) 
+						   -Z.Get(_v2)*X.Get(_v3) )
+		     -Z.Get(_v1)*( +X.Get(_v3)*Y.Get(_v4)
+		                   +X.Get(_v2)*Y.Get(_v3) 
+						   +Y.Get(_v2)*X.Get(_v4)
+						   -X.Get(_v2)*Y.Get(_v4)
+						   -Y.Get(_v3)*X.Get(_v4) 
+						   -Y.Get(_v2)*X.Get(_v3) ) );
+}
+
 real Model3D::getVolume(int _elem)
 {
- int v1=(int)IEN.Get(_elem,0);
- int v2=(int)IEN.Get(_elem,1);
- int v3=(int)IEN.Get(_elem,2);
- int v4=(int)IEN.Get(_elem,3);
+ int v1 = (int)IEN.Get(_elem,0);
+ int v2 = (int)IEN.Get(_elem,1);
+ int v3 = (int)IEN.Get(_elem,2);
+ int v4 = (int)IEN.Get(_elem,3);
 
- real volume = (-1.0/6.0) * (+1*( (X.Get(v2)*Y.Get(v3)*Z.Get(v4)) 
-	                             +(Y.Get(v2)*Z.Get(v3)*X.Get(v4)) 
-								 +(Z.Get(v2)*X.Get(v3)*Y.Get(v4)) 
-								 -(Y.Get(v2)*X.Get(v3)*Z.Get(v4)) 
-								 -(X.Get(v2)*Z.Get(v3)*Y.Get(v4)) 
-								 -(Z.Get(v2)*Y.Get(v3)*X.Get(v4)) )
-	                 -X.Get(v1)*( +Y.Get(v3)*Z.Get(v4)
-		                          +Y.Get(v2)*Z.Get(v3) 
-								  +Z.Get(v2)*Y.Get(v4)
-								  -Y.Get(v2)*Z.Get(v4)
-								  -Z.Get(v3)*Y.Get(v4) 
-								  -Z.Get(v2)*Y.Get(v3) )
-					 +Y.Get(v1)*( +X.Get(v3)*Z.Get(v4)
-	            			      +X.Get(v2)*Z.Get(v3)
-								  +Z.Get(v2)*X.Get(v4)
-								  -X.Get(v2)*Z.Get(v4)
-								  -Z.Get(v3)*X.Get(v4) 
-								  -Z.Get(v2)*X.Get(v3) )
-					 -Z.Get(v1)*( +X.Get(v3)*Y.Get(v4)
-		      	                  +X.Get(v2)*Y.Get(v3) 
-								  +Y.Get(v2)*X.Get(v4)
-								  -X.Get(v2)*Y.Get(v4)
-								  -Y.Get(v3)*X.Get(v4) 
-								  -Y.Get(v2)*X.Get(v3) ) );
- return volume;
+ return (-1.0/6.0) * (+1*( (X.Get(v2)*Y.Get(v3)*Z.Get(v4)) 
+	                      +(Y.Get(v2)*Z.Get(v3)*X.Get(v4)) 
+						  +(Z.Get(v2)*X.Get(v3)*Y.Get(v4)) 
+						  -(Y.Get(v2)*X.Get(v3)*Z.Get(v4)) 
+						  -(X.Get(v2)*Z.Get(v3)*Y.Get(v4)) 
+						  -(Z.Get(v2)*Y.Get(v3)*X.Get(v4)) )
+	          -X.Get(v1)*( +Y.Get(v3)*Z.Get(v4)
+		                   +Y.Get(v2)*Z.Get(v3) 
+						   +Z.Get(v2)*Y.Get(v4)
+						   -Y.Get(v2)*Z.Get(v4)
+						   -Z.Get(v3)*Y.Get(v4) 
+						   -Z.Get(v2)*Y.Get(v3) )
+	    	  +Y.Get(v1)*( +X.Get(v3)*Z.Get(v4)
+	         	   	       +X.Get(v2)*Z.Get(v3)
+						   +Z.Get(v2)*X.Get(v4)
+						   -X.Get(v2)*Z.Get(v4)
+						   -Z.Get(v3)*X.Get(v4) 
+						   -Z.Get(v2)*X.Get(v3) )
+			 -Z.Get(v1)*( +X.Get(v3)*Y.Get(v4)
+		                   +X.Get(v2)*Y.Get(v3) 
+						   +Y.Get(v2)*X.Get(v4)
+						   -X.Get(v2)*Y.Get(v4)
+						   -Y.Get(v3)*X.Get(v4) 
+						   -Y.Get(v2)*X.Get(v3) ) );
 }
 
 real Model3D::getArea(int _v1,int _v2,int _v3)
@@ -4944,9 +5038,7 @@ real Model3D::getArea(int _v1,int _v2,int _v3)
  real crossY = -( (x1*z2)-(z1*x2) );
  real crossZ = (x1*y2)-(y1*x2);
 
- real area = 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
-
- return area;
+ return 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
 }
 
 real Model3D::getArea(int _elem)
@@ -4969,9 +5061,7 @@ real Model3D::getArea(int _elem)
  real crossY = -( (x1*z2)-(z1*x2) );
  real crossZ = (x1*y2)-(y1*x2);
 
- real area = 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
-
- return area;
+ return 0.5*sqrt( crossX*crossX+crossY*crossY+crossZ*crossZ );
 }
 
 real Model3D::getLength(int _v1,int _v2)
@@ -5007,9 +5097,7 @@ real Model3D::getAreaHeron(int _elem)
 
  real s = (a+b+c)/2.0;
 
- real area = sqrt( s*(s-a)*(s-b)*(s-c) );
-
- return area;
+ return sqrt( s*(s-a)*(s-b)*(s-c) );
 }
 
 void Model3D::clearBC()
@@ -5212,6 +5300,53 @@ void Model3D::operator=(Model3D &_mRight)
   inVert = _mRight.inVert;
   outElem = _mRight.outElem;
   inElem = _mRight.inElem;
+}
+
+void Model3D::saveVTKConvex( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename );
+
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "3D Simulation C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << endl;
+
+
+ vtkFile << "POINTS " << xVert.Dim() << " double" << endl;
+ for( int i=0;i<xVert.Dim();i++ )
+  vtkFile << xVert.Get(i) << " " 
+          << yVert.Get(i) << " " 
+		  << zVert.Get(i) << endl;
+
+ vtkFile << endl;
+
+ int numTri = IEN2DMesh.DimI();
+
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
+ for( int i=0;i<numTri;i++ )
+ {
+   vtkFile << "3 " << IEN2DMesh.Get(i,0) << " "
+	               << IEN2DMesh.Get(i,1) << " "
+				   << IEN2DMesh.Get(i,2) << endl;
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "5 ";
+
+ vtkFile << endl;
+
+ vtkFile.close();
 }
 
 void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter )

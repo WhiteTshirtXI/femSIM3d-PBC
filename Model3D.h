@@ -55,12 +55,13 @@ class Model3D
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void setTriEdge();
+  void setTriEdge2();
 
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
   void setSurfaceTri();
-  void setOutTri();
+  void setConvexTri(clMatrix &_IENSent,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
   void setTriangleMinEdge();
@@ -168,6 +169,7 @@ class Model3D
   int getNumGLEU();
   int getNumGLEP();
   int getNumGLEC();
+  real getVolume(int _v1,int _v2,int _v3,int _v4);
   real getVolume(int _elem);
   real getArea(int _v1,int _v2,int _v3);
   real getArea(int _elem);
@@ -199,8 +201,9 @@ class Model3D
 
  private:
   clVector uc,vc,wc,pc,cc;
-  clMatrix IEN,IENTri,IENConvexTri;
-  clVector X,Y,Z;
+  clMatrix IEN,IENTri,IENConvexTri,IENMod,IEN2DMesh;
+  clVector X,Y,Z,xMod,yMod,zMod,xVert,yVert,zVert;
+  clVector xConvex,yConvex,zConvex;
   clVector outflow,idbcu,idbcv,idbcw,idbcp,idbcc;
   clMatrix faceFace,freeFace,mapViz;
   clMatrix oFace;
@@ -238,6 +241,7 @@ class Model3D
   list<int> outVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
 
+  void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
 };
 

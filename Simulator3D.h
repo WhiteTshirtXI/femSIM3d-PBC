@@ -158,11 +158,10 @@ class Simulator3D
   real getBubbleVelocity();
   void setALEVelBC();
 
-  Solver *solverV,*solverP,*solverC;
-
-  clVector cSol;
  private:
   Model3D *m;
+  Solver *solverV,*solverP,*solverC;
+
   int numVerts,numElems,numNodes;
   int numGLEU,numGLEP,numGLEC;
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
@@ -175,12 +174,11 @@ class Simulator3D
   clVector *outflow,*surface;
   clMatrix *IEN;
 
-  clMatrix K,Kc,M,M_no,Mc,G,D;
+  clMatrix K,Kc,Mrho,M,Mc,G,D;
   clMatrix mat,matc;
 
-  clDMatrix MLumped,McLumped;
-  clVector velU,velV,velW,uSol,vSol,wSol,pSol;
-  //clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
+  clDMatrix MrhoLumped,McLumped;
+  clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
   clVector uSL,vSL,wSL,cSL;
   clVector uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
@@ -199,8 +197,8 @@ class Simulator3D
   clVector b;
   
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
-  clDMatrix invA,invC,invMLumped,invMcLumped;
-  clDMatrix MLumped_no,invMLumped_no;
+  clDMatrix invA,invC,invMrhoLumped,invMcLumped;
+  clDMatrix MLumped,invMLumped;
   clVector uTilde,cTilde,pTilde,b1,b1c,b2,ip,ipc;
  
   clVector distance;

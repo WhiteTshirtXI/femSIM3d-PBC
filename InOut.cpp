@@ -1786,7 +1786,6 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- SemiLagrangean semi(*m);
 
  // xVert da malha nova
  real nPoints = 100;
@@ -1802,12 +1801,10 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
  yVert.SetAll(1.5);
  zVert.SetAll(1.5);
 
- semi.meshInterp(xVert,yVert,zVert);
- clVector pLin(nPoints);
-
  // interpolacao linear em numVerts
- clMatrix* interpLin = semi.getInterpLin();
- pLin = *interpLin*(*pSol);
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
+ clVector pLin(nPoints);
+ pLin = interpLin*(*pSol);
 
  for( int i=0;i<nPoints;i++ )
   vtkFile << setw(10) << xVert.Get(i) << " " << pLin.Get(i) << endl;
@@ -1831,8 +1828,6 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
 
  ofstream pFile( filename ); 
 
- SemiLagrangean semi(*m);
-
  // xVert da malha nova
  real nPoints = 100;
  clVector xVert(nPoints*nPoints);
@@ -1853,12 +1848,10 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
  }
  zVert.SetAll(1.5);
 
- semi.meshInterp(xVert,yVert,zVert);
- clVector pLin(nPoints);
-
  // interpolacao linear em numVerts
- clMatrix* interpLin = semi.getInterpLin();
- pLin = *interpLin*(*pSol);
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
+ clVector pLin(nPoints);
+ pLin = interpLin*(*pSol);
 
  for( int i=0;i<nPoints*nPoints;i++ )
   pFile << setw(10) << xVert.Get(i) << " " 
@@ -1896,8 +1889,8 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  real xf = X->Max();
  real yi = Y->Min();
  real yf = Y->Max();
- real zi = (Z->Max()-Z->Min())/2.0;
- //real zf = (Z->Max()-Z->Min())/2.0;
+ //real zi = (Z->Max()-Z->Min())/2.0;
+ real zi = 1.5;
  int count = 0;
  for( int i=0;i<nX;i++ )
  {
@@ -1912,16 +1905,13 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  }
  zVert.SetAll(zi);
 
- Interp3D semi(*m);
-
  // linear interpolation on nTotal
- semi.meshInterp(xVert,yVert,zVert);
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
  clVector cLin(nTotal);
- clMatrix* interpLin = semi.getInterpLin();
- cLin = *interpLin*(*cc);
+ cLin = interpLin*(*cc);
 
  clVector test(nTotal);test.SetAll(1.0);
- clVector cLin2 = *interpLin*(test);
+ clVector cLin2 = interpLin*(test);
 
  // verificando quais os pontos estao dentro do dominio computacinal
  // os que nao estiverem dentro serao marcados por -1

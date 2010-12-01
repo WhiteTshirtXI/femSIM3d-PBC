@@ -145,8 +145,8 @@ void Simulator3D::assemble()
  clMatrix Kzx( numNodes,numNodes );
  clMatrix Kzy( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Mx( numNodes,numNodes );
- clMatrix Mx_no( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -190,11 +190,11 @@ void Simulator3D::assemble()
 									   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux); // matriz de massa
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux); // matriz de massa
 
-	aux = Mx_no.Get(ii,jj) + miniElem.massele[i][j];
-	Mx_no.Set(ii,jj,aux); // matriz de massa sem rho
+	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
+	Mx.Set(ii,jj,aux); // matriz de massa sem rho
 
 	// bloco 12
 	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
@@ -256,33 +256,33 @@ void Simulator3D::assemble()
  // gx = Gx;
  // gy = Gy;
  // gz = Gz;
- M.CopyFrom(          0,          0,              Mx );
- M.CopyFrom(   numNodes,   numNodes,              Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
+ Mrho.CopyFrom(          0,          0,  Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes,  Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rho );
 
- M_no.CopyFrom(          0,          0,        Mx_no );
- M_no.CopyFrom(   numNodes,   numNodes,        Mx_no );
- M_no.CopyFrom( 2*numNodes, 2*numNodes,        Mx_no );
+ M.CopyFrom(          0,          0,     Mx );
+ M.CopyFrom(   numNodes,   numNodes,     Mx );
+ M.CopyFrom( 2*numNodes, 2*numNodes,     Mx );
 
- K.CopyFrom(          0,          0,             Kxx );
- K.CopyFrom(          0,   numNodes,             Kxy );
- K.CopyFrom(          0, 2*numNodes,             Kxz );
- K.CopyFrom(   numNodes,          0, Kxy.Transpose() );
- K.CopyFrom(   numNodes,   numNodes,             Kyy );
- K.CopyFrom(   numNodes, 2*numNodes,             Kyz );
- K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
- K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
- K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
+ K.CopyFrom(          0,          0,     Kxx );
+ K.CopyFrom(          0,   numNodes,     Kxy );
+ K.CopyFrom(          0, 2*numNodes,     Kxz );
+ K.CopyFrom(   numNodes,          0,     Kxy.Transpose() );
+ K.CopyFrom(   numNodes,   numNodes,     Kyy );
+ K.CopyFrom(   numNodes, 2*numNodes,     Kyz );
+ K.CopyFrom( 2*numNodes,          0,     Kxz.Transpose() );
+ K.CopyFrom( 2*numNodes,   numNodes,     Kyz.Transpose() );
+ K.CopyFrom( 2*numNodes, 2*numNodes,     Kzz );
 
- G.CopyFrom(          0,          0,              Gx );
- G.CopyFrom(   numNodes,          0,              Gy );
- G.CopyFrom( 2*numNodes,          0,              Gz );
- D.CopyFrom(          0,          0,  Gx.Transpose() );
- D.CopyFrom(          0,   numNodes,  Gy.Transpose() );
- D.CopyFrom(          0, 2*numNodes,  Gz.Transpose() );
+ G.CopyFrom(          0,          0,     Gx );
+ G.CopyFrom(   numNodes,          0,     Gy );
+ G.CopyFrom( 2*numNodes,          0,     Gz );
+ D.CopyFrom(          0,          0,     Gx.Transpose() );
+ D.CopyFrom(          0,   numNodes,     Gy.Transpose() );
+ D.CopyFrom(          0, 2*numNodes,     Gz.Transpose() );
 
- Kc.CopyFrom(         0,          0,           KcMat );
- Mc.CopyFrom(         0,          0,           McMat );
+ Kc.CopyFrom(         0,          0,     KcMat );
+ Mc.CopyFrom(         0,          0,     McMat );
  
 } // fecha metodo ASSEMBLE
 
@@ -325,8 +325,8 @@ void Simulator3D::assembleC()
   }
  }
  
- Kc.CopyFrom(         0,          0,           KcMat );
- Mc.CopyFrom(         0,          0,           McMat );
+ Kc.CopyFrom( 0, 0, KcMat );
+ Mc.CopyFrom( 0, 0, McMat );
  
 } // fecha metodo ASSEMBLEC
 
@@ -336,7 +336,7 @@ void Simulator3D::assembleNuCte()
  int v1,v2,v3,v4,v5,v[5];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
- clMatrix Mx( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -354,6 +354,8 @@ void Simulator3D::assembleNuCte()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
+  real nuValue = 1.0;
+  real rhoValue = 1.0;
 
   //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
@@ -366,13 +368,13 @@ void Simulator3D::assembleNuCte()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + ( miniElem.kxx[i][j] + 
-	                         miniElem.kyy[i][j] + 
-							 miniElem.kzz[i][j] ); 
+	aux = Kxx.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	                                 miniElem.kyy[i][j] + 
+							         miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux); // matriz de massa
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux); // matriz de massa
    };
 
    for( j=0;j<numGLEP;j++ )
@@ -410,20 +412,20 @@ void Simulator3D::assembleNuCte()
   }
  }
  
- M.CopyFrom(          0,          0,              Mx );
- M.CopyFrom(   numNodes,   numNodes,              Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
+ Mrho.CopyFrom(          0,          0, Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
 
- K.CopyFrom(          0,          0,             Kxx );
- K.CopyFrom(   numNodes,   numNodes,             Kxx );
- K.CopyFrom( 2*numNodes, 2*numNodes,             Kxx );
+ K.CopyFrom(          0,          0,    Kxx );
+ K.CopyFrom(   numNodes,   numNodes,    Kxx );
+ K.CopyFrom( 2*numNodes, 2*numNodes,    Kxx );
 
- G.CopyFrom(          0,          0,              Gx );
- G.CopyFrom(   numNodes,          0,              Gy );
- G.CopyFrom( 2*numNodes,          0,              Gz );
- D.CopyFrom(          0,          0,              Dx );
- D.CopyFrom(          0,   numNodes,              Dy );
- D.CopyFrom(          0, 2*numNodes,              Dz );
+ G.CopyFrom(          0,          0,    Gx );
+ G.CopyFrom(   numNodes,          0,    Gy );
+ G.CopyFrom( 2*numNodes,          0,    Gz );
+ D.CopyFrom(          0,          0,    Dx );
+ D.CopyFrom(          0,   numNodes,    Dy );
+ D.CopyFrom(          0, 2*numNodes,    Dz );
 //--------------------------------------------------
 //  D.CopyFrom(          0,          0,  Gx.Transpose() );
 //  D.CopyFrom(          0,   numNodes,  Gy.Transpose() );
@@ -443,7 +445,7 @@ void Simulator3D::assembleNuC()
  clMatrix Kyy( numNodes,numNodes );
  clMatrix Kyz( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
- clMatrix Mx( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -471,6 +473,7 @@ void Simulator3D::assembleNuC()
   real eme = 0.81315;
   real nuC = exp(eme*c);
   real dif = 1.0/nuC;
+  real rhoValue = 1.0;
 
   // saving nu in vector
   nu.Set(v1,nuC);
@@ -494,8 +497,8 @@ void Simulator3D::assembleNuC()
 								   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux); // matriz de massa
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux); // matriz de massa
 
 	// bloco 12
 	aux = Kxy.Get(ii,jj) + nuC*( miniElem.kxy[i][j] ); 
@@ -577,26 +580,30 @@ void Simulator3D::assembleNuC()
  // gx = Gx;
  // gy = Gy;
  // gz = Gz;
- M.CopyFrom(          0,          0,              Mx );
- M.CopyFrom(   numNodes,   numNodes,              Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
- K.CopyFrom(          0,          0,             Kxx );
- K.CopyFrom(          0,   numNodes,             Kxy );
- K.CopyFrom(          0, 2*numNodes,             Kxz );
- K.CopyFrom(   numNodes,          0, Kxy.Transpose() );
- K.CopyFrom(   numNodes,   numNodes,             Kyy );
- K.CopyFrom(   numNodes, 2*numNodes,             Kyz );
- K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
- K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
- K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
- G.CopyFrom(          0,          0,              Gx );
- G.CopyFrom(   numNodes,          0,              Gy );
- G.CopyFrom( 2*numNodes,          0,              Gz );
- D.CopyFrom(          0,          0,              Dx );
- D.CopyFrom(          0,   numNodes,              Dy );
- D.CopyFrom(          0, 2*numNodes,              Dz );
- Kc.CopyFrom(         0,          0,           KcMat );
- Mc.CopyFrom(         0,          0,           McMat );
+ 
+ Mrho.CopyFrom(          0,          0,  Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes,  Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rho );
+
+ K.CopyFrom(          0,          0,     Kxx );
+ K.CopyFrom(          0,   numNodes,     Kxy );
+ K.CopyFrom(          0, 2*numNodes,     Kxz );
+ K.CopyFrom(   numNodes,          0,     Kxy.Transpose() );
+ K.CopyFrom(   numNodes,   numNodes,     Kyy );
+ K.CopyFrom(   numNodes, 2*numNodes,     Kyz );
+ K.CopyFrom( 2*numNodes,          0,     Kxz.Transpose() );
+ K.CopyFrom( 2*numNodes,   numNodes,     Kyz.Transpose() );
+ K.CopyFrom( 2*numNodes, 2*numNodes,     Kzz );
+
+ G.CopyFrom(          0,          0,     Gx );
+ G.CopyFrom(   numNodes,          0,     Gy );
+ G.CopyFrom( 2*numNodes,          0,     Gz );
+ D.CopyFrom(          0,          0,     Dx );
+ D.CopyFrom(          0,   numNodes,     Dy );
+ D.CopyFrom(          0, 2*numNodes,     Dz );
+
+ Kc.CopyFrom(         0,          0,     KcMat );
+ Mc.CopyFrom(         0,          0,     McMat );
  
 }; // fecha metodo ASSEMBLENUC
 
@@ -611,8 +618,8 @@ void Simulator3D::assembleSlip()
  clMatrix Kyy( numNodes,numNodes );
  clMatrix Kyz( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Mx( numNodes,numNodes );
- clMatrix Mx_no( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -661,11 +668,11 @@ void Simulator3D::assembleSlip()
 								   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux); // matriz de massa
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux); // matriz de massa
 
-	aux = Mx_no.Get(ii,jj) + miniElem.massele[i][j];
-	Mx_no.Set(ii,jj,aux); // matriz de massa sem rho
+	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
+	Mx.Set(ii,jj,aux); // matriz de massa sem rho
 
 	// bloco 12
 	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
@@ -747,34 +754,35 @@ void Simulator3D::assembleSlip()
  // gx = Gx;
  // gy = Gy;
  // gz = Gz;
- M.CopyFrom(          0,          0,              Mx );
- M.CopyFrom(   numNodes,   numNodes,              Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,              Mx );
 
- M_no.CopyFrom(          0,          0,        Mx_no );
- M_no.CopyFrom(   numNodes,   numNodes,        Mx_no );
- M_no.CopyFrom( 2*numNodes, 2*numNodes,        Mx_no );
+ Mrho.CopyFrom(          0,          0, Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
 
- K.CopyFrom(          0,          0,             Kxx );
- K.CopyFrom(          0,   numNodes,             Kxy );
- K.CopyFrom(          0, 2*numNodes,             Kxz );
- K.CopyFrom(   numNodes,          0, Kxy.Transpose() );
- K.CopyFrom(   numNodes,   numNodes,             Kyy );
- K.CopyFrom(   numNodes, 2*numNodes,             Kyz );
- K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
- K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
- K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
+ M.CopyFrom(          0,          0,    Mx );
+ M.CopyFrom(   numNodes,   numNodes,    Mx );
+ M.CopyFrom( 2*numNodes, 2*numNodes,    Mx );
 
- G.CopyFrom(          0,          0,              Gx );
- G.CopyFrom(   numNodes,          0,              Gy );
- G.CopyFrom( 2*numNodes,          0,              Gz );
+ K.CopyFrom(          0,          0,    Kxx );
+ K.CopyFrom(          0,   numNodes,    Kxy );
+ K.CopyFrom(          0, 2*numNodes,    Kxz );
+ K.CopyFrom(   numNodes,          0,    Kxy.Transpose() );
+ K.CopyFrom(   numNodes,   numNodes,    Kyy );
+ K.CopyFrom(   numNodes, 2*numNodes,    Kyz );
+ K.CopyFrom( 2*numNodes,          0,    Kxz.Transpose() );
+ K.CopyFrom( 2*numNodes,   numNodes,    Kyz.Transpose() );
+ K.CopyFrom( 2*numNodes, 2*numNodes,    Kzz );
 
- D.CopyFrom(          0,          0,              Dx );
- D.CopyFrom(          0,   numNodes,              Dy );
- D.CopyFrom(          0, 2*numNodes,              Dz );
+ G.CopyFrom(          0,          0,    Gx );
+ G.CopyFrom(   numNodes,          0,    Gy );
+ G.CopyFrom( 2*numNodes,          0,    Gz );
 
- Kc.CopyFrom(         0,          0,           KcMat );
- Mc.CopyFrom(         0,          0,           McMat );
+ D.CopyFrom(          0,          0,    Dx );
+ D.CopyFrom(          0,   numNodes,    Dy );
+ D.CopyFrom(          0, 2*numNodes,    Dz );
+
+ Kc.CopyFrom(         0,          0,    KcMat );
+ Mc.CopyFrom(         0,          0,    McMat );
  
 }; // fecha metodo ASSEMBLESLIP
 
@@ -789,7 +797,7 @@ void Simulator3D::assembleNuZ()
  clMatrix Kyy( numNodes,numNodes );
  clMatrix Kyz( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
- clMatrix Mx( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
@@ -808,8 +816,10 @@ void Simulator3D::assembleNuZ()
   v[2]= v3 = (int) IEN->Get(mele,2);
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
-  real nuVar = nu.Get(v5);
   //cout << (float) mele/numElems << endl;
+  //
+  real nuValue = nu.Get(v5);
+  real rhoValue = 1.0;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5); 
 
@@ -821,36 +831,36 @@ void Simulator3D::assembleNuZ()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuVar*( 2*miniElem.kxx[i][j] + 
-	                                 miniElem.kyy[i][j] + 
-									 miniElem.kzz[i][j] ); 
+	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
+	                                   miniElem.kyy[i][j] + 
+								       miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux);
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux);
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuVar*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuVar*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuVar*( miniElem.kxx[i][j] + 
-	                             2*miniElem.kyy[i][j] + 
-								   miniElem.kzz[i][j] ); 
+	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	                               2*miniElem.kyy[i][j] + 
+								     miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuVar*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuVar*( miniElem.kxx[i][j] + 
-	                               miniElem.kyy[i][j] + 
-								 2*miniElem.kzz[i][j] ); 
+	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	                                 miniElem.kyy[i][j] + 
+								   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
 
    };
@@ -891,24 +901,27 @@ void Simulator3D::assembleNuZ()
  gx = Gx;
  gy = Gy;
  gz = Gz;
- M.CopyFrom(          0,          0,             Mx );
- M.CopyFrom(   numNodes,   numNodes,             Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,             Mx );
- K.CopyFrom(          0,          0,             Kxx );
- K.CopyFrom(          0,   numNodes,             Kxy );
- K.CopyFrom(          0, 2*numNodes,             Kxz );
- K.CopyFrom(   numNodes,          0, Kxy.Transpose() );
- K.CopyFrom(   numNodes,   numNodes,             Kyy );
- K.CopyFrom(   numNodes, 2*numNodes,             Kyz );
- K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
- K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
- K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
- G.CopyFrom(          0,          0,             Gx );
- G.CopyFrom(   numNodes,          0,             Gy );
- G.CopyFrom( 2*numNodes,          0,             Gz );
- D.CopyFrom(          0,          0,             Dx );
- D.CopyFrom(          0,   numNodes,             Dy );
- D.CopyFrom(          0, 2*numNodes,             Dz );
+
+ Mrho.CopyFrom(          0,          0, Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
+
+ K.CopyFrom(          0,          0,    Kxx );
+ K.CopyFrom(          0,   numNodes,    Kxy );
+ K.CopyFrom(          0, 2*numNodes,    Kxz );
+ K.CopyFrom(   numNodes,          0,    Kxy.Transpose() );
+ K.CopyFrom(   numNodes,   numNodes,    Kyy );
+ K.CopyFrom(   numNodes, 2*numNodes,    Kyz );
+ K.CopyFrom( 2*numNodes,          0,    Kxz.Transpose() );
+ K.CopyFrom( 2*numNodes,   numNodes,    Kyz.Transpose() );
+ K.CopyFrom( 2*numNodes, 2*numNodes,    Kzz );
+
+ G.CopyFrom(          0,          0,    Gx );
+ G.CopyFrom(   numNodes,          0,    Gy );
+ G.CopyFrom( 2*numNodes,          0,    Gz );
+ D.CopyFrom(          0,          0,    Dx );
+ D.CopyFrom(          0,   numNodes,    Dy );
+ D.CopyFrom(          0, 2*numNodes,    Dz );
  
 }; // fecha metodo ASSEMBLENUZ
 
@@ -1009,6 +1022,7 @@ void Simulator3D::assembleK()
  K.CopyFrom( 2*numNodes,          0, Kxz.Transpose() );
  K.CopyFrom( 2*numNodes,   numNodes, Kyz.Transpose() );
  K.CopyFrom( 2*numNodes, 2*numNodes,             Kzz );
+
  Kc.CopyFrom(         0,          0,           KcMat );
  
 }; // fecha metodo ASSEMBLEK
@@ -1064,10 +1078,10 @@ void Simulator3D::step()
  uAnt.CopyTo(0,uvwSol);
 
  // sem correcao na pressao
- va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
+ va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
  
  // com correcao na pressao
- //va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * uvwSol - (G*pSol);
+ //va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * uvwSol - (G*pSol);
 
  // ainda nao funcionando
  //vcc = ( (1.0/dt) * Mc + (1-alpha) * -(1.0/(Re*Sc)) * Kc ) * cSol;
@@ -1367,10 +1381,10 @@ void Simulator3D::setInterfaceVelNormal()
 void Simulator3D::setRHS()
 {
  // sem correcao na pressao
- va = ( (1.0/dt) * M + (1-alpha) * -(1.0/Re) * K ) * convUVW;
+ va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 
  // com correcao na pressao
- //va = ( (1.0/dt) * M - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
+ //va = ( (1.0/dt) * Mrho - (1-alpha) * (1.0/Re) * K ) * convUVW - (G*pSol);
 }
 
 void Simulator3D::setCRHS()
@@ -1383,16 +1397,17 @@ void Simulator3D::setCRHS()
 void Simulator3D::setGravity()
 {
  real rhoAdimen_l = 1.0;
- real g = 1.0;
- clVector uvwOne(2*numNodes);
- uvwOne.SetAll(0.0);
- clVector wOne(numNodes);
- wOne.SetAll(-1.0);
- uvwOne.Append(wOne);
 
- //va = va + M * ( (1.0/(Fr*Fr)) * uvwOne );
- //va = va + ( 1.0/(Fr*Fr) * uvwOne ) * ( (rho_l * g * M) - (M_no * g) )  ;
- va = va + ( (g * (rhoAdimen_l * M) ) - (g * M_no) )*( 1.0/(Fr*Fr) * uvwOne );
+ clVector gx(numNodes);gx.SetAll(0.0);
+ clVector gy(numNodes);gy.SetAll(0.0);
+ clVector gz(numNodes);gz.SetAll(1.0);
+
+ clVector g(0);
+ g.Append(gx);
+ g.Append(gy);
+ g.Append(gz);
+
+ va = va + ( 1.0/(Fr*Fr) )*( (rhoAdimen_l*M - Mrho)*g );
 }
 
 void Simulator3D::setGravityBoussinesq()
@@ -1402,7 +1417,7 @@ void Simulator3D::setGravityBoussinesq()
  forceC.Append(convC); 
  forceC.Append(zeroAux);
 
- va = va - beta*( M*forceC );
+ va = va - beta*( Mrho*forceC );
 }
 
 void Simulator3D::setInterface()
@@ -1445,20 +1460,20 @@ void Simulator3D::setInterfaceGeo()
 
 void Simulator3D::matMount()
 {
- mat = ( (1.0/dt) * M) + (alpha * (1.0/Re) * K );
+ mat = ( (1.0/dt) * Mrho) + (alpha * (1.0/Re) * K );
+
+ for( int i = 0; i < 3*numNodes; i++ )
+  MrhoLumped.Set(i, Mrho.SumLine(i));
 
  for( int i = 0; i < 3*numNodes; i++ )
   MLumped.Set(i, M.SumLine(i));
 
  for( int i = 0; i < 3*numNodes; i++ )
-  MLumped_no.Set(i, M_no.SumLine(i));
-
- for( int i = 0; i < 3*numNodes; i++ )
   invA.Set(i, mat.SumLine(i));
 
  invA = invA.Inverse();
+ invMrhoLumped = MrhoLumped.Inverse();
  invMLumped = MLumped.Inverse();
- invMLumped_no = MLumped_no.Inverse();
 }
 
 void Simulator3D::matMountC()
@@ -1521,7 +1536,7 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- uvw = uTilde + dt*invMLumped_no*fint;
+ uvw = uTilde + dt*invMLumped*fint;
  //uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
@@ -1533,7 +1548,7 @@ void Simulator3D::unCoupled()
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
  cout << " ------------------------------------ " << endl;
  
- //uvw = uTilde - dt*(invMLumped * GTilde * pTilde);
+ //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
  uvw = uvw - (invA * GTilde * pTilde);
 
  uvw.CopyTo(         0,uSol);
@@ -1708,7 +1723,7 @@ void Simulator3D::setUnCoupledBC()
  cout << " boundary condition P --> SET " << endl;
 
  ETilde = E - ((DTilde * invA) * GTilde); 
- //ETilde = E - dt*((DTilde * invMLumped) * GTilde); 
+ //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
 } // fecha metodo setUnCoupledBC 
 
 void Simulator3D::setUnCoupledCBC()
@@ -2014,7 +2029,7 @@ clVector* Simulator3D::getDistance(){return &distance;}
 clVector* Simulator3D::getFint(){return &fint;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
-clMatrix* Simulator3D::getM(){return &M;}
+clMatrix* Simulator3D::getM(){return &Mrho;}
 clMatrix* Simulator3D::getGx(){return &gx;}
 clMatrix* Simulator3D::getGy(){return &gy;}
 clMatrix* Simulator3D::getGz(){return &gz;}
@@ -2093,15 +2108,15 @@ void Simulator3D::operator=(Simulator3D &_sRight)
 
  K = _sRight.K;
  Kc = _sRight.Kc;
+ Mrho = _sRight.Mrho;
  M = _sRight.M;
- M_no = _sRight.M_no;
  Mc = _sRight.Mc;
  G = _sRight.G;
  D = _sRight.D;
  mat = _sRight.mat;
  matc = _sRight.matc;
+ MrhoLumped = _sRight.MrhoLumped;
  MLumped = _sRight.MLumped;
- MLumped_no = _sRight.MLumped_no;
  McLumped = _sRight.McLumped;
  gx = _sRight.gx;
  gy = _sRight.gy;
@@ -2116,8 +2131,8 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  E = _sRight.E;
  invA = _sRight.invA;
  invC = _sRight.invC;
+ invMrhoLumped = _sRight.invMrhoLumped;
  invMLumped = _sRight.invMLumped;
- invMLumped_no = _sRight.invMLumped_no;
  invMcLumped = _sRight.invMcLumped;
 
  uSol = _sRight.uSol;
@@ -2438,7 +2453,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  X->CopyTo(0,xVert);
  Y->CopyTo(0,yVert);
  Z->CopyTo(0,zVert);
- semi.meshInterp(xVert,yVert,zVert);
  uSol.Dim( numVerts );
  vSol.Dim( numVerts );
  wSol.Dim( numVerts );
@@ -2464,35 +2478,41 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  fintOld.CopyTo(_mOld.getNumNodes()*1,yFintOld);
  fintOld.CopyTo(_mOld.getNumNodes()*2,zFintOld);
 
- // interpolacao linear em numVerts
- clMatrix* interpLin = semi.getInterpLin();
- uSol = *interpLin*(uSolOld);
- vSol = *interpLin*(vSolOld);
- wSol = *interpLin*(wSolOld);
- pSol = *interpLin*(pSolOld);
- uALE = *interpLin*(uALEOld);
- vALE = *interpLin*(vALEOld);
- wALE = *interpLin*(wALEOld);
- nu = *interpLin*(nuOld);
- rho = *interpLin*(rhoOld);
- clVector xKappa = *interpLin*(xKappaOld);
- clVector xFint = *interpLin*(xFintOld);
- clVector yFint = *interpLin*(yFintOld);
- clVector zFint = *interpLin*(zFintOld);
+ /*
+  * linear interpolation of mesh - numVerts - (lib/interpolation.h)
+  * interpLin is a interpolation matrix, considering the Model3D passed
+  * as argument and the new mesh coordinates, passed as xVert,yVert and zVert.
+  * Then it is ready to be applied to some vector.
+  * */ 
+ clMatrix interpLin = meshInterp(_mOld,xVert,yVert,zVert);
+
+ uSol = interpLin*(uSolOld);
+ vSol = interpLin*(vSolOld);
+ wSol = interpLin*(wSolOld);
+ pSol = interpLin*(pSolOld);
+ uALE = interpLin*(uALEOld);
+ vALE = interpLin*(vALEOld);
+ wALE = interpLin*(wALEOld);
+ nu = interpLin*(nuOld);
+ rho = interpLin*(rhoOld);
+ clVector xKappa = interpLin*(xKappaOld);
+ clVector xFint = interpLin*(xFintOld);
+ clVector yFint = interpLin*(yFintOld);
+ clVector zFint = interpLin*(zFintOld);
 
  cSol.CopyFrom( 0,*cc ); // copying new cc
 
  // set do centroid
- uSol = setCentroid(uSol);
- vSol = setCentroid(vSol);
- wSol = setCentroid(wSol);
- uALE = setCentroid(uALE);
- vALE = setCentroid(vALE);
- wALE = setCentroid(wALE);
- xKappa = setCentroid(xKappa);
- xFint = setCentroid(xFint);
- yFint = setCentroid(yFint);
- zFint = setCentroid(zFint);
+ uSol = setTetCentroid(*IEN,uSol);
+ vSol = setTetCentroid(*IEN,vSol);
+ wSol = setTetCentroid(*IEN,wSol);
+ uALE = setTetCentroid(*IEN,uALE);
+ vALE = setTetCentroid(*IEN,vALE);
+ wALE = setTetCentroid(*IEN,wALE);
+ xKappa = setTetCentroid(*IEN,xKappa);
+ xFint = setTetCentroid(*IEN,xFint);
+ yFint = setTetCentroid(*IEN,yFint);
+ zFint = setTetCentroid(*IEN,zFint);
 
  // setting uAnt
  uAnt.Dim( 3*numNodes+numVerts );
@@ -2624,11 +2644,11 @@ void Simulator3D::allocateMemoryToAttrib()
  // assembly matrix
  K.Dim( 3*numNodes,3*numNodes );
  Kc.Dim( numVerts,numVerts );
+ Mrho.Dim( 3*numNodes,3*numNodes );
  M.Dim( 3*numNodes,3*numNodes );
- M_no.Dim( 3*numNodes,3*numNodes );
  Mc.Dim( numVerts,numVerts );
+ MrhoLumped.Dim( 3*numNodes );
  MLumped.Dim( 3*numNodes );
- MLumped_no.Dim( 3*numNodes );
  McLumped.Dim( numVerts );
  G.Dim( 3*numNodes,numVerts );
  D.Dim( numVerts,3*numNodes );
@@ -2659,8 +2679,8 @@ void Simulator3D::allocateMemoryToAttrib()
  mat.Dim( 3*numNodes,3*numNodes );
  matc.Dim( numVerts,numVerts );
  invA.Dim( 3*numNodes );
+ invMrhoLumped.Dim( 3*numNodes );
  invMLumped.Dim( 3*numNodes );
- invMLumped_no.Dim( 3*numNodes );
  invC.Dim( numVerts );
  invMcLumped.Dim( numVerts );
 

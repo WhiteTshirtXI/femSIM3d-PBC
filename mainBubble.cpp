@@ -39,6 +39,7 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
+ const char *datFolder  = "./dat/";
  const char *mesh = "../../db/gmsh/3D/bubble-tube4.msh";
 
  Model3D m1,mOld;

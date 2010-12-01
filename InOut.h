@@ -26,6 +26,7 @@
 #include <fstream>
 #include <cmath>
 #include "colors.h" 
+#include "interpolations.h" 
 
 // necessario para leitura do objeto triangle.o escrito em ANSI C
 extern "C"

@@ -448,10 +448,11 @@ void SemiLagrangean::setBC()
  /* APENAS UTILIZADO NAS SIMULACOES DISK (NUCTE, NUC, NUZ) */
  /* ------------- caso com c.c. livre em w --------------- */
 //--------------------------------------------------
-//  for( int i=0;i<idbcp->Dim();i++ )
+//  for( int i=0;i<idbcv->Dim();i++ )
 //  {
-//   aux = (int) idbcp->Get(i);
-//   wParticle.Set( aux,wSol.Get(aux) ); 
+//   aux = (int) idbcv->Get(i);
+//   if( Z->Get(aux) > 1.0 )
+//    wParticle.Set( aux,wSol.Get(aux) ); 
 //  }
 //-------------------------------------------------- 
  /* ------------------------------------------------------ */

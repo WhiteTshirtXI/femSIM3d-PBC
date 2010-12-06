@@ -11,10 +11,9 @@
 #include "GMRes.h"
 #include "Simulator3D.h"
 #include "InOut.h"
-#include "PCGSolver_Petsc.h"
 #include "PetscSolver.h"
-#include "GMRes_Petsc.h"
 #include "petscpc.h"
+#include "colors.h"
 
 int main(int argc, char **argv)
 {
@@ -22,8 +21,9 @@ int main(int argc, char **argv)
 
  int iter = 0;
  real Re = 1;
- real cfl = 10;
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ real cfl = 1;
+ Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
+ //Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,14,70);
+ m1.setMeshDisk(6,10,20);
  //m1.readVTK(mesh);
  m1.setAdimenDisk();
  m1.setMiniElement();
@@ -85,8 +85,10 @@ int main(int argc, char **argv)
  {
   for( int j=0;j<nR;j++ )
   {
-   cout << "____________________________________ Iteration: " 
-	    << i*nR+j+iter << endl;
+   cout << color(none,magenta,black);
+   cout << "____________________________________ Iteration: "
+	    << i*nR+j+iter << endl << endl;
+   cout << resetColor();
 
    s1.stepSL();
    s1.setRHS();
@@ -106,13 +108,14 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk11",i*nR+j+iter,8);
    save.saveVonKarman(simFolder,"vk12",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveVTKTest(vtkFolder,"simTest",i*nR+j+iter);
-   save.saveVTU(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
    save.saveConvergence("./","convergence");
 
-   cout << "__________________________________________ End: " 
-	    << i*nR+j+iter << endl;
+   cout << color(none,magenta,black);
+   cout << "________________________________________ END of "
+	    << i*nR+j+iter << endl << endl;;
+   cout << resetColor();
+
   }
  }
 

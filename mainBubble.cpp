@@ -31,6 +31,12 @@ int main(int argc, char **argv)
  real mu_g = 1.7894E-05;
  real rho_l = 1000;
  real rho_g = 1.225;
+//--------------------------------------------------
+//  real mu_g = 0.001;
+//  real mu_l = 1.7894E-05;
+//  real rho_g = 1000;
+//  real rho_l = 1.225;
+//-------------------------------------------------- 
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);

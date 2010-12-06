@@ -1175,6 +1175,20 @@ void Simulator3D::stepALE()
  m->setY(*m->getY()+(vALE*dt));
  m->setZ(*m->getZ()+(wALE*dt));
 
+//--------------------------------------------------
+//  // movimentando os pontos da malha superficie com velocidade ALE
+//  for( int i=0;i<surface.Dim();i++ )
+//  {
+//   int surfaceNode = surface.Get(i);
+//   real aux = surface->X.Get(surfaceNode)+(uALE.Get(surfaceNode)*dt);
+//   surfMesh->X.Set(surfaceNode,aux);
+//   aux = surface->Y.Get(surfaceNode)+(vALE.Get(surfaceNode)*dt);
+//   surfMesh->Y.Set(surfaceNode,aux);
+//   aux = surface->Z.Get(surfaceNode)+(wALE.Get(surfaceNode)*dt);
+//   surfMesh->Z.Set(surfaceNode,aux);
+//  }
+//-------------------------------------------------- 
+
  // atualizacao de todas as matrizes do sistema
  assemble();
  //assembleSlip();
@@ -1229,6 +1243,20 @@ void Simulator3D::stepALEVel()
  m->setX(*m->getX()+(uALE*dt));
  m->setY(*m->getY()+(vALE*dt));
  m->setZ(*m->getZ()+(wALE*dt));
+
+//--------------------------------------------------
+//  // movimentando os pontos da malha superficie com velocidade ALE
+//  for( int i=0;i<surface.Dim();i++ )
+//  {
+//   int surfaceNode = surface.Get(i);
+//   real aux = surface->X.Get(surfaceNode)+(uALE.Get(surfaceNode)*dt);
+//   surfMesh->X.Set(surfaceNode,aux);
+//   aux = surface->Y.Get(surfaceNode)+(vALE.Get(surfaceNode)*dt);
+//   surfMesh->Y.Set(surfaceNode,aux);
+//   aux = surface->Z.Get(surfaceNode)+(wALE.Get(surfaceNode)*dt);
+//   surfMesh->Z.Set(surfaceNode,aux);
+//  }
+//-------------------------------------------------- 
  
  // atualizacao de todas as matrizes do sistema
  assemble();
@@ -1466,13 +1494,15 @@ void Simulator3D::matMount()
   MrhoLumped.Set(i, Mrho.SumLine(i));
 
  for( int i = 0; i < 3*numNodes; i++ )
-  MLumped.Set(i, M.SumLine(i));
-
- for( int i = 0; i < 3*numNodes; i++ )
   invA.Set(i, mat.SumLine(i));
 
  invA = invA.Inverse();
  invMrhoLumped = MrhoLumped.Inverse();
+
+ // if M != 0
+ for( int i = 0; i < 3*numNodes; i++ )
+  MLumped.Set(i, M.SumLine(i));
+
  invMLumped = MLumped.Inverse();
 }
 
@@ -2636,6 +2666,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  outflow = m->getOutflow();
  IEN = m->getIEN();
  surface = m->getSurface();
+ surfMesh = m->getSurfMesh();
 }
 
 

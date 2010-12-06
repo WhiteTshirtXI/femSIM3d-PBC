@@ -1438,15 +1438,16 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkHeaderTime(vtkFile,_iter);
  vtkCoords(vtkFile);
 
- clMatrix *IENTri = m->getIENTri();
- int numTri = IENTri->DimI();
+ SurfaceMesh *mesh = m->getInterfaceMesh();
+
+ int numTri = mesh->IEN.DimI();
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  vtkFile << setprecision(0) << fixed; 
  for( int i=0;i<numTri;i++ )
  {
-  vtkFile << "3 " << IENTri->Get(i,0) << " "  
-                  << IENTri->Get(i,1) << " " 
-                  << IENTri->Get(i,2) << endl;
+  vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
+                  << mesh->IEN.Get(i,1) << " " 
+                  << mesh->IEN.Get(i,2) << endl;
  };
  vtkFile << endl;
 
@@ -2279,9 +2280,7 @@ void InOut::vtkVector(ofstream& _file,string _name,
 
 void InOut::saveMSH( const char* _dir,const char* _filename )
 {
- IEN = m->getIEN();
- clMatrix *IENOriginal = m->getIENOriginal();
- int numVertsOriginal = m->getNumVertsOriginal();
+ SurfaceMesh *surfMesh = m->getSurfMesh();
 
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + ".msh";
@@ -2298,34 +2297,35 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "2 2 \"wall\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
- mshFile << numVertsOriginal << endl;
+ mshFile << surfMesh->numVerts << endl;
 
- for( int i=0;i<numVertsOriginal;i++ )
+ for( int i=0;i<surfMesh->numVerts;i++ )
   mshFile << i+1 << " " << X->Get(i) << " " 
                         << Y->Get(i) << " " 
 						<< Z->Get(i) << endl;
 
  mshFile << "$EndNodes" << endl;
  mshFile << "$Elements" << endl;
- mshFile << IENOriginal->DimI() << endl;
+ mshFile << surfMesh->numElems << endl;
 
- for( int i=0;i<IENOriginal->DimI();i++ )
+ for( int i=0;i<surfMesh->numElems;i++ )
  {
-  int v1 = IENOriginal->Get(i,0);
-  int v2 = IENOriginal->Get(i,1);
-  int v3 = IENOriginal->Get(i,2);
-  cout << cc->Get(v1) << " "
-       << cc->Get(v2) << " "
-       << cc->Get(v3) << endl;
+  int v1 = surfMesh->IEN.Get(i,0);
+  int v2 = surfMesh->IEN.Get(i,1);
+  int v3 = surfMesh->IEN.Get(i,2);
 
-  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 && cc->Get(v3) == 0.5 )
+  if( surfMesh->Marker.Get(v1) == 0.5 && 
+	  surfMesh->Marker.Get(v2) == 0.5 && 
+	  surfMesh->Marker.Get(v3) == 0.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "1" << " " 
 						 << "14" << " " 
 						 << "0" << " " 
 						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else if( cc->Get(v1) + cc->Get(v2) + cc->Get(v3) > 1.5 )
+  else if( surfMesh->Marker.Get(v1) + 
+	       surfMesh->Marker.Get(v2) + 
+		   surfMesh->Marker.Get(v3) > 1.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "3" << " " 
@@ -2351,8 +2351,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
 
 void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 {
- clMatrix *IENOriginal = m->getIENOriginal();
- int numVertsOriginal = m->getNumVertsOriginal();
+ SurfaceMesh *surfMesh = m->getSurfMesh();
 
  stringstream ss;  //convertendo int --> string
  string str;
@@ -2374,31 +2373,35 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "2 2 \"wall\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
- mshFile << numVertsOriginal << endl;
+ mshFile << surfMesh->numVerts << endl;
 
- for( int i=0;i<numVertsOriginal;i++ )
+ for( int i=0;i<surfMesh->numVerts;i++ )
   mshFile << i+1 << " " << X->Get(i) << " " 
                         << Y->Get(i) << " " 
 						<< Z->Get(i) << endl;
 
  mshFile << "$EndNodes" << endl;
  mshFile << "$Elements" << endl;
- mshFile << IENOriginal->DimI() << endl;
+ mshFile << surfMesh->numElems << endl;
 
- for( int i=0;i<IENOriginal->DimI();i++ )
+ for( int i=0;i<surfMesh->numElems;i++ )
  {
-  int v1 = IENOriginal->Get(i,0);
-  int v2 = IENOriginal->Get(i,1);
-  int v3 = IENOriginal->Get(i,2);
+  int v1 = surfMesh->IEN.Get(i,0);
+  int v2 = surfMesh->IEN.Get(i,1);
+  int v3 = surfMesh->IEN.Get(i,2);
 
-  if( cc->Get(v1) == 0.5 && cc->Get(v2) == 0.5 && cc->Get(v3) == 0.5 )
+  if( surfMesh->Marker.Get(v1) == 0.5 && 
+	  surfMesh->Marker.Get(v2) == 0.5 && 
+	  surfMesh->Marker.Get(v3) == 0.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "1" << " " 
 						 << "14" << " " 
 						 << "0" << " " 
 						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else if( cc->Get(v1) + cc->Get(v2) + cc->Get(v3) > 1.5 )
+  else if( surfMesh->Marker.Get(v1) + 
+	       surfMesh->Marker.Get(v2) + 
+		   surfMesh->Marker.Get(v3) > 1.5 )
    mshFile << i+1 << " " << "2" << " " 
 	                     << "3" << " " 
 						 << "3" << " " 

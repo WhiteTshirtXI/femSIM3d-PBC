@@ -15,12 +15,10 @@ INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
 INCLUDES += -I$(HOME)/Programs/tetgen/1.4.0
-INCLUDES += -I${PETSC_DIR}
 INCLUDES += -I${PETSC_DIR}/include
-INCLUDES += -I$(PETSC_DIR)/src/dm/mesh/sieve
-INCLUDES += -I${PETSC_DIR}/bmake/${PETSC_ARCH}
-INCLUDES += -I${PETSC_DIR}/externalpackages/mpich2-1.0.8/${PETSC_ARCH}/include
+INCLUDES += -I$(HOME)/Programs/triangle
 
+OBJECTS += $(HOME)/Programs/triangle/triangle.o
 OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o

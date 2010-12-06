@@ -26,6 +26,7 @@
 #include "math.h"
 #include "compare.h"
 #include "colors.h"
+#include "structs.h"
 
 /**
  * @brief classe responsavel pela preparacao da malha para entrada no
@@ -55,13 +56,13 @@ class Model3D
   void setAdimenStep();
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void setTriEdge();
-  void setTriEdge2();
 
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
   void setSurfaceTri();
-  void setConvexTri(clMatrix &_IENSent,int _nVerts,int _begin);
+  void setConvexTri();
+  SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
   void setTriangleMinEdge();
@@ -135,16 +136,19 @@ class Model3D
   real getDeltaYMin();
   real getDeltaZMin();
   clVector* getX();
+  clVector* getXVert();
   real getMaxX();
   real getMinX();
   void setX(clVector _X);
   clVector* getY();
+  clVector* getYVert();
   real getMaxY();
   real getMinY();
   void setY(clVector _Y);
   real getMaxZ();
   real getMinZ();
   clVector* getZ();
+  clVector* getZVert();
   void setZ(clVector _Z);
   clVector* getUC();
   clVector* getVC();
@@ -159,11 +163,13 @@ class Model3D
   clVector* getIdbcp();
   clVector* getIdbcc();
   clMatrix* getIEN();
-  clMatrix* getIENTri();
-  clMatrix* getIENConvexTri();
-  clMatrix* getIENOriginal();
+  SurfaceMesh* getSurfMesh();
+  SurfaceMesh* getInterfaceMesh();
+  SurfaceMesh* getConvexMesh();
+  void setMeshX(clVector _X); 
+  void setMeshY(clVector _Y);
+  void setMeshZ(clVector _Z);
   int getNumVerts();
-  int getNumVertsOriginal();
   int getNumNodes();
   int getNumElems();
   int getNumGLEU();
@@ -201,8 +207,9 @@ class Model3D
 
  private:
   clVector uc,vc,wc,pc,cc;
-  clMatrix IEN,IENTri,IENConvexTri,IENMod,IEN2DMesh;
-  clVector X,Y,Z,xMod,yMod,zMod,xVert,yVert,zVert;
+  clMatrix IEN;
+  SurfaceMesh surfMesh,interfaceMesh,convexMesh;
+  clVector X,Y,Z;
   clVector xConvex,yConvex,zConvex;
   clVector outflow,idbcu,idbcv,idbcw,idbcp,idbcc;
   clMatrix faceFace,freeFace,mapViz;
@@ -211,10 +218,8 @@ class Model3D
   clVector idRegion;
   clVector surface,nonSurface;
   clMatrix mapEdgeTri;
-  clMatrix IENOriginal;
 
   int numVerts;                   // numero total de vertices da malha
-  int numVertsOriginal;
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
   int numTriangles;

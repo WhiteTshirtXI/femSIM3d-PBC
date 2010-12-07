@@ -62,6 +62,7 @@ class Model3D
   void setSurfaceFace();
   void setSurfaceTri();
   void setConvexTri();
+  void buildSurfMesh();
   SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();

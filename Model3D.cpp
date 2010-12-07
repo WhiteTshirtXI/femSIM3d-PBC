@@ -1967,7 +1967,7 @@ void Model3D::removePointsByLength()
   int v2 = mapEdgeTri.Get(i,2);
 
   // verifying the length of each surface edge
-  if( cc.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test ) //&&
+  if( surfMesh.Marker.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test ) //&&
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
@@ -4229,7 +4229,6 @@ void Model3D::setConvexTri()
 {
  convexMesh.numElems = freeFace.DimI();
  convexMesh.IEN.Dim(convexMesh.numElems,3);
- convexMesh.numVerts = freeFace.Max()+1;
 
  for (int i=0;i<freeFace.DimI();i++ )
  {
@@ -4240,6 +4239,45 @@ void Model3D::setConvexTri()
   convexMesh.IEN.Set(i,0,v1);
   convexMesh.IEN.Set(i,1,v2);
   convexMesh.IEN.Set(i,2,v3);
+ }
+
+ convexMesh.numVerts = convexMesh.IEN.Max()+1; 
+}
+
+void Model3D::buildSurfMesh()
+{
+ surfMesh.numElems = interfaceMesh.numElems+convexMesh.numElems;
+
+ int maxInterface = interfaceMesh.IEN.Max();
+ int maxConvex = convexMesh.IEN.Max();
+ int max = maxInterface;
+ if( max < maxConvex )
+  max = maxConvex;
+ surfMesh.numVerts = max+1;
+
+ surfMesh.IEN = interfaceMesh.IEN;
+ surfMesh.IEN.Append(convexMesh.IEN);
+ surfMesh.X.Dim(surfMesh.numVerts);
+ surfMesh.Y.Dim(surfMesh.numVerts);
+ surfMesh.Z.Dim(surfMesh.numVerts);
+
+ for( int elem=0;elem<surfMesh.numElems;elem++ )
+ {
+  int v1 = surfMesh.IEN.Get(elem,0);
+  int v2 = surfMesh.IEN.Get(elem,1);
+  int v3 = surfMesh.IEN.Get(elem,2);
+
+  surfMesh.X.Set( v1,X.Get(v1) );
+  surfMesh.X.Set( v2,X.Get(v2) );
+  surfMesh.X.Set( v3,X.Get(v3) );
+
+  surfMesh.Y.Set( v1,Y.Get(v1) );
+  surfMesh.Y.Set( v2,Y.Get(v2) );
+  surfMesh.Y.Set( v3,Y.Get(v3) );
+
+  surfMesh.Z.Set( v1,Z.Get(v1) );
+  surfMesh.Z.Set( v2,Z.Get(v2) );
+  surfMesh.Z.Set( v3,Z.Get(v3) );
  }
 }
 
@@ -4854,42 +4892,13 @@ void Model3D::setSurfaceConfig()
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setSurfaceFace(); // elemSurface e neighbourFaceVert
- setSurfaceTri(); // superficie
- setConvexTri(); // parte externa do dominio
-
-//--------------------------------------------------
-//  // arranging IENTri to start with '0' vertex notation
-//  int nVertsSurface = surface.Dim();
-//  arrangeIEN(IENTri,nVertsSurface,0);
-//  surfMesh.IEN.Dim(0,3);
-//  surfMesh.X.Dim(0);
-//  surfMesh.Y.Dim(0);
-//  surfMesh.Z.Dim(0);
-//  surfMesh.Marker.Dim(0);
-//  surfMesh.X.Append(xMod);
-//  surfMesh.Y.Append(yMod);
-//  surfMesh.Z.Append(zMod);
-//  surfMesh.Marker.Append(ccMod);
-//  surfMesh.IEN = IENMod;
-//  surfMesh.numVerts = nVertsSurface;
-//  surfMesh.numElems = IENTri.DimI();
-// 
-//  // arranging IENConvexTri to start with '0' vertex notation
-//  int nVertsConvex = outVert.size();
-//  arrangeIEN(IENConvexTri,nVertsConvex,nVertsSurface);
-//  surfMesh.X.Append(xMod);
-//  surfMesh.Y.Append(yMod);
-//  surfMesh.Z.Append(zMod);
-//  surfMesh.Marker.Append(ccMod);
-//  surfMesh.IEN.Append(IENMod);
-//  surfMesh.numVerts += nVertsConvex;
-//  surfMesh.numElems += IENConvexTri.DimI();
-//-------------------------------------------------- 
+ setSurfaceTri(); // triang superficie - interfaceMesh
+ setConvexTri(); // triang parte externa do dominio - convexMesh
+ //buildSurfMesh();
 
  setTriEdge(); 
  setNeighbourSurface(); 
  setTriangleMinEdge(); // minEdge check and config
-
  saveVTKConvex("./vtk/","conv",0);
 }
 

@@ -69,7 +69,6 @@ class Model3D
   void setTriangleMinEdge();
   void insertPointsByLength();
   void removePointsByLength();
-  void insertRemovePointsByLength();
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
   void surfaceTriangulatorEarClipping(int _v);
@@ -78,7 +77,7 @@ class Model3D
   void deleteSurfaceElementByPoint(int _v);
   void insertPoint(int _v);
   void deletePoint(int _v);
-  void setPolyedron(int _v);
+  void setPolyhedron(int _v);
   void flipTriangleEdge( int _edge );
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
@@ -87,6 +86,9 @@ class Model3D
   clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
 	                clVector &_XI,clVector &_YI,clVector &_ZI);
 
+void moveXPoints(clVector &_vec,real _dt);
+void moveYPoints(clVector &_vec,real _dt);
+void moveZPoints(clVector &_vec,real _dt);
   void meshTest();
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
@@ -239,9 +241,6 @@ class Model3D
   vector< list<int> > neighbourFaceVert;
   vector< list<int> > elemSurface;
   vector< list<int> > surfaceViz;  // lista de vizinhos na interface
-  vector< list<int> > xSurfaceViz; // lista de coords X de vizinhos na interface
-  vector< list<int> > ySurfaceViz; // lista de coords Y de vizinhos na interface
-  vector< list<int> > zSurfaceViz; // lista de coords Z de vizinhos na interface
   vector< list<int> > neighbourSurfaceElem; // lista de elementos triangulares
   vector< list<int> > neighbourPoint;  // lista de pontos vizinhos da superficie
   list<int> outVert,inVert; // lista de elementos do interior 

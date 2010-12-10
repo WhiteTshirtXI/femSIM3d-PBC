@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 //-------------------------------------------------- 
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);

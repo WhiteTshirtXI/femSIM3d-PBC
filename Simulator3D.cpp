@@ -1096,9 +1096,9 @@ void Simulator3D::step()
 // puramente lagrangiana
 void Simulator3D::stepLagrangian()
 {
- m->setX(*m->getX()+(uSol*dt));
- m->setY(*m->getY()+(vSol*dt));
- m->setZ(*m->getZ()+(wSol*dt));
+ m->moveXPoints(uSol,dt);
+ m->moveYPoints(vSol,dt);
+ m->moveZPoints(wSol,dt);
 
  //assemble();
  assembleSlip();
@@ -1116,15 +1116,8 @@ void Simulator3D::stepLagrangian()
 // utilizado o metodo explicito semi lagrangiano
 void Simulator3D::stepLagrangianZ()
 {
- m->setZ(*m->getZ()+(wSol*dt));
+ m->moveZPoints(wSol,dt);
 
-//--------------------------------------------------
-//  cout << uSol.Norm() << endl;
-//  cout << vSol.Norm() << endl;
-//  cout << wSol.Norm() << endl;
-//-------------------------------------------------- 
-
- //SemiLagrangean sl(*m,uSol,vSol,wSol,cSol);
  SemiLagrangean sl(*m,uSol,vSol,wSol,velU,velV,velW,cSol);
 
  sl.computeFreeSurface(dt);
@@ -1133,13 +1126,12 @@ void Simulator3D::stepLagrangianZ()
  //wSL = *sl.getWSL();
  convC = *sl.getCSL();
 
- // testar!
  convUVW.CopyFrom(0,uSL);
  convUVW.CopyFrom(numNodes,vSL);
  convUVW.CopyFrom(2*numNodes,wSol);
 
  // atualizacao de todas as matrizes do sistema
- //assemble();
+ assemble();
  //assembleSlip();
 
 } // fecha metodo stepLagragianZ
@@ -1171,23 +1163,9 @@ void Simulator3D::stepALE()
  stepSL();
 
  // movimentando os pontos da malha com velocidade ALE
- m->setX(*m->getX()+(uALE*dt));
- m->setY(*m->getY()+(vALE*dt));
- m->setZ(*m->getZ()+(wALE*dt));
-
-//--------------------------------------------------
-//  // movimentando os pontos da malha superficie com velocidade ALE
-//  for( int i=0;i<surface.Dim();i++ )
-//  {
-//   int surfaceNode = surface.Get(i);
-//   real aux = surface->X.Get(surfaceNode)+(uALE.Get(surfaceNode)*dt);
-//   surfMesh->X.Set(surfaceNode,aux);
-//   aux = surface->Y.Get(surfaceNode)+(vALE.Get(surfaceNode)*dt);
-//   surfMesh->Y.Set(surfaceNode,aux);
-//   aux = surface->Z.Get(surfaceNode)+(wALE.Get(surfaceNode)*dt);
-//   surfMesh->Z.Set(surfaceNode,aux);
-//  }
-//-------------------------------------------------- 
+ m->moveXPoints(uALE,dt);
+ m->moveYPoints(vALE,dt);
+ m->moveZPoints(wALE,dt);
 
  // atualizacao de todas as matrizes do sistema
  assemble();
@@ -1240,23 +1218,9 @@ void Simulator3D::stepALEVel()
  stepSL();
 
  // movimentando os pontos da malha com velocidade ALE
- m->setX(*m->getX()+(uALE*dt));
- m->setY(*m->getY()+(vALE*dt));
- m->setZ(*m->getZ()+(wALE*dt));
-
-//--------------------------------------------------
-//  // movimentando os pontos da malha superficie com velocidade ALE
-//  for( int i=0;i<surface.Dim();i++ )
-//  {
-//   int surfaceNode = surface.Get(i);
-//   real aux = surface->X.Get(surfaceNode)+(uALE.Get(surfaceNode)*dt);
-//   surfMesh->X.Set(surfaceNode,aux);
-//   aux = surface->Y.Get(surfaceNode)+(vALE.Get(surfaceNode)*dt);
-//   surfMesh->Y.Set(surfaceNode,aux);
-//   aux = surface->Z.Get(surfaceNode)+(wALE.Get(surfaceNode)*dt);
-//   surfMesh->Z.Set(surfaceNode,aux);
-//  }
-//-------------------------------------------------- 
+ m->moveXPoints(uALE,dt);
+ m->moveYPoints(vALE,dt);
+ m->moveZPoints(wALE,dt);
  
  // atualizacao de todas as matrizes do sistema
  assemble();

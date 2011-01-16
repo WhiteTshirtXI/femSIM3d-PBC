@@ -118,17 +118,15 @@ void Simulator3D::init()
 //-------------------------------------------------- 
 
 /* two bubbles */
-//--------------------------------------------------
-//  for( int i=0;i<numNodes;i++ )
-//  {
-//   real aux = X->Get(i);
-//   uSol.Set(i,aux);
-//   aux = -1.0*Y->Get(i);
-//   vSol.Set(i,aux);
-//   aux = 0.0;
-//   wSol.Set(i,aux);
-//  }
-//-------------------------------------------------- 
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = X->Get(i);
+  uSol.Set(i,aux);
+  aux = -1.0*Y->Get(i);
+  vSol.Set(i,aux);
+  aux = 0.0;
+  wSol.Set(i,aux);
+ }
 }
 
 void Simulator3D::assemble()
@@ -1861,16 +1859,16 @@ void Simulator3D::setMuRho(real _muLiquid,real _muGas,
  //
  // Navier-Stokes Viscous Term (gas - bubble):
  //
- //    mu_ref                 [  mu_g    rho_ref   (                       ) ]
- // ----------- * \nabla \dot [ ------ * ------- * ( \nabla u + \nabla u^T ) ]
- // rho_ref*v*D               [ mu_ref    rho_g    (                       ) ]
+ //    mu_ref                 [  mu_g    (                       ) ]
+ // ----------- * \nabla \dot [ ------ * ( \nabla u + \nabla u^T ) ]
+ // rho_ref*v*D               [ mu_ref   (                       ) ]
  //
  //
  // Navier-Stokes Viscous Term (liquid):
  //
- //    mu_ref                 [  mu_l    rho_ref   (                       ) ]
- // ----------- * \nabla \dot [ ------ * ------- * ( \nabla u + \nabla u^T ) ]
- // rho_ref*v*D               [ mu_ref    rho_l    (                       ) ]
+ //    mu_ref                 [  mu_l    (                       ) ]
+ // ----------- * \nabla \dot [ ------ * ( \nabla u + \nabla u^T ) ]
+ // rho_ref*v*D               [ mu_ref   (                       ) ]
  //
  //
  // Considering the liquid as the referential frame we can define the
@@ -1884,8 +1882,8 @@ void Simulator3D::setMuRho(real _muLiquid,real _muGas,
  real rhoGasAdimen = _rhoGas/rhoReference;
 
  real muReference = _muLiquid;
- real muLiquidAdimen = (_muLiquid/muReference)*(rhoReference/_rhoLiquid);
- real muGasAdimen = (_muGas/muReference)*(rhoReference/_rhoGas); 
+ real muLiquidAdimen = (_muLiquid/muReference);
+ real muGasAdimen = (_muGas/muReference); 
 
  // gas phase (bubble)
  list<int> *inElem;

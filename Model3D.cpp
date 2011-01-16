@@ -859,9 +859,14 @@ void Model3D::mesh2Dto3D()
  //in.regionlist[0] = X.Min();
  //in.regionlist[1] = Y.Min();
  //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.1;
- in.regionlist[1] = 0.1;
- in.regionlist[2] = 0.1;
+//--------------------------------------------------
+//  in.regionlist[0] = 0.1;
+//  in.regionlist[1] = 0.1;
+//  in.regionlist[2] = 0.1;
+//-------------------------------------------------- 
+ in.regionlist[0] = -5.8;
+ in.regionlist[1] = 0.0;
+ in.regionlist[2] = -2.8;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -1098,7 +1103,7 @@ void Model3D::setTriangleMinEdge()
  cout << "       ****************** " << endl;
  cout << endl;
 
- minEdge = 0.11;
+ minEdge = 0.1;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -2003,7 +2008,8 @@ void Model3D::removePointsByInterfaceDistance()
  for( int i=0;i<numVerts;i++ )
  {
   real d = distance.Get(i);
-  if( d>0 && d<0.4*minEdge )
+  //if( d>0 && d<0.4*minEdge ) // mainBubble.cpp
+  if( d>0 && d<0.2*minEdge )
   {
    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
 	    << resetColor() << i << endl;
@@ -2094,24 +2100,30 @@ void Model3D::insertPointsByArea()
  }
 }
  
-/* This method re-mesh the entire domain preserving only the points of
- * the surface and the convex-hull. To do it, surfMesh.numVerts and
+/* This method re-mesh completly the domain preserving only the points
+ * located at surface and convex-hull. To do so, surfMesh.numVerts and
  * surfMesh.IEN need to be set on the beginning of the running program,
  * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
- saveVTKSurface("./vtk/","before",0);
- insertPointsByLength();
- saveVTKSurface("./vtk/","between",0);
- removePointsByLength();
- saveVTKSurface("./vtk/","flipBetween",0);
- flipTriangleEdge(0);
- saveVTKSurface("./vtk/","after",0);
+//--------------------------------------------------
+//  saveVTKSurface("./vtk/","before",0);
+//  insertPointsByLength();
+//  saveVTKSurface("./vtk/","between",0);
+//  removePointsByLength();
+//  saveVTKSurface("./vtk/","flipBetween",0);
+//  flipTriangleEdge(0);
+//  saveVTKSurface("./vtk/","after",0);
+//-------------------------------------------------- 
+
+ int ny = 7;
+ int nPoints = 15;
 
  // tetgen mesh object 
  tetgenio in,out;
  in.mesh_dim = 3;
- in.numberofpoints = surfMesh.numVerts;
+ //in.numberofpoints = surfMesh.numVerts;
+ in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*ny);
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
@@ -2127,23 +2139,97 @@ void Model3D::mesh2Dto3DOriginal()
    in.pointmarkerlist[i] = 22; // same id of facetmarker
  }
 
+ // ******************************************** //
+ // strategy to ADD points - to be implemented - //
+ // ******************************************** //
+ 
+//--------------------------------------------------
+//  real x0 = -1.5;
+//  real z0 = -0.75;
+//  real deltaX = 3.0/(n+1.0);
+//  real deltaZ = 1.5/(n+1.0);
+//-------------------------------------------------- 
+
+ real xi = -0.80;
+ real yi = -0.04;
+ real zi = -0.40;
+ int count = surfMesh.numVerts;
+ for( int i=0;i<nPoints;i++ )
+ {
+  for( int j=0;j<nPoints;j++ )
+  {
+   for( int k=0;k<ny;k++ )
+   {
+	real dx = i * (-2.0*xi)/(nPoints-1);
+	in.pointlist[3*count+0] = xi + dx;
+
+	real dy = k * (-2.0*yi)/(ny-1);
+	in.pointlist[3*count+1] = (yi + dy);
+
+	real dz = j * (-2.0*zi)/(nPoints-1);
+	in.pointlist[3*count+2] = zi + dz;
+
+	in.pointmarkerlist[count] = 11;
+
+	count++;
+   }
+  }
+ }
+
+//--------------------------------------------------
+//  for( int i=0;i<in.numberofpoints;i++ )
+//  {
+//   if( (in.pointlist[3*i+0]*in.pointlist[3*i+0] ) < 0.0 + EPS && 
+//       (in.pointlist[3*i+1]*in.pointlist[3*i+1] ) < 0.0 + EPS && 
+//       (in.pointlist[3*i+2]*in.pointlist[3*i+2] ) < 0.0 + EPS )
+//    cout << i << " " 
+// 	    << in.pointlist[3*i+0] << " " 
+// 	    << in.pointlist[3*i+1] << " " 
+// 	    << in.pointlist[3*i+2] << " "
+// 	    << in.pointmarkerlist[i] << endl;
+//  }
+//-------------------------------------------------- 
+
+
+
+//--------------------------------------------------
+ //int j=1;
+//  for( int i=surfMesh.numVerts;i<surfMesh.numVerts+n;i++ )
+//  {
+//   in.pointlist[3*i+0] = 0.0;
+//   in.pointlist[3*i+1] = y0+j*deltaY;
+//   in.pointlist[3*i+2] = 0.0 ;
+//   in.pointmarkerlist[i] = 11;
+//   j++;
+//  }
+//-------------------------------------------------- 
+
+
  /* This procedure defines regions on the mesh and after
   * insertion/deletion of points by the tetgen program we can easily
   * recognize the point locations by the regionlist array and then we
   * can define the points relied inside the bubble (1.0), on the surface
   * (0.5) and outside the bubble (0.0). To do so it is necessery to
-  * define AT LEAST one region. For instance we have chosen to define
-  * the region between the interface and convex hull. */
+  * define AT LEAST one region, preferably the one between the interface 
+  * and convex hull. 
+  * To recovery the information of different zones, after the meshing
+  * procedure is necessary to look at tetrahedronattributelist 
+  * */
  in.numberofregions = 1; 
  in.regionlist = new REAL[in.numberofregions*4];
 
- // definindo regiao fora da bolha
+ // definindo regiao fora da bolha 
  //in.regionlist[0] = X.Min();
  //in.regionlist[1] = Y.Min();
  //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.1;
- in.regionlist[1] = 0.1;
- in.regionlist[2] = 0.1;
+//--------------------------------------------------
+//  in.regionlist[0] = 0.1;
+//  in.regionlist[1] = 0.1;
+//  in.regionlist[2] = 0.1;
+//-------------------------------------------------- 
+ in.regionlist[0] = -5.8;
+ in.regionlist[1] = -2.8;
+ in.regionlist[2] = -2.8;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -2187,12 +2273,14 @@ void Model3D::mesh2Dto3DOriginal()
  cout << "numNodes IN = " << surfMesh.numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
+ saveVTKSurface("./vtk/","test1",0);
+
  cout << endl;
  cout << "----> complete re-meshing the domain... ";
  //tetrahedralize( (char*) "VYYApq1.4241",&in,&out );
  //tetrahedralize( (char*) "QYYCApq1.4241a0.05",&in,&out );
  tetrahedralize( (char*) "QYYCApq1.4241a0.1",&in,&out );
- //tetrahedralize( (char*) "QYYCApq1.414q10a0.005",&in,&out );
+ //tetrahedralize( (char*) "QYYCApq1.414q10a0.001",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -2248,6 +2336,19 @@ void Model3D::mesh2Dto3DOriginal()
 	  out.pointmarkerlist[i] == 22 )
    cc.Set(i,0.5);
  }
+//--------------------------------------------------
+//  for( int i=0;i<out.numberofpoints;i++ )
+//  {
+//   if( (out.pointlist[3*i+0]*out.pointlist[3*i+0] ) < 0.0 + EPS && 
+//       (out.pointlist[3*i+1]*out.pointlist[3*i+1] ) < 0.0 + EPS && 
+//       (out.pointlist[3*i+2]*out.pointlist[3*i+2] ) < 0.0 + EPS )
+//    cout << i << " " 
+// 	    << out.pointlist[3*i+0] << " " 
+// 	    << out.pointlist[3*i+1] << " " 
+// 	    << out.pointlist[3*i+2] << endl;
+//  }
+//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","test2",0);
 }
 
 void Model3D::mesh3DPoints()
@@ -2287,11 +2388,11 @@ void Model3D::mesh3DPoints()
   in.pointlist[3*i+0] = X.Get(i);
   in.pointlist[3*i+1] = Y.Get(i);
   in.pointlist[3*i+2] = Z.Get(i);
-  if( cc.Get(i) == 0.0 )
+  if( cc.Get(i) == 0.0 ) // fora da bolha
    in.pointmarkerlist[i] = 11;
-  if( cc.Get(i) == 0.5 )
+  if( cc.Get(i) == 0.5 ) // na interface
    in.pointmarkerlist[i] = 22;
-  if( cc.Get(i) == 1.0 )
+  if( cc.Get(i) == 1.0 ) // dentro da bolha
    in.pointmarkerlist[i] = 33;
  }
  /* -------------------------------------------------------------- */
@@ -2318,12 +2419,19 @@ void Model3D::mesh3DPoints()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- //in.regionlist[0] = X.Min();
- //in.regionlist[1] = Y.Min();
- //in.regionlist[2] = Z.Min();
- in.regionlist[0] = 0.1;
- in.regionlist[1] = 0.1;
- in.regionlist[2] = 0.1;
+//--------------------------------------------------
+//  in.regionlist[0] = X.Min();
+//  in.regionlist[1] = Y.Min();
+//  in.regionlist[2] = Z.Min();
+//-------------------------------------------------- 
+//--------------------------------------------------
+//  in.regionlist[0] = 0.1;
+//  in.regionlist[1] = 0.1;
+//  in.regionlist[2] = 0.1;
+//-------------------------------------------------- 
+ in.regionlist[0] = -5.5;
+ in.regionlist[1] = 0.0;
+ in.regionlist[2] = 2.5;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -4194,6 +4302,14 @@ void Model3D::setConvexTri()
  }
 }
 
+/* This method build the surfMesh struct, combining interface and convex
+ * structs. This struct can only be created after the assembling of
+ * interfaceMesh and convexMesh.
+ * The method is useful to define the 3D triangle surface mesh 
+ * that is sent straigth to the mesh generator program (TETGEN). This is
+ * essential to define mesh limits and interfaces between fluids and
+ * solids. 
+ * */
 void Model3D::buildSurfMesh()
 {
  surfMesh.numElems = interfaceMesh.numElems+convexMesh.numElems;
@@ -4896,7 +5012,7 @@ void Model3D::setSurfaceConfig()
  setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
- buildSurfMesh();
+ //buildSurfMesh();
 
  setTriEdge(); 
  setNeighbourSurface(); 

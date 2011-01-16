@@ -505,6 +505,95 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveVtk
 
+void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename, 
+                                  int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeaderTime(vtkFile,_iter);
+ vtkCoords(vtkFile);
+
+
+ // conta numero de elementos
+ real plane1 = Z->Min() + ( Z->Max()-Z->Min() )/2.0;
+ int count = 0;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+   count++;
+ }
+ 
+ vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+  {
+   vtkFile << "4 " << IEN->Get(i,0) << " "  
+            	   << IEN->Get(i,1) << " " 
+				   << IEN->Get(i,2) << " " 
+				   << IEN->Get(i,3) << endl;
+  }
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << count << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
+      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+   vtkFile << "10 ";
+ }
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cSol);
+
+ vtkScalar(vtkFile,"kappa",*kappa);
+ vtkScalar(vtkFile,"distance",*distance);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+ vtkVector(vtkFile,"surface_force",*fint);
+ vtkScalar(vtkFile,"viscosity",*nu);
+ vtkScalar(vtkFile,"density",*rho);
+
+ vtkFile.close();
+
+ cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVtkPlane2Bubbles
+
 void InOut::matrixPrint( clMatrix &_m, const char* _filename )
 {
  int numRows = _m.DimI();

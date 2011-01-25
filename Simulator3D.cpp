@@ -650,6 +650,8 @@ void Simulator3D::assembleSlip()
 	                rho.Get(v3)+
 	                rho.Get(v4) )*0.25;
 
+  rhoValue = 1.0;
+
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
 
@@ -1478,8 +1480,10 @@ void Simulator3D::matMountC()
  matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc)) * Kc);
  //matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc*Re)) * Kc);
 
+ cout << "oi1" << endl;
  for( int i = 0; i < numVerts; i++ )
   invC.Set(i, matc.SumLine(i));
+ cout << "oi1" << endl;
 
  invC = invC.Inverse();
  invMcLumped = McLumped.Inverse();

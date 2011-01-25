@@ -40,7 +40,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3D/2bubbles2D.msh";
+ const char *mesh = "../../db/gmsh/3d/2bubbles2D.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;

@@ -16,7 +16,6 @@
 #include "Model3D.h"
 #include "Simulator3D.h"
 #include "SemiLagrangean.h"
-#include "Interp3D.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "clVector.h"

@@ -34,7 +34,6 @@ OBJECTS += TElement.o
 OBJECTS += Galerkin.o
 OBJECTS += Interface3D.o
 OBJECTS += MeshSmooth.o
-OBJECTS += Interp3D.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o

@@ -2116,8 +2116,8 @@ void Model3D::mesh2Dto3DOriginal()
 //  saveVTKSurface("./vtk/","after",0);
 //-------------------------------------------------- 
 
- int ny = 7;
- int nPoints = 15;
+ int ny = 4;
+ int nPoints = 20;
 
  // tetgen mesh object 
  tetgenio in,out;
@@ -2143,31 +2143,45 @@ void Model3D::mesh2Dto3DOriginal()
  // strategy to ADD points - to be implemented - //
  // ******************************************** //
  
-//--------------------------------------------------
-//  real x0 = -1.5;
-//  real z0 = -0.75;
-//  real deltaX = 3.0/(n+1.0);
-//  real deltaZ = 1.5/(n+1.0);
-//-------------------------------------------------- 
+ real Ymax1=100;
+ real Ymin1=-100;
+ real Ymax2=-100;
+ real Ymin2=100;
+ 
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  // bubble 1 (Y<0)
+  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
+   if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
+  }
+  // bubble 2 (Y>0)
+  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
+   if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
+  }
+ }
 
  real xi = -0.80;
- real yi = -0.04;
+ real yi = Ymin1;
  real zi = -0.40;
  int count = surfMesh.numVerts;
  for( int i=0;i<nPoints;i++ )
  {
   for( int j=0;j<nPoints;j++ )
   {
-   for( int k=0;k<ny;k++ )
+   for( int k=1;k<(ny+1);k++ )
    {
-	real dx = i * (-2.0*xi)/(nPoints-1);
-	in.pointlist[3*count+0] = xi + dx;
+	real dx = (-2.0*xi)/(nPoints-1);
+	in.pointlist[3*count+0] = xi + dx*i;
 
-	real dy = k * (-2.0*yi)/(ny-1);
-	in.pointlist[3*count+1] = (yi + dy);
+	real dy = (Ymin2-Ymin1)/(ny+1);
+	in.pointlist[3*count+1] = yi + dy*k;
 
-	real dz = j * (-2.0*zi)/(nPoints-1);
-	in.pointlist[3*count+2] = zi + dz;
+	real dz = (-2.0*zi)/(nPoints-1);
+	in.pointlist[3*count+2] = zi + dz*j;
 
 	in.pointmarkerlist[count] = 11;
 

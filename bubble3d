@@ -33,7 +33,6 @@ OBJECTS += Model3D.o
 OBJECTS += TElement.o
 OBJECTS += Galerkin.o
 OBJECTS += Interface3D.o
-OBJECTS += Interp3D.o
 OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o

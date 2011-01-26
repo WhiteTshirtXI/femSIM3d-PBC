@@ -196,7 +196,7 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 300;
+ int nIter = 600;
  int nReMesh = 1;
  for( int i=0;i<nIter;i++ )
  {
@@ -223,6 +223,7 @@ int main(int argc, char **argv)
    save.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+   save.bubblesDistance("./","distance",i*nReMesh+j+iter);
    save.oscillating("./","oscillating",i*nReMesh+j+iter);
    save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
    save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);

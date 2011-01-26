@@ -436,11 +436,11 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
    count++;
  }
  
@@ -452,11 +452,11 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -473,11 +473,11 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
    vtkFile << "10 ";
  }
 
@@ -531,9 +531,11 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (Z->Get( v1 ) <  plane1) && 
+	  (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && 
+	  (Z->Get( v4 ) <  plane1) ) )
    count++;
  }
  
@@ -545,9 +547,11 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (Z->Get( v1 ) <  plane1) && 
+	  (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && 
+	  (Z->Get( v4 ) <  plane1) ) )
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -564,9 +568,11 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 || 
-      (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) )
+  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+    ( (Z->Get( v1 ) <  plane1) && 
+	  (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && 
+	  (Z->Get( v4 ) <  plane1) ) )
    vtkFile << "10 ";
  }
 
@@ -1568,44 +1574,69 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveVTKSurface
 
-void InOut::saveDistance(const char* _dir,const char* _filename,real time )
+void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
 {
- string file = _dir;
- string aux = _filename;
- file += aux;
- const char* filename = file.c_str();
+ // concatenando nomes para o nome do arquivo final
+ string fileAux = (string) _dir + (string) _filename + ".dat";
+ const char* filename = fileAux.c_str();
 
  ofstream dist( filename,ios::app );
+ ifstream testFile( filename );
 
- double Ymax1=-100;
- double Ymin1=100;
- double Ymax2=-100;
- double Ymin2=100;
-
- for( int i=0;i<surface->Dim();i++ )
+ if( testFile )
  {
-  if( Y->Get(i) > 0 )
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  dist << "#time" << setw(15) << "Ymin1" 
+				  << setw(15) << "Ymax1"
+                  << setw(15) << "Ymin2" 
+				  << setw(15) << "Ymax2"
+				  << setw(15) << "dist1" 
+				  << setw(15) << "dist2" 
+				  << setw(15) << "iter" 
+				  << endl;
+ }
+
+ simTime = s->getTime();
+ SurfaceMesh *interfaceMesh = m->getInterfaceMesh();
+
+ real Ymax1=100;
+ real Ymin1=-100;
+ real Ymax2=-100;
+ real Ymin2=100;
+ 
+ for( int i=0;i<interfaceMesh->numVerts;i++ )
+ {
+  // bubble 1 (Y<0)
+  if( Y->Get(i) < 0 && cc->Get(i)==0.5 )
   {
-   if(Y->Get(i)>Ymax1) Ymax1=Y->Get(i);
-   if(Y->Get(i)<Ymin1) Ymin1=Y->Get(i);
+   if(Y->Get(i)>Ymin1) Ymin1=Y->Get(i);
+   if(Y->Get(i)<Ymax1) Ymax1=Y->Get(i);
   }
-  if( Y->Get(i) < 0 )
+  // bubble 2 (Y>0)
+  if( Y->Get(i) > 0 && cc->Get(i)==0.5 )
   {
-   if(Y->Get(i)>Ymax2) Ymax2=Y->Get(i);
    if(Y->Get(i)<Ymin2) Ymin2=Y->Get(i);
+   if(Y->Get(i)>Ymax2) Ymax2=Y->Get(i);
   }
  }
- real dist1 = Ymin1-Ymax2;
- real dist2 = Ymax1-Ymin2;
+
+ real dist1 = Ymin2-Ymin1;
+ real dist2 = Ymax2-Ymax1;
 
  dist << setprecision(10) << scientific; 
- dist << setw(9) <<  time << " " << Ymin1 << " " << Ymax2 << " " 
-                                 << Ymax1 << " " << Ymin2 << " " 
-								 << dist1 << " " << dist2 << endl;
+ dist << setw(9) <<  *simTime << " " << Ymin1 << " " << Ymax1 << " " 
+                                     << Ymin2 << " " << Ymax2 << " " 
+							    	 << dist1 << " " << dist2 << " "
+									 << _iter << endl;
 
  dist.close();
 
- cout << "2 bubbles distance iter saved in ASCII " << dist1 << endl;
+ cout << "2 bubbles distances saved in ASCII " << dist1 << endl;
 }
 
 void InOut::saveMeshInfo(const char* _dir,const char* _filename )

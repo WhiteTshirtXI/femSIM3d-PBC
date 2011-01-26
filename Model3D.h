@@ -68,6 +68,7 @@ class Model3D
   void setInOutElem();
   void setTriangleMinEdge();
   void insertPointsByLength();
+  void insertPointsByInterfaceDistance();
   void removePointsByLength();
   void insertPointsByArea();
   void surfaceTriangulator(int _v);

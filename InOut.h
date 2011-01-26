@@ -170,7 +170,7 @@ class InOut
   void oscillating(const char* _dir,const char* _filename, int _iter);
   void oscillatingD(const char* _dir,const char* _filename, int _iter);
   void oscillatingKappa(const char* _dir,const char* _filename, int _iter);
-  void saveDistance(const char* _dir,const char* _filename,real time );
+  void bubblesDistance(const char* _dir,const char* _filename,int _iter);
   void saveMeshInfo(const char* _dir,const char* _filename );
   void saveConvergence(const char* _dir,const char* _filename);
   void chordalPressure( const char* _dir,const char* _filename, int _iter );

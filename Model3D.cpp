@@ -856,17 +856,9 @@ void Model3D::mesh2Dto3D()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- //in.regionlist[0] = X.Min();
- //in.regionlist[1] = Y.Min();
- //in.regionlist[2] = Z.Min();
-//--------------------------------------------------
-//  in.regionlist[0] = 0.1;
-//  in.regionlist[1] = 0.1;
-//  in.regionlist[2] = 0.1;
-//-------------------------------------------------- 
- in.regionlist[0] = -5.8;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = -2.8;
+ in.regionlist[0] = surfMesh.X.Min()+0.01;
+ in.regionlist[1] = surfMesh.Y.Min()+0.01;
+ in.regionlist[2] = surfMesh.Z.Min()+0.01;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -1138,6 +1130,58 @@ void Model3D::insertPointsByLength()
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
    insertPoint(i);
+ }
+}
+
+void Model3D::insertPointsByInterfaceDistance()
+{
+ real Ymax1=100;
+ real Ymin1=-100;
+ real Ymax2=-100;
+ real Ymin2=100;
+ 
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  // bubble 1 (Y<0)
+  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
+   if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
+  }
+  // bubble 2 (Y>0)
+  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
+   if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
+  }
+ }
+
+ int ny = 4;
+ real dist = Ymin2-Ymin1;
+ real dy = (Ymin2-Ymin1)/(ny-1);
+
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge length
+  real edgeLength = mapEdgeTri.Get(i,0);
+  real aux = (dist/2.0)+dy;
+  if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
+	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) < aux && 
+	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
+	  edgeLength > dy )
+  {
+   //--------------------------------------------------
+   //   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
+   //     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
+   //     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
+   //     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
+   //-------------------------------------------------- 
+   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
+   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
+   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
+   cout << "added by distance ";
+   insertPoint(i);
+  }
  }
 }
 
@@ -1617,6 +1661,7 @@ void Model3D::flipTriangleEdge( int _edge )
    surfMesh.IEN.Set(elem2,0,v2);
    surfMesh.IEN.Set(elem2,1,v3elem1);
    surfMesh.IEN.Set(elem2,2,v3elem2);
+
    setTriEdge();
    setNeighbourSurface();
   }
@@ -1909,7 +1954,7 @@ void Model3D::deletePoint(int _v)
 
 void Model3D::removePointsByLength()
 {
- real test = 0.5*minEdge; // 50% of minEdge
+ real test = 0.3*minEdge; // 30% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2117,13 +2162,13 @@ void Model3D::mesh2Dto3DOriginal()
 //-------------------------------------------------- 
 
  int ny = 4;
- int nPoints = 20;
+ int nPoints = 25;
 
  // tetgen mesh object 
  tetgenio in,out;
  in.mesh_dim = 3;
  //in.numberofpoints = surfMesh.numVerts;
- in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*ny);
+ in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*(ny-2));
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
@@ -2172,12 +2217,12 @@ void Model3D::mesh2Dto3DOriginal()
  {
   for( int j=0;j<nPoints;j++ )
   {
-   for( int k=1;k<(ny+1);k++ )
+   for( int k=1;k<(ny-1);k++ )
    {
 	real dx = (-2.0*xi)/(nPoints-1);
 	in.pointlist[3*count+0] = xi + dx*i;
 
-	real dy = (Ymin2-Ymin1)/(ny+1);
+	real dy = (Ymin2-Ymin1)/(ny-1);
 	in.pointlist[3*count+1] = yi + dy*k;
 
 	real dz = (-2.0*zi)/(nPoints-1);
@@ -2233,17 +2278,9 @@ void Model3D::mesh2Dto3DOriginal()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // definindo regiao fora da bolha 
- //in.regionlist[0] = X.Min();
- //in.regionlist[1] = Y.Min();
- //in.regionlist[2] = Z.Min();
-//--------------------------------------------------
-//  in.regionlist[0] = 0.1;
-//  in.regionlist[1] = 0.1;
-//  in.regionlist[2] = 0.1;
-//-------------------------------------------------- 
- in.regionlist[0] = -5.8;
- in.regionlist[1] = -2.8;
- in.regionlist[2] = -2.8;
+ in.regionlist[0] = X.Min()+0.01;
+ in.regionlist[1] = Y.Min()+0.01;
+ in.regionlist[2] = Z.Min()+0.01;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -2369,11 +2406,12 @@ void Model3D::mesh3DPoints()
 {
  saveVTKSurface("./vtk/","before",0);
  insertPointsByLength();
- removePointsByLength();
+ insertPointsByInterfaceDistance();
  saveVTKSurface("./vtk/","between",0);
+ removePointsByLength();
+ saveVTKSurface("./vtk/","after1",0);
  flipTriangleEdge(0);
- saveVTKSurface("./vtk/","after",0);
- removePointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","after2",0);
 
  // cria objeto de malha do tetgen
  tetgenio in,mid,out;
@@ -2433,19 +2471,9 @@ void Model3D::mesh3DPoints()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
-//--------------------------------------------------
-//  in.regionlist[0] = X.Min();
-//  in.regionlist[1] = Y.Min();
-//  in.regionlist[2] = Z.Min();
-//-------------------------------------------------- 
-//--------------------------------------------------
-//  in.regionlist[0] = 0.1;
-//  in.regionlist[1] = 0.1;
-//  in.regionlist[2] = 0.1;
-//-------------------------------------------------- 
- in.regionlist[0] = -5.5;
- in.regionlist[1] = 0.0;
- in.regionlist[2] = 2.5;
+ in.regionlist[0] = X.Min()+0.01;
+ in.regionlist[1] = Y.Min()+0.01;
+ in.regionlist[2] = Z.Min()+0.01;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -5630,6 +5658,12 @@ void Model3D::saveVTKConvex( const char* _dir,const char* _filename, int _iter )
 
 void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 {
+ /* update interfaceMesh ---- */
+ setSurface(); // surface e nonSurface
+ setSurfaceFace();
+ setSurfaceTri();
+ /* ------------------------- */
+
  stringstream ss;  //convertendo int --> string
  string str;
  ss << _iter;

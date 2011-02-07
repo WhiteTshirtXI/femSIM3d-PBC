@@ -31,12 +31,6 @@ int main(int argc, char **argv)
  real mu_g = 1.7894E-05;
  real rho_l = 1000;
  real rho_g = 1.225;
-//--------------------------------------------------
-//  real mu_g = 0.001;
-//  real mu_l = 1.7894E-05;
-//  real rho_g = 1000;
-//  real rho_l = 1.225;
-//-------------------------------------------------- 
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -46,7 +40,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3D/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;
@@ -202,7 +196,7 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 1;
+ int nIter = 3000;
  int nReMesh = 1;
  for( int i=0;i<nIter;i++ )
  {

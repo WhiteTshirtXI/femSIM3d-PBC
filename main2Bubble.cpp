@@ -181,9 +181,9 @@ int main(int argc, char **argv)
   s1 = s2;
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;

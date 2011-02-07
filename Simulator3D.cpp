@@ -117,16 +117,18 @@ void Simulator3D::init()
 //   wSol.Set( (int) idbcw->Get(i),0.0 ); 
 //-------------------------------------------------- 
 
-/* two bubbles */
- for( int i=0;i<numNodes;i++ )
- {
-  real aux = X->Get(i);
-  uSol.Set(i,aux);
-  aux = -1.0*Y->Get(i);
-  vSol.Set(i,aux);
-  aux = 0.0;
-  wSol.Set(i,aux);
- }
+//--------------------------------------------------
+// /* two bubbles */
+//  for( int i=0;i<numNodes;i++ )
+//  {
+//   real aux = X->Get(i);
+//   uSol.Set(i,aux);
+//   aux = -1.0*Y->Get(i);
+//   vSol.Set(i,aux);
+//   aux = 0.0;
+//   wSol.Set(i,aux);
+//  }
+//-------------------------------------------------- 
 }
 
 void Simulator3D::assemble()
@@ -1179,7 +1181,7 @@ void Simulator3D::stepALEVel()
  setInterfaceVelNormal();
 
  setALEVelBC();
- for( int i=0;i<100;i++ )
+ for( int i=0;i<1;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1244,87 +1246,16 @@ void Simulator3D::setInterfaceVel()
 
 void Simulator3D::setInterfaceVelNormal()
 {
- list<int> plist,plist2;
- list<int>::iterator face,vert;
- vector< list<int> > *elemSurface = m->getElemSurface();
- vector< list<int> > *neighbourFaceVert = m->getNeighbourFaceVert();
-
  real bubbleZVelocity = getBubbleVelocity();
 
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
 
-  real sumXCrossUnit = 0;
-  real sumYCrossUnit = 0;
-  real sumZCrossUnit = 0;
-
-  plist = elemSurface->at (surfaceNode);
-  for( face=plist.begin();face!=plist.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   //    // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   real P0x = X->Get(surfaceNode);
-   real P0y = Y->Get(surfaceNode);
-   real P0z = Z->Get(surfaceNode);
-   plist2 = neighbourFaceVert->at (*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
-   real P1x = X->Get(v1);
-   real P1y = Y->Get(v1);
-   real P1z = Z->Get(v1);
-   real P2x = X->Get(v2);
-   real P2y = Y->Get(v2);
-   real P2z = Z->Get(v2);
-
-   // vetores
-   real x1 = P1x-P0x;
-   real y1 = P1y-P0y;
-   real z1 = P1z-P0z;
-   real x2 = P2x-P0x;
-   real y2 = P2y-P0y;
-   real z2 = P2z-P0z;
-
-   // produto vetorial para encontrar a normal a superficie do triangulo
-   real xCross = (y1*z2)-(z1*y2);
-   real yCross = -( (x1*z2)-(z1*x2) );
-   real zCross = (x1*y2)-(y1*x2);
-
-   // norma do vetor cross( xCross,yCross,zCross )
-   real len = sqrt( (xCross*xCross)+(yCross*yCross)+(zCross*zCross) );
-
-   // area calculada atraves da normal
-   //real area = 0.5*len;
-
-   // ponderando a normal (resultante do produto vetorial) com a area do
-   // triangulo, i.e., quem tem a menor area tem um peso maior na
-   // tangente
-   sumXCrossUnit += xCross/len;
-   sumYCrossUnit += yCross/len;
-   sumZCrossUnit += zCross/len;
-
-   //wALE.Set(aux,wSol.Get(aux)-bubbleZVelocity);
-
-  }
-  
-  // norma do vetor sumCrossUnit( sumXCrossUnit,sumYCrossUnit,sumZCrossUnit )
-  real len2 = sqrt( sumXCrossUnit*sumXCrossUnit +
-	                sumYCrossUnit*sumYCrossUnit +
-					sumZCrossUnit*sumZCrossUnit );
-
   // unitario do vetor normal (ponderado com a area) resultante
-  real xNormalUnit = sumXCrossUnit/len2;
-  real yNormalUnit = sumYCrossUnit/len2;
-  real zNormalUnit = sumZCrossUnit/len2;
-
-//--------------------------------------------------
-//   cout << surfaceNode << " " 
-//        << len2 << " " 
-//        << sumXCrossUnit << " " << sumYCrossUnit << " " << sumZCrossUnit << " "
-//        << xNormalUnit << " " << yNormalUnit << " " << zNormalUnit << endl;
-//-------------------------------------------------- 
+  real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+  real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+  real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
 
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
@@ -1438,12 +1369,19 @@ void Simulator3D::setInterface()
 
 void Simulator3D::setInterfaceGeo()
 {
- Interface3D interface(*m);
- clVector kappaAux = interface.computeKappa2();
-
- //interface.plotKappa(kappaAux);
- kappa = interface.setKappaSurface(kappaAux);
- // eu acho que eh necessario neste ponto aplicar a direcao do kappa
+//--------------------------------------------------
+//  Interface3D interface(*m);
+//  clVector kappaAux = interface.computeKappa2();
+// 
+//  //interface.plotKappa(kappaAux);
+//  kappa = interface.setKappaSurface(kappaAux);
+//  // eu acho que eh necessario neste ponto aplicar a direcao do kappa
+//  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
+//-------------------------------------------------- 
+ 
+ m->computeKappa();
+ m->setKappaSurface();
+ kappa = *m->getCurvature();
 
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
  
@@ -1886,8 +1824,8 @@ void Simulator3D::setMuRho(real _muLiquid,real _muGas,
  real rhoGasAdimen = _rhoGas/rhoReference;
 
  real muReference = _muLiquid;
- real muLiquidAdimen = (_muLiquid/muReference);
- real muGasAdimen = (_muGas/muReference); 
+ real muLiquidAdimen = _muLiquid/muReference;
+ real muGasAdimen = _muGas/muReference;
 
  // gas phase (bubble)
  list<int> *inElem;
@@ -2631,8 +2569,10 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  idbcc = m->getIdbcc();
  outflow = m->getOutflow();
  IEN = m->getIEN();
+ curvature = m->getCurvature();
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
+ mesh3d = m->getMesh3d();
 }
 
 

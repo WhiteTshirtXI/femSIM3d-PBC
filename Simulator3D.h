@@ -173,7 +173,9 @@ class Simulator3D
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
   clVector *outflow,*surface;
   clMatrix *IEN;
+  clDMatrix *curvature;
   SurfaceMesh *surfMesh;
+  Mesh3D *mesh3d;
 
   clMatrix K,Kc,Mrho,M,Mc,G,D;
   clMatrix mat,matc;

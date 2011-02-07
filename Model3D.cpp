@@ -6,7 +6,6 @@
 
 
 #include "Model3D.h"
-#include "tetgen.h"
 
 // necessario para leitura do objeto triangle.o escrito em ANSI C
 extern "C"
@@ -187,7 +186,7 @@ void Model3D::readMSH( const char* filename )
 
  if( !mshFile )
  {
-  cerr << "Esta faltando o arquivo de Malha!" << endl;
+  cerr << "Esta faltando o arquivo de Malha .msh!" << endl;
   exit(1);
  }
 
@@ -435,6 +434,8 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
+
+ mesh3d = convertTetgenToMesh3d(out);
 }
 
 void Model3D::setStepBC()
@@ -719,111 +720,9 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
+ mesh3d = convertTetgenToMesh3d(out);
 }
 
-/*  This method makes re-meshing test and can be modified */
-void Model3D::meshTest()
-{
-//--------------------------------------------------
-//  clVector test = cc==0.5;
-//  clVector t1 = test.Find();
-// 
-//  clVector x1,y1,z1;
-//  for( int i=0;i<t1.Dim();i++ )
-//  {
-//   x1.AddItem(X.Get(t1.Get(i)));
-//   y1.AddItem(Y.Get(t1.Get(i)));
-//   z1.AddItem(Z.Get(t1.Get(i)));
-//  }
-//  numVerts = x1.Dim();
-//-------------------------------------------------- 
-
- // cria objeto de malha do tetgen
- tetgenio in,out;
- in.mesh_dim = 3;
- in.numberofpoints = numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
- in.pointmarkerlist = new int[in.numberofpoints];
-
- // adiciona na estrutura tetgen as coordenadas dos pontos
- for( int i=0;i<numVerts;i++ )
- {
-  in.pointlist[3*i+0] = X.Get(i);
-  in.pointlist[3*i+1] = Y.Get(i);
-  in.pointlist[3*i+2] = Z.Get(i);
-  if( cc.Get(i) == 0.0 )
-   in.pointmarkerlist[i] = 11; // fora
-  if( cc.Get(i) == 0.5 )
-   in.pointmarkerlist[i] = 22; // interface
-  if( cc.Get(i) == 1.0 )
-   in.pointmarkerlist[i] = 33; // dentro
- }
-
- //in.save_poly("bubble");
- //in.save_nodes("bubble");
- //in.save_elements("in");
- cout << "numElems IN = " << numElems << endl;
- cout << "numNodes IN = " << numNodes << endl;
- cout << "numVerts IN = " << in.numberofpoints << endl;
-
- cout << endl;
- cout << "----> meshing... ";
- //tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
- tetrahedralize( (char*) "",&in,&out );
- cout << "finished <---- " << endl;;
- cout << endl;
- 
- numElems = out.numberoftrifaces;
- numNodes = out.numberofpoints+numElems;
- numVerts = out.numberofpoints;
- cout << "numElems OUT = " << out.numberoftetrahedra << endl;
- cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
- cout << "numVerts OUT = " << out.numberofpoints << endl;
- cout << "numfacets OUT = " << out.numberoftrifaces << endl;
- //out.save_elements("out");
- //out.save_nodes("out");
- //out.save_poly("out");
- //out.save_faces("out");
-
- IEN.Dim(numElems,4);
- for( int i=0;i<out.numberoftrifaces;i++ )
- {
-  for( int j=0;j<3;j++ )
-  {
-   int vertice = out.trifacelist[i*3+j];
-   IEN.Set(i,j,vertice);
-  }
-  //cout << out.trifacemarkerlist[0] << endl;
- }
-
-//--------------------------------------------------
-//  // varre lista de elementos e passa para estrutura IEN
-//  IEN.Dim(numElems,5);
-//  cc.Dim(numVerts);
-//  inElem.resize (0);
-//  outElem.resize (0);
-//  // varre lista de elementos e passa para estrutura IEN
-//  for( int i=0;i<out.numberoftetrahedra;i++ )
-//  {
-//   for( int j=0;j<4;j++ )
-//   {
-//    int vertice = out.tetrahedronlist[i*4+j];
-//    IEN.Set(i,j,vertice);
-//   }
-//  }
-//-------------------------------------------------- 
-
- // atualizando valores de X,Y,Z,uc,vc,wc e pc
- X.Dim(numNodes);
- Y.Dim(numNodes);
- Z.Dim(numNodes);
- for( int i=0;i<numVerts;i++ )
- {
-  X.Set(i,out.pointlist[3*i+0]);
-  Y.Set(i,out.pointlist[3*i+1]);
-  Z.Set(i,out.pointlist[3*i+2]);
- }
-}
 
 void Model3D::mesh2Dto3D()
 {
@@ -962,6 +861,8 @@ void Model3D::mesh2Dto3D()
    	  out.pointmarkerlist[i] == 22 )
    cc.Set(i,0.5);
  }
+
+ mesh3d = convertTetgenToMesh3d(out);
 }
 
 void Model3D::setTriEdge()
@@ -1095,7 +996,7 @@ void Model3D::setTriangleMinEdge()
  cout << "       ****************** " << endl;
  cout << endl;
 
- minEdge = 0.1;
+ minEdge = 0.11;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -1119,7 +1020,7 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.5*minEdge )//&&
+	  edgeLength > 1.2*minEdge )//&&
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
@@ -1139,7 +1040,7 @@ void Model3D::insertPointsByInterfaceDistance()
  real Ymin1=-100;
  real Ymax2=-100;
  real Ymin2=100;
- 
+
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   // bubble 1 (Y<0)
@@ -1157,34 +1058,26 @@ void Model3D::insertPointsByInterfaceDistance()
  }
 
  int ny = 4;
- real dist = Ymin2-Ymin1;
+ real distMin = Ymin2-Ymin1;
+ //real distMax = Ymax2-Ymax1;
  real dy = (Ymin2-Ymin1)/(ny-1);
 
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  real aux = (dist/2.0)+dy;
+  real aux = (distMin/2.0)+3*dy;
+  //real aux = (distMin/2.0)+(distMax-distMin)/3.0;
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) < aux && 
+	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) < 1.0*aux && 
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
-	  edgeLength > dy )
-  {
-   //--------------------------------------------------
-   //   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
-   //     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
-   //     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
-   //     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
-   //-------------------------------------------------- 
-   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
-   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
-   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
-   cout << "added by distance ";
+	  edgeLength > 2*dy )
    insertPoint(i);
-  }
  }
 }
 
+// triangulate the interface using triangles with sorted vertices.
+// this methods does not work for conncave polyhedrons
 void Model3D::surfaceTriangulator(int _v)
 {
  int listSize = neighbourPoint.at(_v).size();
@@ -1208,32 +1101,21 @@ void Model3D::surfaceTriangulator(int _v)
 
 void Model3D::surfaceTriangulatorEarClipping(int _v)
 {
- // removing last element that is equal to the first one
- neighbourPoint.at(_v).pop_back();
-
- int listSize = neighbourPoint.at(_v).size();
- list<int> plist = neighbourPoint.at(_v);
- list<int>::iterator point=plist.begin();
  int vert1,vert2,vert3;
+ int listSize = neighbourPoint.at(_v).size();
 
-//--------------------------------------------------
-//  for( int j=0;j<listSize;j++ )
-//  {
-//   cout << *point << " ";
-//   ++point;
-//  }
-//  cout << endl;
-//  point=plist.begin();
-//-------------------------------------------------- 
-
- while( listSize>2 )
+ // listSize = number of points of polyhedron + 1 (to close the
+ // polyhedron)
+ // ex.: 0 1 2 3 4 5 0 (closed polyhedron)
+ while( listSize>4 )
  {
-  vert1 = *point;
-  point=neighbourPoint.at(_v).erase(point); // removing 2nd vertice
-  plist.push_back(vert1); // moving to last position
-  vert2 = *point;
-  point=neighbourPoint.at(_v).erase(point); // removing 2nd vertice
+  list<int> plist = neighbourPoint.at(_v);
+  list<int>::iterator point=plist.begin();
+  vert1 = *point;++point;
+  vert2 = *point;++point;
   vert3 = *point;
+  neighbourPoint.at(_v).remove(vert2); // removing 2nd vertice
+  listSize--;
 
   // adding new element
   surfMesh.IEN.AddRow();
@@ -1241,17 +1123,56 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
   surfMesh.IEN.Set(elem,0,vert1);
   surfMesh.IEN.Set(elem,1,vert2);
   surfMesh.IEN.Set(elem,2,vert3);
-  //cout << vert1 << " " << vert2 << " " << vert3 << endl;
+  surfMesh.numElems++;
 
-  listSize--;
  }
+ list<int> plist = neighbourPoint.at(_v);
+ list<int>::iterator point=plist.begin();
+ // adding last remaning element
+ vert1 = *point;++point;
+ vert2 = *point;++point;
+ vert3 = *point;
+ // adding new element
+ surfMesh.IEN.AddRow();
+ int elem = surfMesh.IEN.DimI()-1;
+ surfMesh.IEN.Set(elem,0,vert1);
+ surfMesh.IEN.Set(elem,1,vert2);
+ surfMesh.IEN.Set(elem,2,vert3);
+ surfMesh.numElems++;
 }
 
-// input: vertex to be deleted
-// output: vector with 3 nodes to create 1 element
-// description: this method check the quality of all ear triangles that
-// can be created from the resulting polyhedron after deletion of vertex
-// _v.
+/* input: vertex to be deleted
+ *
+ *
+ *
+ * output: vector with 3 nodes to create 1 element
+ * description: this method check the quality of all ear triangles that
+ * can be created from the resulting polyhedron after deletion of vertex
+ * _v.
+ * 
+ * Problem to be solved:
+ *
+ *          0 *
+ *            |\
+ *			  | \
+ *		    1 *  \
+ *			  |   \
+ *			  |    \
+ *		    2 *-----* 3
+ *
+ * 0-1-2-3 are coplanar and 0-1-2 are aligned. This method will chose
+ * the triangulation as following:
+ * 
+ * 1st. best triangle: 0-3-2
+ * 2nd. and final triangle: 2-1-0 (invalid triangle!)
+ *
+ * This method should triangulate like:
+ * 
+ * 1st. 0-3-1
+ * 2nd. 2-1-3
+ * 
+ * HOW CAN WE DO IT?
+ */
 clVector Model3D::triangleQuality(int _v)
 {
  // adding 2nd element to end of the list, but comparing if it is
@@ -1264,9 +1185,15 @@ clVector Model3D::triangleQuality(int _v)
  list<int>::iterator mele2=plist2.begin();
  ++mele2;
  int v2=*mele2;
- mele2=plist2.end();--mele2;
- if( v2 != *mele2  )
-  neighbourPoint.at(_v).push_back(v2);
+ neighbourPoint.at(_v).push_back(v2);
+
+// I think it is not necessary to check the following (03.02.2011)
+// if and only if we remove the added vertex (v2) in the end of this
+// method
+//--------------------------------------------------
+//  mele2=plist2.end();--mele2;
+//  if( v2 != *mele2  )
+//-------------------------------------------------- 
 
  int listSize = neighbourPoint.at(_v).size();
  list<int> plist = neighbourPoint.at(_v);
@@ -1327,6 +1254,9 @@ clVector Model3D::triangleQuality(int _v)
    vertexMax.Set(2,vert3);
   }
  }
+ // removing the 2nd vertex inserted on the neighbourPoint list on the 
+ // beginning of this method
+ neighbourPoint.at(_v).pop_back();
 
  return vertexMax;
 }
@@ -1364,6 +1294,7 @@ void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
   surfMesh.IEN.Set(elem,2,vert3);
   surfMesh.numElems++;
 
+  cout << vert1 << " " << vert2 << " " << vert3 << endl;
  }
  // adding last remaning element
  list<int> plist = neighbourPoint.at(_v);
@@ -1379,6 +1310,8 @@ void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
  surfMesh.IEN.Set(elem,1,vert2);
  surfMesh.IEN.Set(elem,2,vert3);
  surfMesh.numElems++;
+ cout << vert1 << " " << vert2 << " " << vert3 << endl;
+ cout << "=========================================" << endl;
 }
 
 void Model3D::deleteSurfacePoint(int _v)
@@ -1506,27 +1439,20 @@ void Model3D::setPolyhedron(int _v)
 	 break;
 	}
    }
-//--------------------------------------------------
-//    if( ii == 309 )
-//    {
-//    cout << "-------- " << ii << endl;
-//    test.Display();
-//    cout << endl;
-//    }
-//-------------------------------------------------- 
   }
   neighbourPoint.at(_v).clear();
   for( int i=0;i<test.DimI();i++ )
    for( int j=0;j<test.DimJ();j++ )
 	neighbourPoint.at(_v).push_back(test.Get(i,j));
 
-  // removing duplicated elements
+  // removing all but the first element from every consecutive group of
+  // equal elements in the list container
   neighbourPoint.at(_v).unique();
   //--------------------------------------------------
-  //   cout << "---------" << ii << "------------" << endl;
+  //   cout << "---------" << _v << "------------" << endl;
   //   std::ostream_iterator< int > output( cout, " " );
-  //   std::copy( neighbourPoint.at(ii).begin(), 
-  //              neighbourPoint.at(ii).end(), output );
+  //   std::copy( neighbourPoint.at(_v).begin(), 
+  //              neighbourPoint.at(_v).end(), output );
   //   cout << endl;
   //-------------------------------------------------- 
 }
@@ -1689,6 +1615,9 @@ void Model3D::insertPoint(int _edge)
  real XvAdd = surfMesh.X.Get(v1)+( surfMesh.X.Get(v2)-surfMesh.X.Get(v1) )*0.5;
  real YvAdd = surfMesh.Y.Get(v1)+( surfMesh.Y.Get(v2)-surfMesh.Y.Get(v1) )*0.5;
  real ZvAdd = surfMesh.Z.Get(v1)+( surfMesh.Z.Get(v2)-surfMesh.Z.Get(v1) )*0.5;
+
+ // move the point to the right position according to the curvature
+ // TO BE IMPLEMENTED
 
  // insert aditional vertice coordinate
  X.AddItem(vAdd,XvAdd);
@@ -1919,9 +1848,12 @@ void Model3D::deletePoint(int _v)
  // deleting elements
  deleteSurfaceElementByPoint(_v);
 
- // after the deletion process it's necessary to create new elements
- // to fullfill the space left by the deletion of elements
+
+ // ordering the vertices of the polyhedron surrounding the vertex _v
  setPolyhedron(_v);
+
+ // after the deletion process it's mandatory to create new elements
+ // to fill the space left by the deleting process
  //surfaceTriangulator(_v);
  //surfaceTriangulatorEarClipping(_v);
  surfaceTriangulatorQualityEarClipping(_v);
@@ -1954,7 +1886,7 @@ void Model3D::deletePoint(int _v)
 
 void Model3D::removePointsByLength()
 {
- real test = 0.3*minEdge; // 30% of minEdge
+ real test = 0.4*minEdge; // 30% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2054,7 +1986,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = distance.Get(i);
   //if( d>0 && d<0.4*minEdge ) // mainBubble.cpp
-  if( d>0 && d<0.2*minEdge )
+  if( d>0 && d<0.8*minEdge ) // hiRe
   {
    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
 	    << resetColor() << i << endl;
@@ -2144,6 +2076,67 @@ void Model3D::insertPointsByArea()
   }
  }
 }
+
+//--------------------------------------------------
+// /* 
+//  * strategy to ADD points - to be validated
+//  */
+// void Model3D::insertPointsBetweenBubblesByPosition()
+// {
+//  int ny = 4; // number of points between interfaces
+//  int nPoints = 25;
+// 
+//  real Ymax1=100;
+//  real Ymin1=-100;
+//  real Ymax2=-100;
+//  real Ymin2=100;
+// 
+//  for( int i=0;i<surfMesh.numVerts;i++ )
+//  {
+//   // bubble 1 (Y<0)
+//   if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+//   {
+//    if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
+//    if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
+//   }
+//   // bubble 2 (Y>0)
+//   if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+//   {
+//    if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
+//    if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
+//   }
+//  }
+// 
+//  // initial position
+//  real xi = -0.80;
+//  real yi = Ymin1;
+//  real zi = -0.40;
+// 
+//  // distance between points
+//  real dx = (-2.0*xi)/(nPoints-1);
+//  real dy = (Ymin2-Ymin1)/(ny+1);
+//  real dz = (-2.0*zi)/(nPoints-1);
+// 
+//  // counter to numberize added points
+//  int count = surfMesh.numVerts;
+// 
+//  for( int i=0;i<nPoints;i++ )
+//  {
+//   for( int j=1;j<=ny;j++ )
+//   {
+//    for( int k=0;k<nPoints;k++ )
+//    {
+// 	in.pointlist[3*count+0] = xi + dx*i;
+// 	in.pointlist[3*count+1] = yi + dy*j;
+// 	in.pointlist[3*count+2] = zi + dz*k;
+// 	in.pointmarkerlist[count] = 11;
+// 
+// 	count++;
+//    }
+//   }
+//  }
+// }
+//-------------------------------------------------- 
  
 /* This method re-mesh completly the domain preserving only the points
  * located at surface and convex-hull. To do so, surfMesh.numVerts and
@@ -2151,24 +2144,20 @@ void Model3D::insertPointsByArea()
  * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
-//--------------------------------------------------
-//  saveVTKSurface("./vtk/","before",0);
-//  insertPointsByLength();
-//  saveVTKSurface("./vtk/","between",0);
-//  removePointsByLength();
-//  saveVTKSurface("./vtk/","flipBetween",0);
-//  flipTriangleEdge(0);
-//  saveVTKSurface("./vtk/","after",0);
-//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","before",0);
+ insertPointsByLength();
+ saveVTKSurface("./vtk/","between",0);
+ removePointsByLength();
+ saveVTKSurface("./vtk/","flipBetween",0);
+ flipTriangleEdge(0);
+ saveVTKSurface("./vtk/","after",0);
 
- int ny = 4;
- int nPoints = 25;
 
  // tetgen mesh object 
  tetgenio in,out;
  in.mesh_dim = 3;
- //in.numberofpoints = surfMesh.numVerts;
- in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*(ny-2));
+ in.numberofpoints = surfMesh.numVerts;
+ //////in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*ny);
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
@@ -2183,86 +2172,6 @@ void Model3D::mesh2Dto3DOriginal()
   if( surfMesh.Marker.Get(i) == 0.5 )
    in.pointmarkerlist[i] = 22; // same id of facetmarker
  }
-
- // ******************************************** //
- // strategy to ADD points - to be implemented - //
- // ******************************************** //
- 
- real Ymax1=100;
- real Ymin1=-100;
- real Ymax2=-100;
- real Ymin2=100;
- 
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  // bubble 1 (Y<0)
-  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
-  {
-   if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
-   if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
-  }
-  // bubble 2 (Y>0)
-  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
-  {
-   if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
-   if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
-  }
- }
-
- real xi = -0.80;
- real yi = Ymin1;
- real zi = -0.40;
- int count = surfMesh.numVerts;
- for( int i=0;i<nPoints;i++ )
- {
-  for( int j=0;j<nPoints;j++ )
-  {
-   for( int k=1;k<(ny-1);k++ )
-   {
-	real dx = (-2.0*xi)/(nPoints-1);
-	in.pointlist[3*count+0] = xi + dx*i;
-
-	real dy = (Ymin2-Ymin1)/(ny-1);
-	in.pointlist[3*count+1] = yi + dy*k;
-
-	real dz = (-2.0*zi)/(nPoints-1);
-	in.pointlist[3*count+2] = zi + dz*j;
-
-	in.pointmarkerlist[count] = 11;
-
-	count++;
-   }
-  }
- }
-
-//--------------------------------------------------
-//  for( int i=0;i<in.numberofpoints;i++ )
-//  {
-//   if( (in.pointlist[3*i+0]*in.pointlist[3*i+0] ) < 0.0 + EPS && 
-//       (in.pointlist[3*i+1]*in.pointlist[3*i+1] ) < 0.0 + EPS && 
-//       (in.pointlist[3*i+2]*in.pointlist[3*i+2] ) < 0.0 + EPS )
-//    cout << i << " " 
-// 	    << in.pointlist[3*i+0] << " " 
-// 	    << in.pointlist[3*i+1] << " " 
-// 	    << in.pointlist[3*i+2] << " "
-// 	    << in.pointmarkerlist[i] << endl;
-//  }
-//-------------------------------------------------- 
-
-
-
-//--------------------------------------------------
- //int j=1;
-//  for( int i=surfMesh.numVerts;i<surfMesh.numVerts+n;i++ )
-//  {
-//   in.pointlist[3*i+0] = 0.0;
-//   in.pointlist[3*i+1] = y0+j*deltaY;
-//   in.pointlist[3*i+2] = 0.0 ;
-//   in.pointmarkerlist[i] = 11;
-//   j++;
-//  }
-//-------------------------------------------------- 
-
 
  /* This procedure defines regions on the mesh and after
   * insertion/deletion of points by the tetgen program we can easily
@@ -2324,13 +2233,11 @@ void Model3D::mesh2Dto3DOriginal()
  cout << "numNodes IN = " << surfMesh.numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
 
- saveVTKSurface("./vtk/","test1",0);
-
  cout << endl;
  cout << "----> complete re-meshing the domain... ";
  //tetrahedralize( (char*) "VYYApq1.4241",&in,&out );
  //tetrahedralize( (char*) "QYYCApq1.4241a0.05",&in,&out );
- tetrahedralize( (char*) "QYYCApq1.4241a0.1",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.414q10a0.5",&in,&out );
  //tetrahedralize( (char*) "QYYCApq1.414q10a0.001",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
@@ -2387,31 +2294,199 @@ void Model3D::mesh2Dto3DOriginal()
 	  out.pointmarkerlist[i] == 22 )
    cc.Set(i,0.5);
  }
-//--------------------------------------------------
-//  for( int i=0;i<out.numberofpoints;i++ )
-//  {
-//   if( (out.pointlist[3*i+0]*out.pointlist[3*i+0] ) < 0.0 + EPS && 
-//       (out.pointlist[3*i+1]*out.pointlist[3*i+1] ) < 0.0 + EPS && 
-//       (out.pointlist[3*i+2]*out.pointlist[3*i+2] ) < 0.0 + EPS )
-//    cout << i << " " 
-// 	    << out.pointlist[3*i+0] << " " 
-// 	    << out.pointlist[3*i+1] << " " 
-// 	    << out.pointlist[3*i+2] << endl;
-//  }
-//-------------------------------------------------- 
- saveVTKSurface("./vtk/","test2",0);
+
+ mesh3d = convertTetgenToMesh3d(out);
+
+ printMeshReport(out);
+}
+
+tetgenio Model3D::convertSurfaceMeshToTetGen(SurfaceMesh _mesh)
+{
+ tetgenio in;
+
+ in.mesh_dim = 3;
+ in.numberofpoints = _mesh.numVerts;
+ in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointmarkerlist = new int[in.numberofpoints];
+
+ // add to tetgen struct the point coords
+ for( int i=0;i<_mesh.numVerts;i++ )
+ {
+  in.pointlist[3*i+0] = _mesh.X.Get(i);
+  in.pointlist[3*i+1] = _mesh.Y.Get(i);
+  in.pointlist[3*i+2] = _mesh.Z.Get(i);
+  if( _mesh.Marker.Get(i) == 0.0 )
+   in.pointmarkerlist[i] = 11;
+  if( _mesh.Marker.Get(i) == 0.5 )
+   in.pointmarkerlist[i] = 22; // same id of facetmarker
+ }
+
+ /* This procedure defines regions on the mesh and after
+  * insertion/deletion of points by the tetgen program we can easily
+  * recognize the point locations by the regionlist array and then we
+  * can define the points relied inside the bubble (1.0), on the surface
+  * (0.5) and outside the bubble (0.0). To do so it is necessery to
+  * define AT LEAST one region, preferably the one between the interface 
+  * and convex hull. 
+  * To recovery the information of different zones, after the meshing
+  * procedure is necessary to look at tetrahedronattributelist 
+  * */
+ in.numberofregions = 1; 
+ in.regionlist = new REAL[in.numberofregions*4];
+
+ // definindo regiao fora da bolha 
+ in.regionlist[0] = X.Min()+0.01;
+ in.regionlist[1] = Y.Min()+0.01;
+ in.regionlist[2] = Z.Min()+0.01;
+ in.regionlist[3] = 1;
+
+ tetgenio::facet *f;   // Define a pointer of facet. 
+ tetgenio::polygon *p; // Define a pointer of polygon.
+ in.numberoffacets = _mesh.numElems; 
+ in.facetlist = new tetgenio::facet[in.numberoffacets]; 
+ in.facetmarkerlist = new int[in.numberoffacets];
+ //in.trifacemarkerlist = new int[in.numberoffacets];
+
+ // defining the interface and convex-hull
+ // definindo a superficie da bolha e convex-hull
+ for( int i=0;i<_mesh.numElems;i++ )
+ {
+  int v1 = _mesh.IEN.Get(i,0);
+  int v2 = _mesh.IEN.Get(i,1);
+  int v3 = _mesh.IEN.Get(i,2);
+  f = &in.facetlist[i];
+  f->numberofpolygons = 1;
+  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+  f->numberofholes = 0; 
+  f->holelist = NULL;
+  p = &f->polygonlist[0];
+  p->numberofvertices = 3;
+  p->vertexlist = new int[p->numberofvertices];
+  p->vertexlist[0] = v1; 
+  p->vertexlist[1] = v2; 
+  p->vertexlist[2] = v3;
+  // melhorar esta configuracao de facet para bolha e convex hull
+  if( _mesh.Marker.Get(v1) + 
+	  _mesh.Marker.Get(v2) + 
+	  _mesh.Marker.Get(v3) > 0 )
+   in.facetmarkerlist[i] = 10;
+  else
+   in.facetmarkerlist[i] = 20;
+ }
+ return in;
+}
+
+Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_out)
+{
+ Mesh3D mesh;
+ mesh.numElems = _out.numberoftetrahedra;
+ mesh.numNodes = _out.numberofpoints+_out.numberoftetrahedra;
+ mesh.numVerts = _out.numberofpoints;
+ mesh.IEN.Dim(mesh.numElems);
+ mesh.Marker.Dim(mesh.numVerts);
+ mesh.Marker.SetAll(0.0);
+
+ // varre lista de elementos e passa para estrutura IEN
+ for( int i=0;i<_out.numberoftetrahedra;i++ )
+ {
+  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  if( _out.tetrahedronattributelist[i] == 1 )
+  {
+   for( int j=0;j<4;j++ )
+   {
+	int vertice = _out.tetrahedronlist[i*4+j];
+	mesh.IEN.Set(i,j,vertice);
+	mesh.Marker.Set(vertice,0.0);
+   }
+  }
+  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  else 
+  {
+   for( int j=0;j<4;j++ )
+   {
+	int vertice = _out.tetrahedronlist[i*4+j];
+
+	mesh.IEN.Set(i,j,vertice);
+	mesh.Marker.Set(vertice,1.0);
+   }
+  }
+ }
+
+ // atualizando valores de X,Y,Z,uc,vc,wc e pc
+ mesh.X.Dim(numNodes);
+ mesh.Y.Dim(numNodes);
+ mesh.Z.Dim(numNodes);
+ for( int i=0;i<mesh.numVerts;i++ )
+ {
+  mesh.X.Set(i,_out.pointlist[3*i+0]);
+  mesh.Y.Set(i,_out.pointlist[3*i+1]);
+  mesh.Z.Set(i,_out.pointlist[3*i+2]);
+  if( _out.pointmarkerlist[i] == 10 ||
+	  _out.pointmarkerlist[i] == 22 )
+   mesh.Marker.Set(i,0.5);
+ }
+
+ return mesh;
+}
+
+void Model3D::printMeshReport(tetgenio &_mesh)
+{
+ /* **************************************
+  *
+  * regular  a^3 sqrt(2)
+  *   tet  = -----------
+  * volume       12
+  *
+  *
+  * ************************************** */
+
+ real aux;
+ real minVol = 1.0E+20; // initial value
+ real maxVol = 1.0E-20; // initial value
+
+ int count=0;
+
+ for( int i=0;i<_mesh.numberoftetrahedra;i++ )
+ {
+  int v1 = _mesh.tetrahedronlist[i*4+0];
+  int v2 = _mesh.tetrahedronlist[i*4+1];
+  int v3 = _mesh.tetrahedronlist[i*4+2];
+  int v4 = _mesh.tetrahedronlist[i*4+3];
+
+  aux = fabs(getVolume(i));
+
+  if( _mesh.pointmarkerlist[v1] == 22 &&
+      _mesh.pointmarkerlist[v2] == 22 &&
+      _mesh.pointmarkerlist[v3] == 22 &&
+      _mesh.pointmarkerlist[v4] == 22 )
+   count++;
+  if( aux < minVol ) 
+   minVol = aux;
+  if( aux > maxVol ) 
+   maxVol = aux;
+ }
+ cout << "   |----------------- Mesh Report ---------------------|" << endl;
+ cout << "     mesh: " << count 
+      << " tets w/ all the 4 verts on the interface " << endl;
+ cout << "     interface average element edge length: " << minEdge << endl;
+ cout << "     desired tetrahedron volume  : " 
+      << minEdge*minEdge*minEdge*sqrt(2)/12 << endl;
+ cout << "     min tetrahedron volume: " << minVol << endl;
+ cout << "     max tetrahedron volume: " << maxVol << endl;
+ cout << "   |---------------------------------------------------|" << endl;
 }
 
 void Model3D::mesh3DPoints()
 {
- saveVTKSurface("./vtk/","before",0);
+ saveVTKSurface("./vtk/","start",0);
  insertPointsByLength();
- insertPointsByInterfaceDistance();
- saveVTKSurface("./vtk/","between",0);
+ //insertPointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","inserted",0);
  removePointsByLength();
- saveVTKSurface("./vtk/","after1",0);
- flipTriangleEdge(0);
- saveVTKSurface("./vtk/","after2",0);
+ saveVTKSurface("./vtk/","removed",0);
+ //flipTriangleEdge(0);
+ saveVTKSurface("./vtk/","flipped",0);
+ //removePointsByInterfaceDistance();
 
  // cria objeto de malha do tetgen
  tetgenio in,mid,out;
@@ -2428,9 +2503,9 @@ void Model3D::mesh3DPoints()
   in.pointlist[3*i+0] = surfMesh.X.Get(i); // surfMesh.X nao esta no ALE
   in.pointlist[3*i+1] = surfMesh.Y.Get(i); // surfMesh.Z nao esta no ALE
   in.pointlist[3*i+2] = surfMesh.Z.Get(i); // surfMesh.Y nao esta no ALE
-  if( surfMesh.Marker.Get(i) == 0.0 )
+  if( surfMesh.Marker.Get(i) == 0.0 ) // convex-hull
    in.pointmarkerlist[i] = 11;
-  if( surfMesh.Marker.Get(i) == 0.5 )
+  if( surfMesh.Marker.Get(i) == 0.5 ) // interface
    in.pointmarkerlist[i] = 22;
  }
  
@@ -2442,8 +2517,6 @@ void Model3D::mesh3DPoints()
   in.pointlist[3*i+2] = Z.Get(i);
   if( cc.Get(i) == 0.0 ) // fora da bolha
    in.pointmarkerlist[i] = 11;
-  if( cc.Get(i) == 0.5 ) // na interface
-   in.pointmarkerlist[i] = 22;
   if( cc.Get(i) == 1.0 ) // dentro da bolha
    in.pointmarkerlist[i] = 33;
  }
@@ -2519,7 +2592,7 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  cout << "----> re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCAipq1.414q5a0.5",&in,&out );
+ tetrahedralize( (char*) "QYYRCApq1.414q10a0.5",&in,&out );
  //tetrahedralize( (char*) "VYYRCAipq1.414q5a1.5",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
@@ -2538,7 +2611,7 @@ void Model3D::mesh3DPoints()
  //out.save_faces("out");
 
  // varre lista de elementos e passa para estrutura IEN
- IEN.Dim(numElems,5);
+ IEN.Dim(numElems,4);
  cc.Dim(numVerts);
  cc.SetAll(0.0);
  for( int i=0;i<out.numberoftetrahedra;i++ )
@@ -2579,6 +2652,11 @@ void Model3D::mesh3DPoints()
    cc.Set(i,0.5);
  }
 
+ printMeshReport(out);
+
+ mesh3d = convertTetgenToMesh3d(out);
+
+ //saveVTK("./vtk/","remesh",0);
  //breakup();
 }
 
@@ -5059,8 +5137,12 @@ void Model3D::setSurfaceConfig()
  setTriEdge(); 
  setNeighbourSurface(); 
  setTriangleMinEdge(); // minEdge check and config
- saveVTKConvex("./vtk/","conv",0);
- saveVTKSurface("./vtk/","surf",0);
+
+ computeKappa(); // compute kappa over the interface points
+ setKappaSurface(); // spread curvature along the 3D mesh
+ 
+ //saveVTKConvex("./vtk/","conv",0);
+ //saveVTKSurface("./vtk/","surf",0);
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -5095,138 +5177,6 @@ bool Model3D::testFace(int v1, int v2, int v3, int v4)
   }
   else
    return false;
-}
-
-// monta um vetor de comprimento de arestas do elemento de menor area e 
-// retorna o menor deltaX diferente de 0
-// o valor de deltaX retornado nao e necessariamente o menor deltaX da malha,
-// porem para malhas regulares o valor tende a ser o menor deltaX da malha
-real Model3D::getDeltaXMin()
-{
- int v[4];
- int elemIndex=(int) V.MinIndex();
- clVector deltaX(4);
-
- v[0]=(int) IEN.Get(elemIndex,0);
- v[1]=(int) IEN.Get(elemIndex,1);
- v[2]=(int) IEN.Get(elemIndex,2);
- v[3]=(int) IEN.Get(elemIndex,3);
-
- deltaX.Set(0,fabs(X.Get(v[0])-X.Get(v[1])));
- deltaX.Set(1,fabs(X.Get(v[1])-X.Get(v[2])));
- deltaX.Set(2,fabs(X.Get(v[2])-X.Get(v[3])));
- deltaX.Set(3,fabs(X.Get(v[3])-X.Get(v[0])));
- deltaX.Sort();
-
- if( deltaX.Get(0) == 0.0 )
-  if( deltaX.Get(1) == 0.0 )
-   return deltaX.Get(2);
-  else 
-   return deltaX.Get(1);
- else
-  return deltaX.Get(0);
-}
-
-// monta um vetor de comprimento de arestas do elemento de menor area e 
-// retorna o menor deltaY diferente de 0
-// o valor de deltaY retornado nao e necessariamente o menor deltaY da malha,
-// porem para malhas regulares o valor tende a ser o menor deltaY da malha
-real Model3D::getDeltaYMin()
-{
- int v[4];
- int elemIndex=(int) V.MinIndex();
- clVector deltaY(4);
-
- v[0] = (int) IEN.Get(elemIndex,0);
- v[1] = (int) IEN.Get(elemIndex,1);
- v[2] = (int) IEN.Get(elemIndex,2);
- v[3] = (int) IEN.Get(elemIndex,3);
-
- deltaY.Set(0,fabs(Y.Get(v[0])-Y.Get(v[1])));
- deltaY.Set(1,fabs(Y.Get(v[1])-Y.Get(v[2])));
- deltaY.Set(2,fabs(Y.Get(v[2])-Y.Get(v[3])));
- deltaY.Set(3,fabs(Y.Get(v[3])-Y.Get(v[0])));
- deltaY.Sort();
-
- if( deltaY.Get(0) == 0.0 )
-  if( deltaY.Get(1) == 0.0 )
-   return deltaY.Get(2);
-  else 
-   return deltaY.Get(1);
- else
-  return deltaY.Get(0);
-}
-
-// monta um vetor de comprimento de arestas do elemento de menor area e 
-// retorna o menor deltaZ diferente de 0
-// o valor de deltaZ retornado nao e necessariamente o menor deltaZ da malha,
-// porem para malhas regulares o valor tende a ser o menor deltaZ da malha
-real Model3D::getDeltaZMin()
-{
- int v[4];
- int elemIndex=(int) V.MinIndex();
- clVector deltaZ(4);
-
- v[0] = (int) IEN.Get(elemIndex,0);
- v[1] = (int) IEN.Get(elemIndex,1);
- v[2] = (int) IEN.Get(elemIndex,2);
- v[3] = (int) IEN.Get(elemIndex,3);
-
- deltaZ.Set(0,fabs(Y.Get(v[0])-Y.Get(v[1])));
- deltaZ.Set(1,fabs(Y.Get(v[1])-Y.Get(v[2])));
- deltaZ.Set(2,fabs(Y.Get(v[2])-Y.Get(v[3])));
- deltaZ.Set(3,fabs(Y.Get(v[3])-Y.Get(v[0])));
- deltaZ.Sort();
-
- if( deltaZ.Get(0) == 0.0 )
-  if( deltaZ.Get(1) == 0.0 )
-   return deltaZ.Get(2);
-  else 
-   return deltaZ.Get(1);
- else
-  return deltaZ.Get(0);
-}
-
-real Model3D::getMaxAbsUC()
-{
- clVector aux = uc.Abs();
- real r = aux.Max();
- return r;
-}
-
-real Model3D::getMinAbsUC()
-{
- clVector aux = uc.Abs();
- real r = aux.Min();
- return r;
-}
-
-real Model3D::getMaxAbsVC()
-{
- clVector aux = vc.Abs();
- real r = aux.Max();
- return r;
-}
-
-real Model3D::getMinAbsVC()
-{
- clVector aux = vc.Abs();
- real r = aux.Min();
- return r;
-}
-
-real Model3D::getMaxAbsWC()
-{
- clVector aux = wc.Abs();
- real r = aux.Max();
- return r;
-}
-
-real Model3D::getMinAbsWC()
-{
- clVector aux = wc.Abs();
- real r = aux.Min();
- return r;
 }
 
 real Model3D::getVolume(int _v1,int _v2,int _v3,int _v4)
@@ -5438,10 +5388,11 @@ bool Model3D::checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn)
 
  // normal vector
  // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- real x2 = (yVec1*zVec2)-(zVec1*yVec2);
- real y2 = -( (xVec1*zVec2)-(zVec1*xVec2) );
- real z2 = (xVec1*yVec2)-(yVec1*xVec2);
-
+ clVector cross = crossProd(xVec1,yVec1,zVec1,xVec2,yVec2,zVec2);
+ real x2 = cross.Get(0);
+ real y2 = cross.Get(1);
+ real z2 = cross.Get(2);
+ 
  // scalar product of the normal vector and surfaceNode->in to check if
  // they have the value < 90 degrees
  // produto escalar para saber se os vetores estao no mesmo sentido
@@ -5499,6 +5450,7 @@ void Model3D::moveZPoints(clVector &_vec,real _dt)
 SurfaceMesh* Model3D::getSurfMesh(){ return &surfMesh; }
 SurfaceMesh* Model3D::getInterfaceMesh(){ return &interfaceMesh; }
 SurfaceMesh* Model3D::getConvexMesh(){ return &convexMesh; }
+Mesh3D* Model3D::getMesh3d(){ return &mesh3d; }
 clVector* Model3D::getX(){ return &X; }
 real Model3D::getMaxX(){ return X.Max(); }
 real Model3D::getMinX(){ return X.Min(); }
@@ -5523,6 +5475,7 @@ clVector* Model3D::getIdbcw(){ return &idbcw; }
 clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
+clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
 int Model3D::getNumElems(){ return numElems; }
@@ -5658,11 +5611,12 @@ void Model3D::saveVTKConvex( const char* _dir,const char* _filename, int _iter )
 
 void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 {
- /* update interfaceMesh ---- */
- setSurface(); // surface e nonSurface
- setSurfaceFace();
- setSurfaceTri();
- /* ------------------------- */
+ /* ---- update interfaceMesh ---- */
+ //setSurface(); // surface and nonSurface 
+ //setNeighbour(); // neighbourElem
+ //setSurfaceFace(); // elemSurface and neighbourFaceVert
+ //setSurfaceTri(); // interfaceMesh
+ /* ------------------------------ */
 
  stringstream ss;  //convertendo int --> string
  string str;
@@ -5681,28 +5635,81 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  vtkFile << endl;
 
 
- vtkFile << "POINTS " << interfaceMesh.numVerts<< " double" << endl;
- for( int i=0;i<interfaceMesh.numVerts;i++ )
-  vtkFile << interfaceMesh.X.Get(i) << " " 
-          << interfaceMesh.Y.Get(i) << " " 
-		  << interfaceMesh.Z.Get(i) << endl;
+ vtkFile << "POINTS " << surfMesh.numVerts<< " double" << endl;
+ for( int i=0;i<surfMesh.numVerts;i++ )
+  vtkFile << surfMesh.X.Get(i) << " " 
+          << surfMesh.Y.Get(i) << " " 
+		  << surfMesh.Z.Get(i) << endl;
 
  vtkFile << endl;
 
- int numTri = interfaceMesh.numElems;
+ int j=0;
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  if( surfMesh.Marker.Get( surfMesh.IEN.Get(i,0) ) == 0.5 )
+   j++;
+ }
+ int numTri = j;
 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
- for( int i=0;i<interfaceMesh.numElems;i++ )
+ for( int i=0;i<surfMesh.numElems;i++ )
  {
-   vtkFile << "3 " << interfaceMesh.IEN.Get(i,0) << " "
-	               << interfaceMesh.IEN.Get(i,1) << " "
-				   << interfaceMesh.IEN.Get(i,2) << endl;
+  if( surfMesh.Marker.Get( surfMesh.IEN.Get(i,0) ) == 0.5 )
+   vtkFile << "3 " << surfMesh.IEN.Get(i,0) << " "
+	               << surfMesh.IEN.Get(i,1) << " "
+				   << surfMesh.IEN.Get(i,2) << endl;
  }
  vtkFile << endl;
 
  vtkFile <<  "CELL_TYPES " << numTri << endl;
  for( int i=0;i<numTri;i++ )
   vtkFile << "5 ";
+
+ vtkFile << endl;
+
+ vtkFile.close();
+}
+
+void Model3D::saveVTK( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename );
+
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "3D Simulation C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << endl;
+
+
+ vtkFile << "POINTS " << numVerts << " double" << endl;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << X.Get(i) << " " 
+          << Y.Get(i) << " " 
+		  << Z.Get(i) << endl;
+
+ vtkFile << endl;
+
+ vtkFile << "CELLS " << numElems << " " << 4*numElems << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+   vtkFile << "4 " << IEN.Get(i,0) << " "
+	               << IEN.Get(i,1) << " "
+	               << IEN.Get(i,2) << " "
+				   << IEN.Get(i,3) << endl;
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numElems << endl;
+ for( int i=0;i<numElems;i++ )
+  vtkFile << "10 ";
 
  vtkFile << endl;
 
@@ -5744,4 +5751,307 @@ clVector Model3D::dsearchn(clVector _X,clVector _Y,clVector _Z,
 
  // retorna o indice do ponto da malha
  return vmin;
+}
+
+void Model3D::computeKappa()
+{
+ setCloser();
+ int surfaceNode;
+ real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
+ list<int> plist,plist2;
+ list<int>::iterator face,vert;
+ surfMesh.xNormal.Dim(surfMesh.numVerts);
+ surfMesh.yNormal.Dim(surfMesh.numVerts);
+ surfMesh.zNormal.Dim(surfMesh.numVerts);
+ surfMesh.curvature.Dim(surfMesh.numVerts);
+
+ // loop sobre todos os nos da superficie 
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  surfaceNode = surface.Get(i);
+  real P0x = surfMesh.X.Get(surfaceNode);
+  real P0y = surfMesh.Y.Get(surfaceNode);
+  real P0z = surfMesh.Z.Get(surfaceNode);
+
+  //int c1 = 0;
+  sumXCrossUnit = 0;
+  sumYCrossUnit = 0;
+  sumZCrossUnit = 0;
+  fx = 0;
+  fy = 0;
+  fz = 0;
+  force = 0;
+  sumForce = 0;
+  sumArea = 0;
+  sumLength = 0;
+
+  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
+  plist = elemSurface.at (surfaceNode); 
+  for( face=plist.begin();face!=plist.end();++face )
+  {
+   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
+   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
+   plist2 = neighbourFaceVert.at (*face);
+   vert=plist2.begin();
+   int v1 = *vert;++vert;
+   int v2 = *vert;
+   vert=plist2.end();
+
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+   real P2x = surfMesh.X.Get(v2);
+   real P2y = surfMesh.Y.Get(v2);
+   real P2z = surfMesh.Z.Get(v2);
+
+   // distance do ponto 0 ate metade do segmento 01
+   real a = sqrt( (P0x-P1x)*(P0x-P1x)+
+	              (P0y-P1y)*(P0y-P1y)+
+				  (P0z-P1z)*(P0z-P1z) );
+
+   // distance do ponto 0 ate metade do segmento 02
+   real b = sqrt( (P0x-P2x)*(P0x-P2x)+
+	              (P0y-P2y)*(P0y-P2y)+
+			      (P0z-P2z)*(P0z-P2z) );
+
+   // distance da metade do segmento 01 ate metade do segmento 02
+   real c = sqrt( (P2x-P1x)*(P2x-P1x)+
+	              (P2y-P1y)*(P2y-P1y)+
+			      (P2z-P1z)*(P2z-P1z) );
+
+   // vetores
+   real x1 = P1x-P0x;
+   real y1 = P1y-P0y;
+   real z1 = P1z-P0z;
+   real x2 = P2x-P0x;
+   real y2 = P2y-P0y;
+   real z2 = P2z-P0z;
+   real xReta = P2x-P1x;
+   real yReta = P2y-P1y;
+   real zReta = P2z-P1z;
+
+   // vetores unitarios
+   real x1Unit = x1/a;
+   real y1Unit = y1/a;
+   real z1Unit = z1/a;
+
+   real x2Unit = x2/b;
+   real y2Unit = y2/b;
+   real z2Unit = z2/b;
+
+   real xRetaUnit = xReta/c;
+   real yRetaUnit = yReta/c;
+   real zRetaUnit = zReta/c;
+
+   // calculando o produto vetorial de cada elemento triangular da superficie
+   // para encontrar a normal ao plano do triangulo
+   clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
+
+   // norma do vetor normal do triangulo
+   real length = sqrt( cross.Get(0)*cross.Get(0)+
+                       cross.Get(1)*cross.Get(1)+
+                       cross.Get(2)*cross.Get(2));
+
+   // area do triangulo
+   real area = 0.5*length;
+
+   // somatoria dos vetores unitarios normais aos triangulos encontrados
+   // na estrela do vertice
+   sumXCrossUnit += cross.Get(0)/length;
+   sumYCrossUnit += cross.Get(1)/length;
+   sumZCrossUnit += cross.Get(2)/length;
+
+   // soma dos vetores 1Unit + 2Unit = resultante
+   real xPlaneRes = x1Unit+x2Unit;
+   real yPlaneRes = y1Unit+y2Unit;
+   real zPlaneRes = z1Unit+z2Unit;
+
+   // produto escalar --> projecao do vetor Res no segmento de reta
+   // | Unit.RetaUnit | . RetaUnit
+   // resultado = vetor tangente a reta situado na superficie
+   real prod = xPlaneRes*xRetaUnit + yPlaneRes*yRetaUnit + zPlaneRes*zRetaUnit;
+   real xPlaneTang = xRetaUnit*prod;
+   real yPlaneTang = yRetaUnit*prod;
+   real zPlaneTang = zRetaUnit*prod;
+
+   /* subtraindo vetor tangente do vetor unitario para encontrar as
+    * coordenadas do vetor normal SITUADO NA SUPERFICE (face do
+    * tetrahedro = triangulo)
+	* 
+	*                 P0
+	*                  ^
+	*                 / \
+	*                /   \
+	*               /     \
+	*            P1 ------- P2
+	*                  ----> PlaneTang
+	*                  |\
+	*                  | \  PlaneRes
+	*                  |  \
+	*                PlaneNormal
+	*/
+   real xPlaneNormal = xPlaneRes - xPlaneTang;
+   real yPlaneNormal = yPlaneRes - yPlaneTang;
+   real zPlaneNormal = zPlaneRes - zPlaneTang;
+
+   real len = sqrt( (xPlaneNormal*xPlaneNormal)+
+	                (yPlaneNormal*yPlaneNormal)+
+					(zPlaneNormal*zPlaneNormal) ); 
+
+   // Unitario do vetor resultante situado no plano do triangulo
+   // combinacao linear dos vetores unitarios das arestas do triangulo
+   real xPlaneNormalUnit = xPlaneNormal/len;
+   real yPlaneNormalUnit = yPlaneNormal/len;
+   real zPlaneNormalUnit = zPlaneNormal/len;
+
+   // tamanho do comprimento da aresta do triangulo que tem a metade da
+   // area do elemento
+   // semelhanca de triangulos: area = bh/2
+   // c'h' = A    ----> b'b' = Ac/h
+   real h = 2*area/c;
+   real e = sqrt( c*area/h );
+
+   // normal ao plano integrada na distancia (MOD) dos 2 vertices medianos
+   // force = resultante das componentes * tamanho da aresta que sera
+   // usada como referencia no calculo da area do triangulo
+   fx += xPlaneNormalUnit*e;
+   fy += yPlaneNormalUnit*e;
+   fz += zPlaneNormalUnit*e;
+
+   sumArea += area/2.0;
+   sumLength += c;
+   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+
+//--------------------------------------------------
+//    if( surfaceNode == 0 )
+//    {
+// 	cout << "Triangulo: ------------------------- " << c1 << endl;
+// 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+// 	//cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
+// 	cout << "RetaUnit = " << xRetaUnit << " " 
+// 	                      << yRetaUnit << " " 
+// 						  << zRetaUnit << endl;
+// 	cout << "c = " << c << endl;
+// 	cout << "Cross  = " << cross.Get(0) << " " 
+// 	                    << cross.Get(1) << " " 
+// 						<< cross.Get(2) << endl;
+// 	cout << "xCross = " << xCross << endl;
+// 	cout << "yCross = " << yCross << endl;
+// 	cout << "zCross = " << zCross << endl;
+// 	cout << "Normal = " << xNormal << " " 
+// 	                    << yNormal << " " 
+// 						<< zNormal << endl;
+// 	cout << "area = " << area << endl;
+// 	cout << "force = " << force << endl;
+// 	cout << "sumArea = " << sumArea << endl;
+// 	cout << "fx = " << fx << endl;
+// 	cout << "fy = " << fy << endl;
+// 	cout << "fz = " << fz << endl;
+// 	//cout << "sumForce = " << sumForce << endl;
+// 	//cout << "pressure = " << sumForce/sumArea << endl;
+// 	c1++;
+//    }
+//-------------------------------------------------- 
+  }
+
+  real length2 = sqrt( (sumXCrossUnit*sumXCrossUnit)+
+                       (sumYCrossUnit*sumYCrossUnit)+
+                       (sumZCrossUnit*sumZCrossUnit) );
+
+  real xNormalUnit = sumXCrossUnit/length2;
+  real yNormalUnit = sumYCrossUnit/length2;
+  real zNormalUnit = sumZCrossUnit/length2;
+
+  // aplicando o teste para saber o sentido correto de aplicacao da
+  // pressao no noh.
+  if( (fx*sumXCrossUnit+fy*sumYCrossUnit+fz*sumZCrossUnit) < 0.0 )
+   force = -force;
+
+  real pressure = force/sumArea;
+
+//--------------------------------------------------
+//   if( surfaceNode == 1268 )
+//   {
+//   cout << surfaceNode << endl;
+//   cout << "  " << "force = " << force << endl; 
+//   cout << "  " << "fx = " << fx << endl; 
+//   cout << "  " << "fy = " << fy << endl;
+//   cout << "  " << "fz = " << fz << endl;
+//   cout << "  " << "sumArea = " << sumArea << endl;
+//   cout << "  " << "pressure = " << pressure << endl;
+//   }
+//-------------------------------------------------- 
+
+  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
+  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
+  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
+  surfMesh.curvature.Set(surfaceNode,pressure);
+ }
+
+} // fecha metodo computeKappa
+
+void Model3D::setCloser()
+{
+ int aux;
+ xCloser.Dim(numNodes);
+ yCloser.Dim(numNodes);
+ zCloser.Dim(numNodes);
+
+ // {x,y,z}Surface representam os valores de {X,Y,Z} dos nos da interface
+ xSurface.Dim( surface.Dim() );
+ ySurface.Dim( surface.Dim() );
+ zSurface.Dim( surface.Dim() );
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  aux = surface.Get(i);
+  xSurface.Set(i,X.Get( aux ));
+  ySurface.Set(i,Y.Get( aux ));
+  zSurface.Set(i,Z.Get( aux ));
+ }
+
+ // closer=surface(dsearchn(X(surface),Y(surface),X,Y));
+ // esta funcao retorna o noh da interface (surface) mais 
+ // proximo de cada noh da malha (vertices)
+ closer = dsearchn(xSurface,ySurface,zSurface,X,Y,Z);
+ for( int i=0;i<closer.Dim();i++ )
+ {
+  aux = closer.Get(i);
+  closer.Set(i,surface.Get(aux)); // alterando os valores de closer(i)
+  xCloser.Set(i,X.Get( closer.Get(i) ));
+  yCloser.Set(i,Y.Get( closer.Get(i) ));
+  zCloser.Set(i,Z.Get( closer.Get(i) ));
+ }
+}
+
+clVector Model3D::crossProd(real _x1,real _y1,real _z1,
+                            real _x2,real _y2,real _z2)
+{
+ real crossX = (_y1*_z2)-(_z1*_y2);
+ real crossY = -( (_x1*_z2)-(_z1*_x2) );
+ real crossZ = (_x1*_y2)-(_y1*_x2);
+
+ clVector cross(3);
+ cross.Set(0,crossX);
+ cross.Set(1,crossY);
+ cross.Set(2,crossZ);
+
+ return cross;
+}
+
+// espalhando capa calculado na superfice para todos os pontos
+void Model3D::setKappaSurface()
+{
+ curvature.Dim(3*numNodes);
+ mesh3d.curvature.Dim(3*numNodes);
+ for( int i=0;i<numNodes;i++ )
+ {
+  int aux = closer.Get(i);
+  curvature.Set(i,surfMesh.curvature.Get(aux));
+  curvature.Set(i+numNodes,surfMesh.curvature.Get(aux));
+  curvature.Set(i+2*numNodes,surfMesh.curvature.Get(aux));
+  mesh3d.curvature.Set(i,surfMesh.curvature.Get(aux));
+  mesh3d.curvature.Set(i+numNodes,surfMesh.curvature.Get(aux));
+  mesh3d.curvature.Set(i+2*numNodes,surfMesh.curvature.Get(aux));
+ }
 }

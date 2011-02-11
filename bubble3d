@@ -38,6 +38,8 @@ OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
 
+#OBJECTS += mainTestCurvature.o
+
 OBJECTS += mainBubble.o
 #OBJECTS += mainAnnular.o
 #OBJECTS += main2Bubble.o

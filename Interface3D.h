@@ -29,6 +29,7 @@ class Interface3D
   clVector smoothing(clMatrix &_AcTilde,clVector &_b1cTilde);
   clVector computeKappa1();
   clVector computeKappa2();
+  void computeKappaTest();
   void computeKappa3();
   void plotKappa(clVector &_kappaAux);
   clVector dsearchn(clVector _X,clVector _Y,clVector _Z,

@@ -454,11 +454,8 @@ clVector Interface3D::computeKappa2()
    fy += yNormalUnit*e;
    fz += zNormalUnit*e;
 
-//--------------------------------------------------
-//    if( Y->Get(surfaceNode) == Y->Max() || Y->Get(surfaceNode) == Y->Min() )
-// 	fy = 0;
-//-------------------------------------------------- 
 
+   // metade da area total do triangulo
    sumArea += area/2.0;
    sumLength += c;
    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
@@ -519,6 +516,247 @@ clVector Interface3D::computeKappa2()
  return distance;
 
 } // fecha metodo computeKappa2
+
+//--------------------------------------------------
+// void Interface3D::computeKappaTest()
+// {
+//  int surfaceNode;
+//  real force,sumForce,sumArea,sumLength,fx,fy,fz;
+//  real xCross,yCross,zCross;
+//  list<int> plist,plist2;
+//  list<int>::iterator face,vert;
+// 
+//  // pontos da superficie
+//  clVector surf(4);
+//  surf.Set(0,0);
+//  surf.Set(1,1);
+//  surf.Set(2,2);
+//  surf.Set(3,3);
+// 
+//  // coordenadas dos pontos da superficie
+//  clVector Xsurf(4),Ysurf(4),Zsurf(4);
+//  XSurf.Set(0,0.5);
+//  XSurf.Set(1,0.0);
+//  XSurf.Set(2,-0.5);
+//  XSurf.Set(3,0.0);
+//  YSurf.Set(0,0.0);
+//  YSurf.Set(1,0.866);
+//  YSurf.Set(2,0.0);
+//  YSurf.Set(3,0.0);
+//  ZSurf.Set(0,0.0);
+//  ZSurf.Set(1,0.0);
+//  ZSurf.Set(2,0.0);
+//  ZSurf.Set(3,0.866);
+// 
+//  // vetores de faces e vertices da superfice
+//  vector< list<int> > neighFaceVert,elemSurface;
+//  elemSurf.resize(0);
+//  elemSurf.resize(4);
+//  elemSurf.at(0).push_back(0);
+//  elemSurf.at(0).push_back(1);
+//  elemSurf.at(0).push_back(3);
+//  elemSurf.at(1).push_back(0);
+//  elemSurf.at(1).push_back(1);
+//  elemSurf.at(1).push_back(2);
+//  elemSurf.at(2).push_back(0);
+//  elemSurf.at(2).push_back(2);
+//  elemSurf.at(2).push_back(3);
+//  elemSurf.at(3).push_back(1);
+//  elemSurf.at(3).push_back(2);
+//  elemSurf.at(3).push_back(3);
+// 
+//  neighFaceVert.resize(0);
+//  neighFaceVert.resize(30);
+//  neighFaceVert.at(0).push_back(1);neighFaceVert.at(0).push_back(2);
+//  neighFaceVert.at(0).push_back(3);neighFaceVert.at(0).push_back(1);
+//  neighFaceVert.at(0).push_back(2);neighFaceVert.at(0).push_back(3);
+//  neighFaceVert.at(1).push_back(2);neighFaceVert.at(1).push_back(0);
+//  neighFaceVert.at(1).push_back(0);neighFaceVert.at(1).push_back(3);
+//  neighFaceVert.at(1).push_back(2);neighFaceVert.at(1).push_back(3);
+// 
+// 
+// 
+// 
+//  // loop sobre todos os nos da superficie 
+//  for( int i=0;i<surf.Dim();i++ )
+//  {
+//   surfaceNode = surface.Get(i);
+//   real P0x = Xsurf.Get(surfaceNode);
+//   real P0y = Ysurf.Get(surfaceNode);
+//   real P0z = Zsurf.Get(surfaceNode);
+// 
+//   int c1 = 0;
+//   xCross = 0;
+//   yCross = 0;
+//   zCross = 0;
+//   fx = 0;
+//   fy = 0;
+//   fz = 0;
+//   force = 0;
+//   sumForce = 0;
+//   sumArea = 0;
+//   sumLength = 0;
+// 
+//   // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
+//   plist = elemSurf.at (surfaceNode); 
+//   for( face=plist.begin();face!=plist.end();++face )
+//   {
+//    // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
+//    // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
+//    plist2 = neighFaceVert.at (*face);
+//    vert=plist2.begin();
+//    int v1 = *vert;++vert;
+//    int v2 = *vert;
+//    vert=plist2.end();
+// 
+//    real P1x = Xsurf.Get(v1);
+//    real P1y = Ysurf.Get(v1);
+//    real P1z = Zsurf.Get(v1);
+//    real P2x = Xsurf.Get(v2);
+//    real P2y = Ysurf.Get(v2);
+//    real P2z = Zsurf.Get(v2);
+// 
+//    // distance do ponto 0 ate metade do segmento 01
+//    real a = sqrt( (P0x-P1x)*(P0x-P1x)+
+// 	              (P0y-P1y)*(P0y-P1y)+
+// 				  (P0z-P1z)*(P0z-P1z) );
+// 
+//    // distance do ponto 0 ate metade do segmento 02
+//    real b = sqrt( (P0x-P2x)*(P0x-P2x)+
+// 	              (P0y-P2y)*(P0y-P2y)+
+// 			      (P0z-P2z)*(P0z-P2z) );
+// 
+//    // distance da metade do segmento 01 ate metade do segmento 02
+//    real c = sqrt( (P2x-P1x)*(P2x-P1x)+
+// 	              (P2y-P1y)*(P2y-P1y)+
+// 			      (P2z-P1z)*(P2z-P1z) );
+// 
+//    // vetores
+//    real x1 = P1x-P0x;
+//    real y1 = P1y-P0y;
+//    real z1 = P1z-P0z;
+//    real x2 = P2x-P0x;
+//    real y2 = P2y-P0y;
+//    real z2 = P2z-P0z;
+//    real xReta = P2x-P1x;
+//    real yReta = P2y-P1y;
+//    real zReta = P2z-P1z;
+// 
+//    // vetores unitarios
+//    real x1Unit = x1/a;
+//    real y1Unit = y1/a;
+//    real z1Unit = z1/a;
+// 
+//    real x2Unit = x2/b;
+//    real y2Unit = y2/b;
+//    real z2Unit = z2/b;
+// 
+//    real xRetaUnit = xReta/c;
+//    real yRetaUnit = yReta/c;
+//    real zRetaUnit = zReta/c;
+// 
+//    // calculando o produto vetorial de cada elemento triangular da superficie
+//    clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
+//    xCross += cross.Get(0);
+//    yCross += cross.Get(1);
+//    zCross += cross.Get(2);
+// 
+//    real area = 0.5*sqrt( cross.Get(0)*cross.Get(0)+
+//                          cross.Get(1)*cross.Get(1)+
+//                          cross.Get(2)*cross.Get(2));
+// 
+//    // soma dos vetores 1Unit + 2Unit = resultante
+//    real xRes = x1Unit+x2Unit;
+//    real yRes = y1Unit+y2Unit;
+//    real zRes = z1Unit+z2Unit;
+// 
+//    // produto escalar --> projecao do vetor Res no segmento de reta
+//    // | Unit.RetaUnit | . RetaUnit
+//    // resultado = vetor tangente a reta situado na superficie
+//    real prod = xRes*xRetaUnit + yRes*yRetaUnit + zRes*zRetaUnit;
+//    real xTang = xRetaUnit*prod;
+//    real yTang = yRetaUnit*prod;
+//    real zTang = zRetaUnit*prod;
+// 
+//    // subtraindo vetor tangente do vetor unitario para encontrar as
+//    // coordenadas do vetor normal situada na superficie
+//    real xNormal = xRes - xTang;
+//    real yNormal = yRes - yTang;
+//    real zNormal = zRes - zTang;
+// 
+//    real len = sqrt( (xNormal*xNormal)+(yNormal*yNormal)+(zNormal*zNormal) ); 
+// 
+//    // Unitario do vetor resultante situado no plano do triangulo
+//    // combinacao linear dos vetores unitarios das arestas do triangulo
+//    real xNormalUnit = xNormal/len;
+//    real yNormalUnit = yNormal/len;
+//    real zNormalUnit = zNormal/len;
+// 
+//    // tamanho do comprimento da aresta do triangulo que tem a metade da
+//    // area do elemento
+//    // semelhanca de triangulos: area = bh/2
+//    // c'h' = A    ----> b'b' = Ac/h
+//    real h = 2*area/c;
+//    real e = sqrt( c*area/h );
+// 
+//    // normal integrada na distancia (MOD) dos 2 vertices medianos
+//    // force = resultante das componentes * tamanho da aresta que sera
+//    // usada como referencia no calculo da area do triangulo
+//    fx += xNormalUnit*e;
+//    fy += yNormalUnit*e;
+//    fz += zNormalUnit*e;
+// 
+// 
+//    // metade da area total do triangulo
+//    sumArea += area/2.0;
+//    sumLength += c;
+//    force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+// 
+// //--------------------------------------------------
+// //    if( surfaceNode == 0 )
+// //    {
+// // 	cout << "Triangulo: ------------------------- " << c1 << endl;
+// // 	cout << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
+// // 	//cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
+// // 	cout << "RetaUnit = " << xRetaUnit << " " 
+// // 	                      << yRetaUnit << " " 
+// // 						  << zRetaUnit << endl;
+// // 	cout << "c = " << c << endl;
+// // 	cout << "Cross  = " << cross.Get(0) << " " 
+// // 	                    << cross.Get(1) << " " 
+// // 						<< cross.Get(2) << endl;
+// // 	cout << "xCross = " << xCross << endl;
+// // 	cout << "yCross = " << yCross << endl;
+// // 	cout << "zCross = " << zCross << endl;
+// // 	cout << "Normal = " << xNormal << " " 
+// // 	                    << yNormal << " " 
+// // 						<< zNormal << endl;
+// // 	cout << "area = " << area << endl;
+// // 	cout << "force = " << force << endl;
+// // 	cout << "sumArea = " << sumArea << endl;
+// // 	cout << "fx = " << fx << endl;
+// // 	cout << "fy = " << fy << endl;
+// // 	cout << "fz = " << fz << endl;
+// // 	//cout << "sumForce = " << sumForce << endl;
+// // 	//cout << "pressure = " << sumForce/sumArea << endl;
+// // 	c1++;
+// //    }
+// //-------------------------------------------------- 
+//   }
+//   // aplicando o teste para saber o sentido correto de aplicacao da
+//   // pressao no noh.
+//   if( (fx*xCross+fy*yCross+fz*zCross) < 0.0 )
+//    force = -force;
+// 
+//   real curvature = force/sumArea;
+// 
+//   cout << "-----------------------------------------------" << endl;
+//   cout << curvature << endl;
+//   cout << "-----------------------------------------------" << endl;
+// 
+//  }
+// } // fecha metodo computeKappa2
+//-------------------------------------------------- 
 
 clVector Interface3D::smoothing(clMatrix &_AcTilde,clVector &_b1cTilde)
 {

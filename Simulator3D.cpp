@@ -1181,7 +1181,7 @@ void Simulator3D::stepALEVel()
  setInterfaceVelNormal();
 
  setALEVelBC();
- for( int i=0;i<1;i++ )
+ for( int i=0;i<10;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1223,6 +1223,35 @@ void Simulator3D::stepALEVel()
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
+
+ // velocidade da bolha
+ getBubbleVelocity(uALE,vALE,wALE);
+ cout << "ALE:    " << bubbleXVel << " " << bubbleYVel << " " 
+                    << bubbleZVel << endl;
+ cout << rho_0*bubbleXVel*1.0/mu_0 << " "
+      << rho_0*bubbleYVel*1.0/mu_0 << " "
+      << rho_0*bubbleZVel*1.0/mu_0 << endl;
+ getBubbleVelocity(uSol,vSol,wSol);
+ cout << "SOL:    " << bubbleXVel << " " << bubbleYVel << " " 
+                    << bubbleZVel << endl;
+ cout << rho_0*bubbleXVel*1.0/mu_0 << " "
+      << rho_0*bubbleYVel*1.0/mu_0 << " "
+      << rho_0*bubbleZVel*1.0/mu_0 << endl;
+ getBubbleVelocity(uSL,vSL,wSL);
+ cout << "SL:     " << bubbleXVel << " " << bubbleYVel << " " 
+                    << bubbleZVel << endl;
+ cout << rho_0*bubbleXVel*1.0/mu_0 << " "
+      << rho_0*bubbleYVel*1.0/mu_0 << " "
+      << rho_0*bubbleZVel*1.0/mu_0 << endl;
+ clVector vx = uSol-uALE;
+ clVector vy = vSol-vALE;
+ clVector vz = wSol-wALE;
+ getBubbleVelocity(vx,vy,vz);
+ cout << "SOL-ALE: " << bubbleXVel << " " << bubbleYVel << " " 
+                     << bubbleZVel << endl;
+ cout << rho_0*bubbleXVel*1.0/mu_0 << " "
+      << rho_0*bubbleYVel*1.0/mu_0 << " "
+      << rho_0*bubbleZVel*1.0/mu_0 << endl;
  
  // atualizacao de todas as matrizes do sistema
  assemble();
@@ -1232,8 +1261,6 @@ void Simulator3D::stepALEVel()
 
 void Simulator3D::setInterfaceVel()
 {
- //real bubbleZVelocity = getBubbleVelocity();
-
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
@@ -1246,8 +1273,6 @@ void Simulator3D::setInterfaceVel()
 
 void Simulator3D::setInterfaceVelNormal()
 {
- real bubbleZVelocity = getBubbleVelocity();
-
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
@@ -1282,17 +1307,18 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  //uALE.Set(surfaceNode,uSolNormal+uSmoothTangent);
-  //vALE.Set(surfaceNode,vSolNormal+vSmoothTangent);
-  //wALE.Set(surfaceNode,wSolNormal+wSmoothTangent);
+  real a = 0.3;
+  uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
+  vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
+  wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
 
   //uALE.Set(surfaceNode,uSmoothTangent);
   //vALE.Set(surfaceNode,vSmoothTangent);
   //wALE.Set(surfaceNode,wSmoothTangent);
 
-  uALE.Set(surfaceNode,uSolNormal);
-  vALE.Set(surfaceNode,vSolNormal);
-  wALE.Set(surfaceNode,wSolNormal);
+  //uALE.Set(surfaceNode,uSolNormal);
+  //vALE.Set(surfaceNode,vSolNormal);
+  //wALE.Set(surfaceNode,wSolNormal);
   
   //cout << bubbleZVelocity << " " << wSolNormal << endl;
   //wALE.Set(surfaceNode,wSolNormal-bubbleZVelocity);
@@ -1319,18 +1345,18 @@ void Simulator3D::setCRHS()
 
 void Simulator3D::setGravity()
 {
- real rhoAdimen_l = 1.0;
+ real gAdimen = 1.0;
 
  clVector gx(numNodes);gx.SetAll(0.0);
  clVector gy(numNodes);gy.SetAll(0.0);
- clVector gz(numNodes);gz.SetAll(1.0);
+ clVector gz(numNodes);gz.SetAll(gAdimen);
 
  clVector g(0);
  g.Append(gx);
  g.Append(gy);
  g.Append(gz);
 
- va = va + ( 1.0/(Fr*Fr) )*( (rhoAdimen_l*M - Mrho)*g );
+ va = va + ( 1.0/(Fr*Fr) )*( (rho_lAdimen*M - Mrho)*g );
 }
 
 void Simulator3D::setGravityBoussinesq()
@@ -1352,11 +1378,9 @@ void Simulator3D::setInterface()
 
  // ----------- smoothing step ------------ //
   vcc = ( (1.0/dt) * McLumped ) * distance;
-  //vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/Sc) * Kc ) * distance;
   unCoupledC();
-  //clVector kappaAux = invC*(Kc*distance);
-  clVector kappaAux = invC*(Kc*cTilde);
-  //clVector kappaAux = invMcLumped*(Kc*cTilde);
+  //clVector kappaAux = invMcLumped*(Kc*distance);
+  clVector kappaAux = invMcLumped*(Kc*cTilde);
  // --------------------------------------- //
  
  //interface.plotKappa(kappaAux);
@@ -1371,7 +1395,7 @@ void Simulator3D::setInterfaceGeo()
 {
 //--------------------------------------------------
 //  Interface3D interface(*m);
-//  clVector kappaAux = interface.computeKappa2();
+//  clVector kappaAux = interface.computeKappa1();
 // 
 //  //interface.plotKappa(kappaAux);
 //  kappa = interface.setKappaSurface(kappaAux);
@@ -1382,7 +1406,6 @@ void Simulator3D::setInterfaceGeo()
  m->computeKappa();
  m->setKappaSurface();
  kappa = *m->getCurvature();
-
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
  
  //va = va + invA*fint;
@@ -1418,10 +1441,8 @@ void Simulator3D::matMountC()
  matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc)) * Kc);
  //matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc*Re)) * Kc);
 
- cout << "oi1" << endl;
  for( int i = 0; i < numVerts; i++ )
   invC.Set(i, matc.SumLine(i));
- cout << "oi1" << endl;
 
  invC = invC.Inverse();
  invMcLumped = McLumped.Inverse();
@@ -1489,18 +1510,6 @@ void Simulator3D::unCoupled()
  uvw.CopyTo(  numNodes,vSol);
  uvw.CopyTo(numNodes*2,wSol);
 
-//--------------------------------------------------
-//  /* TEST */
-//  real bubbleZVelocity = getBubbleVelocity();
-//  for( int i=0;i<surface->Dim();i++ )
-//  {
-//   int aux = surface->Get(i);
-//   real vel = wSol.Get(aux)+bubbleZVelocity;
-//   wSol.Set(aux,vel);
-//  }
-//  /********/
-//-------------------------------------------------- 
-
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao
 
@@ -1508,6 +1517,12 @@ void Simulator3D::unCoupled()
  uAnt.CopyFrom(numNodes*3,pSol);
 
  time = time + dt;
+ getBubbleVelocity(uSol,vSol,wSol);
+ cout << "SOL:    " << bubbleXVel << " " << bubbleYVel << " " 
+                    << bubbleZVel << endl;
+ cout << rho_l*bubbleXVel*1.0/mu_l << " "
+      << rho_l*bubbleYVel*1.0/mu_l << " "
+      << rho_l*bubbleZVel*1.0/mu_l << endl;
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()
@@ -1767,65 +1782,60 @@ void Simulator3D::setHsmooth()
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setMuRho(real _muLiquid,real _muGas,
-                           real _rhoLiquid,real _rhoGas)
+void Simulator3D::setMuRho(real _mu_l,real _mu_g,
+                           real _rho_l,real _rho_g)
 {
- // Since we are working here with non-dimensional equations and also
- // because the referential Reynolds used in two-phase flow is the one
- // from the liquid phase, we set the liquid viscosity (mu_fluid) as
- // equal to 1.0.
- //
- //          rho_ref * v_ref * D     
- // Re_ref = -------------------     
- //                mu_ref            
- //
- //                rho_l                     rho_g
- // rhoAdimen_l = -------     rhoAdimen_g = -------
- //               rho_ref                   rho_ref
- //
- //               mu_l                      mu_g
- // muAdimen_l = ------       muAdimen_g = ------
- //              mu_ref                    mu_ref
- //
- //
- //        rho_l * v_l * D          rho_g * v_g * D 
- // Re_l = ---------------   Re_g = --------------- 
- //             mu_l                     mu_g       
- //
- // Navier-Stokes Viscous Term (liquid):
- //
- //    mu_ref                 [            (                       ) ]
- // ----------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
- // rho_ref*v*D               [            (                       ) ]
- //
- //
- // Navier-Stokes Viscous Term (gas - bubble):
- //
- //    mu_ref                 [  mu_g    (                       ) ]
- // ----------- * \nabla \dot [ ------ * ( \nabla u + \nabla u^T ) ]
- // rho_ref*v*D               [ mu_ref   (                       ) ]
- //
- //
- // Navier-Stokes Viscous Term (liquid):
- //
- //    mu_ref                 [  mu_l    (                       ) ]
- // ----------- * \nabla \dot [ ------ * ( \nabla u + \nabla u^T ) ]
- // rho_ref*v*D               [ mu_ref   (                       ) ]
- //
- //
- // Considering the liquid as the referential frame we can define the
- // Reynolds number, i.e., Re = 20 (for example):
- //
- // rho_ref = rho_l     mu_ref = mu_l 
- //
+ /* Since we are working here with non-dimensional equations and also
+  * because the referential Reynolds used in two-phase flow is the one
+  * from the liquid phase, we set the liquid viscosity (mu_fluid) as
+  * equal to 1.0.
+  *
+  *          rho_0 * v_0 * D     
+  * Re_ref = ---------------     
+  *               mu_0            
+  *
+  *               rho_l                   rho_g
+  * rho_lAdimen = -----     rho_gAdimen = -----
+  *               rho_0                   rho_0
+  *
+  *               mu_l                   mu_g
+  * muAdimen_l =  ----      muAdimen_g = ----
+  *               mu_0                   mu_0
+  *
+  *
+  *        rho_l * v_l * D          rho_g * v_g * D 
+  * Re_l = ---------------   Re_g = --------------- 
+  *             mu_l                     mu_g       
+  *
+  * Navier-Stokes Viscous Term (liquid):
+  *
+  *    mu_0                 [            (                       ) ]
+  * --------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [            (                       ) ]
+  *
+  *
+  * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
+  *
+  *    mu_0                 [ mu_g   (                       ) ]
+  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [ mu_0   (                       ) ]
+  *
+  *
+  * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
+  *
+  *    mu_0                 [ mu_l   (                       ) ]
+  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [ mu_0   (                       ) ]
+  *
+  * */
  
- real rhoReference = _rhoLiquid; 
- real rhoLiquidAdimen = _rhoLiquid/rhoReference; 
- real rhoGasAdimen = _rhoGas/rhoReference;
+ rho_0= _rho_l-_rho_g; 
+ rho_lAdimen = _rho_l/rho_0; 
+ rho_gAdimen = _rho_g/rho_0;
 
- real muReference = _muLiquid;
- real muLiquidAdimen = _muLiquid/muReference;
- real muGasAdimen = _muGas/muReference;
+ mu_0 = _mu_l;
+ mu_lAdimen = _mu_l/mu_0;
+ mu_gAdimen = _mu_g/mu_0;
 
  // gas phase (bubble)
  list<int> *inElem;
@@ -1837,11 +1847,12 @@ void Simulator3D::setMuRho(real _muLiquid,real _muGas,
   int v3 = IEN->Get(*it,2); 
   int v4 = IEN->Get(*it,3); 
   int v5 = IEN->Get(*it,3); 
-  nu.Set(v1,muGasAdimen); rho.Set(v1,rhoGasAdimen);
-  nu.Set(v2,muGasAdimen); rho.Set(v2,rhoGasAdimen);
-  nu.Set(v3,muGasAdimen); rho.Set(v3,rhoGasAdimen);
-  nu.Set(v4,muGasAdimen); rho.Set(v4,rhoGasAdimen);
-  nu.Set(v5,muGasAdimen); rho.Set(v5,rhoGasAdimen);  }
+  nu.Set(v1,mu_gAdimen); rho.Set(v1,rho_gAdimen);
+  nu.Set(v2,mu_gAdimen); rho.Set(v2,rho_gAdimen);
+  nu.Set(v3,mu_gAdimen); rho.Set(v3,rho_gAdimen);
+  nu.Set(v4,mu_gAdimen); rho.Set(v4,rho_gAdimen);
+  nu.Set(v5,mu_gAdimen); rho.Set(v5,rho_gAdimen);  }
+
  // liquid phase
  list<int> *outElem;
  outElem = m->getOutElem();
@@ -1852,18 +1863,18 @@ void Simulator3D::setMuRho(real _muLiquid,real _muGas,
   int v3 = IEN->Get(*it,2); 
   int v4 = IEN->Get(*it,3); 
   int v5 = IEN->Get(*it,3); 
-  nu.Set(v1,muLiquidAdimen); rho.Set(v1,rhoLiquidAdimen);
-  nu.Set(v2,muLiquidAdimen); rho.Set(v2,rhoLiquidAdimen);
-  nu.Set(v3,muLiquidAdimen); rho.Set(v3,rhoLiquidAdimen);
-  nu.Set(v4,muLiquidAdimen); rho.Set(v4,rhoLiquidAdimen);
-  nu.Set(v5,muLiquidAdimen); rho.Set(v5,rhoLiquidAdimen);
+  nu.Set(v1,mu_lAdimen); rho.Set(v1,rho_lAdimen);
+  nu.Set(v2,mu_lAdimen); rho.Set(v2,rho_lAdimen);
+  nu.Set(v3,mu_lAdimen); rho.Set(v3,rho_lAdimen);
+  nu.Set(v4,mu_lAdimen); rho.Set(v4,rho_lAdimen);
+  nu.Set(v5,mu_lAdimen); rho.Set(v5,rho_lAdimen);
  }
  // interface as average value
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
-  nu.Set(surfaceNode,(muGasAdimen+muLiquidAdimen)*0.5);
-  rho.Set(surfaceNode,(rhoGasAdimen+rhoLiquidAdimen)*0.5);
+  nu.Set(surfaceNode,(mu_gAdimen+mu_lAdimen)*0.5);
+  rho.Set(surfaceNode,(rho_gAdimen+rho_lAdimen)*0.5);
  }
 }
 
@@ -2475,14 +2486,16 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
 
 // calcula velocidade media da bolha tomando como referencia o centro de
 // massa
-real Simulator3D::getBubbleVelocity()
+void Simulator3D::getBubbleVelocity(clVector _uVel,
+                                    clVector _vVel,
+									clVector _wVel)
 {
  real velX,velY,velZ;
+ real volume=0;
  real sumVolume=0;
  real sumXVelVolume=0;
  real sumYVelVolume=0;
  real sumZVelVolume=0;
- int count = 0;
 
  list<int> *inElem;
  inElem = m->getInElem();
@@ -2493,30 +2506,31 @@ real Simulator3D::getBubbleVelocity()
   int v3 = IEN->Get(*it,2);
   int v4 = IEN->Get(*it,3);
 
-  velX = ( uALE.Get(v1)+
-	       uALE.Get(v2)+
-		   uALE.Get(v3)+
-		   uALE.Get(v4) )*0.25;
+  velX = ( _uVel.Get(v1)+
+	       _uVel.Get(v2)+
+		   _uVel.Get(v3)+
+		   _uVel.Get(v4) )*0.25;
 
-  velY = ( vALE.Get(v1)+
-           vALE.Get(v2)+
-           vALE.Get(v3)+
-	 	   vALE.Get(v4) )*0.25;
+  velY = ( _vVel.Get(v1)+
+           _vVel.Get(v2)+
+           _vVel.Get(v3)+
+	 	   _vVel.Get(v4) )*0.25;
 
-  velZ = ( wALE.Get(v1)+
-           wALE.Get(v2)+
-           wALE.Get(v3)+
-	 	   wALE.Get(v4) )*0.25;
+  velZ = ( _wVel.Get(v1)+
+           _wVel.Get(v2)+
+           _wVel.Get(v3)+
+	 	   _wVel.Get(v4) )*0.25;
 
-  sumXVelVolume += velX * m->getVolume(*it);
-  sumYVelVolume += velY * m->getVolume(*it);
-  sumZVelVolume += velZ * m->getVolume(*it);
-  sumVolume += m->getVolume(*it);
-  count++;
+  volume = m->getVolume(*it);
+
+  sumXVelVolume += velX * volume;
+  sumYVelVolume += velY * volume;
+  sumZVelVolume += velZ * volume;
+  sumVolume += volume;
  }
- real bubbleZVel = sumZVelVolume/sumVolume;
-
- return bubbleZVel;
+ bubbleXVel = sumXVelVolume/sumVolume;
+ bubbleYVel = sumYVelVolume/sumVolume;
+ bubbleZVel = sumZVelVolume/sumVolume;
 }
 
 // impoe velocidade ALE = 0 no contorno

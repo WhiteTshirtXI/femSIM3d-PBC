@@ -19,18 +19,32 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
+//--------------------------------------------------
+//  int iter = 0;
+//  real Re = 15;
+//  real Sc = 2;
+//  real We = 2;
+//  real Fr = 0.4;
+//  real alpha = 1;
+//  real beta = -40;
+//  real cfl = 0.5;
+//  real mu_l = 0.001;
+//  real mu_g = 1.7894E-05;
+//  real rho_l = 1000;
+//  real rho_g = 1.225;
+//-------------------------------------------------- 
  int iter = 0;
- real Re = 15;
+ real Re = 10;
  real Sc = 2;
- real We = 2;
- real Fr = 0.4;
+ real We = 10;
+ real Fr = 1.0;
  real alpha = 1;
  real beta = -40;
- real cfl = 0.5;
- real mu_l = 0.001;
- real mu_g = 1.7894E-05;
- real rho_l = 1000;
- real rho_g = 1.225;
+ real cfl = 5.5;
+ real mu_l = 2.0;
+ real mu_g = 1.0;
+ real rho_l = 100;
+ real rho_g = 1;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -40,7 +54,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
+ //const char *mesh = "../../db/gmsh/3d/test1.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;
@@ -214,10 +230,10 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity();
+   //s1.setGravity();
    //s1.setGravityBoussinesq();
+   //s1.setInterface();
    s1.setInterfaceGeo();
-   //s1.setInterfaceGeoTest();
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao

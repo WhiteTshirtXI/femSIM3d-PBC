@@ -79,7 +79,7 @@ class Simulator3D
   void setUnCoupledCBC();
 
   void setHsmooth();
-  void setMuRho(real _muFluid,real _muBubble,real _rhoFluid,real _rhoBubble);
+  void setMuRho(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
   void setNuZ();
   void setRe(real _Re);
   real getRe();
@@ -155,7 +155,8 @@ class Simulator3D
   void loadSolution( const char* _dir,const char* _filename );
   void loadSolution( const char* _dir,const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
-  real getBubbleVelocity();
+  void getBubbleVelocity();
+  void getBubbleVelocity(clVector _uVel,clVector _vVel,clVector _wVel);
   void setALEVelBC();
 
  private:
@@ -166,7 +167,10 @@ class Simulator3D
   int numGLEU,numGLEP,numGLEC;
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
   real c1,c2,c3;
+  real bubbleXVel,bubbleYVel,bubbleZVel;
   real rho_l,rho_g,mu_l,mu_g;
+  real rho_0,mu_0;
+  real rho_lAdimen,rho_gAdimen,mu_lAdimen,mu_gAdimen;
 
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;

@@ -152,6 +152,8 @@ tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
   void setKappaSurface();
   void setCloser();
   void computeKappa();
+  void computeKappaNorb();
+  void computeKappa2();
 
   // get and set methods
   clVector* getX();

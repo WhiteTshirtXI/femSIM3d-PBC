@@ -149,6 +149,7 @@ tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
   void clearBC();
   void reAllocStruct();
   clVector crossProd(real _x1,real _y1,real _z1,real _x2,real _y2,real _z2);
+  void computeSurfaceNormal();
   void setKappaSurface();
   void setCloser();
   void computeKappa();

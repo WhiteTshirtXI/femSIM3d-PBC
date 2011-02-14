@@ -5155,8 +5155,7 @@ void Model3D::setSurfaceConfig()
  setNeighbourSurface(); 
  setTriangleMinEdge(); // minEdge check and config
 
- computeKappa(); // compute kappa over the interface points
- setKappaSurface(); // spread curvature along the 3D mesh
+ computeSurfaceNormal(); // compute surface normal of all surface points
  
  //saveVTKConvex("./vtk/","conv",0);
  //saveVTKSurface("./vtk/","surf",0);
@@ -5770,18 +5769,109 @@ clVector Model3D::dsearchn(clVector _X,clVector _Y,clVector _Z,
  return vmin;
 }
 
-void Model3D::computeKappa()
+void Model3D::computeSurfaceNormal()
 {
- setCloser();
  int surfaceNode;
- real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ real sumArea;
  real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
- real sumXNormal2dUnit,sumYNormal2dUnit,sumZNormal2dUnit;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
  surfMesh.xNormal.Dim(surfMesh.numVerts);
  surfMesh.yNormal.Dim(surfMesh.numVerts);
  surfMesh.zNormal.Dim(surfMesh.numVerts);
+
+ // loop sobre todos os nos da superficie 
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  surfaceNode = surface.Get(i);
+  real P0x = surfMesh.X.Get(surfaceNode);
+  real P0y = surfMesh.Y.Get(surfaceNode);
+  real P0z = surfMesh.Z.Get(surfaceNode);
+
+  sumXCrossUnit = 0;
+  sumYCrossUnit = 0;
+  sumZCrossUnit = 0;
+  sumArea = 0;
+
+  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
+  plist = elemSurface.at (surfaceNode); 
+  for( face=plist.begin();face!=plist.end();++face )
+  {
+   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
+   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
+   plist2 = neighbourFaceVert.at (*face);
+   vert=plist2.begin();
+   int v1 = *vert;++vert;
+   int v2 = *vert;
+   vert=plist2.end();
+
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+   real P2x = surfMesh.X.Get(v2);
+   real P2y = surfMesh.Y.Get(v2);
+   real P2z = surfMesh.Z.Get(v2);
+
+   // vetores
+   real x1 = P1x-P0x;
+   real y1 = P1y-P0y;
+   real z1 = P1z-P0z;
+
+   real x2 = P2x-P0x;
+   real y2 = P2y-P0y;
+   real z2 = P2z-P0z;
+
+   // calculando o produto vetorial de cada elemento triangular da superficie
+   clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
+
+   // comprimento do vetor normal ao plano formado por (x1,y1,z1) e
+   // (x2,y2,z2)
+   real length = sqrt( cross.Get(0)*cross.Get(0)+
+                       cross.Get(1)*cross.Get(1)+
+                       cross.Get(2)*cross.Get(2));
+
+   // area do triangulo P0-P1-P2
+   real area = 0.5*length;
+   sumArea += area;
+
+   // somatorio ponderado pela area dos vetores unitarios normais 
+   // aos triangulos encontrados na estrela do vertice
+   sumXCrossUnit += (cross.Get(0)/length)*area;
+   sumYCrossUnit += (cross.Get(1)/length)*area;
+   sumZCrossUnit += (cross.Get(2)/length)*area;
+
+  } // loop over each elements that shares the same vertice P0
+
+  // averaging the normal vector
+  sumXCrossUnit = sumXCrossUnit/sumArea;
+  sumYCrossUnit = sumYCrossUnit/sumArea;
+  sumZCrossUnit = sumZCrossUnit/sumArea;
+
+  real length2 = sqrt( (sumXCrossUnit*sumXCrossUnit)+
+	                   (sumYCrossUnit*sumYCrossUnit)+
+					   (sumZCrossUnit*sumZCrossUnit) );
+
+  real xNormalUnit = sumXCrossUnit/length2;
+  real yNormalUnit = sumYCrossUnit/length2;
+  real zNormalUnit = sumZCrossUnit/length2;
+
+  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
+  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
+  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
+
+ } // loop over all surface points
+} // computeNormal
+
+void Model3D::computeKappa()
+{
+ // compute Surface Normals
+ computeSurfaceNormal();
+
+ int surfaceNode;
+ real force,sumForce,sumArea,sumLength,fx,fy,fz;
+ real sumXNormal2dUnit,sumYNormal2dUnit,sumZNormal2dUnit;
+ list<int> plist,plist2;
+ list<int>::iterator face,vert;
  surfMesh.curvature.Dim(surfMesh.numVerts);
 
  // loop sobre todos os nos da superficie 
@@ -5792,10 +5882,7 @@ void Model3D::computeKappa()
   real P0y = surfMesh.Y.Get(surfaceNode);
   real P0z = surfMesh.Z.Get(surfaceNode);
 
-  int c1 = 0;
-  sumXCrossUnit = 0;
-  sumYCrossUnit = 0;
-  sumZCrossUnit = 0;
+  //int c1 = 0;
   sumXNormal2dUnit = 0;
   sumYNormal2dUnit = 0;
   sumZNormal2dUnit = 0;
@@ -5872,7 +5959,7 @@ void Model3D::computeKappa()
                        cross.Get(1)*cross.Get(1)+
                        cross.Get(2)*cross.Get(2));
 
-   // area do triangulo
+   // area do triangulo P0-P1-P2
    real area = 0.5*length;
 
    real prodAB = x1*xReta+y1*yReta+z1*zReta;
@@ -5902,13 +5989,13 @@ void Model3D::computeKappa()
 		<< endl;
 
    real XYZc = Xc*Xc + Yc*Yc + Zc*Zc;
-   real kappa2d = 1.0/circumRadius;
+   //real kappa2d = 1.0/circumRadius;
    real kappaX = Xc/(XYZc);
    real kappaY = Yc/(XYZc);
    real kappaZ = Zc/(XYZc);
 
    clVector tan2d = crossProd(cross.Get(0),cross.Get(1),cross.Get(2),
-	                             kappaX,kappaY,kappaZ);
+                              kappaX,kappaY,kappaZ);
 
    real tan2dLength = sqrt( tan2d.Get(0)*tan2d.Get(0)+
                             tan2d.Get(1)*tan2d.Get(1)+
@@ -5918,20 +6005,13 @@ void Model3D::computeKappa()
    sumYNormal2dUnit =+ tan2d.Get(1)/tan2dLength;
    sumZNormal2dUnit =+ tan2d.Get(2)/tan2dLength;
 
-
-   // somatorio ponderado pela area dos vetores unitarios normais aos triangulos 
-   // encontrados na estrela do vertice
-   sumXCrossUnit += (cross.Get(0)/length)*area;
-   sumYCrossUnit += (cross.Get(1)/length)*area;
-   sumZCrossUnit += (cross.Get(2)/length)*area;
-
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
    real yPlaneRes = y1Unit+y2Unit;
    real zPlaneRes = z1Unit+z2Unit;
 
    // produto escalar --> projecao do vetor Res no segmento de reta
-   // | Unit.RetaUnit | . RetaUnit
+   // | Unit.RetaUnit | * RetaUnit
    // resultado = vetor tangente a reta situado na superficie
    real prod = xPlaneRes*xRetaUnit + yPlaneRes*yRetaUnit + zPlaneRes*zRetaUnit;
    real xPlaneTang = xRetaUnit*prod;
@@ -6004,22 +6084,11 @@ void Model3D::computeKappa()
 //    }
 //-------------------------------------------------- 
   }
-  // averaging the normal vector
-  sumXCrossUnit = sumXCrossUnit/sumArea;
-  sumYCrossUnit = sumYCrossUnit/sumArea;
-  sumZCrossUnit = sumZCrossUnit/sumArea;
-
-  real length2 = sqrt( (sumXCrossUnit*sumXCrossUnit)+
-                       (sumYCrossUnit*sumYCrossUnit)+
-                       (sumZCrossUnit*sumZCrossUnit) );
-
-  real xNormalUnit = sumXCrossUnit/length2;
-  real yNormalUnit = sumYCrossUnit/length2;
-  real zNormalUnit = sumZCrossUnit/length2;
-
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.
-  if( (fx*sumXCrossUnit+fy*sumYCrossUnit+fz*sumZCrossUnit) < 0.0 )
+  if( (fx*surfMesh.xNormal.Get(surfaceNode)+
+	   fy*surfMesh.yNormal.Get(surfaceNode)+
+	   fz*surfMesh.zNormal.Get(surfaceNode)) < 0.0 )
    force = -force;
 
   real pressure = force/(sumArea);
@@ -6035,9 +6104,6 @@ void Model3D::computeKappa()
   cout << "  " << "pressure = " << pressure << endl;
   }
 
-  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
-  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
-  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
 } // fecha metodo computeKappa
@@ -6045,15 +6111,13 @@ void Model3D::computeKappa()
 
 void Model3D::computeKappaNorb()
 {
- setCloser();
+ // compute Surface Normals
+ computeSurfaceNormal();
+
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
- real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
- surfMesh.xNormal.Dim(surfMesh.numVerts);
- surfMesh.yNormal.Dim(surfMesh.numVerts);
- surfMesh.zNormal.Dim(surfMesh.numVerts);
  surfMesh.curvature.Dim(surfMesh.numVerts);
 
  // loop sobre todos os nos da superficie 
@@ -6064,10 +6128,7 @@ void Model3D::computeKappaNorb()
   real P0y = surfMesh.Y.Get(surfaceNode);
   real P0z = surfMesh.Z.Get(surfaceNode);
 
-  int c1 = 0;
-  sumXCrossUnit = 0;
-  sumYCrossUnit = 0;
-  sumZCrossUnit = 0;
+  //int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -6096,14 +6157,14 @@ void Model3D::computeKappaNorb()
    real P2z = surfMesh.Z.Get(v2);
 
    // ponto medio aresta 01
-   real Pm01x = P0x + (P1x-P0x)/2.0; 
-   real Pm01y = P0y + (P1y-P0y)/2.0; 
-   real Pm01z = P0z + (P1z-P0z)/2.0; 
+   real Pm01x = (P1x+P0x)*0.5; 
+   real Pm01y = (P1y+P0y)*0.5; 
+   real Pm01z = (P1z+P0z)*0.5; 
 
    // ponto medio aresta 02
-   real Pm02x = P0x + (P2x-P0x)/2.0; 
-   real Pm02y = P0y + (P2y-P0y)/2.0; 
-   real Pm02z = P0z + (P2z-P0z)/2.0; 
+   real Pm02x = (P2x+P0x)*0.5; 
+   real Pm02y = (P2y+P0y)*0.5; 
+   real Pm02z = (P2z+P0z)*0.5; 
 
    // distance do ponto 0 ate metade do segmento 01
    real a = sqrt( (P0x-Pm01x)*(P0x-Pm01x)+
@@ -6155,14 +6216,8 @@ void Model3D::computeKappaNorb()
                        cross.Get(1)*cross.Get(1)+
                        cross.Get(2)*cross.Get(2));
 
-   // area do triangulo
+   // area do triangulo P0 - Pm01 - Pm02
    real area = 0.5*length;
-
-   // somatoria dos vetores unitarios normais aos triangulos encontrados
-   // na estrela do vertice
-   sumXCrossUnit += cross.Get(0)/length;
-   sumYCrossUnit += cross.Get(1)/length;
-   sumZCrossUnit += cross.Get(2)/length;
 
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
@@ -6272,17 +6327,11 @@ void Model3D::computeKappaNorb()
 //-------------------------------------------------- 
   }
 
-  real length2 = sqrt( (sumXCrossUnit*sumXCrossUnit)+
-                       (sumYCrossUnit*sumYCrossUnit)+
-                       (sumZCrossUnit*sumZCrossUnit) );
-
-  real xNormalUnit = sumXCrossUnit/length2;
-  real yNormalUnit = sumYCrossUnit/length2;
-  real zNormalUnit = sumZCrossUnit/length2;
-
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.
-  if( (fx*sumXCrossUnit+fy*sumYCrossUnit+fz*sumZCrossUnit) < 0.0 )
+  if( (fx*surfMesh.xNormal.Get(surfaceNode)+
+	   fy*surfMesh.yNormal.Get(surfaceNode)+
+	   fz*surfMesh.zNormal.Get(surfaceNode)) < 0.0 )
    force = -force;
 
   real pressure = force/sumArea;
@@ -6300,25 +6349,20 @@ void Model3D::computeKappaNorb()
 //   }
 //-------------------------------------------------- 
 
-  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
-  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
-  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
 
-} // fecha metodo computeKappa
+} // fecha metodo computeKappaNorb
 
 void Model3D::computeKappa2()
 {
- setCloser();
+ // compute Surface Normals
+ computeSurfaceNormal();
+
  int surfaceNode;
  real force,sumForce,sumArea,sumLength,fx,fy,fz;
- real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
- surfMesh.xNormal.Dim(surfMesh.numVerts);
- surfMesh.yNormal.Dim(surfMesh.numVerts);
- surfMesh.zNormal.Dim(surfMesh.numVerts);
  surfMesh.curvature.Dim(surfMesh.numVerts);
 
  // loop sobre todos os nos da superficie 
@@ -6329,10 +6373,7 @@ void Model3D::computeKappa2()
   real P0y = surfMesh.Y.Get(surfaceNode);
   real P0z = surfMesh.Z.Get(surfaceNode);
 
-  int c1 = 0;
-  sumXCrossUnit = 0;
-  sumYCrossUnit = 0;
-  sumZCrossUnit = 0;
+  //int c1 = 0;
   fx = 0;
   fy = 0;
   fz = 0;
@@ -6408,158 +6449,63 @@ void Model3D::computeKappa2()
                        cross.Get(1)*cross.Get(1)+
                        cross.Get(2)*cross.Get(2));
 
-   // area do triangulo
+   // area do triangulo P0-P1-P2
    real area = 0.5*length;
 
-   // somatoria dos vetores unitarios normais aos triangulos encontrados
-   // na estrela do vertice
-   sumXCrossUnit += cross.Get(0)/length;
-   sumYCrossUnit += cross.Get(1)/length;
-   sumZCrossUnit += cross.Get(2)/length;
+   real prodAB = x1*xReta+y1*yReta+z1*zReta;
+   clVector crossCAB = crossProd(-x2,-y2,-z2,cross.Get(0),
+	                                         cross.Get(1),
+									         cross.Get(2));
 
-   // soma dos vetores 1Unit + 2Unit = resultante
-   real xPlaneRes = x1Unit+x2Unit;
-   real yPlaneRes = y1Unit+y2Unit;
-   real zPlaneRes = z1Unit+z2Unit;
+   real circumRadius = (a*b*c)/(4*area);
 
-   // produto escalar --> projecao do vetor Res no segmento de reta
-   // | Unit.RetaUnit | . RetaUnit
-   // resultado = vetor tangente a reta situado na superficie
-   real prod = xPlaneRes*xRetaUnit + yPlaneRes*yRetaUnit + zPlaneRes*zRetaUnit;
-   real xPlaneTang = xRetaUnit*prod;
-   real yPlaneTang = yRetaUnit*prod;
-   real zPlaneTang = zRetaUnit*prod;
+   // center = mid point + size * unit vector 
+   //           1.0                A dot B
+   // center = ----- * (P0+P2) + ----------- * [ C x (A x B) ]
+   //           2.0              8*area*area
+   //
+   //  ref: Centroid, Incenter and Circumcenter of Triangle using Vector
+   //  Notation, Kurt Nalty, December 25, 2007
+   real Xc = 0.5*(P0x+P2x)+(prodAB/(8*area*area))*crossCAB.Get(0);
+   real Yc = 0.5*(P0y+P2y)+(prodAB/(8*area*area))*crossCAB.Get(1);
+   real Zc = 0.5*(P0z+P2z)+(prodAB/(8*area*area))*crossCAB.Get(2);
 
-   /* subtraindo vetor tangente do vetor unitario para encontrar as
-    * coordenadas do vetor normal SITUADO NA SUPERFICE (face do
-    * tetrahedro = triangulo)
-	* 
-	*                 P0
-	*                  ^
-	*                 / \
-	*                /   \
-	*               /     \
-	*            P1 ------- P2
-	*                  ----> PlaneTang
-	*                  |\
-	*                  | \  PlaneRes
-	*                  |  \
-	*                PlaneNormal
-	*/
-   real xPlaneNormal = xPlaneRes - xPlaneTang;
-   real yPlaneNormal = yPlaneRes - yPlaneTang;
-   real zPlaneNormal = zPlaneRes - zPlaneTang;
+   cout << circumRadius << " "
+	    << sqrt( (P0x-Xc)*(P0x-Xc) + (P0y-Yc)*(P0y-Yc) + (P0z-Zc)*(P0z-Zc) )
+		<< " " 
+	    << sqrt( (P1x-Xc)*(P1x-Xc) + (P1y-Yc)*(P1y-Yc) + (P1z-Zc)*(P1z-Zc) )
+		<< " " 
+	    << sqrt( (P2x-Xc)*(P2x-Xc) + (P2y-Yc)*(P2y-Yc) + (P2z-Zc)*(P2z-Zc) )
+		<< endl;
 
-   real len = sqrt( (xPlaneNormal*xPlaneNormal)+
-	                (yPlaneNormal*yPlaneNormal)+
-					(zPlaneNormal*zPlaneNormal) ); 
+   real XYZc = Xc*Xc + Yc*Yc + Zc*Zc;
+   //real kappa2d = 1.0/circumRadius;
+   real kappaXi = ( Xc/(XYZc) )*surfMesh.xNormal(surfaceNode);
+   real kappaYi = ( Yc/(XYZc) )*surfMesh.yNormal(surfaceNode);
+   real kappaZi = ( Zc/(XYZc) )*surfMesh.zNormal(surfaceNode);
 
-   // Unitario do vetor resultante situado no plano do triangulo
-   // combinacao linear dos vetores unitarios das arestas do triangulo
-   real xPlaneNormalUnit = xPlaneNormal/len;
-   real yPlaneNormalUnit = yPlaneNormal/len;
-   real zPlaneNormalUnit = zPlaneNormal/len;
-
-   // tamanho do comprimento da aresta do triangulo que tem a metade da
-   // area do elemento
-   // semelhanca de triangulos por areas: 2*a = A -> a/A = 0.5 = k^2
-   // onde k eh a razao de semelhanca.
-   // k = sqrt(0.5)
-   // c/C = k, onde c eh a base do triangulo menor e C a do maior
-   // b = B*k = sqrt(0.5)*B 
-   real base = c;
-
-   // normal ao plano integrada na distancia (MOD) dos 2 vertices medianos
-   // force = resultante das componentes * tamanho da aresta que sera
-   // usada como referencia no calculo da area do triangulo
-   fx += xPlaneNormalUnit*base;
-   fy += yPlaneNormalUnit*base;
-   fz += zPlaneNormalUnit*base;
+   force = kappaXi+kappaYi+kappaZi;
 
    sumArea += area;
-   sumLength += c;
-   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
-
-//--------------------------------------------------
-//    if( surfaceNode == 0 )
-//    {
-// 	cout << "Triangulo: ------------------------- " << c1 << endl;
-// 	cout << "v0 = " << surfaceNode << " (" << P0x << "," 
-// 	                                       << P0y << "," 
-// 										   << P0z << ")" << endl;
-// 	cout << "v1 = " << v1 << " (" << P1x << "," 
-// 	                              << P1y << "," 
-// 							 	 << P1z << ")" << endl;
-// 	cout << "v2 = " << v2 << " (" << P2x << "," 
-// 	                              << P2y << "," 
-// 							  	  << P2z << ")" << endl;
-// 	//cout << "Unit = " << xUnit << " " << yUnit << " " << zUnit << endl;
-// 	cout << "1Unit = " << x1Unit << " " 
-// 	                   << y1Unit << " " 
-// 					   << z1Unit << endl;
-// 	cout << "a = " << a << endl;
-// 	cout << "2Unit = " << x2Unit << " " 
-// 	                   << y2Unit << " " 
-// 					   << z2Unit << endl;
-// 	cout << "b = " << b << endl;
-// 	cout << "RetaUnit = " << xRetaUnit << " " 
-// 	                      << yRetaUnit << " " 
-// 						  << zRetaUnit << endl;
-// 	cout << "c = " << c << endl;
-// 	cout << "Cross  = " << cross.Get(0) << " " 
-// 	                    << cross.Get(1) << " " 
-// 						<< cross.Get(2) << endl;
-// 	cout << "PlaneNormal = " << xPlaneNormal << " " 
-// 	                         << yPlaneNormal << " " 
-// 							 << zPlaneNormal << endl;
-// 	cout << "area = " << area << endl;
-// 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "force = " << force << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
-// 	//cout << "sumForce = " << sumForce << endl;
-// 	//cout << "pressure = " << sumForce/sumArea << endl;
-// 	c1++;
-//    }
-//-------------------------------------------------- 
   }
-
-  real length2 = sqrt( (sumXCrossUnit*sumXCrossUnit)+
-                       (sumYCrossUnit*sumYCrossUnit)+
-                       (sumZCrossUnit*sumZCrossUnit) );
-
-  real xNormalUnit = sumXCrossUnit/length2;
-  real yNormalUnit = sumYCrossUnit/length2;
-  real zNormalUnit = sumZCrossUnit/length2;
-
-  // aplicando o teste para saber o sentido correto de aplicacao da
-  // pressao no noh.
-  if( (fx*sumXCrossUnit+fy*sumYCrossUnit+fz*sumZCrossUnit) < 0.0 )
-   force = -force;
 
   real pressure = force/sumArea;
 
-//--------------------------------------------------
-//   if( surfaceNode == 0  )
-//   {
-//   cout << surfaceNode << endl;
-//   cout << "  " << "force = " << force << endl; 
-//   cout << "  " << "fx = " << fx << endl; 
-//   cout << "  " << "fy = " << fy << endl;
-//   cout << "  " << "fz = " << fz << endl;
-//   cout << "  " << "sumArea = " << sumArea << endl;
-//   cout << "  " << "pressure = " << pressure << endl;
-//   }
-//-------------------------------------------------- 
+  if( surfaceNode == 0  )
+  {
+  cout << surfaceNode << endl;
+  cout << "  " << "force = " << force << endl; 
+  cout << "  " << "fx = " << fx << endl; 
+  cout << "  " << "fy = " << fy << endl;
+  cout << "  " << "fz = " << fz << endl;
+  cout << "  " << "sumArea = " << sumArea << endl;
+  cout << "  " << "pressure = " << pressure << endl;
+  }
 
-  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
-  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
-  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
 
-} // fecha metodo computeKappa
+} // fecha metodo computeKappa2
 
 
 void Model3D::setCloser()
@@ -6610,9 +6556,11 @@ clVector Model3D::crossProd(real _x1,real _y1,real _z1,
  return cross;
 }
 
-// espalhando capa calculado na superfice para todos os pontos
+// espalhando kappa calculado na superfice para todos os pontos da
+// malha, com isso garantimos uma forca distribuida
 void Model3D::setKappaSurface()
 {
+ setCloser();
  curvature.Dim(3*numNodes);
  mesh3d.curvature.Dim(3*numNodes);
  for( int i=0;i<numNodes;i++ )

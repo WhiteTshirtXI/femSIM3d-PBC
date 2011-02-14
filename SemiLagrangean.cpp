@@ -270,7 +270,16 @@ void SemiLagrangean::jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R
  return;
 }
 
-// calcula ponto de intersecao
+// calcula ponto de intersecao resolvendo um sistema linear 3x3 atraves
+// da regra de Cramer
+//
+// | a1 b1 c1 |   | x1 | = | d1 |
+// | a2 b2 c2 | . | x2 | = | d2 |
+// | a3 b3 c3 |   | x3 | = | d3 |
+//
+//       detx          dety
+// x1 = ------   x2 = ------   x3 = 1.0-x1-x2
+//       det            det
 void SemiLagrangean::computeIntercept(int ii,real R2X,real R2Y,real R2Z,int ib1,int ib2,int ib3,real *Bl1,real *Bl2,real *Bl3)
 {
  real R1X = X->Get(ii); real R1Y = Y->Get(ii); real R1Z = Z->Get(ii);

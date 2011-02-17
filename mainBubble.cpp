@@ -40,7 +40,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real alpha = 1;
  real beta = -40;
- real cfl = 5.5;
+ real cfl = 1.5;
  real mu_l = 2.0;
  real mu_g = 1.0;
  real rho_l = 100;
@@ -55,8 +55,8 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
- const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
- //const char *mesh = "../../db/gmsh/3d/test1.msh";
+ //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
+ const char *mesh = "../../db/gmsh/3d/curvatureTest/test5.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;

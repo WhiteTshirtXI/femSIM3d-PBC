@@ -1032,6 +1032,7 @@ void Model3D::insertPointsByLength()
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
   //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
    insertPoint(i);
+   //insertPointWithCurvature(i); // not working yet
  }
 }
 
@@ -1613,9 +1614,9 @@ void Model3D::insertPoint(int _edge)
  int elem2 = mapEdgeTri.Get(_edge,6);
 
  // add point in the middle of a edge 
- real XvAdd = surfMesh.X.Get(v1)+( surfMesh.X.Get(v2)-surfMesh.X.Get(v1) )*0.5;
- real YvAdd = surfMesh.Y.Get(v1)+( surfMesh.Y.Get(v2)-surfMesh.Y.Get(v1) )*0.5;
- real ZvAdd = surfMesh.Z.Get(v1)+( surfMesh.Z.Get(v2)-surfMesh.Z.Get(v1) )*0.5;
+ real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+ real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+ real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
 
  // move the point to the right position according to the curvature
  // TO BE IMPLEMENTED
@@ -1624,6 +1625,12 @@ void Model3D::insertPoint(int _edge)
  X.AddItem(vAdd,XvAdd);
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
+
+ // update surface, xSurface, ySurface, zSurface
+ surface.AddItem(vAdd);
+ xSurface.AddItem(XvAdd);
+ ySurface.AddItem(YvAdd);
+ zSurface.AddItem(ZvAdd);
 
  surfMesh.X.AddItem(XvAdd);
  surfMesh.Y.AddItem(YvAdd);
@@ -1840,11 +1847,169 @@ void Model3D::insertPoint(int _edge)
 //-------------------------------------------------- 
 }
 
+void Model3D::insertPointWithCurvature(int _edge)
+{
+ int vAdd = surfMesh.numVerts; // aditional vertice
+ cout << "-------------- " << color(none,yellow,black) << "inserting vertex: "
+      << resetColor() << vAdd << endl;
+ //saveVTKSurface("./vtk/","insertBefore",vAdd);
+
+ // edge vertices
+ int v1 = mapEdgeTri.Get(_edge,1);
+ int v2 = mapEdgeTri.Get(_edge,2);
+ int v3elem1 = mapEdgeTri.Get(_edge,3);
+ int v3elem2 = mapEdgeTri.Get(_edge,4);
+
+ // elements
+ int elem1 = mapEdgeTri.Get(_edge,5);
+ int elem2 = mapEdgeTri.Get(_edge,6);
+
+ real P1x = surfMesh.X.Get(v1);
+ real P1y = surfMesh.Y.Get(v1);
+ real P1z = surfMesh.Z.Get(v1);
+
+ real P2x = surfMesh.X.Get(v2);
+ real P2y = surfMesh.Y.Get(v2);
+ real P2z = surfMesh.Z.Get(v2);
+
+ real P3elem1x = surfMesh.X.Get(v3elem1);
+ real P3elem1y = surfMesh.Y.Get(v3elem1);
+ real P3elem1z = surfMesh.Z.Get(v3elem1);
+
+ real P3elem2x = surfMesh.X.Get(v3elem2);
+ real P3elem2y = surfMesh.Y.Get(v3elem2);
+ real P3elem2z = surfMesh.Z.Get(v3elem2);
+
+ // vector v1-v2
+ real v1x = P2x-P1x;
+ real v1y = P2y-P1y;
+ real v1z = P2z-P1z;
+ real a = distance3D(P1x,P1y,P1z,P2x,P2y,P2z);
+ real v1xUnit = v1x/a;
+ real v1yUnit = v1y/a;
+ real v1zUnit = v1z/a;
+
+ // vector v1-v3elem1
+ real v2x = P3elem1x-P1x;
+ real v2y = P3elem1y-P1y;
+ real v2z = P3elem1z-P1z;
+
+ // vector v1-v3elem2
+ real v3x = P3elem2x-P1x;
+ real v3y = P3elem2y-P1y;
+ real v3z = P3elem2z-P1z;
+
+ clVector cross1 = crossProd3D(v1x,v1y,v1z,v2x,v2y,v2z);
+ real area1 = getArea3D(P1x,P1y,P1z,P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z);
+ real res1x = cross1.Get(0)*area1;
+ real res1y = cross1.Get(1)*area1;
+ real res1z = cross1.Get(2)*area1;
+
+ clVector cross2 = crossProd3D(v3x,v3y,v3z,v1x,v1y,v1z);
+ real area2 = getArea3D(P1x,P1y,P1z,P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
+ real res2x = cross2.Get(0)*area2;
+ real res2y = cross2.Get(1)*area2;
+ real res2z = cross2.Get(2)*area2;
+
+ // averaged normal vector between 2 elements
+ real normalX = (res1x+res2x)/(area1+area2);
+ real normalY = (res1y+res2y)/(area1+area2);
+ real normalZ = (res1z+res2z)/(area1+area2);
+
+ real len = sqrt( normalX*normalX+normalY*normalY+normalZ*normalZ );
+
+ // normal Unit to be used togheter with vector 1Unit and then create
+ // the basis for the plan section
+ real normalXUnit = normalX/len;
+ real normalYUnit = normalY/len;
+ real normalZUnit = normalZ/len;
+
+ // add point in the middle of a edge 
+ real Xmid = ( P1x+P2x )*0.5;
+ real Ymid = ( P1y+P2y )*0.5;
+ real Zmid = ( P1z+P2z )*0.5;
+
+ // curvature considerations
+ real c1 = surfMesh.curvature.Get(v1);
+ real c2 = surfMesh.curvature.Get(v2);
+ real cMid = (c1-c2)*0.5; // linear approximation
+
+ // pull up the point to the right position considering the curvature
+ real XvAdd = Xmid + cMid*normalXUnit;
+ real YvAdd = Ymid + cMid*normalYUnit;
+ real ZvAdd = Zmid + cMid*normalZUnit;
+
+ cout << c1 << " " << cMid << " " << c2 << endl;
+ cout << P1x << " " << P1y << " " << P1z << " " << v1 << " " << v3elem1 << endl;
+ cout << Xmid << " " << Ymid << " " << Zmid << endl;
+ cout << P2x << " " << P2y << " " << P2z << " " << v2 << " " << v3elem2 << endl;
+ cout << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
+ cout << cross1.Get(0) << " " << cross1.Get(1) << " " << cross1.Get(2) << endl;
+ cout << cross2.Get(0) << " " << cross2.Get(1) << " " << cross2.Get(2) << endl;
+ cout << normalXUnit << " " << normalYUnit << " " << normalZUnit << endl;
+
+ // insert aditional vertice coordinate
+ X.AddItem(vAdd,XvAdd);
+ Y.AddItem(vAdd,YvAdd);
+ Z.AddItem(vAdd,ZvAdd);
+
+ surfMesh.X.AddItem(XvAdd);
+ surfMesh.Y.AddItem(YvAdd);
+ surfMesh.Z.AddItem(ZvAdd);
+ surfMesh.Marker.AddItem(0.5); // interface set up
+ surfMesh.curvature.AddItem(cMid);
+
+ // incremeting the number of points
+ surfMesh.numVerts++;
+ numVerts++;
+
+ /* by adding 1 point on the edge it is necessary to divide the
+  * original element and also the oposite element by 2, becoming 4
+  * elements in total. */
+
+ // 1st. new element (v1 - vAdd - v3elem1) 
+ // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
+ surfMesh.IEN.Set(elem1,0,v1);
+ surfMesh.IEN.Set(elem1,1,vAdd);
+ surfMesh.IEN.Set(elem1,2,v3elem1);
+
+ // 2nd. new element (v1 - vAdd - v3elem2) 
+ // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
+ surfMesh.IEN.Set(elem2,0,v1);
+ surfMesh.IEN.Set(elem2,1,vAdd);
+ surfMesh.IEN.Set(elem2,2,v3elem2);
+
+ // 3rd. new element (v2 - vAdd - v3elem1) on the last row
+ surfMesh.IEN.AddRow();
+ int elem3 = surfMesh.IEN.DimI()-1;
+ surfMesh.IEN.Set(elem3,0,v2);
+ surfMesh.IEN.Set(elem3,1,vAdd);
+ surfMesh.IEN.Set(elem3,2,v3elem1);
+ surfMesh.numElems++;
+
+ // 4th. new element (v2 - vAdd - v3elem2) on the last row
+ surfMesh.IEN.AddRow();
+ int elem4 = surfMesh.IEN.DimI()-1;
+ surfMesh.IEN.Set(elem4,0,v2);
+ surfMesh.IEN.Set(elem4,1,vAdd);
+ surfMesh.IEN.Set(elem4,2,v3elem2);
+ surfMesh.numElems++;
+ 
+ setTriEdge();
+ setNeighbourSurface();
+
+}
+
 void Model3D::deletePoint(int _v)
 {
  cout << "--------------- " << color(none,red,black) << "removing vertex: "
       << resetColor() << _v << endl;
  //saveVTKSurface("./vtk/","deleteBefore",_v);
+ 
+ // delete _v from surface, xSurface, ySurface, zSurface vectors
+ // surface is not used to add/remove/flip elements before the remeshing
+ // but it's used on removePointsByInterfaceDistance
+ // to be implemented 
 
  // deleting elements
  deleteSurfaceElementByPoint(_v);
@@ -2494,6 +2659,8 @@ void Model3D::printMeshReport(tetgenio &_mesh)
 
 void Model3D::mesh3DPoints()
 {
+ //computeKappa();
+
 //--------------------------------------------------
 //  saveVTKSurface("./vtk/","start",0);
 //  insertPointsByLength();
@@ -2503,8 +2670,8 @@ void Model3D::mesh3DPoints()
 //  saveVTKSurface("./vtk/","removed",0);
 //  flipTriangleEdge(0);
 //  saveVTKSurface("./vtk/","flipped",0);
+//  removePointsByInterfaceDistance();
 //-------------------------------------------------- 
- removePointsByInterfaceDistance();
 
  // cria objeto de malha do tetgen
  tetgenio in,mid,out;
@@ -5980,13 +6147,15 @@ void Model3D::computeKappa()
    real Yc = 0.5*(P0y+P2y)+(prodAB/(8*area*area))*crossCAB.Get(1);
    real Zc = 0.5*(P0z+P2z)+(prodAB/(8*area*area))*crossCAB.Get(2);
 
-   cout << circumRadius << " "
-	    << sqrt( (P0x-Xc)*(P0x-Xc) + (P0y-Yc)*(P0y-Yc) + (P0z-Zc)*(P0z-Zc) )
-		<< " " 
-	    << sqrt( (P1x-Xc)*(P1x-Xc) + (P1y-Yc)*(P1y-Yc) + (P1z-Zc)*(P1z-Zc) )
-		<< " " 
-	    << sqrt( (P2x-Xc)*(P2x-Xc) + (P2y-Yc)*(P2y-Yc) + (P2z-Zc)*(P2z-Zc) )
-		<< endl;
+//--------------------------------------------------
+//    cout << circumRadius << " "
+// 	    << sqrt( (P0x-Xc)*(P0x-Xc) + (P0y-Yc)*(P0y-Yc) + (P0z-Zc)*(P0z-Zc) )
+// 		<< " " 
+// 	    << sqrt( (P1x-Xc)*(P1x-Xc) + (P1y-Yc)*(P1y-Yc) + (P1z-Zc)*(P1z-Zc) )
+// 		<< " " 
+// 	    << sqrt( (P2x-Xc)*(P2x-Xc) + (P2y-Yc)*(P2y-Yc) + (P2z-Zc)*(P2z-Zc) )
+// 		<< endl;
+//-------------------------------------------------- 
 
    real XYZc = Xc*Xc + Yc*Yc + Zc*Zc;
    //real kappa2d = 1.0/circumRadius;
@@ -6004,6 +6173,10 @@ void Model3D::computeKappa()
    sumXNormal2dUnit =+ tan2d.Get(0)/tan2dLength;
    sumYNormal2dUnit =+ tan2d.Get(1)/tan2dLength;
    sumZNormal2dUnit =+ tan2d.Get(2)/tan2dLength;
+
+   real kappaNiX = kappaX*surfMesh.xNormal.Get(surfaceNode);
+   real kappaNiY = kappaY*surfMesh.yNormal.Get(surfaceNode);
+   real kappaNiZ = kappaZ*surfMesh.zNormal.Get(surfaceNode);
 
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
@@ -6050,8 +6223,6 @@ void Model3D::computeKappa()
 
    // metade da area total do triangulo
    sumArea += area/2.0;
-   sumLength += c;
-   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
 //--------------------------------------------------
 //    if( surfaceNode == 0 )
@@ -6073,17 +6244,16 @@ void Model3D::computeKappa()
 // 	                    << yNormal << " " 
 // 						<< zNormal << endl;
 // 	cout << "area = " << area << endl;
-// 	cout << "force = " << force << endl;
 // 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
 // 	//cout << "sumForce = " << sumForce << endl;
 // 	//cout << "pressure = " << sumForce/sumArea << endl;
 // 	c1++;
 //    }
 //-------------------------------------------------- 
   }
+  // intensidade da forca resultante
+  force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.
   if( (fx*surfMesh.xNormal.Get(surfaceNode)+
@@ -6091,18 +6261,20 @@ void Model3D::computeKappa()
 	   fz*surfMesh.zNormal.Get(surfaceNode)) < 0.0 )
    force = -force;
 
-  real pressure = force/(sumArea);
+  real pressure = force/sumArea;
 
-  if( surfaceNode == 0  )
-  {
-  cout << surfaceNode << endl;
-  cout << "  " << "force = " << force << endl; 
-  cout << "  " << "fx = " << fx << endl; 
-  cout << "  " << "fy = " << fy << endl;
-  cout << "  " << "fz = " << fz << endl;
-  cout << "  " << "sumArea = " << sumArea << endl;
-  cout << "  " << "pressure = " << pressure << endl;
-  }
+//--------------------------------------------------
+//   if( surfaceNode == 0  )
+//   {
+//   cout << surfaceNode << endl;
+//   cout << "  " << "force = " << force << endl; 
+//   cout << "  " << "fx = " << fx << endl; 
+//   cout << "  " << "fy = " << fy << endl;
+//   cout << "  " << "fz = " << fz << endl;
+//   cout << "  " << "sumArea = " << sumArea << endl;
+//   cout << "  " << "pressure = " << pressure << endl;
+//   }
+//-------------------------------------------------- 
 
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
@@ -6167,19 +6339,13 @@ void Model3D::computeKappaNorb()
    real Pm02z = (P2z+P0z)*0.5; 
 
    // distance do ponto 0 ate metade do segmento 01
-   real a = sqrt( (P0x-Pm01x)*(P0x-Pm01x)+
-	              (P0y-Pm01y)*(P0y-Pm01y)+
-				  (P0z-Pm01z)*(P0z-Pm01z) );
+   real a = distance3D(P0x,P0y,P0z,Pm01x,Pm01y,Pm01z);
 
    // distance do ponto 0 ate metade do segmento 02
-   real b = sqrt( (P0x-Pm02x)*(P0x-Pm02x)+
-	              (P0y-Pm02y)*(P0y-Pm02y)+
-			      (P0z-Pm02z)*(P0z-Pm02z) );
+   real b = distance3D(P0x,P0y,P0z,Pm02x,Pm02y,Pm02z);
 
    // distance da metade do segmento 01 ate metade do segmento 02
-   real c = sqrt( (Pm02x-Pm01x)*(Pm02x-Pm01x)+
-	              (Pm02y-Pm01y)*(Pm02y-Pm01y)+
-			      (Pm02z-Pm01z)*(Pm02z-Pm01z) );
+   real c = distance3D(Pm01x,Pm01y,Pm01z,Pm02x,Pm02y,Pm02z);
 
    // vetores 
    real x1 = Pm01x-P0x;
@@ -6206,18 +6372,6 @@ void Model3D::computeKappaNorb()
    real xRetaUnit = xReta/c;
    real yRetaUnit = yReta/c;
    real zRetaUnit = zReta/c;
-
-   // calculando o produto vetorial de cada elemento triangular da superficie
-   // para encontrar a normal ao plano do triangulo
-   clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
-
-   // norma do vetor normal do triangulo
-   real length = sqrt( cross.Get(0)*cross.Get(0)+
-                       cross.Get(1)*cross.Get(1)+
-                       cross.Get(2)*cross.Get(2));
-
-   // area do triangulo P0 - Pm01 - Pm02
-   real area = 0.5*length;
 
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
@@ -6278,9 +6432,9 @@ void Model3D::computeKappaNorb()
    fy += yPlaneNormalUnit*base;
    fz += zPlaneNormalUnit*base;
 
-   sumArea += area;
-   sumLength += c;
-   force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+   // (1/3) * area P0-P1-P2
+   sumArea += 0.3334*getArea3D(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+   //sumArea += getArea3D(P0x,P0y,P0z,Pm01x,Pm01y,Pm01z,Pm02x,Pm02y,Pm02z);
 
 //--------------------------------------------------
 //    if( surfaceNode == 0 )
@@ -6316,16 +6470,15 @@ void Model3D::computeKappaNorb()
 // 							 << zPlaneNormal << endl;
 // 	cout << "area = " << area << endl;
 // 	cout << "sumArea = " << sumArea << endl;
-// 	cout << "force = " << force << endl;
-// 	cout << "fx = " << fx << endl;
-// 	cout << "fy = " << fy << endl;
-// 	cout << "fz = " << fz << endl;
 // 	//cout << "sumForce = " << sumForce << endl;
 // 	//cout << "pressure = " << sumForce/sumArea << endl;
 // 	c1++;
 //    }
 //-------------------------------------------------- 
   }
+
+  // intensidade da forca resultante
+  force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.
@@ -6353,160 +6506,6 @@ void Model3D::computeKappaNorb()
  }
 
 } // fecha metodo computeKappaNorb
-
-void Model3D::computeKappa2()
-{
- // compute Surface Normals
- computeSurfaceNormal();
-
- int surfaceNode;
- real force,sumForce,sumArea,sumLength,fx,fy,fz;
- list<int> plist,plist2;
- list<int>::iterator face,vert;
- surfMesh.curvature.Dim(surfMesh.numVerts);
-
- // loop sobre todos os nos da superficie 
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-  real P0x = surfMesh.X.Get(surfaceNode);
-  real P0y = surfMesh.Y.Get(surfaceNode);
-  real P0z = surfMesh.Z.Get(surfaceNode);
-
-  //int c1 = 0;
-  fx = 0;
-  fy = 0;
-  fz = 0;
-  force = 0;
-  sumForce = 0;
-  sumArea = 0;
-  sumLength = 0;
-
-  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
-  for( face=plist.begin();face!=plist.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
-
-   real P1x = surfMesh.X.Get(v1);
-   real P1y = surfMesh.Y.Get(v1);
-   real P1z = surfMesh.Z.Get(v1);
-   real P2x = surfMesh.X.Get(v2);
-   real P2y = surfMesh.Y.Get(v2);
-   real P2z = surfMesh.Z.Get(v2);
-
-   // distance do ponto 0 ate metade do segmento 01
-   real a = sqrt( (P0x-P1x)*(P0x-P1x)+
-	              (P0y-P1y)*(P0y-P1y)+
-				  (P0z-P1z)*(P0z-P1z) );
-
-   // distance do ponto 0 ate metade do segmento 02
-   real b = sqrt( (P0x-P2x)*(P0x-P2x)+
-	              (P0y-P2y)*(P0y-P2y)+
-			      (P0z-P2z)*(P0z-P2z) );
-
-   // distance do ponto 2 ate ponto 1
-   real c = sqrt( (P2x-P1x)*(P2x-P1x)+
-	              (P2y-P1y)*(P2y-P1y)+
-			      (P2z-P1z)*(P2z-P1z) );
-
-   // vetores
-   real x1 = P1x-P0x;
-   real y1 = P1y-P0y;
-   real z1 = P1z-P0z;
-   real x2 = P2x-P0x;
-   real y2 = P2y-P0y;
-   real z2 = P2z-P0z;
-   real xReta = P2x-P1x;
-   real yReta = P2y-P1y;
-   real zReta = P2z-P1z;
-
-   // vetores unitarios
-   real x1Unit = x1/a;
-   real y1Unit = y1/a;
-   real z1Unit = z1/a;
-
-   real x2Unit = x2/b;
-   real y2Unit = y2/b;
-   real z2Unit = z2/b;
-
-   real xRetaUnit = xReta/c;
-   real yRetaUnit = yReta/c;
-   real zRetaUnit = zReta/c;
-
-   // calculando o produto vetorial de cada elemento triangular da superficie
-   // para encontrar a normal ao plano do triangulo
-   clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
-
-   // norma do vetor normal do triangulo
-   real length = sqrt( cross.Get(0)*cross.Get(0)+
-                       cross.Get(1)*cross.Get(1)+
-                       cross.Get(2)*cross.Get(2));
-
-   // area do triangulo P0-P1-P2
-   real area = 0.5*length;
-
-   real prodAB = x1*xReta+y1*yReta+z1*zReta;
-   clVector crossCAB = crossProd(-x2,-y2,-z2,cross.Get(0),
-	                                         cross.Get(1),
-									         cross.Get(2));
-
-   real circumRadius = (a*b*c)/(4*area);
-
-   // center = mid point + size * unit vector 
-   //           1.0                A dot B
-   // center = ----- * (P0+P2) + ----------- * [ C x (A x B) ]
-   //           2.0              8*area*area
-   //
-   //  ref: Centroid, Incenter and Circumcenter of Triangle using Vector
-   //  Notation, Kurt Nalty, December 25, 2007
-   real Xc = 0.5*(P0x+P2x)+(prodAB/(8*area*area))*crossCAB.Get(0);
-   real Yc = 0.5*(P0y+P2y)+(prodAB/(8*area*area))*crossCAB.Get(1);
-   real Zc = 0.5*(P0z+P2z)+(prodAB/(8*area*area))*crossCAB.Get(2);
-
-   cout << circumRadius << " "
-	    << sqrt( (P0x-Xc)*(P0x-Xc) + (P0y-Yc)*(P0y-Yc) + (P0z-Zc)*(P0z-Zc) )
-		<< " " 
-	    << sqrt( (P1x-Xc)*(P1x-Xc) + (P1y-Yc)*(P1y-Yc) + (P1z-Zc)*(P1z-Zc) )
-		<< " " 
-	    << sqrt( (P2x-Xc)*(P2x-Xc) + (P2y-Yc)*(P2y-Yc) + (P2z-Zc)*(P2z-Zc) )
-		<< endl;
-
-   real XYZc = Xc*Xc + Yc*Yc + Zc*Zc;
-   //real kappa2d = 1.0/circumRadius;
-   real kappaXi = ( Xc/(XYZc) )*surfMesh.xNormal(surfaceNode);
-   real kappaYi = ( Yc/(XYZc) )*surfMesh.yNormal(surfaceNode);
-   real kappaZi = ( Zc/(XYZc) )*surfMesh.zNormal(surfaceNode);
-
-   force = kappaXi+kappaYi+kappaZi;
-
-   sumArea += area;
-  }
-
-  real pressure = force/sumArea;
-
-  if( surfaceNode == 0  )
-  {
-  cout << surfaceNode << endl;
-  cout << "  " << "force = " << force << endl; 
-  cout << "  " << "fx = " << fx << endl; 
-  cout << "  " << "fy = " << fy << endl;
-  cout << "  " << "fz = " << fz << endl;
-  cout << "  " << "sumArea = " << sumArea << endl;
-  cout << "  " << "pressure = " << pressure << endl;
-  }
-
-  surfMesh.curvature.Set(surfaceNode,pressure);
- }
-
-} // fecha metodo computeKappa2
-
 
 void Model3D::setCloser()
 {

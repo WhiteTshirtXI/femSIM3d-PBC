@@ -27,6 +27,7 @@
 #include "compare.h"
 #include "colors.h"
 #include "structs.h"
+#include "geometry.h"
 #include "tetgen.h"
 
 /**
@@ -77,7 +78,8 @@ class Model3D
   void surfaceTriangulatorQualityEarClipping(int _v);
   void deleteSurfacePoint(int _v);
   void deleteSurfaceElementByPoint(int _v);
-  void insertPoint(int _v);
+  void insertPoint(int _edge);
+  void insertPointWithCurvature(int _edge);
   void deletePoint(int _v);
   void setPolyhedron(int _v);
   void flipTriangleEdge( int _edge );

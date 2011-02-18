@@ -1226,35 +1226,6 @@ void Simulator3D::stepALEVel()
 
  // velocidade da bolha
  getBubbleVelocity(uALE,vALE,wALE);
-//--------------------------------------------------
-//  cout << "ALE:    " << bubbleXVel << " " << bubbleYVel << " " 
-//                     << bubbleZVel << endl;
-//  cout << rho_0*bubbleXVel*1.0/mu_0 << " "
-//       << rho_0*bubbleYVel*1.0/mu_0 << " "
-//       << rho_0*bubbleZVel*1.0/mu_0 << endl;
-//  getBubbleVelocity(uSol,vSol,wSol);
-//  cout << "SOL:    " << bubbleXVel << " " << bubbleYVel << " " 
-//                     << bubbleZVel << endl;
-//  cout << rho_0*bubbleXVel*1.0/mu_0 << " "
-//       << rho_0*bubbleYVel*1.0/mu_0 << " "
-//       << rho_0*bubbleZVel*1.0/mu_0 << endl;
-//  getBubbleVelocity(uSL,vSL,wSL);
-//  cout << "SL:     " << bubbleXVel << " " << bubbleYVel << " " 
-//                     << bubbleZVel << endl;
-//  cout << rho_0*bubbleXVel*1.0/mu_0 << " "
-//       << rho_0*bubbleYVel*1.0/mu_0 << " "
-//       << rho_0*bubbleZVel*1.0/mu_0 << endl;
-//
-//  clVector vx = uSol-uALE;
-//  clVector vy = vSol-vALE;
-//  clVector vz = wSol-wALE;
-//  getBubbleVelocity(vx,vy,vz);
-//  cout << "SOL-ALE: " << bubbleXVel << " " << bubbleYVel << " " 
-//                      << bubbleZVel << endl;
-//  cout << rho_0*bubbleXVel*1.0/mu_0 << " "
-//       << rho_0*bubbleYVel*1.0/mu_0 << " "
-//       << rho_0*bubbleZVel*1.0/mu_0 << endl;
-//-------------------------------------------------- 
  
  // atualizacao de todas as matrizes do sistema
  assemble();
@@ -1406,7 +1377,7 @@ void Simulator3D::setInterfaceGeo()
 //  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
 //-------------------------------------------------- 
  
- m->computeKappaNorb();
+ m->computeKappa();
  m->setKappaSurface();
  kappa = *m->getCurvature();
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
@@ -1520,14 +1491,6 @@ void Simulator3D::unCoupled()
  uAnt.CopyFrom(numNodes*3,pSol);
 
  time = time + dt;
- getBubbleVelocity(uSol,vSol,wSol);
-//--------------------------------------------------
-//  cout << "SOL:    " << bubbleXVel << " " << bubbleYVel << " " 
-//                     << bubbleZVel << endl;
-//  cout << rho_l*bubbleXVel*1.0/mu_l << " "
-//       << rho_l*bubbleYVel*1.0/mu_l << " "
-//       << rho_l*bubbleZVel*1.0/mu_l << endl;
-//-------------------------------------------------- 
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()

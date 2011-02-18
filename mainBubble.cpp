@@ -43,8 +43,8 @@ int main(int argc, char **argv)
  real cfl = 1.5;
  real mu_l = 2.0;
  real mu_g = 1.0;
- real rho_l = 100;
- real rho_g = 1;
+ real rho_l = 2.0;
+ real rho_g = 1.0;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
  const char *datFolder  = "./dat/";
  //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
- const char *mesh = "../../db/gmsh/3d/curvatureTest/test5.msh";
+ const char *mesh = "../../db/gmsh/3d/curvatureTest/test4.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;

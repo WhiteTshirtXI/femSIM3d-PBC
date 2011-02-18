@@ -832,43 +832,6 @@ clDMatrix Interface3D::setKappaSurface(clVector &_kappaNx,
  return kappa;
 }
 
-clVector Interface3D::dsearchn(clVector _X,clVector _Y,clVector _Z,
-                               clVector &_XI,clVector &_YI,clVector &_ZI)
-{
- clVector vmin(_XI.Dim());
- vmin.SetAll(0);
- real dist, dmin;
-
- // loop sobre todos os pontos a serem procurados
- for( int i=0;i<_XI.Dim();i++ )
- {
-
-  // distancia de um ponto qualquer x(0),y(o) para o ponto informado xi,yi
-  dmin = (_XI.Get(i)-_X.Get(0))*(_XI.Get(i)-_X.Get(0))+
-         (_YI.Get(i)-_Y.Get(0))*(_YI.Get(i)-_Y.Get(0))+
-         (_ZI.Get(i)-_Z.Get(0))*(_ZI.Get(i)-_Z.Get(0));
-
-  // loop sobre todos os pontos da malha (menos o ponto inicial) para
-  // saber qual o ponto apresenta a menor distancia com relacao ao ponto
-  // informado xi,yi
-  for (int j=1;j<_X.Dim();j++)
-  {
-   //calculo da distancia de outro ponto da malha x(i),y(i)
-   dist = (_XI.Get(i)-_X.Get(j))*(_XI.Get(i)-_X.Get(j))+
-	      (_YI.Get(i)-_Y.Get(j))*(_YI.Get(i)-_Y.Get(j))+
-	      (_ZI.Get(i)-_Z.Get(j))*(_ZI.Get(i)-_Z.Get(j));
-   if (dist<dmin)
-   {
-	dmin=dist;
-	vmin.Set(i,j); 
-   }
-  }
- }
-
- // retorna o indice do ponto da malha
- return vmin;
-}
-
 void Interface3D::setSolverSmooth(Solver *s){ solverC = s; }
 
 clVector Interface3D::getCloser(){ return closer; }

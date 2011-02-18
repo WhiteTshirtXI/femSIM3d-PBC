@@ -32,8 +32,6 @@ class Interface3D
   void computeKappaTest();
   void computeKappa3();
   void plotKappa(clVector &_kappaAux);
-  clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
-	                clVector &_XI,clVector &_YI,clVector &_ZI);
   void setCloser();
   clDMatrix setKappaSurface(clVector &_kappaAux);
   clDMatrix setKappaSurface(clVector &_kappaNx,

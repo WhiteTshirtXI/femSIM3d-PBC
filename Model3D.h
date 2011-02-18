@@ -87,8 +87,6 @@ class Model3D
   void removePointsByInterfaceDistance();
   void breakup();
   clVector triangleQuality(int _v);
-  clVector dsearchn(clVector _X,clVector _Y,clVector _Z,
-	                clVector &_XI,clVector &_YI,clVector &_ZI);
   void setTriEdge();
   void setSurfaceConfig();
   bool checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn);
@@ -101,7 +99,7 @@ class Model3D
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
   void mesh3DPoints();
-tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
+  tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
   Mesh3D convertTetgenToMesh3d(tetgenio &_out);
 
   // boundary condition settings
@@ -150,8 +148,8 @@ tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
   void printMeshReport(tetgenio &_mesh);
   void clearBC();
   void reAllocStruct();
-  clVector crossProd(real _x1,real _y1,real _z1,real _x2,real _y2,real _z2);
   void computeSurfaceNormal();
+  void computeSurfaceAverageNormal();
   void setKappaSurface();
   void setCloser();
   void computeKappa();
@@ -204,8 +202,8 @@ tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
   int getNumGLEC();
   real getVolume(int _v1,int _v2,int _v3,int _v4);
   real getVolume(int _elem);
-  real getArea(int _v1,int _v2,int _v3);
-  real getArea(int _elem);
+  real getAreaVert(int _v1,int _v2,int _v3);
+  real getAreaElem(int _elem);
   real getAreaHeron(int _elem);
   real getLength(int _v1,int _v2);
   clMatrix* getOFace();

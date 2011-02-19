@@ -85,6 +85,7 @@ class Model3D
   void flipTriangleEdge( int _edge );
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
+  void remove3dMeshPointsByDistance();
   void breakup();
   clVector triangleQuality(int _v);
   void setTriEdge();
@@ -248,6 +249,7 @@ class Model3D
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
+  int extraVerts;
   int numTriangles;
   int numGLEU;                    // numero de graus de liberdade de vel.
   int numGLEP;                    // numero de graus de liberdade de P.

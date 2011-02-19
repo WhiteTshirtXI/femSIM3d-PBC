@@ -1021,16 +1021,13 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.1*minEdge )//&&
+	  edgeLength > 1.3*minEdge )//&&
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
 	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
 	//-------------------------------------------------- 
-  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.15 ) 
-  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.157 ) 
-  //if( cc.Get(mapEdgeTri.Get(i,1)) == 0.5 && edgeLength > 0.16 ) 
    insertPoint(i);
    //insertPointWithCurvature(i); // not working yet
  }
@@ -1647,9 +1644,6 @@ void Model3D::insertPoint(int _edge)
  real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
  real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
 
- // move the point to the right position according to the curvature
- // TO BE IMPLEMENTED
-
  // insert aditional vertice coordinate
  X.AddItem(vAdd,XvAdd);
  Y.AddItem(vAdd,YvAdd);
@@ -2141,11 +2135,17 @@ void Model3D::removePointsByInterfaceDistance()
 
  setCloser();
 
+ clVector dist(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
-  real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
+  real aux = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                 xCloser.Get(i),yCloser.Get(i),zCloser.Get(i) );
+  dist.Set(i,aux);
+ }
 
+ for( int i=0;i<numVerts;i++ )
+ {
+  real d = dist.Get(i);
   //if( d>0 && d<0.4*minEdge ) // mainBubble.cpp
   if( d>0 && d<0.8*minEdge ) // hiRe
   {
@@ -2156,8 +2156,38 @@ void Model3D::removePointsByInterfaceDistance()
    Y.Delete(i);
    Z.Delete(i);
    cc.Delete(i);
+   dist.Delete(i);
    numVerts--;
    i--;
+  }
+ }
+}
+
+void Model3D::remove3dMeshPointsByDistance()
+{
+ for( int i=extraVerts;i<numVerts;i++ )
+ {
+  for( int j=surfMesh.numVerts;j<numVerts;j++ )
+  {
+   if( cc.Get(i) < 0.5 && cc.Get(j) < 0.5 )
+   {
+	real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
+	                   X.Get(j),Y.Get(j),Z.Get(j) );
+	if( d>0 && d<2.0*minEdge )
+	{
+	 cout << "- " << color(none,blue,black) 
+	              << "removing dense vertex cluster: "
+	              << resetColor() << i << endl;
+	 X.Delete(i);
+	 Y.Delete(i);
+	 Z.Delete(i);
+	 cc.Delete(i);
+	 numVerts--;
+	 extraVerts--;
+	 i--;
+	 j--;
+	}
+   }
   }
  }
 }
@@ -2655,17 +2685,16 @@ void Model3D::mesh3DPoints()
 {
  //computeKappa();
 
-//--------------------------------------------------
-//  saveVTKSurface("./vtk/","start",0);
-//  insertPointsByLength();
-//  //insertPointsByInterfaceDistance();
-//  saveVTKSurface("./vtk/","inserted",0);
-//  removePointsByLength();
-//  saveVTKSurface("./vtk/","removed",0);
-//  flipTriangleEdge(0);
-//  saveVTKSurface("./vtk/","flipped",0);
-//  removePointsByInterfaceDistance();
-//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","start",0);
+ insertPointsByLength();
+ //insertPointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","inserted",0);
+ removePointsByLength();
+ saveVTKSurface("./vtk/","removed",0);
+ flipTriangleEdge(0);
+ saveVTKSurface("./vtk/","flipped",0);
+ removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
 
  // cria objeto de malha do tetgen
  tetgenio in,mid,out;
@@ -2679,9 +2708,9 @@ void Model3D::mesh3DPoints()
  // superficie e do convex-hull
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  in.pointlist[3*i+0] = surfMesh.X.Get(i); // surfMesh.X nao esta no ALE
-  in.pointlist[3*i+1] = surfMesh.Y.Get(i); // surfMesh.Z nao esta no ALE
-  in.pointlist[3*i+2] = surfMesh.Z.Get(i); // surfMesh.Y nao esta no ALE
+  in.pointlist[3*i+0] = surfMesh.X.Get(i); 
+  in.pointlist[3*i+1] = surfMesh.Y.Get(i); 
+  in.pointlist[3*i+2] = surfMesh.Z.Get(i); 
   if( surfMesh.Marker.Get(i) == 0.0 ) // convex-hull
    in.pointmarkerlist[i] = 11;
   if( surfMesh.Marker.Get(i) == 0.5 ) // interface
@@ -2775,6 +2804,7 @@ void Model3D::mesh3DPoints()
  cout << "finished <---- " << endl;;
  cout << endl;
 
+ extraVerts = out.numberofpoints - numVerts;
  numElems = out.numberoftetrahedra;
  numNodes = out.numberofpoints+out.numberoftetrahedra;
  numVerts = out.numberofpoints;
@@ -6236,9 +6266,6 @@ void Model3D::computeKappa()
 void Model3D::setCloser()
 {
  int aux;
- xCloser.Dim(numNodes);
- yCloser.Dim(numNodes);
- zCloser.Dim(numNodes);
 
  // {x,y,z}Surface representam os valores de {X,Y,Z} dos nos da interface
  xSurface.Dim( surface.Dim() );
@@ -6256,6 +6283,9 @@ void Model3D::setCloser()
  // esta funcao retorna o noh da interface (surface) mais 
  // proximo de cada noh da malha (vertices)
  closer = dsearchn(xSurface,ySurface,zSurface,X,Y,Z);
+ xCloser.Dim( closer.Dim() );
+ yCloser.Dim( closer.Dim() );
+ zCloser.Dim( closer.Dim() );
  for( int i=0;i<closer.Dim();i++ )
  {
   aux = closer.Get(i);

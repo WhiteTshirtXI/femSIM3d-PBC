@@ -54,9 +54,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
- const char *mesh = "../../db/gmsh/3d/curvatureTest/test4.msh";
+ //const char *mesh = "../../db/gmsh/3d/curvatureTest/test4.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;
@@ -230,8 +230,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity();
-   //s1.setGravityBoussinesq();
+   s1.setGravity();
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();

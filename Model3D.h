@@ -249,7 +249,7 @@ class Model3D
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
-  int extraVerts;
+  int dVerts;                     // delta vertices (v_new-v_old)
   int numTriangles;
   int numGLEU;                    // numero de graus de liberdade de vel.
   int numGLEP;                    // numero de graus de liberdade de P.
@@ -258,6 +258,11 @@ class Model3D
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
   real minEdge;
+  int isp;                        // isp: num of inserted surface points
+  int rsp;                        // rsp: num of removed surface points
+  int ip;                         // ip: num of inserted 3d mesh points
+  int rp;                         // rp: num of removed 3d mesh points
+  int rpi;                        // rpi: by interface distance
 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

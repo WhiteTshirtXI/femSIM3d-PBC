@@ -1281,7 +1281,7 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.3;
+  real a = 0.0;
   uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
@@ -1290,9 +1290,11 @@ void Simulator3D::setInterfaceVelNormal()
   //vALE.Set(surfaceNode,vSmoothTangent);
   //wALE.Set(surfaceNode,wSmoothTangent);
 
-  //uALE.Set(surfaceNode,uSolNormal);
-  //vALE.Set(surfaceNode,vSolNormal);
-  //wALE.Set(surfaceNode,wSolNormal);
+//--------------------------------------------------
+//   uALE.Set(surfaceNode,uSolNormal);
+//   vALE.Set(surfaceNode,vSolNormal);
+//   wALE.Set(surfaceNode,wSolNormal);
+//-------------------------------------------------- 
   
   //cout << bubbleZVelocity << " " << wSolNormal << endl;
   //wALE.Set(surfaceNode,wSolNormal-bubbleZVelocity);
@@ -1465,8 +1467,8 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- uvw = uTilde + dt*invMLumped*fint;
- //uvw = uTilde + invA*fint;
+ //uvw = uTilde + dt*invMLumped*fint;
+ uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
  b2Tilde = b2 - (DTilde * uvw); // D com c.c.
@@ -1639,8 +1641,8 @@ void Simulator3D::setUnCoupledBC()
  }
  cout << " boundary condition P --> SET " << endl;
 
- ETilde = E - ((DTilde * invA) * GTilde); 
  //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
+ ETilde = E - ((DTilde * invA) * GTilde); 
 } // fecha metodo setUnCoupledBC 
 
 void Simulator3D::setUnCoupledCBC()

@@ -1016,12 +1016,16 @@ int Model3D::findEdge(int _v1,int _v2)
 
 void Model3D::insertPointsByLength()
 {
+ // number of inserted surface points
+ isp = 0;
+
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
 	  edgeLength > 1.3*minEdge )//&&
+  {
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
@@ -1029,7 +1033,9 @@ void Model3D::insertPointsByLength()
 	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
 	//-------------------------------------------------- 
    insertPoint(i);
+   isp++;
    //insertPointWithCurvature(i); // not working yet
+  }
  }
 }
 
@@ -2075,6 +2081,9 @@ void Model3D::deletePoint(int _v)
 
 void Model3D::removePointsByLength()
 {
+ // number of removed surface points
+ rsp=0;
+
  real test = 0.4*minEdge; // 30% of minEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
@@ -2121,15 +2130,24 @@ void Model3D::removePointsByLength()
 
    // check which node has the smallest length sum and proceed
    if( sumLength1 < sumLength2 )
+   {
 	deletePoint(v1);
+	rsp++;
+   }
    else // if the 2nd. node has the smallest edge length sum
+   {
 	deletePoint(v2);
+	rsp++;
+   }
   }
  }
 }
 
 void Model3D::removePointsByInterfaceDistance()
 {
+ // number of removed 3d mesh points by interface distance
+ rpi=0;
+
  clVector surfaceAux = cc==0.5;
  clVector surface = surfaceAux.Find();
 
@@ -2159,33 +2177,41 @@ void Model3D::removePointsByInterfaceDistance()
    dist.Delete(i);
    numVerts--;
    i--;
+   rpi++;
   }
  }
 }
 
 void Model3D::remove3dMeshPointsByDistance()
 {
- for( int i=extraVerts;i<numVerts;i++ )
+ // number of removed points of 3d mesh
+ rp = 0;
+
+ if( dVerts>0 )
  {
-  for( int j=surfMesh.numVerts;j<numVerts;j++ )
+  for( int i=numVerts-dVerts;i<numVerts;i++ )
   {
-   if( cc.Get(i) < 0.5 && cc.Get(j) < 0.5 )
+   for( int j=surfMesh.numVerts;j<numVerts;j++ )
    {
-	real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
-	                   X.Get(j),Y.Get(j),Z.Get(j) );
-	if( d>0 && d<2.0*minEdge )
+	if( cc.Get(i) < 0.5 && cc.Get(j) < 0.5 )
 	{
-	 cout << "- " << color(none,blue,black) 
-	              << "removing dense vertex cluster: "
-	              << resetColor() << i << endl;
-	 X.Delete(i);
-	 Y.Delete(i);
-	 Z.Delete(i);
-	 cc.Delete(i);
-	 numVerts--;
-	 extraVerts--;
-	 i--;
-	 j--;
+	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
+	   X.Get(j),Y.Get(j),Z.Get(j) );
+	 if( d>0 && d<1.2*minEdge )
+	 {
+	  cout << "- " << color(none,blue,black) 
+	   << "removing dense vertex cluster: "
+	   << resetColor() << i << endl;
+	  X.Delete(i);
+	  Y.Delete(i);
+	  Z.Delete(i);
+	  cc.Delete(i);
+	  numVerts--;
+	  dVerts--;
+	  i--;
+	  j--;
+	  rp++;
+	 }
 	}
    }
   }
@@ -2670,21 +2696,28 @@ void Model3D::printMeshReport(tetgenio &_mesh)
    maxElem = i;
   }
  }
- cout << "   |----------------- Mesh Report ---------------------|" << endl;
+ cout << "   |------------------------ Mesh Report --------------------------|" 
+      << endl;
  cout << "     mesh: " << count 
       << " tets w/ all the 4 verts on the interface " << endl;
  cout << "     interface average element edge length: " << minEdge << endl;
- cout << "     desired tetrahedron volume  : " 
+ cout << "     desired tetrahedron volume:            " 
       << minEdge*minEdge*minEdge*sqrt(2)/12 << endl;
- cout << "     min tetrahedron volume: " << minElem << " " << minVol << endl;
- cout << "     max tetrahedron volume: " << maxElem << " " << maxVol << endl;
- cout << "   |---------------------------------------------------|" << endl;
+ cout << "     min tetrahedron volume:                " 
+      << minVol << " (" << minElem << ")" << endl;
+ cout << "     max tetrahedron volume:                " 
+      << maxVol <<  " (" << maxElem << ")" << endl;
+ cout << "     number of inserted surface points:     " << isp << endl;
+ cout << "     number of removed surface points:      " << rsp << endl;
+ cout << "     number of inserted mesh points:        " << ip << endl;
+ cout << "     number of removed mesh points:         " << rp+rpi 
+      << " (" << rpi << "," << rp << ")" << endl;
+ cout << "   |---------------------------------------------------------------|" 
+      << endl;
 }
 
 void Model3D::mesh3DPoints()
 {
- //computeKappa();
-
  saveVTKSurface("./vtk/","start",0);
  insertPointsByLength();
  //insertPointsByInterfaceDistance();
@@ -2804,7 +2837,7 @@ void Model3D::mesh3DPoints()
  cout << "finished <---- " << endl;;
  cout << endl;
 
- extraVerts = out.numberofpoints - numVerts;
+ dVerts = out.numberofpoints - numVerts;
  numElems = out.numberoftetrahedra;
  numNodes = out.numberofpoints+out.numberoftetrahedra;
  numVerts = out.numberofpoints;

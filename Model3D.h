@@ -62,6 +62,7 @@ class Model3D
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
+void setSurfaceFace2();
   void setSurfaceTri();
   void setConvexTri();
   void buildSurfMesh();
@@ -230,7 +231,7 @@ class Model3D
 
  private:
   clVector uc,vc,wc,pc,cc;
-  clMatrix IEN;
+  clMatrix IEN,IENTemp;
   clDMatrix curvature;
   Mesh3D mesh3d;
   SurfaceMesh surfMesh,interfaceMesh,convexMesh;

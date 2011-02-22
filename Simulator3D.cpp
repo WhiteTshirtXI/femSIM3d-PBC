@@ -1281,7 +1281,7 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.0;
+  real a = 0.2;
   uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
@@ -1397,14 +1397,15 @@ void Simulator3D::matMount()
  for( int i = 0; i < 3*numNodes; i++ )
   invA.Set(i, mat.SumLine(i));
 
- invA = invA.Inverse();
- invMrhoLumped = MrhoLumped.Inverse();
-
  // if M != 0
  for( int i = 0; i < 3*numNodes; i++ )
   MLumped.Set(i, M.SumLine(i));
 
  invMLumped = MLumped.Inverse();
+
+ invA = invA.Inverse();
+ //invMrhoLumped = MLumped.Inverse();
+ invMrhoLumped = MrhoLumped.Inverse();
 }
 
 void Simulator3D::matMountC()
@@ -1753,6 +1754,85 @@ void Simulator3D::setHsmooth()
 }
 
 void Simulator3D::setMuRho(real _mu_l,real _mu_g,
+                           real _rho_l,real _rho_g)
+{
+ /* Since we are working here with non-dimensional equations and also
+  * because the referential Reynolds used in two-phase flow is the one
+  * from the liquid phase, we set the liquid viscosity (mu_fluid) as
+  * equal to 1.0.
+  *
+  *          rho_0 * v_0 * D     
+  * Re_ref = ---------------     
+  *               mu_0            
+  *
+  *               rho_l                   rho_g
+  * rho_lAdimen = -----     rho_gAdimen = -----
+  *               rho_0                   rho_0
+  *
+  *               mu_l                   mu_g
+  * muAdimen_l =  ----      muAdimen_g = ----
+  *               mu_0                   mu_0
+  *
+  *
+  *        rho_l * v_l * D          rho_g * v_g * D 
+  * Re_l = ---------------   Re_g = --------------- 
+  *             mu_l                     mu_g       
+  *
+  * Navier-Stokes Viscous Term (liquid):
+  *
+  *    mu_0                 [            (                       ) ]
+  * --------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [            (                       ) ]
+  *
+  *
+  * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
+  *
+  *    mu_0                 [ mu_g   (                       ) ]
+  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [ mu_0   (                       ) ]
+  *
+  *
+  * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
+  *
+  *    mu_0                 [ mu_l   (                       ) ]
+  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+  * rho_0*v*D               [ mu_0   (                       ) ]
+  *
+  * */
+ 
+ rho_0= _rho_l-_rho_g; 
+ rho_lAdimen = _rho_l/rho_0; 
+ rho_gAdimen = _rho_g/rho_0;
+
+ mu_0 = _mu_l;
+ mu_lAdimen = _mu_l/mu_0;
+ mu_gAdimen = _mu_g/mu_0;
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  // gas phase (bubble)
+  if( cc->Get(i)>0.5 )
+  {
+   nu.Set(i,mu_gAdimen); 
+   rho.Set(i,rho_gAdimen);
+  }
+  // liquid phase
+  else if( cc->Get(i)<0.5 )
+  {
+   nu.Set(i,mu_lAdimen); 
+   rho.Set(i,rho_lAdimen);
+  }
+  else
+  {
+   nu.Set(i,(mu_gAdimen+mu_lAdimen)*0.5);
+   rho.Set(i,(rho_gAdimen+rho_lAdimen)*0.5);
+  }
+ }
+ nu = setTetCentroid(*IEN,nu);
+ rho = setTetCentroid(*IEN,rho);
+}
+
+void Simulator3D::setMuRho2(real _mu_l,real _mu_g,
                            real _rho_l,real _rho_g)
 {
  /* Since we are working here with non-dimensional equations and also

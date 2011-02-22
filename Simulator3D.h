@@ -80,6 +80,7 @@ class Simulator3D
 
   void setHsmooth();
   void setMuRho(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
+  void setMuRho2(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
   void setNuZ();
   void setRe(real _Re);
   real getRe();

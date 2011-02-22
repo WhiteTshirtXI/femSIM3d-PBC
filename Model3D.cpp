@@ -15,7 +15,28 @@ extern "C"
 
 using namespace std;
 
-Model3D::Model3D(){}
+Model3D::Model3D()
+{
+ numVerts = 0;                
+ numElems = 0;                
+ numNodes = 0;                
+ dVerts = 0;                  
+ numTriangles = 0;
+ numGLEU = 0;                 
+ numGLEP = 0;                 
+ numGLEC = 0;                 
+ rMax = 0;                    
+ xCenter = 0;
+ yCenter = 0;
+ zCenter = 0;
+ bubbleRadius = 0;
+ minEdge = 0;
+ isp = 0;                    
+ rsp = 0;                    
+ ip = 0;                     
+ rp = 0;                     
+ rpi = 0;                   
+}
 Model3D::~Model3D(){}
 
 void Model3D::readVTK( const char* filename )
@@ -997,7 +1018,7 @@ void Model3D::setTriangleMinEdge()
  cout << endl;
 
  //minEdge = 0.11; //rising bubble
- minEdge = 0.11;
+ minEdge = 0.07;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -2165,7 +2186,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = dist.Get(i);
   //if( d>0 && d<0.4*minEdge ) // mainBubble.cpp
-  if( d>0 && d<0.8*minEdge ) // hiRe
+  if( d>0 && d<0.7*minEdge ) // hiRe
   {
    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
 	    << resetColor() << i << endl;
@@ -2193,7 +2214,7 @@ void Model3D::remove3dMeshPointsByDistance()
   {
    for( int j=surfMesh.numVerts;j<numVerts;j++ )
    {
-	if( cc.Get(i) < 0.5 && cc.Get(j) < 0.5 )
+	if( cc.Get(i) != 0.5 && cc.Get(j) != 0.5 )
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	   X.Get(j),Y.Get(j),Z.Get(j) );
@@ -2453,7 +2474,7 @@ void Model3D::mesh2Dto3DOriginal()
  cout << "----> complete re-meshing the domain... ";
  //tetrahedralize( (char*) "VYYApq1.4241",&in,&out );
  //tetrahedralize( (char*) "QYYCApq1.4241a0.05",&in,&out );
- tetrahedralize( (char*) "QYYCApq1.414q10a0.5",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
  //tetrahedralize( (char*) "QYYCApq1.414q10a0.001",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
@@ -2662,7 +2683,22 @@ void Model3D::printMeshReport(tetgenio &_mesh)
  int minElem,maxElem;
 
  int count=0;
+ for( int i=0;i<_mesh.numberoftetrahedra;i++ )
+ {
+  int v1 = _mesh.tetrahedronlist[i*4+0];
+  int v2 = _mesh.tetrahedronlist[i*4+1];
+  int v3 = _mesh.tetrahedronlist[i*4+2];
+  int v4 = _mesh.tetrahedronlist[i*4+3];
 
+  if( _mesh.pointmarkerlist[v1] == 22 &&
+      _mesh.pointmarkerlist[v2] == 22 &&
+      _mesh.pointmarkerlist[v3] == 22 &&
+      _mesh.pointmarkerlist[v4] == 22 )
+   count++;
+ }
+ IENTemp.Dim(count,5);
+
+ int j=0;
  for( int i=0;i<_mesh.numberoftetrahedra;i++ )
  {
   int v1 = _mesh.tetrahedronlist[i*4+0];
@@ -2679,10 +2715,15 @@ void Model3D::printMeshReport(tetgenio &_mesh)
       _mesh.pointmarkerlist[v3] == 22 &&
       _mesh.pointmarkerlist[v4] == 22 )
   {
-   count++;
    cout << i << "  " << v1 << " " << v2 << " " << v3 << " " << v4 
 	    << " " << _mesh.tetrahedronattributelist[i] << " "
 		<< volume << endl;
+   IENTemp.Set(j,0,v1);
+   IENTemp.Set(j,1,v2);
+   IENTemp.Set(j,2,v3);
+   IENTemp.Set(j,3,v4);
+   IENTemp.Set(j,4,_mesh.tetrahedronattributelist[i]);
+   j++;
   }
 
   if( aux < minVol ) 
@@ -2729,10 +2770,12 @@ void Model3D::mesh3DPoints()
  removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
+ //IENTemp.Dim(0,0);
+ cout << IENTemp.DimI() << endl;
  // cria objeto de malha do tetgen
  tetgenio in,mid,out;
  in.mesh_dim = 3;
- in.numberofpoints = numVerts;
+ in.numberofpoints = numVerts+IENTemp.DimI();;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
@@ -2760,6 +2803,31 @@ void Model3D::mesh3DPoints()
    in.pointmarkerlist[i] = 11;
   if( cc.Get(i) == 1.0 ) // dentro da bolha
    in.pointmarkerlist[i] = 33;
+ }
+
+ int j=0;
+ for( int i=numVerts;i<numVerts+IENTemp.DimI();i++ )
+ {
+  int v1 = IENTemp.Get(j,0);
+  int v2 = IENTemp.Get(j,1);
+  int v3 = IENTemp.Get(j,2);
+  int v4 = IENTemp.Get(j,3);
+  int region = IENTemp.Get(j,4);
+
+  real xMid = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )*0.25;
+  real yMid = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )*0.25;
+  real zMid = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )*0.25;
+
+  in.pointlist[3*i+0] = xMid;
+  in.pointlist[3*i+1] = yMid;
+  in.pointlist[3*i+2] = zMid;
+
+  if( region ==  1 ) // fora da bolha
+   in.pointmarkerlist[i] = 11;
+  else
+   in.pointmarkerlist[i] = 33;
+
+  j++;
  }
  /* -------------------------------------------------------------- */
 
@@ -2833,7 +2901,7 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  cout << "----> re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCAipq1.414q10a0.5",&in,&out );
+ tetrahedralize( (char*) "QYYRCAipq1.414q10a0.1",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
 
@@ -4519,6 +4587,55 @@ void Model3D::setSurfaceFace()
 //-------------------------------------------------- 
  }
  neighbourFaceVert.resize (count); // trim vector para numero real de itens
+ cout << "inElem: " << count << endl;
+}
+
+void Model3D::setSurfaceFace2()
+{
+ int v1,v2,v3,v4;
+ list<int> plist;
+ list<int>::iterator mele;
+ int surfaceNode;
+ 
+ // contador de faces na superficie
+ int count = 0; 
+
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  surfaceNode = surface.Get(i);
+  // lista de elementos que contem surfaceNode
+  plist = neighbourElem.at(surfaceNode);
+  for( mele=plist.begin(); mele != plist.end();++mele )
+  {
+   v1 = (int) IEN.Get(*mele,0);
+   v2 = (int) IEN.Get(*mele,1);
+   v3 = (int) IEN.Get(*mele,2);
+   v4 = (int) IEN.Get(*mele,3);
+
+   // pegando o elemento com 3 vertices na superfice e 1 fora da bolha
+   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
+	   cc.Get(v3)==0.5 && cc.Get(v4)==1.0 )
+   {
+	count++;
+   }
+   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
+	   cc.Get(v3)==1.0 && cc.Get(v4)==0.5 )
+   {
+	count++;
+   }
+   if( cc.Get(v1)==0.5 && cc.Get(v2)==1.0 && 
+	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
+   {
+	count++;
+   }
+   if( cc.Get(v1)==1.0 && cc.Get(v2)==0.5 && 
+	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
+   {
+	count++;
+   }
+  }
+ }
+ cout << "outElem: " << count << endl;
 }
 
 /* cria matriz IEN para os elementos da superficie que no caso 3D sao
@@ -5371,6 +5488,7 @@ void Model3D::setSurfaceConfig()
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setSurfaceFace(); // elemSurface e neighbourFaceVert
+ setSurfaceFace2();
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();

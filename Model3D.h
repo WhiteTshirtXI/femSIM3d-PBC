@@ -51,8 +51,6 @@ class Model3D
   void readBC( const char* filename );
   void readBaseStateNu(const char* _filename);
 
-  void setMeshStep(int nX,int nY,int nZ);
-  void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void setSphere(real _xC,real _yC,real _zC,real _r,real _eps);
   void setCube(real _lim1,real _lim2,real _eps);
   void setCube(real _xlimInf,real _xlimSup,
@@ -62,14 +60,13 @@ class Model3D
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
-void setSurfaceFace2();
   void setSurfaceTri();
   void setConvexTri();
   void buildSurfMesh();
   SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
-  void setTriangleMinEdge();
+  void computeAverageTriangleEdge();
   void insertPointsByLength();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
@@ -89,7 +86,7 @@ void setSurfaceFace2();
   void remove3dMeshPointsByDistance();
   void breakup();
   clVector triangleQuality(int _v);
-  void setTriEdge();
+  void setMapEdgeTri();
   void setSurfaceConfig();
   bool checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn);
   void saveVTK( const char* _dir,const char* _filename, int _iter );
@@ -98,11 +95,16 @@ void setSurfaceFace2();
   bool testFace(int v1, int v2, int v3, int v4);
 
   // meshing with TETGEN
+  void setMeshStep(int nX,int nY,int nZ);
+  void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();
   void mesh3DPoints();
-  tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh);
-  Mesh3D convertTetgenToMesh3d(tetgenio &_out);
+  bool checkMeshQuality(tetgenio &_tetmesh);
+  tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh,tetgenio &_tetmesh);
+  Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
+  void convertTetgenToModel3D(tetgenio &_tetmesh);
+  void convertModel3DtoTetgen(tetgenio &_tetmesh);
 
   // boundary condition settings
   void setNuCteDiskBC();
@@ -147,7 +149,7 @@ void setSurfaceFace2();
   void setNeighbourSurface();
   void setVertNeighbour();
   void setOFace();
-  void printMeshReport(tetgenio &_mesh);
+  void printMeshReport(tetgenio &_tetmesh);
   void clearBC();
   void reAllocStruct();
   void computeSurfaceNormal();
@@ -226,12 +228,15 @@ void setSurfaceFace2();
   list<int>* getInVert();
   list<int>* getOutElem();
   list<int>* getInElem();
+  real getTriEdge();
+  void setTriEdge(real _triEdge);
 
   void operator=(Model3D &_mRight);
 
  private:
+  tetgenio in,mid,out;
   clVector uc,vc,wc,pc,cc;
-  clMatrix IEN,IENTemp;
+  clMatrix IEN;
   clDMatrix curvature;
   Mesh3D mesh3d;
   SurfaceMesh surfMesh,interfaceMesh,convexMesh;
@@ -258,12 +263,14 @@ void setSurfaceFace2();
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
-  real minEdge;
+  real triEdge,averageTriEdge;
   int isp;                        // isp: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
   int ip;                         // ip: num of inserted 3d mesh points
   int rp;                         // rp: num of removed 3d mesh points
   int rpi;                        // rpi: by interface distance
+  int flip;
+  int badtets;
 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

@@ -30,12 +30,14 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- minEdge = 0;
+ triEdge = 0.09;
+ averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
  ip = 0;                     
  rp = 0;                     
  rpi = 0;                   
+ flip = 0;
 }
 Model3D::~Model3D(){}
 
@@ -399,7 +401,10 @@ void Model3D::readBC( const char* filename )
 // seguida pela atualizacao da matriz de mapeamento de elementos IEN
 void Model3D::setMeshStep(int nX,int nY,int nZ)
 {
- tetgenio in,out;
+ // clean and init tetgen mesh object
+ in.initialize();
+ out.initialize();
+
  in.mesh_dim = 3;
  in.numberofpoints = nX*nY*nZ;
  in.pointlist = new REAL[in.numberofpoints * 3];
@@ -457,6 +462,9 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
  }
 
  mesh3d = convertTetgenToMesh3d(out);
+
+ in.initialize();
+ out.initialize();
 }
 
 void Model3D::setStepBC()
@@ -709,7 +717,10 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  yAux.CopyTo(0,Y);
  zAux.CopyTo(0,Z);
 
- tetgenio in,out;
+ // clean and init tetgen mesh object
+ in.initialize();
+ out.initialize();
+
  in.mesh_dim = 3;
  in.numberofpoints = numVerts;
  in.pointlist = new REAL[in.numberofpoints * 3];
@@ -742,151 +753,56 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   }
  }
  mesh3d = convertTetgenToMesh3d(out);
+
+ in.initialize();
+ out.initialize();
 }
 
 
 void Model3D::mesh2Dto3D()
 {
- // cria objeto de malha do tetgen
- tetgenio in,out;
+ // clean and init tetgen mesh object
+ in.initialize();
+ out.initialize();
+
  in.mesh_dim = 3;
  in.numberofpoints = surfMesh.numVerts;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
- // adiciona na estrutura tetgen as coordenadas dos pontos
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  in.pointlist[3*i+0] = surfMesh.X.Get(i);
-  in.pointlist[3*i+1] = surfMesh.Y.Get(i);
-  in.pointlist[3*i+2] = surfMesh.Z.Get(i);
-  if( surfMesh.Marker.Get(i) == 0.0 )
-   in.pointmarkerlist[i] = 11; // fora
-  if( surfMesh.Marker.Get(i) == 0.5 )
-   in.pointmarkerlist[i] = 22; // interface
- }
-
- /* ESTE PROCEDIMENTO DEFINE REGIOES NA MALHA E APOS A INSERCAO/RETIRADA
-  * DE PONTOS PELO TETGEN, CONSEGUIMOS RECONHECER A LOCALIZACAO DOS
-  * PONTOS E ASSIM PODEMOS DEFINIR NOVAMENTE A FUNCAO MARCADORA COMO
-  * SENDO 1.0 DENTRO DA BOLHA, 0.5 NA SUPERFICIE E 0.0 FORA 
-  * E NECESSARIO DEFINIR 1 PONTO EM CADA REGIAO */
- // fluido interior + fluido exterior + superficie
- in.numberofregions = 1; 
- in.regionlist = new REAL[in.numberofregions*4];
-
- // fora da bolha
- in.regionlist[0] = surfMesh.X.Min()+0.01;
- in.regionlist[1] = surfMesh.Y.Min()+0.01;
- in.regionlist[2] = surfMesh.Z.Min()+0.01;
- in.regionlist[3] = 1;
-
- tetgenio::facet *f;   // Define a pointer of facet. 
- tetgenio::polygon *p; // Define a pointer of polygon.
- in.numberoffacets = surfMesh.numElems; 
- in.facetlist = new tetgenio::facet[in.numberoffacets]; 
- in.facetmarkerlist = new int[in.numberoffacets];
- //in.trifacemarkerlist = new int[in.numberoffacets];
-
- // definindo a superficie da bolha e convex-hull
- for( int i=0;i<surfMesh.numElems;i++ )
- {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-  f = &in.facetlist[i];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0; 
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 3;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = v1; 
-  p->vertexlist[1] = v2; 
-  p->vertexlist[2] = v3;
-  // melhorar esta configuracao de facet para bolha e convex hull
-  if( surfMesh.Marker.Get(v1) + 
-	  surfMesh.Marker.Get(v2) + 
-	  surfMesh.Marker.Get(v3) > 0 )
-   in.facetmarkerlist[i] = 10;
-  else
-   in.facetmarkerlist[i] = 20;
- }
-
+ convertModel3DtoTetgen(in);
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+ cout << endl;
+ cout << "|-----------------------------------------------------|" << endl;
  cout << "numElems IN = " << surfMesh.numElems << endl;
  cout << "numNodes IN = " << surfMesh.numNodes << endl;
  cout << "numVerts IN = " << surfMesh.numVerts << endl;
-
  cout << endl;
- cout << "----> meshing... ";
+ cout << "----> complete re-meshing the domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
- //tetrahedralize( (char*) "QYYApq1.4241a0.1",&in,&out );
- //tetrahedralize( (char*) "QYYApq1.4241a0.05",&in,&out );
- //tetrahedralize( (char*) "QpYY",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
- 
- numElems = out.numberoftetrahedra;
- numNodes = out.numberofpoints+numElems;
- numVerts = out.numberofpoints;
  cout << "numElems OUT = " << out.numberoftetrahedra << endl;
  cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
  cout << "numVerts OUT = " << out.numberofpoints << endl;
  cout << "numfacets OUT = " << out.numberoftrifaces << endl;
+ cout << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");
  //out.save_faces("out");
 
- // varre lista de elementos e passa para estrutura IEN
- IEN.Dim(numElems,5);
- cc.Dim(numVerts);
- for( int i=0;i<out.numberoftetrahedra;i++ )
- {
-  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
-  if( out.tetrahedronattributelist[i] == 1 )
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = out.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
-	cc.Set(vertice,0.0);
-   }
-  }
-  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
-  else 
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = out.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
-	cc.Set(vertice,1.0);
-   }
-  }
- }
-
- // atualizando valores de X,Y,Z,uc,vc,wc e pc
- X.Dim(numNodes);
- Y.Dim(numNodes);
- Z.Dim(numNodes);
- for( int i=0;i<numVerts;i++ )
- {
-  X.Set(i,out.pointlist[3*i+0]);
-  Y.Set(i,out.pointlist[3*i+1]);
-  Z.Set(i,out.pointlist[3*i+2]);
-  if( out.pointmarkerlist[i] == 10 ||
-   	  out.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
- }
+ convertTetgenToModel3D(out);
 
  mesh3d = convertTetgenToMesh3d(out);
+
+ in.initialize();
+ out.initialize();
 }
 
-void Model3D::setTriEdge()
+void Model3D::setMapEdgeTri()
 {
  int v1,v2,v3;
  int numFace = 3; // triangulo tem 3 arestas
@@ -988,19 +904,9 @@ void Model3D::setTriEdge()
  }
 }
 
-// procura o tamanho da menor aresta na superficie
-void Model3D::setTriangleMinEdge()
+// calcula o tamanho medio da aresta na superficie
+void Model3D::computeAverageTriangleEdge()
 {
-//--------------------------------------------------
-//  minEdge = 1E10; // initil minimum edge length
-//  for( int i=0;i<mapEdgeTri.DimI();i++ )
-//   if( minEdge>mapEdgeTri.Get(i,0) && cc.Get(mapEdgeTri.Get(i,1) == 0.5) )
-//    minEdge = mapEdgeTri.Get(i,0); // setting the min edge of 3d surface
-//  //minEdge = 0.0600023; // tamanho minimo da malha bubble-tube-1
-//  minEdge = 0.09; // tamanho minimo da malha bubble-tube-4
-//-------------------------------------------------- 
- 
- // norm
  int count = 0;
  real aux  = 0;
  for( int i=0;i<mapEdgeTri.DimI();i++ )
@@ -1009,29 +915,27 @@ void Model3D::setTriangleMinEdge()
    aux += mapEdgeTri.Get(i,0); 
    count++;
   }
- minEdge = aux/count;
+ averageTriEdge = aux/count;
  
  cout << endl;
  cout << "       ****************** " << endl;
- cout << "       |    "    << minEdge << "    |" << endl;
+ cout << "       |    "    << averageTriEdge << "    |" << endl;
  cout << "       ****************** " << endl;
  cout << endl;
-
- //minEdge = 0.11; //rising bubble
- minEdge = 0.07;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
 {
- int aux=0;
- for( int i=0;mapEdgeTri.DimI();i++ )
+ int aux=-1;
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
   if( (mapEdgeTri.Get(i,1) == _v1 && mapEdgeTri.Get(i,2) == _v2) ||
 	  (mapEdgeTri.Get(i,1) == _v2 && mapEdgeTri.Get(i,2) == _v1) )
   {
    aux = i;
    break;
   }
-
+ }
  return aux;
 }
 
@@ -1045,7 +949,7 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.3*minEdge )//&&
+	  edgeLength > 1.3*triEdge )//&&
   {
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
@@ -1536,6 +1440,7 @@ void Model3D::flipTriangleEdge( int _edge )
   * Roundtable, pp. 363:374 (1997)
   * */
 
+ flip = 0;
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   _edge = i;
@@ -1616,9 +1521,10 @@ void Model3D::flipTriangleEdge( int _edge )
   real q4 = 3.4641*inRadius4/h4;
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  if( surfMesh.Marker.Get(v1)==0.5 && 
+  if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
-	  area1+area2>=area3+area4 ) //&&
+	  area1+area2>=area3+area4 &&
+	  semiPerimeter1+semiPerimeter2>semiPerimeter3+semiPerimeter4 ) //&&
 	//--------------------------------------------------
 	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
 	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
@@ -1643,8 +1549,9 @@ void Model3D::flipTriangleEdge( int _edge )
    surfMesh.IEN.Set(elem2,1,v3elem1);
    surfMesh.IEN.Set(elem2,2,v3elem2);
 
-   setTriEdge();
+   setMapEdgeTri();
    setNeighbourSurface();
+   flip++;
   }
  }
 }
@@ -1723,7 +1630,7 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem4,2,v3elem2);
  surfMesh.numElems++;
  
- setTriEdge();
+ setMapEdgeTri();
  setNeighbourSurface();
 
 //--------------------------------------------------
@@ -2045,7 +1952,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem4,2,v3elem2);
  surfMesh.numElems++;
  
- setTriEdge();
+ setMapEdgeTri();
  setNeighbourSurface();
 
 }
@@ -2078,7 +1985,7 @@ void Model3D::deletePoint(int _v)
  deleteSurfacePoint(_v);
 
  // updating edge matrix
- setTriEdge();
+ setMapEdgeTri();
  // updating surface neighbours
  setNeighbourSurface();
 
@@ -2105,7 +2012,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.4*minEdge; // 30% of minEdge
+ real test = 0.4*triEdge; // 30% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2185,11 +2092,13 @@ void Model3D::removePointsByInterfaceDistance()
  for( int i=0;i<numVerts;i++ )
  {
   real d = dist.Get(i);
-  //if( d>0 && d<0.4*minEdge ) // mainBubble.cpp
-  if( d>0 && d<0.7*minEdge ) // hiRe
+  //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
+  if( d>0 && d<0.7*triEdge ) // hiRe
   {
-   cout << "--- " << color(none,red,black) << "removing vertex by distance: "
-	    << resetColor() << i << endl;
+//--------------------------------------------------
+//    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
+// 	    << resetColor() << i << endl;
+//-------------------------------------------------- 
 
    X.Delete(i);
    Y.Delete(i);
@@ -2218,11 +2127,13 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	   X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<1.2*minEdge )
+	 if( d>0 && d<2.0*triEdge )
 	 {
-	  cout << "- " << color(none,blue,black) 
-	   << "removing dense vertex cluster: "
-	   << resetColor() << i << endl;
+	//--------------------------------------------------
+	//   cout << "- " << color(none,blue,black) 
+	//    << "removing dense vertex cluster: "
+	//    << resetColor() << i << endl;
+	//-------------------------------------------------- 
 	  X.Delete(i);
 	  Y.Delete(i);
 	  Z.Delete(i);
@@ -2389,396 +2300,74 @@ void Model3D::mesh2Dto3DOriginal()
  flipTriangleEdge(0);
  saveVTKSurface("./vtk/","after",0);
 
+ // clean and init tetgen mesh object
+ in.initialize();
+ out.initialize();
 
- // tetgen mesh object 
- tetgenio in,out;
  in.mesh_dim = 3;
  in.numberofpoints = surfMesh.numVerts;
- //////in.numberofpoints = surfMesh.numVerts+(nPoints*nPoints*ny);
+ numVerts = in.numberofpoints;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
- // add to tetgen struct the point coords
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  in.pointlist[3*i+0] = surfMesh.X.Get(i);
-  in.pointlist[3*i+1] = surfMesh.Y.Get(i);
-  in.pointlist[3*i+2] = surfMesh.Z.Get(i);
-  if( surfMesh.Marker.Get(i) == 0.0 )
-   in.pointmarkerlist[i] = 11;
-  if( surfMesh.Marker.Get(i) == 0.5 )
-   in.pointmarkerlist[i] = 22; // same id of facetmarker
- }
-
- /* This procedure defines regions on the mesh and after
-  * insertion/deletion of points by the tetgen program we can easily
-  * recognize the point locations by the regionlist array and then we
-  * can define the points relied inside the bubble (1.0), on the surface
-  * (0.5) and outside the bubble (0.0). To do so it is necessery to
-  * define AT LEAST one region, preferably the one between the interface 
-  * and convex hull. 
-  * To recovery the information of different zones, after the meshing
-  * procedure is necessary to look at tetrahedronattributelist 
-  * */
- in.numberofregions = 1; 
- in.regionlist = new REAL[in.numberofregions*4];
-
- // definindo regiao fora da bolha 
- in.regionlist[0] = X.Min()+0.01;
- in.regionlist[1] = Y.Min()+0.01;
- in.regionlist[2] = Z.Min()+0.01;
- in.regionlist[3] = 1;
-
- tetgenio::facet *f;   // Define a pointer of facet. 
- tetgenio::polygon *p; // Define a pointer of polygon.
- in.numberoffacets = surfMesh.numElems; 
- in.facetlist = new tetgenio::facet[in.numberoffacets]; 
- in.facetmarkerlist = new int[in.numberoffacets];
- //in.trifacemarkerlist = new int[in.numberoffacets];
-
- // defining the interface and convex-hull
- // definindo a superficie da bolha e convex-hull
- for( int i=0;i<surfMesh.numElems;i++ )
- {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-  f = &in.facetlist[i];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0; 
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 3;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = v1; 
-  p->vertexlist[1] = v2; 
-  p->vertexlist[2] = v3;
-  // melhorar esta configuracao de facet para bolha e convex hull
-  if( surfMesh.Marker.Get(v1) + 
-	  surfMesh.Marker.Get(v2) + 
-	  surfMesh.Marker.Get(v3) > 0 )
-   in.facetmarkerlist[i] = 10;
-  else
-   in.facetmarkerlist[i] = 20;
- }
+ convertModel3DtoTetgen(in);
 
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+ cout << endl;
+ cout << "|-----------------------------------------------------|" << endl;
  cout << "numElems IN = " << surfMesh.numElems << endl;
  cout << "numNodes IN = " << surfMesh.numNodes << endl;
  cout << "numVerts IN = " << in.numberofpoints << endl;
-
  cout << endl;
  cout << "----> complete re-meshing the domain... ";
- //tetrahedralize( (char*) "VYYApq1.4241",&in,&out );
- //tetrahedralize( (char*) "QYYCApq1.4241a0.05",&in,&out );
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
- //tetrahedralize( (char*) "QYYCApq1.414q10a0.001",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
-
- numElems = out.numberoftetrahedra;
- numNodes = out.numberofpoints+numElems;
- numVerts = out.numberofpoints;
  cout << "numElems OUT = " << out.numberoftetrahedra << endl;
  cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
  cout << "numVerts OUT = " << out.numberofpoints << endl;
  cout << "numfacets OUT = " << out.numberoftrifaces << endl;
+ cout << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");
  //out.save_faces("out");
 
- // varre lista de elementos e passa para estrutura IEN
- IEN.Dim(numElems,5);
- cc.Dim(numVerts);
- for( int i=0;i<out.numberoftetrahedra;i++ )
- {
-  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
-  if( out.tetrahedronattributelist[i] == 1 )
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = out.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
-	cc.Set(vertice,0.0);
-   }
-  }
-  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
-  else 
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = out.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
-	cc.Set(vertice,1.0);
-   }
-  }
- }
-
- // atualizando valores de X,Y,Z,uc,vc,wc e pc
- X.Dim(numNodes);
- Y.Dim(numNodes);
- Z.Dim(numNodes);
- for( int i=0;i<numVerts;i++ )
- {
-  X.Set(i,out.pointlist[3*i+0]);
-  Y.Set(i,out.pointlist[3*i+1]);
-  Z.Set(i,out.pointlist[3*i+2]);
-  if( out.pointmarkerlist[i] == 10 ||
-	  out.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
- }
-
+ convertTetgenToModel3D(out);
  mesh3d = convertTetgenToMesh3d(out);
 
+ cout << endl;
+ while( checkMeshQuality(out) == true ) 
+ {
+  in.initialize();
+  out.initialize();
+
+  in.mesh_dim = 3;
+  in.numberofpoints = numVerts;
+  in.pointlist = new REAL[in.numberofpoints * 3];
+  in.pointmarkerlist = new int[in.numberofpoints];
+
+  convertModel3DtoTetgen(in);
+
+  cout << "----> fixing 3D mesh points... ";
+  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+  cout << "finished <---- " << endl;;
+
+  convertTetgenToModel3D(out);
+  mesh3d = convertTetgenToMesh3d(out);
+ }
+ cout << endl;
+
  printMeshReport(out);
+
+ in.initialize();
+ out.initialize();
 }
 
-tetgenio Model3D::convertSurfaceMeshToTetGen(SurfaceMesh _mesh)
+void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
 {
- tetgenio in;
-
- in.mesh_dim = 3;
- in.numberofpoints = _mesh.numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
- in.pointmarkerlist = new int[in.numberofpoints];
-
- // add to tetgen struct the point coords
- for( int i=0;i<_mesh.numVerts;i++ )
- {
-  in.pointlist[3*i+0] = _mesh.X.Get(i);
-  in.pointlist[3*i+1] = _mesh.Y.Get(i);
-  in.pointlist[3*i+2] = _mesh.Z.Get(i);
-  if( _mesh.Marker.Get(i) == 0.0 )
-   in.pointmarkerlist[i] = 11;
-  if( _mesh.Marker.Get(i) == 0.5 )
-   in.pointmarkerlist[i] = 22; // same id of facetmarker
- }
-
- /* This procedure defines regions on the mesh and after
-  * insertion/deletion of points by the tetgen program we can easily
-  * recognize the point locations by the regionlist array and then we
-  * can define the points relied inside the bubble (1.0), on the surface
-  * (0.5) and outside the bubble (0.0). To do so it is necessery to
-  * define AT LEAST one region, preferably the one between the interface 
-  * and convex hull. 
-  * To recovery the information of different zones, after the meshing
-  * procedure is necessary to look at tetrahedronattributelist 
-  * */
- in.numberofregions = 1; 
- in.regionlist = new REAL[in.numberofregions*4];
-
- // definindo regiao fora da bolha 
- in.regionlist[0] = X.Min()+0.01;
- in.regionlist[1] = Y.Min()+0.01;
- in.regionlist[2] = Z.Min()+0.01;
- in.regionlist[3] = 1;
-
- tetgenio::facet *f;   // Define a pointer of facet. 
- tetgenio::polygon *p; // Define a pointer of polygon.
- in.numberoffacets = _mesh.numElems; 
- in.facetlist = new tetgenio::facet[in.numberoffacets]; 
- in.facetmarkerlist = new int[in.numberoffacets];
- //in.trifacemarkerlist = new int[in.numberoffacets];
-
- // defining the interface and convex-hull
- // definindo a superficie da bolha e convex-hull
- for( int i=0;i<_mesh.numElems;i++ )
- {
-  int v1 = _mesh.IEN.Get(i,0);
-  int v2 = _mesh.IEN.Get(i,1);
-  int v3 = _mesh.IEN.Get(i,2);
-  f = &in.facetlist[i];
-  f->numberofpolygons = 1;
-  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
-  f->numberofholes = 0; 
-  f->holelist = NULL;
-  p = &f->polygonlist[0];
-  p->numberofvertices = 3;
-  p->vertexlist = new int[p->numberofvertices];
-  p->vertexlist[0] = v1; 
-  p->vertexlist[1] = v2; 
-  p->vertexlist[2] = v3;
-  // melhorar esta configuracao de facet para bolha e convex hull
-  if( _mesh.Marker.Get(v1) + 
-	  _mesh.Marker.Get(v2) + 
-	  _mesh.Marker.Get(v3) > 0 )
-   in.facetmarkerlist[i] = 10;
-  else
-   in.facetmarkerlist[i] = 20;
- }
- return in;
-}
-
-Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_out)
-{
- Mesh3D mesh;
- mesh.numElems = _out.numberoftetrahedra;
- mesh.numNodes = _out.numberofpoints+_out.numberoftetrahedra;
- mesh.numVerts = _out.numberofpoints;
- mesh.IEN.Dim(mesh.numElems);
- mesh.Marker.Dim(mesh.numVerts);
- mesh.Marker.SetAll(0.0);
-
- // varre lista de elementos e passa para estrutura IEN
- for( int i=0;i<_out.numberoftetrahedra;i++ )
- {
-  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
-  if( _out.tetrahedronattributelist[i] == 1 )
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = _out.tetrahedronlist[i*4+j];
-	mesh.IEN.Set(i,j,vertice);
-	mesh.Marker.Set(vertice,0.0);
-   }
-  }
-  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
-  else 
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = _out.tetrahedronlist[i*4+j];
-
-	mesh.IEN.Set(i,j,vertice);
-	mesh.Marker.Set(vertice,1.0);
-   }
-  }
- }
-
- // atualizando valores de X,Y,Z,uc,vc,wc e pc
- mesh.X.Dim(numNodes);
- mesh.Y.Dim(numNodes);
- mesh.Z.Dim(numNodes);
- for( int i=0;i<mesh.numVerts;i++ )
- {
-  mesh.X.Set(i,_out.pointlist[3*i+0]);
-  mesh.Y.Set(i,_out.pointlist[3*i+1]);
-  mesh.Z.Set(i,_out.pointlist[3*i+2]);
-  if( _out.pointmarkerlist[i] == 10 ||
-	  _out.pointmarkerlist[i] == 22 )
-   mesh.Marker.Set(i,0.5);
- }
-
- return mesh;
-}
-
-void Model3D::printMeshReport(tetgenio &_mesh)
-{
- /* **************************************
-  *
-  * regular  a^3 sqrt(2)
-  *   tet  = -----------
-  * volume       12
-  *
-  *
-  * ************************************** */
-
- real aux;
- real minVol = 1.0E+20; // initial value
- real maxVol = 1.0E-20; // initial value
- int minElem,maxElem;
-
- int count=0;
- for( int i=0;i<_mesh.numberoftetrahedra;i++ )
- {
-  int v1 = _mesh.tetrahedronlist[i*4+0];
-  int v2 = _mesh.tetrahedronlist[i*4+1];
-  int v3 = _mesh.tetrahedronlist[i*4+2];
-  int v4 = _mesh.tetrahedronlist[i*4+3];
-
-  if( _mesh.pointmarkerlist[v1] == 22 &&
-      _mesh.pointmarkerlist[v2] == 22 &&
-      _mesh.pointmarkerlist[v3] == 22 &&
-      _mesh.pointmarkerlist[v4] == 22 )
-   count++;
- }
- IENTemp.Dim(count,5);
-
- int j=0;
- for( int i=0;i<_mesh.numberoftetrahedra;i++ )
- {
-  int v1 = _mesh.tetrahedronlist[i*4+0];
-  int v2 = _mesh.tetrahedronlist[i*4+1];
-  int v3 = _mesh.tetrahedronlist[i*4+2];
-  int v4 = _mesh.tetrahedronlist[i*4+3];
-
-  real volume = getVolume(v1,v2,v3,v4);
-
-  aux = fabs(getVolume(i));
-
-  if( _mesh.pointmarkerlist[v1] == 22 &&
-      _mesh.pointmarkerlist[v2] == 22 &&
-      _mesh.pointmarkerlist[v3] == 22 &&
-      _mesh.pointmarkerlist[v4] == 22 )
-  {
-   cout << i << "  " << v1 << " " << v2 << " " << v3 << " " << v4 
-	    << " " << _mesh.tetrahedronattributelist[i] << " "
-		<< volume << endl;
-   IENTemp.Set(j,0,v1);
-   IENTemp.Set(j,1,v2);
-   IENTemp.Set(j,2,v3);
-   IENTemp.Set(j,3,v4);
-   IENTemp.Set(j,4,_mesh.tetrahedronattributelist[i]);
-   j++;
-  }
-
-  if( aux < minVol ) 
-  {
-   minVol = aux;
-   minElem = i;
-  }
-  if( aux > maxVol ) 
-  {
-   maxVol = aux;
-   maxElem = i;
-  }
- }
- cout << "   |------------------------ Mesh Report --------------------------|" 
-      << endl;
- cout << "     mesh: " << count 
-      << " tets w/ all the 4 verts on the interface " << endl;
- cout << "     interface average element edge length: " << minEdge << endl;
- cout << "     desired tetrahedron volume:            " 
-      << minEdge*minEdge*minEdge*sqrt(2)/12 << endl;
- cout << "     min tetrahedron volume:                " 
-      << minVol << " (" << minElem << ")" << endl;
- cout << "     max tetrahedron volume:                " 
-      << maxVol <<  " (" << maxElem << ")" << endl;
- cout << "     number of inserted surface points:     " << isp << endl;
- cout << "     number of removed surface points:      " << rsp << endl;
- cout << "     number of inserted mesh points:        " << ip << endl;
- cout << "     number of removed mesh points:         " << rp+rpi 
-      << " (" << rpi << "," << rp << ")" << endl;
- cout << "   |---------------------------------------------------------------|" 
-      << endl;
-}
-
-void Model3D::mesh3DPoints()
-{
- saveVTKSurface("./vtk/","start",0);
- insertPointsByLength();
- //insertPointsByInterfaceDistance();
- saveVTKSurface("./vtk/","inserted",0);
- removePointsByLength();
- saveVTKSurface("./vtk/","removed",0);
- flipTriangleEdge(0);
- saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
- remove3dMeshPointsByDistance();
-
- //IENTemp.Dim(0,0);
- cout << IENTemp.DimI() << endl;
- // cria objeto de malha do tetgen
- tetgenio in,mid,out;
- in.mesh_dim = 3;
- in.numberofpoints = numVerts+IENTemp.DimI();;
- in.pointlist = new REAL[in.numberofpoints * 3];
- in.pointmarkerlist = new int[in.numberofpoints];
-
  /* ------------ pontos da malha separados em 2 loops ------------ */
  // adiciona na estrutura tetgen as coordenadas dos pontos da 
  // superficie e do convex-hull
@@ -2792,7 +2381,7 @@ void Model3D::mesh3DPoints()
   if( surfMesh.Marker.Get(i) == 0.5 ) // interface
    in.pointmarkerlist[i] = 22;
  }
- 
+
  // adicionando pontos que nao sao da interface e do convex-hull
  for( int i=surfMesh.numVerts;i<numVerts;i++ )
  {
@@ -2803,31 +2392,6 @@ void Model3D::mesh3DPoints()
    in.pointmarkerlist[i] = 11;
   if( cc.Get(i) == 1.0 ) // dentro da bolha
    in.pointmarkerlist[i] = 33;
- }
-
- int j=0;
- for( int i=numVerts;i<numVerts+IENTemp.DimI();i++ )
- {
-  int v1 = IENTemp.Get(j,0);
-  int v2 = IENTemp.Get(j,1);
-  int v3 = IENTemp.Get(j,2);
-  int v4 = IENTemp.Get(j,3);
-  int region = IENTemp.Get(j,4);
-
-  real xMid = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )*0.25;
-  real yMid = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )*0.25;
-  real zMid = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )*0.25;
-
-  in.pointlist[3*i+0] = xMid;
-  in.pointlist[3*i+1] = yMid;
-  in.pointlist[3*i+2] = zMid;
-
-  if( region ==  1 ) // fora da bolha
-   in.pointmarkerlist[i] = 11;
-  else
-   in.pointmarkerlist[i] = 33;
-
-  j++;
  }
  /* -------------------------------------------------------------- */
 
@@ -2853,9 +2417,9 @@ void Model3D::mesh3DPoints()
  in.regionlist = new REAL[in.numberofregions*4];
 
  // fora da bolha
- in.regionlist[0] = X.Min()+0.01;
- in.regionlist[1] = Y.Min()+0.01;
- in.regionlist[2] = Z.Min()+0.01;
+ in.regionlist[0] = surfMesh.X.Min()+0.01;
+ in.regionlist[1] = surfMesh.Y.Min()+0.01;
+ in.regionlist[2] = surfMesh.Z.Min()+0.01;
  in.regionlist[3] = 1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -2884,53 +2448,137 @@ void Model3D::mesh3DPoints()
   p->vertexlist[2] = v3;
   // melhorar esta configuracao de facet para bolha e convex hull
   if( surfMesh.Marker.Get(v1) + 
-	  surfMesh.Marker.Get(v2) + 
-	  surfMesh.Marker.Get(v3) > 0 )
+	surfMesh.Marker.Get(v2) + 
+	surfMesh.Marker.Get(v3) > 0 )
    in.facetmarkerlist[i] = 10;
   else
    in.facetmarkerlist[i] = 20;
  }
+}
 
- //in.save_poly("bubble");
- //in.save_nodes("bubble");
- //in.save_elements("in");
- cout << endl;
- cout << "numElems IN = " << surfMesh.numElems << endl;
- cout << "numNodes IN = " << in.numberoffacets+in.numberofpoints << endl;
- cout << "numVerts IN = " << in.numberofpoints << endl;
+tetgenio Model3D::convertSurfaceMeshToTetGen(SurfaceMesh _mesh,
+                                             tetgenio &_tetmesh)
+{
+ // add to tetgen struct the point coords
+ for( int i=0;i<_mesh.numVerts;i++ )
+ {
+  _tetmesh.pointlist[3*i+0] = _mesh.X.Get(i);
+  _tetmesh.pointlist[3*i+1] = _mesh.Y.Get(i);
+  _tetmesh.pointlist[3*i+2] = _mesh.Z.Get(i);
+  if( _mesh.Marker.Get(i) == 0.0 )
+   _tetmesh.pointmarkerlist[i] = 11;
+  if( _mesh.Marker.Get(i) == 0.5 )
+   _tetmesh.pointmarkerlist[i] = 22; // same id of facetmarker
+ }
 
- cout << endl;
- cout << "----> re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCAipq1.414q10a0.1",&in,&out );
- cout << "finished <---- " << endl;;
- cout << endl;
+ // definindo regiao fora da bolha 
+ _tetmesh.regionlist[0] = surfMesh.X.Min()+0.01;
+ _tetmesh.regionlist[1] = surfMesh.Y.Min()+0.01;
+ _tetmesh.regionlist[2] = surfMesh.Z.Min()+0.01;
+ _tetmesh.regionlist[3] = 1;
 
- dVerts = out.numberofpoints - numVerts;
- numElems = out.numberoftetrahedra;
- numNodes = out.numberofpoints+out.numberoftetrahedra;
- numVerts = out.numberofpoints;
- cout << "numElems OUT = " << out.numberoftetrahedra << endl;
- cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
- cout << "numVerts OUT = " << out.numberofpoints << endl;
- cout << "numfacets OUT = " << out.numberoftrifaces << endl;
- cout << endl;
- //out.save_elements("out");
- //out.save_nodes("out");
- //out.save_poly("out");
- //out.save_faces("out");
+ tetgenio::facet *f;   // Define a pointer of facet. 
+ tetgenio::polygon *p; // Define a pointer of polygon.
+
+ // defining the interface and convex-hull
+ // definindo a superficie da bolha e convex-hull
+ for( int i=0;i<_mesh.numElems;i++ )
+ {
+  int v1 = _mesh.IEN.Get(i,0);
+  int v2 = _mesh.IEN.Get(i,1);
+  int v3 = _mesh.IEN.Get(i,2);
+  f = &_tetmesh.facetlist[i];
+  f->numberofpolygons = 1;
+  f->polygonlist = new tetgenio::polygon[f->numberofpolygons];
+  f->numberofholes = 0; 
+  f->holelist = NULL;
+  p = &f->polygonlist[0];
+  p->numberofvertices = 3;
+  p->vertexlist = new int[p->numberofvertices];
+  p->vertexlist[0] = v1; 
+  p->vertexlist[1] = v2; 
+  p->vertexlist[2] = v3;
+  // melhorar esta configuracao de facet para bolha e convex hull
+  if( _mesh.Marker.Get(v1) + 
+	  _mesh.Marker.Get(v2) + 
+	  _mesh.Marker.Get(v3) > 0 )
+   _tetmesh.facetmarkerlist[i] = 10;
+  else
+   _tetmesh.facetmarkerlist[i] = 20;
+ }
+ return _tetmesh;
+}
+
+Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_tetmesh)
+{
+ Mesh3D mesh;
+ mesh.numElems = _tetmesh.numberoftetrahedra;
+ mesh.numNodes = _tetmesh.numberofpoints+_tetmesh.numberoftetrahedra;
+ mesh.numVerts = _tetmesh.numberofpoints;
+ mesh.IEN.Dim(mesh.numElems,4);
+ mesh.Marker.Dim(mesh.numVerts);
+ mesh.Marker.SetAll(0.0);
+
+ // varre lista de elementos e passa para estrutura IEN
+ for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
+ {
+  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  if( _tetmesh.tetrahedronattributelist[i] == 1 )
+  {
+   for( int j=0;j<4;j++ )
+   {
+	int vertice = _tetmesh.tetrahedronlist[i*4+j];
+	mesh.IEN.Set(i,j,vertice);
+	mesh.Marker.Set(vertice,0.0);
+   }
+  }
+  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  else 
+  {
+   for( int j=0;j<4;j++ )
+   {
+	int vertice = _tetmesh.tetrahedronlist[i*4+j];
+	mesh.IEN.Set(i,j,vertice);
+	mesh.Marker.Set(vertice,1.0);
+   }
+  }
+ }
+
+ // atualizando valores de X,Y,Z,uc,vc,wc e pc
+ mesh.X.Dim(numNodes);
+ mesh.Y.Dim(numNodes);
+ mesh.Z.Dim(numNodes);
+ for( int i=0;i<mesh.numVerts;i++ )
+ {
+  mesh.X.Set(i,_tetmesh.pointlist[3*i+0]);
+  mesh.Y.Set(i,_tetmesh.pointlist[3*i+1]);
+  mesh.Z.Set(i,_tetmesh.pointlist[3*i+2]);
+  if( _tetmesh.pointmarkerlist[i] == 10 ||
+	  _tetmesh.pointmarkerlist[i] == 22 )
+   mesh.Marker.Set(i,0.5);
+ }
+
+ return mesh;
+}
+
+void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
+{
+ numElems = _tetmesh.numberoftetrahedra;
+ numNodes = _tetmesh.numberofpoints+out.numberoftetrahedra;
+ numVerts = _tetmesh.numberofpoints;
  
  // varre lista de elementos e passa para estrutura IEN
  IEN.Dim(numElems,4);
  cc.Dim(numVerts);
  cc.SetAll(0.0);
- for( int i=0;i<out.numberoftetrahedra;i++ )
+ for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
-  if( out.tetrahedronattributelist[i] == 1 )
+  if( _tetmesh.tetrahedronattributelist[i] == 1 )
   {
    for( int j=0;j<4;j++ )
    {
-	int vertice = out.tetrahedronlist[i*4+j];
+	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
    }
@@ -2940,7 +2588,7 @@ void Model3D::mesh3DPoints()
   {
    for( int j=0;j<4;j++ )
    {
-	int vertice = out.tetrahedronlist[i*4+j];
+	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
    }
@@ -2953,22 +2601,208 @@ void Model3D::mesh3DPoints()
  Z.Dim(numNodes);
  for( int i=0;i<numVerts;i++ )
  {
-  X.Set(i,out.pointlist[3*i+0]);
-  Y.Set(i,out.pointlist[3*i+1]);
-  Z.Set(i,out.pointlist[3*i+2]);
-  if( out.pointmarkerlist[i] == 10 ||
-	  out.pointmarkerlist[i] == 22 )
+  X.Set(i,_tetmesh.pointlist[3*i+0]);
+  Y.Set(i,_tetmesh.pointlist[3*i+1]);
+  Z.Set(i,_tetmesh.pointlist[3*i+2]);
+  if( _tetmesh.pointmarkerlist[i] == 10 ||
+	  _tetmesh.pointmarkerlist[i] == 22 )
    cc.Set(i,0.5);
  }
+}
+
+bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
+{
+ int count=0;
+ for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
+ {
+  int v1 = _tetmesh.tetrahedronlist[i*4+0];
+  int v2 = _tetmesh.tetrahedronlist[i*4+1];
+  int v3 = _tetmesh.tetrahedronlist[i*4+2];
+  int v4 = _tetmesh.tetrahedronlist[i*4+3];
+  int region = _tetmesh.tetrahedronattributelist[i];
+
+  if( _tetmesh.pointmarkerlist[v1] == 22 &&
+	  _tetmesh.pointmarkerlist[v2] == 22 &&
+	  _tetmesh.pointmarkerlist[v3] == 22 &&
+	  _tetmesh.pointmarkerlist[v4] == 22 )
+  {
+
+   real xMid = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )*0.25;
+   real yMid = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )*0.25;
+   real zMid = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )*0.25;
+   X.AddItem(numVerts,xMid);
+   Y.AddItem(numVerts,yMid);
+   Z.AddItem(numVerts,zMid);
+   if( region > 0.0 ) // fora da bolha
+	cc.AddItem(0.0);
+   else
+	cc.AddItem(1.0);
+   numVerts++;
+
+   count++;
+  }
+ }
+ if( count>0 ) 
+  return true;
+ else
+  return false;
+}
+
+void Model3D::printMeshReport(tetgenio &_tetmesh)
+{
+ /* **************************************
+  *
+  * regular  a^3 sqrt(2)
+  *   tet  = -----------
+  * volume       12
+  *
+  *
+  * ************************************** */
+
+ real aux;
+ real minVol = 1.0E+20; // initial value
+ real maxVol = 1.0E-20; // initial value
+ int minElem,maxElem;
+
+ int count=0;
+ for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
+ {
+  int v1 = _tetmesh.tetrahedronlist[i*4+0];
+  int v2 = _tetmesh.tetrahedronlist[i*4+1];
+  int v3 = _tetmesh.tetrahedronlist[i*4+2];
+  int v4 = _tetmesh.tetrahedronlist[i*4+3];
+  int region = _tetmesh.tetrahedronattributelist[i];
+
+  real volume = getVolume(v1,v2,v3,v4);
+
+  aux = fabs(getVolume(i));
+
+  if( _tetmesh.pointmarkerlist[v1] == 22 &&
+      _tetmesh.pointmarkerlist[v2] == 22 &&
+      _tetmesh.pointmarkerlist[v3] == 22 &&
+      _tetmesh.pointmarkerlist[v4] == 22 )
+  {
+   cout << i << "  " << v1 << " " << v2 << " " << v3 << " " << v4 
+	    << " " << region << " " << volume << endl;
+   count++;
+  }
+
+  if( aux < minVol ) 
+  {
+   minVol = aux;
+   minElem = i;
+  }
+  if( aux > maxVol ) 
+  {
+   maxVol = aux;
+   maxElem = i;
+  }
+ }
+ cout << "   |------------------------ Mesh Report --------------------------|" 
+      << endl;
+ cout << "     mesh: " << count 
+      << " tets w/ all the 4 verts on the interface " << endl;
+ cout << "     interface average element edge length: " << averageTriEdge 
+      << endl;
+ cout << "     desired tetrahedron volume:            " 
+      << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
+ cout << "     triangle edge size:                    " << triEdge << endl;
+ cout << "     min tetrahedron volume:                " 
+      << minVol << " (" << minElem << ")" << endl;
+ cout << "     max tetrahedron volume:                " 
+      << maxVol <<  " (" << maxElem << ")" << endl;
+ cout << "     number of inserted surface points:     " << isp << endl;
+ cout << "     number of removed surface points:      " << rsp << endl;
+ cout << "     number of inserted mesh points:        " << ip << endl;
+ cout << "     number of removed mesh points:         " << rp+rpi 
+      << " (" << rpi << "," << rp << ")" << endl;
+ cout << "     number of flipped operations:          " << flip << endl; 
+ cout << "   |---------------------------------------------------------------|" 
+      << endl;
+}
+
+
+void Model3D::mesh3DPoints()
+{
+ saveVTKSurface("./vtk/","start",0);
+ insertPointsByLength();
+ //insertPointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","inserted",0);
+ removePointsByLength();
+ saveVTKSurface("./vtk/","removed",0);
+ flipTriangleEdge(0);
+ saveVTKSurface("./vtk/","flipped",0);
+ removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
+
+ // init tetgen mesh object
+ in.initialize();
+ out.initialize();
+
+ in.mesh_dim = 3;
+ in.numberofpoints = numVerts;
+ in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointmarkerlist = new int[in.numberofpoints];
+
+ convertModel3DtoTetgen(in);
+
+ //in.save_poly("bubble");
+ //in.save_nodes("bubble");
+ //in.save_elements("in");
+ cout << endl;
+ cout << "|-----------------------------------------------------|" << endl;
+ cout << "numElems IN = " << surfMesh.numElems << endl;
+ cout << "numNodes IN = " << in.numberoffacets+in.numberofpoints << endl;
+ cout << "numVerts IN = " << in.numberofpoints << endl;
+ cout << endl;
+ cout << "----> re-meshing 3D points... ";
+ tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+ cout << "finished <---- " << endl;;
+ cout << endl;
+ cout << "numElems OUT = " << out.numberoftetrahedra << endl;
+ cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
+ cout << "numVerts OUT = " << out.numberofpoints << endl;
+ cout << "numfacets OUT = " << out.numberoftrifaces << endl;
+ cout << "|-----------------------------------------------------|" << endl;
+ //out.save_elements("out");
+ //out.save_nodes("out");
+ //out.save_poly("out");
+ //out.save_faces("out");
+
+ dVerts = out.numberofpoints - numVerts;
+
+ convertTetgenToModel3D(out);
+ mesh3d = convertTetgenToMesh3d(out);
+
+ cout << endl;
+ while( checkMeshQuality(out) == true ) 
+ {
+  in.initialize();
+  out.initialize();
+
+  in.mesh_dim = 3;
+  in.numberofpoints = numVerts;
+  in.pointlist = new REAL[in.numberofpoints * 3];
+  in.pointmarkerlist = new int[in.numberofpoints];
+
+  convertModel3DtoTetgen(in);
+
+  cout << "----> fixing 3D mesh points... ";
+  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+  cout << "finished <---- " << endl;;
+
+  convertTetgenToModel3D(out);
+  mesh3d = convertTetgenToMesh3d(out);
+ }
+ cout << endl;
 
  printMeshReport(out);
 
- mesh3d = convertTetgenToMesh3d(out);
-
- //saveVTK("./vtk/","remesh",0);
  //breakup();
+ 
+ in.initialize();
+ out.initialize();
 }
-
 
 void Model3D::setDiskCouetteBC()
 {
@@ -4432,6 +4266,7 @@ void Model3D::setSurfaceFace()
  for( int i=0;i<surface.Dim();i++ )
  {
   surfaceNode = surface.Get(i);
+
   // lista de elementos que contem surfaceNode
   plist = neighbourElem.at(surfaceNode);
   for( mele=plist.begin(); mele != plist.end();++mele )
@@ -4482,6 +4317,7 @@ void Model3D::setSurfaceFace()
 	neighbourFaceVert.at( count ).push_back(v1);
 	count++;
    }
+  }
 
    // reordenando faces da superfice na ordem dos ponteiros do relogio 
    // (clockwise)
@@ -4493,7 +4329,7 @@ void Model3D::setSurfaceFace()
 	int v1Old = *vert;++vert;
 	int v2Old = *vert;++vert;
 	int v3Old = *vert;++vert;
-	int vIn = *vert; // vertice dentro da bolha
+	int vIn = *vert; // vertice fora da bolha
 	vert=plist2.end();
 
 	if( v1Old == surfaceNode )
@@ -4542,7 +4378,6 @@ void Model3D::setSurfaceFace()
 	 }
 	}
    }
-  }
 //--------------------------------------------------
 //   cout << "---------" << surfaceNode << "------------" << endl;
 //   std::ostream_iterator< int > output( cout, " " );
@@ -4585,57 +4420,8 @@ void Model3D::setSurfaceFace()
 //    }
 //   }
 //-------------------------------------------------- 
- }
- neighbourFaceVert.resize (count); // trim vector para numero real de itens
- cout << "inElem: " << count << endl;
-}
-
-void Model3D::setSurfaceFace2()
-{
- int v1,v2,v3,v4;
- list<int> plist;
- list<int>::iterator mele;
- int surfaceNode;
- 
- // contador de faces na superficie
- int count = 0; 
-
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-  // lista de elementos que contem surfaceNode
-  plist = neighbourElem.at(surfaceNode);
-  for( mele=plist.begin(); mele != plist.end();++mele )
-  {
-   v1 = (int) IEN.Get(*mele,0);
-   v2 = (int) IEN.Get(*mele,1);
-   v3 = (int) IEN.Get(*mele,2);
-   v4 = (int) IEN.Get(*mele,3);
-
-   // pegando o elemento com 3 vertices na superfice e 1 fora da bolha
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==1.0 )
-   {
-	count++;
-   }
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==1.0 && cc.Get(v4)==0.5 )
-   {
-	count++;
-   }
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==1.0 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
-   {
-	count++;
-   }
-   if( cc.Get(v1)==1.0 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
-   {
-	count++;
-   }
   }
- }
- cout << "outElem: " << count << endl;
+ neighbourFaceVert.resize (count); // trim vector para numero real de itens
 }
 
 /* cria matriz IEN para os elementos da superficie que no caso 3D sao
@@ -4887,10 +4673,10 @@ void Model3D::buildSurfMesh()
  * correspondente.
  * !!!metodo ainda nao testado 100%!!!
  * */
-SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin)
+SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
 {
- int nElems = _mesh.numElems;
- int end = _mesh.IEN.Max();
+ int nElems = _tetmesh.numElems;
+ int end = _tetmesh.IEN.Max();
 
  SurfaceMesh meshReturn;
  meshReturn.IEN.Dim(nElems,3);
@@ -4905,7 +4691,7 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin)
  test.resize (end+1);
  for( int i=0;i<nElems;i++ )
   for( int j= 0;j<3;j++ )
-   test.at( (int) _mesh.IEN.Get(i,j) ).push_back(i);
+   test.at( (int) _tetmesh.IEN.Get(i,j) ).push_back(i);
 
  int count = 0;
  for( int i=0;i<end+1;i++ )
@@ -4923,9 +4709,9 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin)
    list<int>::iterator it;
    for( it=test.at(i).begin();it!=test.at(i).end();++it )
    {
-	int v1 = _mesh.IEN.Get(*it,0);
-	int v2 = _mesh.IEN.Get(*it,1);
-	int v3 = _mesh.IEN.Get(*it,2);
+	int v1 = _tetmesh.IEN.Get(*it,0);
+	int v2 = _tetmesh.IEN.Get(*it,1);
+	int v3 = _tetmesh.IEN.Get(*it,2);
 	if (v1 == i )
 	{
 	 meshReturn.IEN.Set(*it,0,count+_begin);
@@ -5488,14 +5274,13 @@ void Model3D::setSurfaceConfig()
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setSurfaceFace(); // elemSurface e neighbourFaceVert
- setSurfaceFace2();
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
 
- setTriEdge(); 
+ setMapEdgeTri(); 
  setNeighbourSurface(); 
- setTriangleMinEdge(); // minEdge check and config
+ computeAverageTriangleEdge(); 
 
  computeSurfaceNormal(); // compute surface normal of all surface points
  
@@ -5845,6 +5630,8 @@ list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getOutVert(){return &outVert;}
 list<int>* Model3D::getInElem(){return &inElem;}
 list<int>* Model3D::getOutElem(){return &outElem;}
+real Model3D::getTriEdge(){return triEdge;}
+void Model3D::setTriEdge(real _triEdge){triEdge = _triEdge;}
 
 //-------------------------------------------------- 
 // Atribui o Model3D do argumento no corrente
@@ -6064,7 +5851,6 @@ void Model3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 void Model3D::computeSurfaceNormal()
 {
  int surfaceNode;
- real sumArea;
  real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
  list<int> plist,plist2;
  list<int>::iterator face,vert;
@@ -6144,7 +5930,6 @@ void Model3D::computeSurfaceNormal()
   surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
   surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
   surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
-
  } // loop over all surface points
 } // computeSurfaceNormal
 

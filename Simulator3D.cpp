@@ -1181,7 +1181,7 @@ void Simulator3D::stepALEVel()
  setInterfaceVelNormal();
 
  setALEVelBC();
- for( int i=0;i<10;i++ )
+ for( int i=0;i<100;i++ )
  {
   // smoothing - coordenadas
   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1281,7 +1281,7 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.2;
+  real a = 0.0;
   uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
@@ -1703,17 +1703,17 @@ void Simulator3D::setCflDisk(real _cfl)
 
 void Simulator3D::setCflBubble(real _cfl)
 {
+ /* cfl based on the paper:
+  * A Continuum Method for Modeling Surface Tension
+  * J.U. Brackbill, D.B. Kothe and C. Zemach
+  * */
+
  cfl = _cfl;
+ real triEdge = m->getTriEdge();
 
- real xMax = X->Max();
- real xMin = X->Min();
- real yMax = Y->Max();
- real yMin = Y->Min();
- real zMax = Z->Max();
- real zMin = Z->Min();
- real L = ( (xMax-xMin)*(yMax-yMin)*(zMax-zMin) )/numVerts;
-
- dt = cfl*sqrt( 1.0*L*L*L/(3.141592*sigma) );
+ real capillary = sqrt( ( 0.5*(rho_l+rho_g)*triEdge*triEdge*triEdge)
+                  /(2*3.141592*sigma) );
+ dt = cfl*capillary;
 }
 
 void Simulator3D::setUAnt(clVector &_uAnt)

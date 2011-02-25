@@ -27,8 +27,8 @@ int main(int argc, char **argv)
  real sigma = 1;
  real alpha = 1;
  real beta = -40;
- real cfl = 1.5;
- real dt = 0.00926;
+ real cfl = 0.7;
+ //real dt = 0.00528;
  real mu_l = 2.73;
  real mu_g = 1.7894E-05;
  real rho_l = 1350;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
  //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   s1.setBeta(beta);
   s1.setSigma(sigma);
   s1.setCflBubble(cfl);
-  s1.setDt(dt);
+  //s1.setDt(dt);
   s1.setMu_l(mu_l);
   s1.setMu_g(mu_g);
   s1.setRho_l(rho_l);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
   s1.setBeta(beta);
   s1.setSigma(sigma);
   s1.setCflBubble(cfl);
-  s1.setDt(dt);
+  //s1.setDt(dt);
   s1.setMu_l(mu_l);
   s1.setMu_g(mu_g);
   s1.setRho_l(rho_l);

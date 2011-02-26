@@ -80,7 +80,7 @@ class Model3D
   void insertPointWithCurvature(int _edge);
   void deletePoint(int _v);
   void setPolyhedron(int _v);
-  void flipTriangleEdge( int _edge );
+  void flipTriangleEdge();
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();

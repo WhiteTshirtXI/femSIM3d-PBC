@@ -22,6 +22,7 @@ class MeshSmooth
 
   clVector compute();
   void stepSmooth();
+  void stepSmoothFujiwara();
   void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void stepSmoothSurface();
   void stepSmoothSurface2();

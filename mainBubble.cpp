@@ -27,7 +27,7 @@ int main(int argc, char **argv)
  real sigma = 1;
  real alpha = 1;
  real beta = -40;
- real cfl = 0.7;
+ real cfl = 0.4;
  //real dt = 0.00528;
  real mu_l = 2.73;
  real mu_g = 1.7894E-05;

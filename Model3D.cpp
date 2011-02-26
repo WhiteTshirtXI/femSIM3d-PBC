@@ -780,7 +780,7 @@ void Model3D::mesh2Dto3D()
  cout << "numNodes IN = " << surfMesh.numNodes << endl;
  cout << "numVerts IN = " << surfMesh.numVerts << endl;
  cout << endl;
- cout << "----> complete re-meshing the domain... ";
+ cout << "----> Meshing surface in 3D domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
  cout << "finished <---- " << endl;;
  cout << endl;
@@ -1428,7 +1428,7 @@ void Model3D::setNeighbourSurface()
  }
 }
 
-void Model3D::flipTriangleEdge( int _edge )
+void Model3D::flipTriangleEdge()
 {
  /* Triangle quality measure;
   *
@@ -1443,14 +1443,14 @@ void Model3D::flipTriangleEdge( int _edge )
  flip = 0;
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
-  _edge = i;
-  mapEdgeTri.Get(_edge,0); // length
-  int v1 = mapEdgeTri.Get(_edge,1); // v1
-  int v2 = mapEdgeTri.Get(_edge,2); // v2
-  int v3elem1 = mapEdgeTri.Get(_edge,3); // v3elem1
-  int v3elem2 = mapEdgeTri.Get(_edge,4); // v3elem2
-  int elem1 = mapEdgeTri.Get(_edge,5); // elem1
-  int elem2 = mapEdgeTri.Get(_edge,6); // elem2
+  real edge = i;
+  mapEdgeTri.Get(edge,0); // length
+  int v1 = mapEdgeTri.Get(edge,1); // v1
+  int v2 = mapEdgeTri.Get(edge,2); // v2
+  int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
+  int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
+  int elem1 = mapEdgeTri.Get(edge,5); // elem1
+  int elem2 = mapEdgeTri.Get(edge,6); // elem2
 
   real P1x = surfMesh.X.Get(v1);
   real P1y = surfMesh.Y.Get(v1);
@@ -1486,6 +1486,8 @@ void Model3D::flipTriangleEdge( int _edge )
   if( h1<length23_1 )
    h1 = length23_1;
   real q1 = 3.4641*inRadius1/h1;
+  real c1 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
+	                        P3elem1x,P3elem1y,P3elem1z);
 
   // elem2
   real semiPerimeter2 = 0.5*(length12+length13_2+length23_2);
@@ -1497,6 +1499,8 @@ void Model3D::flipTriangleEdge( int _edge )
   if( h2<length23_2 )
    h2 = length23_2;
   real q2 = 3.4641*inRadius2/h2;
+  real c2 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
+	                        P3elem2x,P3elem2y,P3elem2z);
 
   // elem3
   real semiPerimeter3 = 0.5*(length3_1_3_2+length13_1+length13_2);
@@ -1508,6 +1512,8 @@ void Model3D::flipTriangleEdge( int _edge )
   if( h3<length13_2 )
    h3 = length13_2;
   real q3 = 3.4641*inRadius3/h3;
+  real c3 = getCircumRadius(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z,
+	                        P3elem2x,P3elem2y,P3elem2z);
 
   // elem4
   real semiPerimeter4 = 0.5*(length3_1_3_2+length23_1+length23_2);
@@ -1519,18 +1525,14 @@ void Model3D::flipTriangleEdge( int _edge )
   if( h4<length23_2 )
    h4 = length23_2;
   real q4 = 3.4641*inRadius4/h4;
+  real c4 = getCircumRadius(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z,
+	                        P3elem2x,P3elem2y,P3elem2z);
 
   // this works, but is not consistent!!! CHANGE IT SOON!
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
-	  area1+area2>=area3+area4 &&
-	  semiPerimeter1+semiPerimeter2>semiPerimeter3+semiPerimeter4 ) //&&
-	//--------------------------------------------------
-	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
-	//-------------------------------------------------- 
+	  area1+area2  > area3+area4 &&
+	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
    //cout << q1 << " " << q2 << " " << q3 << " " << q4 << endl;
@@ -2012,7 +2014,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.4*triEdge; // 30% of triEdge
+ real test = 0.3*triEdge; // 30% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2089,11 +2091,16 @@ void Model3D::removePointsByInterfaceDistance()
   dist.Set(i,aux);
  }
 
+ /*         l*3^(1/3)
+  *     h = --------- = l*0.86602
+  *             2
+  * */
+ real h = triEdge*0.86602; 
  for( int i=0;i<numVerts;i++ )
  {
   real d = dist.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<0.7*triEdge ) // hiRe
+  if( d>0 && d<h ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2297,7 +2304,7 @@ void Model3D::mesh2Dto3DOriginal()
  saveVTKSurface("./vtk/","between",0);
  removePointsByLength();
  saveVTKSurface("./vtk/","flipBetween",0);
- flipTriangleEdge(0);
+ flipTriangleEdge();
  saveVTKSurface("./vtk/","after",0);
 
  // clean and init tetgen mesh object
@@ -2730,10 +2737,10 @@ void Model3D::mesh3DPoints()
  saveVTKSurface("./vtk/","inserted",0);
  removePointsByLength();
  saveVTKSurface("./vtk/","removed",0);
- flipTriangleEdge(0);
+ flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
- remove3dMeshPointsByDistance();
+ //removePointsByInterfaceDistance();
+ //remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();

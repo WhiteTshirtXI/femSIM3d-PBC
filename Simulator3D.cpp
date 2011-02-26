@@ -1181,15 +1181,8 @@ void Simulator3D::stepALEVel()
  setInterfaceVelNormal();
 
  setALEVelBC();
- for( int i=0;i<100;i++ )
+ for( int i=0;i<30;i++ )
  {
-  // smoothing - coordenadas
-  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
-  e1.stepSmoothSurface();
-  uSmoothCoord = *e1.getUSmooth();
-  vSmoothCoord = *e1.getVSmooth();
-  wSmoothCoord = *e1.getWSmooth();
-
   // smoothing - velocidade
   MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
   e2.stepSmooth(uALE,vALE,wALE);
@@ -1202,9 +1195,17 @@ void Simulator3D::stepALEVel()
   setInterfaceVelNormal();
  }
 
+ // smoothing - coordenadas
+ MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ e1.stepSmooth();
+ //e1.stepSmooth();
+ uSmoothCoord = *e1.getUSmooth();
+ vSmoothCoord = *e1.getVSmooth();
+ wSmoothCoord = *e1.getWSmooth();
+
  c1 = 0.0; 
  c2 = 1.0;
- c3 = 1.0; 
+ c3 = 0.1; 
 
  uALE = c1*uSol+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSol+c2*vSmooth+c3*vSmoothCoord;

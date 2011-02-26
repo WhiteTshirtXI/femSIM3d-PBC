@@ -91,23 +91,45 @@ void MeshSmooth::stepSmooth()
   real zAverage = zSum/size; // Y medio
   aux = (zAverage - Z->Get(*it))/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
-//--------------------------------------------------
-//   if( *it == 0 )
-//   {
-//   cout << "-------- " << *it << " --------" << endl;
-//   cout << "uSmooth: " << uSmooth.Get(*it) << endl;
-//   cout << "vSmooth: " << vSmooth.Get(*it) << endl;
-//   cout << "wSmooth: " << wSmooth.Get(*it) << endl;
-//   cout << "xAverage: " << xAverage << endl;
-//   cout << "yAverage: " << yAverage << endl;
-//   cout << "zAverage: " << zAverage << endl;
-//   cout << "X: " << X->Get(*it) << endl;
-//   cout << "Y: " << Y->Get(*it) << endl;
-//   cout << "Z: " << Z->Get(*it) << endl;
-//   cout << "dt: " << dt << endl;
-//   cout << "--------------------" << endl;
-//   }
-//-------------------------------------------------- 
+ }
+} // fecha metodo stepSmooth
+
+// calcula velocidade da malha em todos os vertices
+void MeshSmooth::stepSmoothFujiwara()
+{
+ real aux;
+ list<int> plist;
+ list<int>::iterator vert;
+ real xSum,ySum,zSum,distSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(numNodes);
+ vSmooth.Dim(numNodes);
+ wSmooth.Dim(numNodes);
+
+ for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ {
+  plist = neighbourVert->at(*it);
+  size = plist.size();
+  xSum = 0.0;
+  ySum = 0.0;
+  zSum = 0.0;
+  distSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   xSum += X->Get(*vert)-X->Get(*it);
+   ySum += Y->Get(*vert)-Y->Get(*it);
+   zSum += Z->Get(*vert)-Z->Get(*it);
+   distSum += distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
+	                    X->Get(*it),Y->Get(*it),Z->Get(*it) );
+  }
+  aux = (xSum/distSum )/dt; // X medio
+  uSmooth.Set(*it,aux);
+
+  aux = (ySum/distSum)/dt; // Y medio
+  vSmooth.Set(*it,aux);
+
+  aux = (zSum/distSum)/dt; // Z medio
+  wSmooth.Set(*it,aux);
  }
 } // fecha metodo stepSmooth
 

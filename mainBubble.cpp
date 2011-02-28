@@ -57,7 +57,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
  //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
 

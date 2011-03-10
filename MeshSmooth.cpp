@@ -76,21 +76,23 @@ void MeshSmooth::stepSmooth()
   zSum = 0.0;
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
-   xSum += X->Get(*vert);
-   ySum += Y->Get(*vert);
-   zSum += Z->Get(*vert);
+   xSum += X->Get(*vert)-X->Get(*it);
+   ySum += Y->Get(*vert)-Y->Get(*it);
+   zSum += Z->Get(*vert)-Z->Get(*it);
   }
-  real xAverage = xSum/size; // X medio
-  aux = (xAverage - X->Get(*it))/dt; // velocidade USmooth
+  aux = (xSum/size)/dt; // velocidade USmooth
   uSmooth.Set(*it,aux);
 
-  real yAverage = ySum/size; // Y medio
-  aux = (yAverage - Y->Get(*it))/dt; // velocidade VSmooth
+  aux = (ySum/size)/dt; // velocidade VSmooth
   vSmooth.Set(*it,aux);
 
-  real zAverage = zSum/size; // Y medio
-  aux = (zAverage - Z->Get(*it))/dt; // velocidade WSmooth
+  aux = (zSum/size)/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
+  if( *it == 20 )
+  {
+   cout << xSum << " " << dt << " "  
+	    << aux << endl;
+  }
  }
 } // fecha metodo stepSmooth
 
@@ -116,20 +118,22 @@ void MeshSmooth::stepSmoothFujiwara()
   distSum = 0.0;
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
-   xSum += X->Get(*vert)-X->Get(*it);
-   ySum += Y->Get(*vert)-Y->Get(*it);
-   zSum += Z->Get(*vert)-Z->Get(*it);
-   distSum += distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
-	                    X->Get(*it),Y->Get(*it),Z->Get(*it) );
+   real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
+	                     X->Get(*it),Y->Get(*it),Z->Get(*it) );
+   distSum += dist;   
+   xSum += ( X->Get(*vert)-X->Get(*it) )*dist;
+   ySum += ( Y->Get(*vert)-Y->Get(*it) )*dist;
+   zSum += ( Z->Get(*vert)-Z->Get(*it) )*dist;
   }
-  aux = (xSum/distSum )/dt; // X medio
+  aux = (xSum/distSum)/dt; // velocidade USmooth
   uSmooth.Set(*it,aux);
 
-  aux = (ySum/distSum)/dt; // Y medio
+  aux = (ySum/distSum)/dt; // velocidade VSmooth
   vSmooth.Set(*it,aux);
 
-  aux = (zSum/distSum)/dt; // Z medio
+  aux = (zSum/distSum)/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
+
  }
 } // fecha metodo stepSmooth
 

@@ -2012,15 +2012,17 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  real yf = Y->Max();
  //real zi = (Z->Max()-Z->Min())/2.0;
  real zi = 1.5;
+ real dx = (xf-xi)/(nX-1);
+ real dy = (yf-yi)/(nY-1);
  int count = 0;
  for( int i=0;i<nX;i++ )
  {
   for( int j=0;j<nY;j++ )
   {
-   real dx = xi + i * (xf-xi)/(nX-1);
-   xVert.Set(count,dx);
-   real dy = yi + j * (yf-yi)/(nY-1);
-   yVert.Set(count,dy);
+   real x = xi + i * dx ;
+   xVert.Set(count,x);
+   real y = yi + j * dy;
+   yVert.Set(count,y);
    count++;
   }
  }
@@ -2031,187 +2033,11 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  clVector cLin(nTotal);
  cLin = interpLin*(*cc);
 
- clVector test(nTotal);test.SetAll(1.0);
- clVector cLin2 = interpLin*(test);
-
- // verificando quais os pontos estao dentro do dominio computacinal
- // os que nao estiverem dentro serao marcados por -1
+ int gas=0;
  for( int i=0;i<cLin.Dim();i++ )
  {
-  if(cLin2.Get(i) > 0.0 || cLin2.Get(i) < 0.0 )
-  {
-   if( cLin.Get(i) >= 0.5 )
-	cLin.Set(i,1.0);
-   if( cLin.Get(i) < 0.5 )
-	cLin.Set(i,0.0);
-  }
-  else
-   cLin.Set(i,-1); // fora do dominio
- }
-
- // domain mesh
- // domainX e domainY sao vetores de coordenadas X e Y dos pontos da
- // malha struturada que estao dentro do dominio computacional
- // domain tera apenas os pontos pertencentes ao dominio computacional
- clVector domain,domainX,domainY;
- for( int i=0;i<cLin.Dim();i++ )
-  if(cLin.Get(i) != -1)
-  {
-   domain.AddItem(cLin.Get(i));
-   domainX.AddItem(xVert.Get(i));
-   domainY.AddItem(yVert.Get(i));
-  }
-
- // TRIANGLE Library - DOMAIN
- // criando malha triangular da secao transversal do dominio completo
- struct triangulateio in1, out1;
-
- in1.numberofpoints = domain.Dim() ;
- in1.numberofpointattributes = 0;
- in1.pointlist = (REALL *) malloc(in1.numberofpoints * 2 * sizeof(REALL));
- in1.pointattributelist = (REALL *) NULL;
- in1.pointmarkerlist = (int *) NULL;
- in1.numberofsegments = 0;
- in1.numberofholes = 0;
- in1.numberofregions = 0;
- in1.regionlist = (REALL *) NULL;
-
- for( int i=0;i<domain.Dim();i++ )
- {
-  in1.pointlist[2*i+0] = domainX.Get(i);
-  in1.pointlist[2*i+1] = domainY.Get(i);
- }
-
- out1.pointlist = (REALL *) NULL;
- out1.pointattributelist = (REALL *) NULL;
- out1.pointmarkerlist = (int *) NULL;
- out1.trianglelist = (int *) NULL;
- out1.triangleattributelist = (REALL *) NULL;
- out1.neighborlist = (int *) NULL;
- out1.segmentlist = (int *) NULL;
- out1.segmentmarkerlist = (int *) NULL;
- out1.edgelist = (int *) NULL; out1.edgemarkerlist = (int *) NULL;
-
- triangulate( (char* ) "Qz", &in1, &out1, (struct triangulateio *) NULL);
-
- // somando area de todos os elementos da malha para area total da secao 
- real areaDomain = 0;
- for( int i=0;i<out1.numberoftriangles;i++ )
- {
-  int v1 = out1.trianglelist[3*i+0];
-  int v2 = out1.trianglelist[3*i+1];
-  int v3 = out1.trianglelist[3*i+2];
-
-  areaDomain+=0.5*(((domainX.Get(v2)-domainX.Get(v1))*
-	                (domainY.Get(v3)-domainY.Get(v1)))
-	              -((domainX.Get(v3)-domainX.Get(v1))*
-	                (domainY.Get(v2)-domainY.Get(v1))));
- }
-
- // FREEing pointers
- free(in1.pointlist);
- free(in1.pointmarkerlist);
- free(out1.pointlist);
- free(out1.trianglelist);
- free(out1.triangleattributelist);
- free(out1.segmentlist);
- free(out1.segmentmarkerlist);
-
-//--------------------------------------------------
-//  /* ---- SAVING VTK DOMAIN ---- */
-//  // concatenando nomes para o nome do arquivo final
-//  string file3 = (string) _dir + (string) _filename + "Domain" + "-" + str + ".vtk";
-//  const char* filename3 = file3.c_str();
-// 
-//  ofstream vtkFile2( filename3 ); 
-// 
-//  vtkHeader(vtkFile2);
-// 
-//  vtkFile2 << "POINTS " << domainX.Dim() << " double" << endl;
-// 
-//  vtkFile2 << setprecision(10) << scientific; 
-//  for( int i=0;i<domainX.Dim();i++ )
-//   vtkFile2 << setw(10) << domainX.Get(i) << " " 
-//            << setw(10) << domainY.Get(i) << " " 
-// 		   << setw(10) << zVert.Get(i) << endl;
-// 
-//  vtkFile2 << endl;
-//  
-//  vtkFile2 << "CELLS " << out1.numberoftriangles << " " << 4*out1.numberoftriangles<< endl;
-//  vtkFile2 << setprecision(0) << fixed; 
-//  for( int i=0;i<out1.numberoftriangles;i++ )
-//  {
-//   vtkFile2 << "3 " << out1.trianglelist[3*i+0] << " "  
-//                    << out1.trianglelist[3*i+1] << " " 
-//                    << out1.trianglelist[3*i+2] << endl;
-//  };
-//  vtkFile2 << endl;
-// 
-//  vtkFile2 <<  "CELL_TYPES " << out1.numberoftriangles << endl;
-//  for( int i=0;i<out1.numberoftriangles;i++ )
-//   vtkFile2 << "5 ";
-// 
-//  vtkFile2 << endl;
-//  /* --------------------- */
-//-------------------------------------------------- 
- 
- // bubble mesh
- // bx e by sao vetores de coordenadas X e Y dos pontos da
- // malha struturada que pertencem a bolha
- // bubble tera apenas os pontos pertencentes ao dominio computacional
- clVector bubble,bx,by;
- for( int i=0;i<domain.Dim();i++ )
- {
-   if( domain.Get(i) >= 0.5 )
-   {
-	bubble.AddItem(i);
-	bx.AddItem(domainX.Get(i));
-	by.AddItem(domainY.Get(i));
-   }
- }
-
- // TRIANGLE Library - BUBBLE
- struct triangulateio in, out;
-
- in.numberofpoints = bubble.Dim() ;
- in.numberofpointattributes = 0;
- in.pointlist = (REALL *) malloc(in.numberofpoints * 2 * sizeof(REALL));
- in.pointattributelist = (REALL *) NULL;
- in.pointmarkerlist = (int *) NULL;
- in.numberofsegments = 0;
- in.numberofholes = 0;
- in.numberofregions = 0;
- in.regionlist = (REALL *) NULL;
-
- for( int i=0;i<bubble.Dim();i++ )
- {
-  in.pointlist[2*i+0] = bx.Get(i);
-  in.pointlist[2*i+1] = by.Get(i);
- }
-
- out.pointlist = (REALL *) NULL;
- out.pointattributelist = (REALL *) NULL;
- out.pointmarkerlist = (int *) NULL;
- out.trianglelist = (int *) NULL;
- out.triangleattributelist = (REALL *) NULL;
- out.neighborlist = (int *) NULL;
- out.segmentlist = (int *) NULL;
- out.segmentmarkerlist = (int *) NULL;
- out.edgelist = (int *) NULL; out.edgemarkerlist = (int *) NULL;
-
- triangulate( (char* ) "Qz", &in, &out, (struct triangulateio *) NULL);
-
- // somando area dos elementos da malha contidos na bolha para saber
- // area bolha
- real bubbleArea = 0;
- for( int i=0;i<out.numberoftriangles;i++ )
- {
-  int v1 = out.trianglelist[3*i+0];
-  int v2 = out.trianglelist[3*i+1];
-  int v3 = out.trianglelist[3*i+2];
-
-  bubbleArea+=0.5*(((bx.Get(v2)-bx.Get(v1))*(by.Get(v3)-by.Get(v1)))
-	              -((bx.Get(v3)-bx.Get(v1))*(by.Get(v2)-by.Get(v1))));
+  if( cLin.Get(i) >= 0.5 )
+   gas++;
  }
 
  // saving in DAT format
@@ -2232,7 +2058,8 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
 					  << endl;
  }
 
- real totalArea = areaDomain;
+ real totalArea = (xf-xi)*(yf-yi);
+ real bubbleArea = gas*dx*dy;
  real fluidArea = totalArea - bubbleArea;
  real voidFraction = bubbleArea/totalArea;
  voidFile << setw(10) << *simTime << " " 
@@ -2245,51 +2072,6 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
 
  cout << "cross sectional void fraction No. " << _iter 
       << " saved in dat" << endl;
-
- /* ---- SAVING VTK ---- */
- // concatenando nomes para o nome do arquivo final
- string file2 = (string) _dir + (string) _filename + "-" + str + ".vtk";
- const char* filename2 = file2.c_str();
-
- ofstream vtkFile( filename2 ); 
-
- vtkHeader(vtkFile);
-
- vtkFile << "POINTS " << bx.Dim() << " double" << endl;
-
- vtkFile << setprecision(10) << scientific; 
- for( int i=0;i<bx.Dim();i++ )
-  vtkFile << setw(10) << bx.Get(i) << " " 
-          << setw(10) << by.Get(i) << " " 
-		  << setw(10) << zVert.Get(i) << endl;
-
- vtkFile << endl;
- 
- vtkFile << "CELLS " << out.numberoftriangles << " " << 4*out.numberoftriangles<< endl;
- vtkFile << setprecision(0) << fixed; 
- for( int i=0;i<out.numberoftriangles;i++ )
- {
-  vtkFile << "3 " << out.trianglelist[3*i+0] << " "  
-                  << out.trianglelist[3*i+1] << " " 
-                  << out.trianglelist[3*i+2] << endl;
- };
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << out.numberoftriangles << endl;
- for( int i=0;i<out.numberoftriangles;i++ )
-  vtkFile << "5 ";
-
- vtkFile << endl;
- /* --------------------- */
-
- // FREEing pointers
- free(in.pointlist);
- free(in.pointmarkerlist);
- free(out.pointlist);
- free(out.trianglelist);
- free(out.triangleattributelist);
- free(out.segmentlist);
- free(out.segmentmarkerlist);
 
 } // fecha metodo crossSectionalVoidFraction
 

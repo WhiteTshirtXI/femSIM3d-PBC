@@ -1197,7 +1197,7 @@ void Simulator3D::stepALEVel()
 
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSmooth();
+ e1.stepSmoothFujiwara();
  //e1.stepSmooth();
  uSmoothCoord = *e1.getUSmooth();
  vSmoothCoord = *e1.getVSmooth();
@@ -1205,7 +1205,7 @@ void Simulator3D::stepALEVel()
 
  c1 = 0.0; 
  c2 = 1.0;
- c3 = 0.1; 
+ c3 = 0.03; 
 
  uALE = c1*uSol+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSol+c2*vSmooth+c3*vSmoothCoord;
@@ -1801,7 +1801,7 @@ void Simulator3D::setMuRho(real _mu_l,real _mu_g,
   *
   * */
  
- rho_0= _rho_l-_rho_g; 
+ rho_0= (_rho_l+_rho_g)/2.0; 
  rho_lAdimen = _rho_l/rho_0; 
  rho_gAdimen = _rho_g/rho_0;
 

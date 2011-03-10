@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.09;
+ triEdge = 0.05;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -2134,7 +2134,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	   X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<2.0*triEdge )
+	 if( d>0 && d<0.2*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2739,8 +2739,8 @@ void Model3D::mesh3DPoints()
  saveVTKSurface("./vtk/","removed",0);
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- //removePointsByInterfaceDistance();
- //remove3dMeshPointsByDistance();
+ removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();
@@ -2783,6 +2783,7 @@ void Model3D::mesh3DPoints()
 
  cout << endl;
  while( checkMeshQuality(out) == true ) 
+ //if( checkMeshQuality(out) == true ) 
  {
   in.initialize();
   out.initialize();
@@ -5896,12 +5897,12 @@ void Model3D::computeSurfaceNormal()
    real P2y = surfMesh.Y.Get(v2);
    real P2z = surfMesh.Z.Get(v2);
 
-   // distance do ponto 0 ate metade do segmento 01
+   // distance do ponto 0 ate 1
    real a = sqrt( (P0x-P1x)*(P0x-P1x)+
 	              (P0y-P1y)*(P0y-P1y)+
 				  (P0z-P1z)*(P0z-P1z) );
 
-   // distance do ponto 0 ate metade do segmento 02
+   // distance do ponto 0 ate 2
    real b = sqrt( (P0x-P2x)*(P0x-P2x)+
 	              (P0y-P2y)*(P0y-P2y)+
 			      (P0z-P2z)*(P0z-P2z) );

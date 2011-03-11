@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.05;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -959,7 +959,7 @@ void Model3D::insertPointsByLength()
 	//-------------------------------------------------- 
    insertPoint(i);
    isp++;
-   //insertPointWithCurvature(i); // not working yet
+   insertPointWithCurvature(i); // not working yet
   }
  }
 }
@@ -1852,28 +1852,34 @@ void Model3D::insertPointWithCurvature(int _edge)
  real v2x = P3elem1x-P1x;
  real v2y = P3elem1y-P1y;
  real v2z = P3elem1z-P1z;
+ real b = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
+ real v2xUnit = v2x/b;
+ real v2yUnit = v2y/b;
+ real v2zUnit = v2z/b;
 
  // vector v1-v3elem2
  real v3x = P3elem2x-P1x;
  real v3y = P3elem2y-P1y;
  real v3z = P3elem2z-P1z;
+ real c = distance(P1x,P1y,P1z,P3elem2x,P3elem2y,P3elem2z);
+ real v3xUnit = v3x/c;
+ real v3yUnit = v3y/c;
+ real v3zUnit = v3z/c;
 
- clVector cross1 = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
- real area1 = getArea(P1x,P1y,P1z,P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z);
- real res1x = cross1.Get(0)*area1;
- real res1y = cross1.Get(1)*area1;
- real res1z = cross1.Get(2)*area1;
+ clVector cross1 = crossProd(v1xUnit,v1yUnit,v1zUnit,v2xUnit,v2yUnit,v2zUnit);
+ real res1x = cross1.Get(0);
+ real res1y = cross1.Get(1);
+ real res1z = cross1.Get(2);
 
- clVector cross2 = crossProd(v3x,v3y,v3z,v1x,v1y,v1z);
- real area2 = getArea(P1x,P1y,P1z,P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
- real res2x = cross2.Get(0)*area2;
- real res2y = cross2.Get(1)*area2;
- real res2z = cross2.Get(2)*area2;
+ clVector cross2 = crossProd(v3xUnit,v3yUnit,v3zUnit,v1xUnit,v1yUnit,v1zUnit);
+ real res2x = cross2.Get(0);
+ real res2y = cross2.Get(1);
+ real res2z = cross2.Get(2);
 
- // averaged normal vector between 2 elements
- real normalX = (res1x+res2x)/(area1+area2);
- real normalY = (res1y+res2y)/(area1+area2);
- real normalZ = (res1z+res2z)/(area1+area2);
+ // normal vector between 2 elements
+ real normalX = res1x+res2x;
+ real normalY = res1y+res2y;
+ real normalZ = res1z+res2z;
 
  real len = vectorLength( normalX,normalY,normalZ );
 
@@ -1883,79 +1889,157 @@ void Model3D::insertPointWithCurvature(int _edge)
  real normalYUnit = normalY/len;
  real normalZUnit = normalZ/len;
 
- // add point in the middle of a edge 
- real Xmid = ( P1x+P2x )*0.5;
- real Ymid = ( P1y+P2y )*0.5;
- real Zmid = ( P1z+P2z )*0.5;
+ // normalUnit and v1Unit define a plane. Then, the global vertex normal
+ // unit vector can be rebounded to this plan simple by the projections
+ // of this vector to the unit vectors that define the plane
+ // (normalUnit,v1Unit)
+ /*
+  *       normalUnit                                     normalUnit
+  *           ^                                              ^
+  *           |                                              |
+  *           |                                              |
+  *           o------> v1Unit                                o------> v1Unit
+  *           x-----------------x          x-----------------x
+  *          (v1)              (v2)       (v1)              (v2)
+  *                   
+  *           |------- a -------|          |------- a -------|
+  *
+  * */
+ real x1 = dotProd(surfMesh.xNormal.Get(v1),
+                   surfMesh.yNormal.Get(v1),
+                   surfMesh.zNormal.Get(v1),
+                   v1xUnit,v1yUnit,v1zUnit);
 
- // curvature considerations
- real c1 = surfMesh.curvature.Get(v1);
- real c2 = surfMesh.curvature.Get(v2);
- real cMid = (c1-c2)*0.5; // linear approximation
+ real y1 = dotProd(surfMesh.xNormal.Get(v1),
+                   surfMesh.yNormal.Get(v1),
+                   surfMesh.zNormal.Get(v1),
+                   normalXUnit,normalYUnit,normalZUnit);
 
- // pull up the point to the right position considering the curvature
- real XvAdd = Xmid + cMid*normalXUnit;
- real YvAdd = Ymid + cMid*normalYUnit;
- real ZvAdd = Zmid + cMid*normalZUnit;
+ real x2 = dotProd(surfMesh.xNormal.Get(v2),
+                   surfMesh.yNormal.Get(v2),
+                   surfMesh.zNormal.Get(v2),
+                   v1xUnit,v1yUnit,v1zUnit);
 
- cout << c1 << " " << cMid << " " << c2 << endl;
- cout << P1x << " " << P1y << " " << P1z << " " << v1 << " " << v3elem1 << endl;
- cout << Xmid << " " << Ymid << " " << Zmid << endl;
- cout << P2x << " " << P2y << " " << P2z << " " << v2 << " " << v3elem2 << endl;
- cout << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
- cout << cross1.Get(0) << " " << cross1.Get(1) << " " << cross1.Get(2) << endl;
- cout << cross2.Get(0) << " " << cross2.Get(1) << " " << cross2.Get(2) << endl;
- cout << normalXUnit << " " << normalYUnit << " " << normalZUnit << endl;
+ real y2 = dotProd(surfMesh.xNormal.Get(v2),
+                   surfMesh.yNormal.Get(v2),
+                   surfMesh.zNormal.Get(v2),
+                   normalXUnit,normalYUnit,normalZUnit);
 
- // insert aditional vertice coordinate
- X.AddItem(vAdd,XvAdd);
- Y.AddItem(vAdd,YvAdd);
- Z.AddItem(vAdd,ZvAdd);
+ /*
+  * [ y1        ] |    |   |   |  a = dist between vertices
+  * [----   -1  ] | Xc |   | 0 |
+  * [ x1        ] |    | = |   |  Xc,Yc = circumference center
+  * [        x2 ] |    |   |   |
+  * [  1    ----] | Yc |   | a |  x1,y1,x2,y2 = vector components on the
+  * [        y2 ] |    |   |   |                normalUnit and v1Unit
+  *                                             plane
+  *
+  * Cramer's rule:
+  *
+  *        y1     x2              y1     x2 
+  * det = ---- * ---- - (-1)*1 = ---- * ---- + 1 
+  *        x1     y2              x1     y2 
+  *
+  *         x2                       y1           
+  *      0*---- - (-1)*a            ----*a - 0*1
+  *         y2                       x1
+  * Xc = ---------------       Yc = ---------------
+  *            det                        det
+  *
+  * */
 
- surfMesh.X.AddItem(XvAdd);
- surfMesh.Y.AddItem(YvAdd);
- surfMesh.Z.AddItem(ZvAdd);
- surfMesh.Marker.AddItem(0.5); // interface set up
- surfMesh.curvature.AddItem(cMid);
+ real det = (y1/x1)*(x2/y2)+1;
+ real Xc = a/det;
+ real Yc = ( (y1/x1)*a )/det;
 
- // incremeting the number of points
- surfMesh.numVerts++;
- numVerts++;
+ cout << endl;
+ cout << endl;
+ cout << endl;
+ cout << distance(Xc,Yc,0,0) << " "
+      << distance(Xc,Yc,a,0) << endl;
+ cout << endl;
+ cout << endl;
+ cout << endl;
 
- /* by adding 1 point on the edge it is necessary to divide the
-  * original element and also the oposite element by 2, becoming 4
-  * elements in total. */
 
- // 1st. new element (v1 - vAdd - v3elem1) 
- // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
- surfMesh.IEN.Set(elem1,0,v1);
- surfMesh.IEN.Set(elem1,1,vAdd);
- surfMesh.IEN.Set(elem1,2,v3elem1);
 
- // 2nd. new element (v1 - vAdd - v3elem2) 
- // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
- surfMesh.IEN.Set(elem2,0,v1);
- surfMesh.IEN.Set(elem2,1,vAdd);
- surfMesh.IEN.Set(elem2,2,v3elem2);
 
- // 3rd. new element (v2 - vAdd - v3elem1) on the last row
- surfMesh.IEN.AddRow();
- int elem3 = surfMesh.IEN.DimI()-1;
- surfMesh.IEN.Set(elem3,0,v2);
- surfMesh.IEN.Set(elem3,1,vAdd);
- surfMesh.IEN.Set(elem3,2,v3elem1);
- surfMesh.numElems++;
 
- // 4th. new element (v2 - vAdd - v3elem2) on the last row
- surfMesh.IEN.AddRow();
- int elem4 = surfMesh.IEN.DimI()-1;
- surfMesh.IEN.Set(elem4,0,v2);
- surfMesh.IEN.Set(elem4,1,vAdd);
- surfMesh.IEN.Set(elem4,2,v3elem2);
- surfMesh.numElems++;
- 
- setMapEdgeTri();
- setNeighbourSurface();
+//--------------------------------------------------
+//  // add point in the middle of a edge 
+//  real Xmid = ( P1x+P2x )*0.5;
+//  real Ymid = ( P1y+P2y )*0.5;
+//  real Zmid = ( P1z+P2z )*0.5;
+// 
+//  // curvature considerations
+//  real c1 = surfMesh.curvature.Get(v1);
+//  real c2 = surfMesh.curvature.Get(v2);
+//  real cMid = (c1-c2)*0.5; // linear approximation
+// 
+//  // pull up the point to the right position considering the curvature
+//  real XvAdd = Xmid + cMid*normalXUnit;
+//  real YvAdd = Ymid + cMid*normalYUnit;
+//  real ZvAdd = Zmid + cMid*normalZUnit;
+// 
+//  cout << c1 << " " << cMid << " " << c2 << endl;
+//  cout << P1x << " " << P1y << " " << P1z << " " << v1 << " " << v3elem1 << endl;
+//  cout << Xmid << " " << Ymid << " " << Zmid << endl;
+//  cout << P2x << " " << P2y << " " << P2z << " " << v2 << " " << v3elem2 << endl;
+//  cout << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
+//  cout << cross1.Get(0) << " " << cross1.Get(1) << " " << cross1.Get(2) << endl;
+//  cout << cross2.Get(0) << " " << cross2.Get(1) << " " << cross2.Get(2) << endl;
+//  cout << normalXUnit << " " << normalYUnit << " " << normalZUnit << endl;
+// 
+//  // insert aditional vertice coordinate
+//  X.AddItem(vAdd,XvAdd);
+//  Y.AddItem(vAdd,YvAdd);
+//  Z.AddItem(vAdd,ZvAdd);
+// 
+//  surfMesh.X.AddItem(XvAdd);
+//  surfMesh.Y.AddItem(YvAdd);
+//  surfMesh.Z.AddItem(ZvAdd);
+//  surfMesh.Marker.AddItem(0.5); // interface set up
+//  surfMesh.curvature.AddItem(cMid);
+// 
+//  // incremeting the number of points
+//  surfMesh.numVerts++;
+//  numVerts++;
+// 
+//  /* by adding 1 point on the edge it is necessary to divide the
+//   * original element and also the oposite element by 2, becoming 4
+//   * elements in total. */
+// 
+//  // 1st. new element (v1 - vAdd - v3elem1) 
+//  // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
+//  surfMesh.IEN.Set(elem1,0,v1);
+//  surfMesh.IEN.Set(elem1,1,vAdd);
+//  surfMesh.IEN.Set(elem1,2,v3elem1);
+// 
+//  // 2nd. new element (v1 - vAdd - v3elem2) 
+//  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
+//  surfMesh.IEN.Set(elem2,0,v1);
+//  surfMesh.IEN.Set(elem2,1,vAdd);
+//  surfMesh.IEN.Set(elem2,2,v3elem2);
+// 
+//  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
+//  surfMesh.IEN.AddRow();
+//  int elem3 = surfMesh.IEN.DimI()-1;
+//  surfMesh.IEN.Set(elem3,0,v2);
+//  surfMesh.IEN.Set(elem3,1,vAdd);
+//  surfMesh.IEN.Set(elem3,2,v3elem1);
+//  surfMesh.numElems++;
+// 
+//  // 4th. new element (v2 - vAdd - v3elem2) on the last row
+//  surfMesh.IEN.AddRow();
+//  int elem4 = surfMesh.IEN.DimI()-1;
+//  surfMesh.IEN.Set(elem4,0,v2);
+//  surfMesh.IEN.Set(elem4,1,vAdd);
+//  surfMesh.IEN.Set(elem4,2,v3elem2);
+//  surfMesh.numElems++;
+//  
+//  setMapEdgeTri();
+//  setNeighbourSurface();
+//-------------------------------------------------- 
 
 }
 
@@ -5927,9 +6011,7 @@ void Model3D::computeSurfaceNormal()
 
   } // loop over each elements that shares the same vertice P0
 
-  real len = sqrt( (sumXCrossUnit*sumXCrossUnit)+
-	               (sumYCrossUnit*sumYCrossUnit)+
-				   (sumZCrossUnit*sumZCrossUnit) );
+  real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
 
   real xNormalUnit = sumXCrossUnit/len;
   real yNormalUnit = sumYCrossUnit/len;
@@ -6126,22 +6208,16 @@ void Model3D::computeKappa()
    real y2Unit = y2/b;
    real z2Unit = z2/b;
 
-   real xRetaUnit = xReta/c;
-   real yRetaUnit = yReta/c;
-   real zRetaUnit = zReta/c;
-
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
    real yPlaneRes = y1Unit+y2Unit;
    real zPlaneRes = z1Unit+z2Unit;
 
-   // produto escalar --> projecao do vetor Res no segmento de reta
-   // | Unit.RetaUnit | . RetaUnit
-   // resultado = vetor tangente a reta situado na superficie
-   real prod = xPlaneRes*xRetaUnit + yPlaneRes*yRetaUnit + zPlaneRes*zRetaUnit;
-   real xPlaneTang = xRetaUnit*prod;
-   real yPlaneTang = yRetaUnit*prod;
-   real zPlaneTang = zRetaUnit*prod;
+   clVector proj = projection(xPlaneRes,yPlaneRes,zPlaneRes,
+                              xReta,yReta,zReta);
+   real xPlaneTang = proj.Get(0);
+   real yPlaneTang = proj.Get(1);
+   real zPlaneTang = proj.Get(2);
 
    /* subtraindo vetor tangente do vetor unitario para encontrar as
     * coordenadas do vetor normal SITUADO NA SUPERFICE (face do

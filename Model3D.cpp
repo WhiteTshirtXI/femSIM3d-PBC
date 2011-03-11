@@ -1926,43 +1926,58 @@ void Model3D::insertPointWithCurvature(int _edge)
                    normalXUnit,normalYUnit,normalZUnit);
 
  /*
-  * [ y1        ] |    |   |   |  a = dist between vertices
-  * [----   -1  ] | Xc |   | 0 |
-  * [ x1        ] |    | = |   |  Xc,Yc = circumference center
-  * [        x2 ] |    |   |   |
-  * [  1    ----] | Yc |   | a |  x1,y1,x2,y2 = vector components on the
-  * [        y2 ] |    |   |   |                normalUnit and v1Unit
+  * [ y1            ] |    |   |   |  a = dist between vertices
+  * [----       -1  ] | Xc |   | 0 |
+  * [ x1            ] |    | = |   |  Xc,Yc = circumference center
+  * [            x2 ] |    |   |   |
+  * [  1  (-1)* ----] | Yc |   | a |  x1,y1,x2,y2 = vector components on the
+  * [            y2 ] |    |   |   |                normalUnit and v1Unit
   *                                             plane
   *
   * Cramer's rule:
   *
-  *        y1     x2              y1     x2 
-  * det = ---- * ---- - (-1)*1 = ---- * ---- + 1 
-  *        x1     y2              x1     y2 
+  *        y1          x2              y1          x2 
+  * det = ---- * (-1)*---- - (-1)*1 = ---- * (-1)*---- + 1 
+  *        x1          y2              x1          y2 
   *
-  *         x2                       y1           
-  *      0*---- - (-1)*a            ----*a - 0*1
-  *         y2                       x1
-  * Xc = ---------------       Yc = ---------------
-  *            det                        det
+  *              x2                       y1           
+  *      0*(-1)*---- - (-1)*a            ----*a - 0*1
+  *              y2                       x1
+  * Xc = --------------------      Yc = ---------------
+  *            det                            det
   *
   * */
 
- real det = (y1/x1)*(x2/y2)+1;
+ real det = (y1/x1)*(-1)*(x2/y2)+1;
  real Xc = a/det;
  real Yc = ( (y1/x1)*a )/det;
+ real radius = distance(Xc,Yc,0,0);
+ real xMid2D = a/2.0;
 
- cout << endl;
- cout << endl;
- cout << endl;
- cout << distance(Xc,Yc,0,0) << " "
-      << distance(Xc,Yc,a,0) << endl;
- cout << endl;
- cout << endl;
- cout << endl;
+ /*
+  * Circumference equation:
+  *
+  * (x-Xc)^2 + (y-Yc)^2 = r^2
+  *
+  * x = xMid and it is known
+  *
+  * (xMid-Xc)^2 + (y-Yc)^2 = r^2 :=> (y-Yc)^2 = r^2 - (xMid-Xc)^2
+  *
+  * How we calculate yMid2D?
+  *
+  * */
 
-
-
+ /* 
+  *     3D coords         2D coords
+  * X(v1),Y(v1),Z(v1) |---> (0,0)
+  * X(v2),Y(v2),Z(v2) |---> (a,0)
+  *  
+  * Transforming from the 2D plane coordinates to the 3D global coords
+  *
+  *                     ?
+  *       X,Y,Z       <---| (a/2,yMid2D)
+  *
+  * */
 
 
 //--------------------------------------------------

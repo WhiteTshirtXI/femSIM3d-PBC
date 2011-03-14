@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.11;
+ triEdge = 0.10;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -2190,9 +2190,10 @@ void Model3D::removePointsByInterfaceDistance()
   dist.Set(i,aux);
  }
 
- /*         l*3^(1/3)
-  *     h = --------- = l*0.86602
-  *             2
+ /*     
+  *                l*3^(1/3)
+  *   height = h = --------- = l*0.86602
+  *                    2
   * */
  real h = triEdge*0.86602; 
  for( int i=0;i<numVerts;i++ )
@@ -2718,7 +2719,9 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 
 bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 {
- int count=0;
+ bool flag = false;
+
+ badtet=0;
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   int v1 = _tetmesh.tetrahedronlist[i*4+0];
@@ -2732,26 +2735,32 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 	  _tetmesh.pointmarkerlist[v3] == 22 &&
 	  _tetmesh.pointmarkerlist[v4] == 22 )
   {
+   real xMid = ( _tetmesh.pointlist[3*v1+0]+
+                 _tetmesh.pointlist[3*v2+0]+
+				 _tetmesh.pointlist[3*v3+0]+
+				 _tetmesh.pointlist[3*v4+0] )*0.25;
 
-   real xMid = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )*0.25;
-   real yMid = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )*0.25;
-   real zMid = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )*0.25;
+   real yMid = ( _tetmesh.pointlist[3*v1+1]+
+                 _tetmesh.pointlist[3*v2+1]+
+				 _tetmesh.pointlist[3*v3+1]+
+				 _tetmesh.pointlist[3*v4+1] )*0.25;
+
+   real zMid = ( _tetmesh.pointlist[3*v1+2]+
+                 _tetmesh.pointlist[3*v2+2]+
+				 _tetmesh.pointlist[3*v3+2]+
+				 _tetmesh.pointlist[3*v4+2] )*0.25;
+
    X.AddItem(numVerts,xMid);
    Y.AddItem(numVerts,yMid);
    Z.AddItem(numVerts,zMid);
-   if( region > 0.0 ) // fora da bolha
-	cc.AddItem(0.0);
-   else
-	cc.AddItem(1.0);
+   cc.AddItem(fabs(region-1));
    numVerts++;
 
-   count++;
+   badtet++;
+   flag = true;
   }
  }
- if( count>0 ) 
-  return true;
- else
-  return false;
+ return flag;
 }
 
 void Model3D::printMeshReport(tetgenio &_tetmesh)
@@ -2894,7 +2903,7 @@ void Model3D::mesh3DPoints()
 
   convertModel3DtoTetgen(in);
 
-  cout << "----> fixing 3D mesh points... ";
+  cout << "----> fixing " << badtet << " shit tetrahedron elements... ";
   tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
   cout << "finished <---- " << endl;;
 
@@ -4383,9 +4392,15 @@ void Model3D::setSurfaceFace()
    v3 = (int) IEN.Get(*mele,2);
    v4 = (int) IEN.Get(*mele,3);
 
+   // tetraedro possui face na superficie se uma das opcoes abaixo tiver
+   // somatorio = 1.5, pois cada vertice na interface vale 0.5
+   real triface1 = cc.Get(v1)+cc.Get(v2)+cc.Get(v3);
+   real triface2 = cc.Get(v1)+cc.Get(v2)+cc.Get(v4);
+   real triface3 = cc.Get(v1)+cc.Get(v3)+cc.Get(v4);
+   real triface4 = cc.Get(v2)+cc.Get(v3)+cc.Get(v4);
+
    // pegando o elemento com 3 vertices na superfice e 1 fora da bolha
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==0 )
+   if( triface1 == 1.5 && cc.Get(v4)==0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v1);
@@ -4394,8 +4409,7 @@ void Model3D::setSurfaceFace()
 	neighbourFaceVert.at( count ).push_back(v4);
 	count++;
    }
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==0 && cc.Get(v4)==0.5 )
+   if( triface2 == 1.5 && cc.Get(v3)==0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v4);
@@ -4404,8 +4418,7 @@ void Model3D::setSurfaceFace()
 	neighbourFaceVert.at( count ).push_back(v3);
 	count++;
    }
-   if( cc.Get(v1)==0.5 && cc.Get(v2)==0 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
+   if( triface3 == 1.5 && cc.Get(v2)==0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v3);
@@ -4414,8 +4427,7 @@ void Model3D::setSurfaceFace()
 	neighbourFaceVert.at( count ).push_back(v2);
 	count++;
    }
-   if( cc.Get(v1)==0 && cc.Get(v2)==0.5 && 
-	   cc.Get(v3)==0.5 && cc.Get(v4)==0.5 )
+   if( triface4 == 1.5 && cc.Get(v1)==0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v2);

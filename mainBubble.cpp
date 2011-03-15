@@ -19,35 +19,35 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
-//--------------------------------------------------
-//  int iter = 0;
-//  real Re = 42.574;
-//  real Sc = 2;
-//  real We = 115.5566;
-//  real Fr = 1.0;
-//  real sigma = 1;
-//  real alpha = 1;
-//  real beta = -40;
-//  real cfl = 0.6;
-//  //real dt = 0.00528;
-//  real mu_l = 2.73;
-//  real mu_g = 1.7894E-05;
-//  real rho_l = 1350;
-//  real rho_g = 1.225;
-//-------------------------------------------------- 
  int iter = 0;
- real Re = 1;
+ real Re = 42.574;
  real Sc = 2;
- real We = 1;
+ real We = 115.5566;
  real Fr = 1.0;
- real sigma = 1.0;
+ real sigma = 1;
  real alpha = 1;
  real beta = -40;
- real cfl = 0.5;
- real mu_l = 2.0;
- real mu_g = 1.0;
- real rho_l = 1.0;
- real rho_g = 1.0;
+ real cfl = 0.6;
+ //real dt = 0.00528;
+ real mu_l = 2.73;
+ real mu_g = 1.7894E-05;
+ real rho_l = 1350;
+ real rho_g = 1.225;
+//--------------------------------------------------
+//  int iter = 0;
+//  real Re = 1;
+//  real Sc = 2;
+//  real We = 1;
+//  real Fr = 1.0;
+//  real sigma = 1.0;
+//  real alpha = 1;
+//  real beta = -40;
+//  real cfl = 0.5;
+//  real mu_l = 2.0;
+//  real mu_g = 1.0;
+//  real rho_l = 1.0;
+//  real rho_g = 1.0;
+//-------------------------------------------------- 
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -57,9 +57,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
- const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
+ //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
 
  Model3D m1,mOld;
  Simulator3D s1,s2;

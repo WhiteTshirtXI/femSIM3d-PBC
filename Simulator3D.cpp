@@ -1282,7 +1282,7 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.0;
+  real a = 0.1;
   uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
@@ -1801,7 +1801,7 @@ void Simulator3D::setMuRho(real _mu_l,real _mu_g,
   *
   * */
  
- rho_0= (_rho_l+_rho_g)/2.0; 
+ rho_0 = rho_l; 
  rho_lAdimen = _rho_l/rho_0; 
  rho_gAdimen = _rho_g/rho_0;
 

@@ -1474,7 +1474,7 @@ void Model3D::flipTriangleEdge()
   real length23_1 = distance(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z);
   real length23_2 = distance(P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
   real length3_1_3_2 = distance(P3elem1x,P3elem1y,P3elem1z,
-	                              P3elem2x,P3elem2y,P3elem2z);
+	                            P3elem2x,P3elem2y,P3elem2z);
 
   // elem1
   real semiPerimeter1 = 0.5*(length12+length13_1+length23_1);
@@ -1951,7 +1951,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  real det = (y1/x1)*(-1)*(x2/y2)+1;
  real Xc = a/det;
  real Yc = ( (y1/x1)*a )/det;
- real radius = distance(Xc,Yc,0,0);
+ real r2D = distance(Xc,Yc,0,0);
  real xMid2D = a/2.0;
 
  /*
@@ -1963,9 +1963,17 @@ void Model3D::insertPointWithCurvature(int _edge)
   *
   * (xMid-Xc)^2 + (y-Yc)^2 = r^2 :=> (y-Yc)^2 = r^2 - (xMid-Xc)^2
   *
+  * y = sqrt( r^2 - (xMid-Xc)^2 ) + Yc :: z = sqrt( r^2 - (xMid-Xc)^2 )
+  *
+  * y1 = +z + Yc;
+  * y2 = -z + Yc;
+  *
   * How we calculate yMid2D?
   *
   * */
+
+ real yMidNew1 = (+1.0)*sqrt( r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc) ) + Yc;
+ real yMidNew2 = (-1.0)*sqrt( r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc) ) + Yc;
 
  /* 
   *     3D coords         2D coords
@@ -1979,6 +1987,32 @@ void Model3D::insertPointWithCurvature(int _edge)
   *
   * */
 
+ real Xcurv1 = P1x + (normalXUnit*yMidNew1);
+ real Ycurv1 = P1y + (normalYUnit*yMidNew1);
+ real Zcurv1 = P1z + (normalZUnit*yMidNew1);
+ real Xcurv2 = P1x + (normalXUnit*yMidNew2);
+ real Ycurv2 = P1y + (normalYUnit*yMidNew2);
+ real Zcurv2 = P1z + (normalZUnit*yMidNew2);
+
+//--------------------------------------------------
+//  cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
+//  cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
+//  cout << "radius: " << r2D << endl;
+//  cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
+//  cout << "center: " << Xc << " " << Yc << endl;
+//  cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
+// 
+//  // add point in the middle of an edge 
+//  real Xmid = P1x + (v1xUnit*a/2.0);
+//  real Ymid = P1y + (v1yUnit*a/2.0);
+//  real Zmid = P1z + (v1zUnit*a/2.0);
+// 
+//  cout << "m: " << Xmid << " " << Ymid << " " << Zmid << endl;
+//-------------------------------------------------- 
+
+// real Xcurv = P1x + (normalXUnit*value);
+// real Ycurv = P1y + (normalXUnit*value);
+// real Zcurv = P1z + (normalXUnit*value);
 
 //--------------------------------------------------
 //  // add point in the middle of a edge 
@@ -3998,7 +4032,7 @@ void Model3D::setMiniElement()
   real volume = getVolume(i);
   V.Set(i,volume);
 
-  if( fabs(volume)<1.0E-10)
+  if( fabs(volume)<1.0E-14)
   {
    cout << i << endl;
    cout << volume << endl;
@@ -4399,147 +4433,138 @@ void Model3D::setSurfaceFace()
    real triface3 = cc.Get(v1)+cc.Get(v3)+cc.Get(v4);
    real triface4 = cc.Get(v2)+cc.Get(v3)+cc.Get(v4);
 
-   // pegando o elemento com 3 vertices na superfice e 1 fora da bolha
-   if( triface1 == 1.5 && cc.Get(v4)==0 )
+   // pegando o elemento com 3 vertices na superfice e 1 dentro da bolha
+   if( triface1 == 1.5 && cc.Get(v4)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
+
 	neighbourFaceVert.at( count ).push_back(v1);
 	neighbourFaceVert.at( count ).push_back(v2);
 	neighbourFaceVert.at( count ).push_back(v3);
-	neighbourFaceVert.at( count ).push_back(v4);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+
+	// orientation checking
+	list<int> plist = neighbourFaceVert.at ( count );
+	list<int>::iterator vert=plist.begin();
+	int vSwap1 = *vert;++vert;
+	int vSwap2 = *vert;
+	vert=plist.end();
+	if( getVolume(surfaceNode,vSwap1,vSwap2,v4) > 0 )
+	{
+	 neighbourFaceVert.at( count ).clear();
+	 neighbourFaceVert.at( count ).push_back(vSwap2);
+	 neighbourFaceVert.at( count ).push_back(vSwap1);
+	}
+
 	count++;
    }
-   if( triface2 == 1.5 && cc.Get(v3)==0 )
+   if( triface2 == 1.5 && cc.Get(v3)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v4);
-	neighbourFaceVert.at( count ).push_back(v1);
 	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+
+	// orientation checking
+	list<int> plist = neighbourFaceVert.at ( count );
+	list<int>::iterator vert=plist.begin(); 
+	int vSwap1 = *vert;++vert;
+	int vSwap2 = *vert;
+	vert=plist.end();
+	if( getVolume(surfaceNode,vSwap1,vSwap2,v3) > 0 )
+	{
+	 neighbourFaceVert.at( count ).clear();
+	 neighbourFaceVert.at( count ).push_back(vSwap2);
+	 neighbourFaceVert.at( count ).push_back(vSwap1);
+	}
+
 	count++;
    }
-   if( triface3 == 1.5 && cc.Get(v2)==0 )
+   if( triface3 == 1.5 && cc.Get(v2)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v3);
 	neighbourFaceVert.at( count ).push_back(v4);
 	neighbourFaceVert.at( count ).push_back(v1);
-	neighbourFaceVert.at( count ).push_back(v2);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+
+	// orientation checking
+	list<int> plist = neighbourFaceVert.at ( count );
+	list<int>::iterator vert=plist.begin();
+	int vSwap1 = *vert;++vert;
+	int vSwap2 = *vert;
+	vert=plist.end();
+	if( getVolume(surfaceNode,vSwap1,vSwap2,v2) > 0 )
+	{
+	 neighbourFaceVert.at( count ).clear();
+	 neighbourFaceVert.at( count ).push_back(vSwap2);
+	 neighbourFaceVert.at( count ).push_back(vSwap1);
+	}
+
 	count++;
    }
-   if( triface4 == 1.5 && cc.Get(v1)==0 )
+   if( triface4 == 1.5 && cc.Get(v1)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v3);
 	neighbourFaceVert.at( count ).push_back(v4);
-	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).remove(surfaceNode);
+
+	// orientation checking
+	list<int> plist = neighbourFaceVert.at ( count );
+	list<int>::iterator vert=plist.begin(); 
+	int vSwap1 = *vert;++vert;
+	int vSwap2 = *vert;
+	vert=plist.end();
+	if( getVolume(surfaceNode,vSwap1,vSwap2,v1) > 0 )
+	{
+	 neighbourFaceVert.at( count ).clear();
+	 neighbourFaceVert.at( count ).push_back(vSwap2);
+	 neighbourFaceVert.at( count ).push_back(vSwap1);
+	}
+
 	count++;
+   }
+
+   if( (cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4)) == 2.0 )
+   {
+	//cout << "------ " << surfaceNode << " ------" << endl;
+	//--------------------------------------------------
+	// elemSurface.at( surfaceNode ).push_back(count);
+	// neighbourFaceVert.at( count ).push_back(v1);
+	// neighbourFaceVert.at( count ).push_back(v2);
+	// neighbourFaceVert.at( count ).push_back(v3);
+	// neighbourFaceVert.at( count ).push_back(v4);
+	// neighbourFaceVert.at( count ).remove(surfaceNode);
+	//-------------------------------------------------- 
+
+	//--------------------------------------------------
+	// // orientation checking
+	// list<int> plist = neighbourFaceVert.at ( count );
+	// list<int>::iterator vert=plist.begin(); 
+	// int vSwap1 = *vert;++vert;
+	// int vSwap2 = *vert;++vert;
+	// int vSwap3 = *vert;
+	// vert=plist.end();
+	// cout << "eu to passando aqui, carambola!!!" << endl;
+	// cout << getVolume(surfaceNode,vSwap1,vSwap2,vSwap3) << endl;
+	// if( getVolume(surfaceNode,vSwap1,vSwap2,vSwap3) < 0 )
+	// {
+	//  neighbourFaceVert.at( count ).clear();
+	//  neighbourFaceVert.at( count ).push_back(vSwap2);
+	//  neighbourFaceVert.at( count ).push_back(vSwap1);
+	//  neighbourFaceVert.at( count ).push_back(vSwap3);
+	// }
+	//-------------------------------------------------- 
+
+	//--------------------------------------------------
+	// count++;
+	//-------------------------------------------------- 
    }
   }
-
-   // reordenando faces da superfice na ordem dos ponteiros do relogio 
-   // (clockwise)
-   list<int> plist = elemSurface.at (surfaceNode);
-   for( list<int>::iterator face=plist.begin();face!=plist.end();++face )
-   {
-	list<int> plist2 = neighbourFaceVert.at (*face);
-	list<int>::iterator vert=plist2.begin();
-	int v1Old = *vert;++vert;
-	int v2Old = *vert;++vert;
-	int v3Old = *vert;++vert;
-	int vIn = *vert; // vertice fora da bolha
-	vert=plist2.end();
-
-	if( v1Old == surfaceNode )
-	{
-	 if( checkNormal(surfaceNode,v2Old,v3Old,vIn) == true )
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v2Old);
-	  neighbourFaceVert.at( *face ).push_back(v3Old);
-	 }
-	 else
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v3Old);
-	  neighbourFaceVert.at( *face ).push_back(v2Old);
-	 }
-	}
-	if( v2Old == surfaceNode )
-	{
-	 if( checkNormal(surfaceNode,v1Old,v3Old,vIn) == true )
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v1Old);
-	  neighbourFaceVert.at( *face ).push_back(v3Old);
-	 }
-	 else
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v3Old);
-	  neighbourFaceVert.at( *face ).push_back(v1Old);
-	 }
-	}
-	if( v3Old == surfaceNode )
-	{
-	 if( checkNormal(surfaceNode,v1Old,v2Old,vIn) == true )
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v1Old);
-	  neighbourFaceVert.at( *face ).push_back(v2Old);
-	 }
-	 else
-	 {
-	  neighbourFaceVert.at( *face ).clear();
-	  neighbourFaceVert.at( *face ).push_back(v2Old);
-	  neighbourFaceVert.at( *face ).push_back(v1Old);
-	 }
-	}
-   }
-//--------------------------------------------------
-//   cout << "---------" << surfaceNode << "------------" << endl;
-//   std::ostream_iterator< int > output( cout, " " );
-//   std::copy( elemSurface.at(surfaceNode).begin(), elemSurface.at(surfaceNode).end(), output );
-//   ///std::copy( neighbourFaceVert.at(surfaceNode).begin(), neighbourFaceVert.at(surfaceNode).end(), output );
-//   cout << endl;
-//-------------------------------------------------- 
-  //
-//--------------------------------------------------
-//   int c1=0;
-//   if( surfaceNode == 29 )
-//   //if( surfaceNode == 144 )
-//   {
-//    list<int> plist = elemSurface.at (surfaceNode);
-//    for( list<int>::iterator face=plist.begin();face!=plist.end();++face )
-//    {
-// 	cout << "Triangulo: ------------------------- " << c1 << endl;
-// 	list<int> plist2 = neighbourFaceVert.at (*face);
-// 	list<int>::iterator vert=plist2.begin();
-// 	int v0 = *vert;++vert;
-// 	int v1 = *vert;
-// 	vert=plist2.end();
-// 	cout << "v0 = " << v0 << " " << "v1 = " << v1 << " " << endl;
-// 
-// 	real testx = ( ( Y.Get(v1)-Y.Get(v0) )*( Z.Get(v2)-Z.Get(v0) ) )-( (Z.Get(v1)-Z.Get(v0))*(Y.Get(v2)-Y.Get(v0) ) );
-// 	real testy = ( ( Z.Get(v1)-Z.Get(v0) )*( X.Get(v2)-X.Get(v0) ) )-( (X.Get(v1)-X.Get(v0))*(Z.Get(v2)-Z.Get(v0) ) );
-// 	real testz = ( ( X.Get(v1)-X.Get(v0) )*( Y.Get(v2)-Y.Get(v0) ) )-( (Y.Get(v1)-Y.Get(v0))*(X.Get(v2)-X.Get(v0) ) );
-// 	cout << testx << endl;
-// 	cout << testy << endl;
-// 	cout << testz << endl;
-// 
-// 	if( testz < 0.0 )
-// 	{
-// 	 int aux = v0;
-// 	 v0=v1;
-// 	 v1=aux;
-// 	}
-// 	//cout << "v0 = " << v0 << " " << "v1 = " << v1 << " " << "v2 = " << v2 << endl;
-// 	c1++;
-//    }
-//   }
-//-------------------------------------------------- 
-  }
+ }
  neighbourFaceVert.resize (count); // trim vector para numero real de itens
 }
 

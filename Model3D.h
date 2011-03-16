@@ -20,6 +20,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <map>
 #include "clVector.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
@@ -60,6 +61,7 @@ class Model3D
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
+  void setSurfaceFace2();
   void setSurfaceTri();
   void setConvexTri();
   void buildSurfMesh();
@@ -75,12 +77,14 @@ class Model3D
   void surfaceTriangulatorEarClipping(int _v);
   void surfaceTriangulatorQualityEarClipping(int _v);
   void deleteSurfacePoint(int _v);
-  void deleteSurfaceElementByPoint(int _v);
+  void markSurfElemForDeletion(int _elem);
+  void deleteSurfaceElements();
   void insertPoint(int _edge);
   void insertPointWithCurvature(int _edge);
   void deletePoint(int _v);
   void setPolyhedron(int _v);
   void flipTriangleEdge();
+  void contractEdgeByLength();
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();
@@ -266,11 +270,12 @@ class Model3D
   real triEdge,averageTriEdge;
   int isp;                        // isp: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
+  int csp;                        // csp: num of contracted surface points
   int ip;                         // ip: num of inserted 3d mesh points
   int rp;                         // rp: num of removed 3d mesh points
   int rpi;                        // rpi: by interface distance
   int flip;
-  int badtets;
+  int badtet;                     // num of shit tetrahedrons
 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

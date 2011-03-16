@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.10;
+ triEdge = 0.085;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -959,7 +959,7 @@ void Model3D::insertPointsByLength()
 	//-------------------------------------------------- 
    insertPoint(i);
    isp++;
-   insertPointWithCurvature(i); // not working yet
+   //insertPointWithCurvature(i); // not working yet
   }
  }
 }
@@ -1277,17 +1277,15 @@ void Model3D::deleteSurfacePoint(int _v)
 	surfMesh.IEN.Set(i,j,surfMesh.IEN.Get(i,j)-1);
 }
 
-void Model3D::deleteSurfaceElementByPoint(int _v)
+void Model3D::markSurfElemForDeletion(int _elem)
 {
- // marking the desired elements for deletion
- list<int> plist = neighbourSurfaceElem.at(_v);
- for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
- {
-  surfMesh.IEN.Set(*mele,0,-1);
-  surfMesh.IEN.Set(*mele,1,-1);
-  surfMesh.IEN.Set(*mele,2,-1);
- }
+ surfMesh.IEN.Set(_elem,0,-1);
+ surfMesh.IEN.Set(_elem,1,-1);
+ surfMesh.IEN.Set(_elem,2,-1);
+}
 
+void Model3D::deleteSurfaceElements()
+{
  // deleting elements
  for( int i=0;i<surfMesh.IEN.DimI();i++ )
   if( surfMesh.IEN.Get(i,0) == -1 && 
@@ -1468,6 +1466,22 @@ void Model3D::flipTriangleEdge()
   real P3elem2y = surfMesh.Y.Get(v3elem2);
   real P3elem2z = surfMesh.Z.Get(v3elem2);
 
+  real v1x = P1x-P3elem1x;
+  real v1y = P1y-P3elem1y;
+  real v1z = P1z-P3elem1z;
+
+  real v2x = P2x-P3elem1x;
+  real v2y = P2y-P3elem1y;
+  real v2z = P2z-P3elem1z;
+
+  real z1x = P1x-P3elem2x;
+  real z1y = P1y-P3elem2y;
+  real z1z = P1z-P3elem2z;
+
+  real z2x = P2x-P3elem2x;
+  real z2y = P2y-P3elem2y;
+  real z2z = P2z-P3elem2z;
+
   real length12 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
   real length13_1 = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
   real length13_2 = distance(P1x,P1y,P1z,P3elem2x,P3elem2y,P3elem2z);
@@ -1532,6 +1546,8 @@ void Model3D::flipTriangleEdge()
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
 	  area1+area2  > area3+area4 &&
+	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
+	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
@@ -1561,8 +1577,8 @@ void Model3D::flipTriangleEdge()
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
- cout << "-------------- " << color(none,yellow,black) << "inserting vertex: "
-      << resetColor() << vAdd << endl;
+ cout << "----------------- " << color(none,yellow,black) 
+      << "inserting vertex: " << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
  // edge vertices
@@ -1634,176 +1650,6 @@ void Model3D::insertPoint(int _edge)
  
  setMapEdgeTri();
  setNeighbourSurface();
-
-//--------------------------------------------------
-//  /* ********************************************************************* */
-//  /* updating mapEdgeTri */
-//  /* eh necessario atualizar as 4 arestas dos 2 triangulos trabalhados */
-//  int lastRow;
-//  real length;
-// 
-//  // 1st. new edge on the same place as the old edge
-//  length = getLength(v1,vAdd);
-//  mapEdgeTri.Set(_edge,0,length);
-//  mapEdgeTri.Set(_edge,1,v1);
-//  mapEdgeTri.Set(_edge,2,vAdd);
-//  mapEdgeTri.Set(_edge,3,v3elem1);
-//  mapEdgeTri.Set(_edge,4,v3elem2);
-//  mapEdgeTri.Set(_edge,5,elem1);
-//  mapEdgeTri.Set(_edge,6,elem2);
-// 
-//  // 2nd. new edge on the end of the mapEdgeTri matrix
-//  mapEdgeTri.AddRow();
-//  lastRow = mapEdgeTri.DimI()-1;
-//  length = getLength(v2,vAdd);
-//  mapEdgeTri.Set(lastRow,0,length);
-//  mapEdgeTri.Set(lastRow,1,v2);
-//  mapEdgeTri.Set(lastRow,2,vAdd);
-//  mapEdgeTri.Set(lastRow,3,v3elem1);
-//  mapEdgeTri.Set(lastRow,4,v3elem2);
-//  mapEdgeTri.Set(lastRow,5,elem3); 
-//  mapEdgeTri.Set(lastRow,6,elem4); // last row element
-// 
-//  // 3rd. new edge on the end of the mapEdgeTri matrix
-//  length = getLength(v3elem1,vAdd);
-//  mapEdgeTri.AddRow();
-//  lastRow = mapEdgeTri.DimI()-1;
-//  mapEdgeTri.Set(lastRow,0,length);
-//  mapEdgeTri.Set(lastRow,1,v3elem1);
-//  mapEdgeTri.Set(lastRow,2,vAdd);
-//  mapEdgeTri.Set(lastRow,3,v1);
-//  mapEdgeTri.Set(lastRow,4,v2);
-//  mapEdgeTri.Set(lastRow,5,elem1); 
-//  mapEdgeTri.Set(lastRow,6,elem3); // last row element
-// 
-//  // 4th. new edge on the end of the mapEdgeTri matrix
-//  length = getLength(v3elem2,vAdd);
-//  mapEdgeTri.AddRow();
-//  lastRow = mapEdgeTri.DimI()-1;
-//  mapEdgeTri.Set(lastRow,0,length);
-//  mapEdgeTri.Set(lastRow,1,v3elem2);
-//  mapEdgeTri.Set(lastRow,2,vAdd);
-//  mapEdgeTri.Set(lastRow,3,v1);
-//  mapEdgeTri.Set(lastRow,4,v2);
-//  mapEdgeTri.Set(lastRow,5,elem2); 
-//  mapEdgeTri.Set(lastRow,6,elem4); // last row element
-// 
-//  // 1st. updated edge 
-//  int edgeUpdate = findEdge(v1,v3elem1);
-//  if( mapEdgeTri.Get(edgeUpdate,5) == elem1 )
-//  {
-//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,5,elem1);
-//  }
-//  else
-//  {
-//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,6,elem1);
-//  }
-// 
-//  // 2nd. updated edge 
-//  edgeUpdate = findEdge(v1,v3elem2);
-//  if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
-//  {
-//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,5,elem2);
-//  }
-//  else
-//  {
-//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,6,elem2);
-//  }
-// 
-//  // 3rd. updated edge 
-//  edgeUpdate = findEdge(v2,v3elem1);
-//  if( mapEdgeTri.Get(edgeUpdate,5) == elem1 )
-//  {
-//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,5,elem3);
-//  }
-//  else
-//  {
-//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,6,elem3);
-//  }
-// 
-//  // 4th. updated edge 
-//  edgeUpdate = findEdge(v2,v3elem2);
-//  if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
-//  {
-//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,5,elem4);
-//  }
-//  else
-//  {
-//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,6,elem4);
-//  }
-//  /* _____________________________________________________________________ */
-// 
-//  /* ********************************************************************* */
-//  /* updating neighbourSurfaceElem */
-//  neighbourSurfaceElem.at(v1).push_back(elem2);
-//  neighbourSurfaceElem.at(v2).remove(elem2);
-//  neighbourSurfaceElem.at(v2).push_back(elem3);
-//  neighbourSurfaceElem.at(v2).push_back(elem4);
-//  neighbourSurfaceElem.at(v3elem1).remove(elem2);
-//  neighbourSurfaceElem.at(v3elem1).push_back(elem3);
-//  neighbourSurfaceElem.at(v3elem2).remove(elem1);
-//  neighbourSurfaceElem.at(v3elem2).push_back(elem2);
-//  neighbourSurfaceElem.at(v3elem2).push_back(elem4);
-//  list<int> myNewList;myNewList.resize(0);
-//  myNewList.push_back(elem1);
-//  myNewList.push_back(elem2);
-//  myNewList.push_back(elem3);
-//  myNewList.push_back(elem4);
-//  neighbourSurfaceElem.push_back(myNewList);
-// 
-//  /* updating neighbourPoint */
-//  // o problema neste update eh que neighbourPoint precisa ter uma
-//  // arrumacao especial para o uso seguido de setPolyhedron. Isso quer
-//  // dizer que os vertices tem que estar duplicados e nao pode entao ser
-//  // atualizado desta forma abaixo.
-//  
-// //--------------------------------------------------
-// //  // point v1
-// //  neighbourPoint.at(v1).push_back(vAdd);
-// //  neighbourPoint.at(v1).remove(v2);
-// //  // point v2
-// //  neighbourPoint.at(v2).push_back(vAdd);
-// //  neighbourPoint.at(v2).remove(v1);
-// //  // point v3elem1
-// //  neighbourPoint.at(v3elem1).push_back(vAdd);
-// //  // point v3elem2
-// //  neighbourPoint.at(v3elem2).push_back(vAdd);
-// //  // add vAdd
-// //  list<int> myNewList;myNewList.resize(0);
-// //  myNewList.push_back(v1);
-// //  myNewList.push_back(v3elem1);
-// //  myNewList.push_back(v2);
-// //  myNewList.push_back(v3elem2);
-// //  neighbourPoint.push_back(myNewList);
-// //-------------------------------------------------- 
-// 
-//  /* *********************************** */
-//  // provisory update
-//  int lastLine = surfMesh.numVerts-1;
-//  neighbourPoint.resize(surfMesh.numVerts);
-//  list<int> plist = neighbourSurfaceElem.at(lastLine);
-//  for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-//  {
-//   int v1 = (int) surfMesh.IEN.Get(*mele,0);
-//   int v2 = (int) surfMesh.IEN.Get(*mele,1);
-//   int v3 = (int) surfMesh.IEN.Get(*mele,2);
-// 
-//   neighbourPoint.at( lastLine ).push_back(v1);
-//   neighbourPoint.at( lastLine ).push_back(v2);
-//   neighbourPoint.at( lastLine ).push_back(v3);
-//   neighbourPoint.at( lastLine ).remove(lastLine);
-//  }
-//  /* *********************************** */
-//  /* _____________________________________________________________________ */
-//-------------------------------------------------- 
 }
 
 void Model3D::insertPointWithCurvature(int _edge)
@@ -2094,7 +1940,7 @@ void Model3D::insertPointWithCurvature(int _edge)
 
 void Model3D::deletePoint(int _v)
 {
- cout << "--------------- " << color(none,red,black) << "removing vertex: "
+ cout << "----------------- " << color(none,red,black) << "removing vertex: "
       << resetColor() << _v << endl;
  //saveVTKSurface("./vtk/","deleteBefore",_v);
  
@@ -2103,9 +1949,13 @@ void Model3D::deletePoint(int _v)
  // but it's used on removePointsByInterfaceDistance
  // to be implemented 
 
- // deleting elements
- deleteSurfaceElementByPoint(_v);
+ // marking the desired elements for deletion
+ list<int> plist = neighbourSurfaceElem.at(_v);
+ for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+  markSurfElemForDeletion(*mele);
 
+ // deleting elements
+ deleteSurfaceElements();
 
  // ordering the vertices of the polyhedron surrounding the vertex _v
  setPolyhedron(_v);
@@ -2123,23 +1973,70 @@ void Model3D::deletePoint(int _v)
  setMapEdgeTri();
  // updating surface neighbours
  setNeighbourSurface();
+}
 
-//--------------------------------------------------
-//  // 2nd. updated edge 
-//  edgeUpdate = findEdge(v1,v3elem2);
-//  if( mapEdgeTri.Get(edgeUpdate,5) == elem2 )
-//  {
-//   mapEdgeTri.Set(edgeUpdate,3,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,5,elem2);
-//  }
-//  else
-//  {
-//   mapEdgeTri.Set(edgeUpdate,4,vAdd);
-//   mapEdgeTri.Set(edgeUpdate,6,elem2);
-//  }
-//-------------------------------------------------- 
+void Model3D::contractEdgeByLength()
+{
+ // number of removed 3d mesh points by interface distance
+ csp=0;
 
- //saveVTKSurface("./vtk/","deleteAfter",_v);
+ real test = 0.3*triEdge; // 30% + of triEdge
+ for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
+ {
+  // verifying the length of each surface edge
+  if( mapEdgeTri.Get(edge,0) < test ) 
+  {
+   // int length = mapEdgeTri.Get(edge,0); // length
+   int v1 = mapEdgeTri.Get(edge,1); // v1
+   int v2 = mapEdgeTri.Get(edge,2); // v2
+   int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
+   int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
+   int elem1 = mapEdgeTri.Get(edge,5); // elem1
+   int elem2 = mapEdgeTri.Get(edge,6); // elem2
+
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+
+   real P2x = surfMesh.X.Get(v2);
+   real P2y = surfMesh.Y.Get(v2);
+   real P2z = surfMesh.Z.Get(v2);
+
+   markSurfElemForDeletion(elem1);
+   markSurfElemForDeletion(elem2);
+   deleteSurfaceElements();
+
+   // moving point to the middle of the edge
+   clVector mid = midPoint(P1x,P1y,P1z,P2x,P2y,P2z);
+   surfMesh.X.Set(v1, mid.Get(0) );
+   surfMesh.Y.Set(v1, mid.Get(1) );
+   surfMesh.Z.Set(v1, mid.Get(2) );
+   X.Set(v1, mid.Get(0) );
+   Y.Set(v1, mid.Get(1) );
+   Z.Set(v1, mid.Get(2) );
+
+   // changing surfMesh.IEN from v2 to v1
+   for( int i=0;i<surfMesh.IEN.DimI();i++ )
+	for( int j=0;j<surfMesh.IEN.DimJ();j++ )
+	 if( surfMesh.IEN.Get(i,j)==v2 )
+	  surfMesh.IEN.Set(i,j,v1);
+
+   deleteSurfacePoint(v2);
+
+   // updating edge matrix
+   setMapEdgeTri();
+
+   // updating surface neighbours
+   setNeighbourSurface();
+
+   cout << "----------------- " << color(none,red,black) 
+	    << "contracting edge: " << resetColor() 
+		<< v2 << color(none,red,black) 
+		<< " --> " << resetColor()
+		<< v1 << endl;
+   csp++;
+  }
+ }
 }
 
 void Model3D::removePointsByLength()
@@ -2147,7 +2044,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.3*triEdge; // 30% of triEdge
+ real test = 0.1*triEdge; // 20% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2234,7 +2131,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = dist.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h ) // hiRe
+  if( d>0 && d<h/2 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2866,6 +2763,7 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
  cout << "     number of removed mesh points:         " << rp+rpi 
       << " (" << rpi << "," << rp << ")" << endl;
  cout << "     number of flipped operations:          " << flip << endl; 
+ cout << "     number of contracted surface points:   " << csp << endl; 
  cout << "   |---------------------------------------------------------------|" 
       << endl;
 }
@@ -2879,6 +2777,7 @@ void Model3D::mesh3DPoints()
  saveVTKSurface("./vtk/","inserted",0);
  removePointsByLength();
  saveVTKSurface("./vtk/","removed",0);
+ contractEdgeByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
  removePointsByInterfaceDistance();

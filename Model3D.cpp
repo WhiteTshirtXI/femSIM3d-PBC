@@ -1547,7 +1547,7 @@ void Model3D::flipTriangleEdge()
 	  q1+q2 < q3+q4 && 
 	  area1+area2  > area3+area4 &&
 	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
-	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
+	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
@@ -2029,9 +2029,9 @@ void Model3D::contractEdgeByLength()
    // updating surface neighbours
    setNeighbourSurface();
 
-   cout << "----------------- " << color(none,red,black) 
+   cout << "----------------- " << color(none,blue,black) 
 	    << "contracting edge: " << resetColor() 
-		<< v2 << color(none,red,black) 
+		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
    csp++;
@@ -2757,13 +2757,18 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
       << minVol << " (" << minElem << ")" << endl;
  cout << "     max tetrahedron volume:                " 
       << maxVol <<  " (" << maxElem << ")" << endl;
- cout << "     number of inserted surface points:     " << isp << endl;
- cout << "     number of removed surface points:      " << rsp << endl;
+ cout << "     number of " << color(none,yellow,black) 
+      << "inserted" << resetColor() << " surface points:     " << isp << endl;
+
+ cout << "     number of " << color(none,red,black)
+      << "removed" << resetColor() << " surface points:      " << rsp << endl;
  cout << "     number of inserted mesh points:        " << ip << endl;
  cout << "     number of removed mesh points:         " << rp+rpi 
       << " (" << rpi << "," << rp << ")" << endl;
- cout << "     number of flipped operations:          " << flip << endl; 
- cout << "     number of contracted surface points:   " << csp << endl; 
+ cout << "     number of " << color(none,green,black)
+      << "flipped" << resetColor() << " operations:          " << flip << endl; 
+ cout << "     number of " << color(none,blue,black) 
+      << "contracted" << resetColor() << " surface points:   " << csp << endl; 
  cout << "   |---------------------------------------------------------------|" 
       << endl;
 }

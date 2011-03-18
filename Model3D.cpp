@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.085;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -441,9 +441,14 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
  }
 
  cout << endl;
- cout << "----> meshing... ";
- tetrahedralize( (char*) "Q",&in,&out,NULL,NULL );
- cout << "finished <---- " << endl;;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
+ cout << color(blink,red,black) 
+      << "             | meshing 3D points... ";
+ tetrahedralize( (char*) "Q",&in,&out );
+ cout << "finished | " << resetColor() << endl;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
  cout << endl;
 
  //out.save_elements("out");
@@ -733,9 +738,14 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  }
 
  cout << endl;
- cout << "----> meshing... ";
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
+ cout << color(blink,red,black) 
+      << "             | meshing 3D points... ";
  tetrahedralize( (char*) "Q",&in,&out );
- cout << "finished <---- " << endl;;
+ cout << "finished | " << resetColor() << endl;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
  cout << endl;
 
  //out.save_elements("out");
@@ -775,20 +785,14 @@ void Model3D::mesh2Dto3D()
  //in.save_nodes("bubble");
  //in.save_elements("in");
  cout << endl;
- cout << "|-----------------------------------------------------|" << endl;
- cout << "numElems IN = " << surfMesh.numElems << endl;
- cout << "numNodes IN = " << surfMesh.numNodes << endl;
- cout << "numVerts IN = " << surfMesh.numVerts << endl;
- cout << endl;
- cout << "----> Meshing surface in 3D domain... ";
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
+ cout << color(blink,red,black) 
+      << "             | meshing surface in 3D domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
- cout << "finished <---- " << endl;;
- cout << endl;
- cout << "numElems OUT = " << out.numberoftetrahedra << endl;
- cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
- cout << "numVerts OUT = " << out.numberofpoints << endl;
- cout << "numfacets OUT = " << out.numberoftrifaces << endl;
- cout << "|-----------------------------------------------------|" << endl;
+ cout << "finished | " << resetColor() << endl;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");
@@ -951,15 +955,9 @@ void Model3D::insertPointsByLength()
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
 	  edgeLength > 1.3*triEdge )//&&
   {
-	//--------------------------------------------------
-	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
-	//-------------------------------------------------- 
    insertPoint(i);
-   isp++;
    //insertPointWithCurvature(i); // not working yet
+   isp++;
   }
  }
 }
@@ -996,12 +994,12 @@ void Model3D::insertPointsByInterfaceDistance()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  real aux = (distMin/2.0)+3*dy;
+  real aux = (distMin/2.0)+2*dy;
   //real aux = (distMin/2.0)+(distMax-distMin)/3.0;
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) < 1.0*aux && 
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
-	  edgeLength > 2*dy )
+	  edgeLength > 4*dy )
    insertPoint(i);
  }
 }
@@ -1811,15 +1809,13 @@ void Model3D::insertPointWithCurvature(int _edge)
   *
   * y = sqrt( r^2 - (xMid-Xc)^2 ) + Yc :: z = sqrt( r^2 - (xMid-Xc)^2 )
   *
-  * y1 = +z + Yc;
-  * y2 = -z + Yc;
-  *
-  * How we calculate yMid2D?
+  * y1 = Yc + z;
+  * y2 = Yc - z;
   *
   * */
 
- real yMidNew1 = (+1.0)*sqrt( r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc) ) + Yc;
- real yMidNew2 = (-1.0)*sqrt( r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc) ) + Yc;
+ real yMidNew1 = Yc + sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
+ real yMidNew2 = Yc - sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
 
  /* 
   *     3D coords         2D coords
@@ -1833,109 +1829,116 @@ void Model3D::insertPointWithCurvature(int _edge)
   *
   * */
 
- real Xcurv1 = P1x + (normalXUnit*yMidNew1);
- real Ycurv1 = P1y + (normalYUnit*yMidNew1);
- real Zcurv1 = P1z + (normalZUnit*yMidNew1);
- real Xcurv2 = P1x + (normalXUnit*yMidNew2);
- real Ycurv2 = P1y + (normalYUnit*yMidNew2);
- real Zcurv2 = P1z + (normalZUnit*yMidNew2);
+ real Xcurv1 = P1x + (v1xUnit*a/2.0) + (normalXUnit*yMidNew1);
+ real Ycurv1 = P1y + (v1yUnit*a/2.0) + (normalYUnit*yMidNew1);
+ real Zcurv1 = P1z + (v1zUnit*a/2.0) + (normalZUnit*yMidNew1);
+ real Xcurv2 = P1x + (v1xUnit*a/2.0) + (normalXUnit*yMidNew2);
+ real Ycurv2 = P1y + (v1yUnit*a/2.0) + (normalYUnit*yMidNew2);
+ real Zcurv2 = P1z + (v1zUnit*a/2.0) + (normalZUnit*yMidNew2);
 
-//--------------------------------------------------
-//  cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
-//  cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
-//  cout << "radius: " << r2D << endl;
-//  cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
-//  cout << "center: " << Xc << " " << Yc << endl;
-//  cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
-// 
-//  // add point in the middle of an edge 
-//  real Xmid = P1x + (v1xUnit*a/2.0);
-//  real Ymid = P1y + (v1yUnit*a/2.0);
-//  real Zmid = P1z + (v1zUnit*a/2.0);
-// 
-//  cout << "m: " << Xmid << " " << Ymid << " " << Zmid << endl;
-//-------------------------------------------------- 
+ // middle of an edge 
+ real Xmid = P1x + (v1xUnit*a/2.0);
+ real Ymid = P1y + (v1yUnit*a/2.0);
+ real Zmid = P1z + (v1zUnit*a/2.0);
 
-// real Xcurv = P1x + (normalXUnit*value);
-// real Ycurv = P1y + (normalXUnit*value);
-// real Zcurv = P1z + (normalXUnit*value);
+ // vector from mid to Y1;
+ real midY1x = Xcurv1-Xmid;
+ real midY1y = Ycurv1-Ymid;
+ real midY1z = Zcurv1-Zmid;
 
-//--------------------------------------------------
-//  // add point in the middle of a edge 
-//  real Xmid = ( P1x+P2x )*0.5;
-//  real Ymid = ( P1y+P2y )*0.5;
-//  real Zmid = ( P1z+P2z )*0.5;
-// 
-//  // curvature considerations
-//  real c1 = surfMesh.curvature.Get(v1);
-//  real c2 = surfMesh.curvature.Get(v2);
-//  real cMid = (c1-c2)*0.5; // linear approximation
-// 
-//  // pull up the point to the right position considering the curvature
-//  real XvAdd = Xmid + cMid*normalXUnit;
-//  real YvAdd = Ymid + cMid*normalYUnit;
-//  real ZvAdd = Zmid + cMid*normalZUnit;
-// 
-//  cout << c1 << " " << cMid << " " << c2 << endl;
-//  cout << P1x << " " << P1y << " " << P1z << " " << v1 << " " << v3elem1 << endl;
-//  cout << Xmid << " " << Ymid << " " << Zmid << endl;
-//  cout << P2x << " " << P2y << " " << P2z << " " << v2 << " " << v3elem2 << endl;
-//  cout << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
-//  cout << cross1.Get(0) << " " << cross1.Get(1) << " " << cross1.Get(2) << endl;
-//  cout << cross2.Get(0) << " " << cross2.Get(1) << " " << cross2.Get(2) << endl;
-//  cout << normalXUnit << " " << normalYUnit << " " << normalZUnit << endl;
-// 
-//  // insert aditional vertice coordinate
-//  X.AddItem(vAdd,XvAdd);
-//  Y.AddItem(vAdd,YvAdd);
-//  Z.AddItem(vAdd,ZvAdd);
-// 
-//  surfMesh.X.AddItem(XvAdd);
-//  surfMesh.Y.AddItem(YvAdd);
-//  surfMesh.Z.AddItem(ZvAdd);
-//  surfMesh.Marker.AddItem(0.5); // interface set up
-//  surfMesh.curvature.AddItem(cMid);
-// 
-//  // incremeting the number of points
-//  surfMesh.numVerts++;
-//  numVerts++;
-// 
-//  /* by adding 1 point on the edge it is necessary to divide the
-//   * original element and also the oposite element by 2, becoming 4
-//   * elements in total. */
-// 
-//  // 1st. new element (v1 - vAdd - v3elem1) 
-//  // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
-//  surfMesh.IEN.Set(elem1,0,v1);
-//  surfMesh.IEN.Set(elem1,1,vAdd);
-//  surfMesh.IEN.Set(elem1,2,v3elem1);
-// 
-//  // 2nd. new element (v1 - vAdd - v3elem2) 
-//  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
-//  surfMesh.IEN.Set(elem2,0,v1);
-//  surfMesh.IEN.Set(elem2,1,vAdd);
-//  surfMesh.IEN.Set(elem2,2,v3elem2);
-// 
-//  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
-//  surfMesh.IEN.AddRow();
-//  int elem3 = surfMesh.IEN.DimI()-1;
-//  surfMesh.IEN.Set(elem3,0,v2);
-//  surfMesh.IEN.Set(elem3,1,vAdd);
-//  surfMesh.IEN.Set(elem3,2,v3elem1);
-//  surfMesh.numElems++;
-// 
-//  // 4th. new element (v2 - vAdd - v3elem2) on the last row
-//  surfMesh.IEN.AddRow();
-//  int elem4 = surfMesh.IEN.DimI()-1;
-//  surfMesh.IEN.Set(elem4,0,v2);
-//  surfMesh.IEN.Set(elem4,1,vAdd);
-//  surfMesh.IEN.Set(elem4,2,v3elem2);
-//  surfMesh.numElems++;
-//  
-//  setMapEdgeTri();
-//  setNeighbourSurface();
-//-------------------------------------------------- 
+ // vector from mid to Y2;
+ real midY2x = Xcurv2-Xmid;
+ real midY2y = Ycurv2-Ymid;
+ real midY2z = Zcurv2-Zmid;
 
+ real up = dotProd(midY1x,midY1y,midY1z,normalXUnit,normalYUnit,normalZUnit);
+ real down = dotProd(midY2x,midY2y,midY2z,normalXUnit,normalYUnit,normalZUnit);
+
+ real XvAdd=0;
+ real YvAdd=0;
+ real ZvAdd=0;
+ if( up > 0.0 )  
+ {
+  XvAdd = Xcurv1;
+  YvAdd = Ycurv1;
+  ZvAdd = Zcurv1;
+ }
+ else  
+ {
+  XvAdd = XvAdd;
+  YvAdd = YvAdd;
+  ZvAdd = ZvAdd;
+ }
+
+ cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
+ cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
+ cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
+ cout << "add: " << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
+ cout << "radius: " << r2D << endl;
+ cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
+ cout << "center: " << Xc << " " << Yc << endl;
+ cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
+ cout << surfMesh.curvature.Get(v1) << " " 
+      << surfMesh.curvature.Get(v2) << endl;
+ cout << up << " " << down << endl;
+
+ // insert aditional vertice coordinate
+ X.AddItem(vAdd,XvAdd);
+ Y.AddItem(vAdd,YvAdd);
+ Z.AddItem(vAdd,ZvAdd);
+
+ // update surface, xSurface, ySurface, zSurface
+ surface.AddItem(vAdd);
+ xSurface.AddItem(XvAdd);
+ ySurface.AddItem(YvAdd);
+ zSurface.AddItem(ZvAdd);
+
+ surfMesh.X.AddItem(XvAdd);
+ surfMesh.Y.AddItem(YvAdd);
+ surfMesh.Z.AddItem(ZvAdd);
+ surfMesh.Marker.AddItem(0.5); // interface set up
+ // atencao aqui no calculo... verificar!!!
+ real curvature = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))/2.0;
+ surfMesh.curvature.AddItem(curvature);
+
+ // incremeting the number of points
+ surfMesh.numVerts++;
+ numVerts++;
+
+ /* by adding 1 point on the edge it is necessary to divide the
+  * original element and also the oposite element by 2, becoming 4
+  * elements in total. */
+
+ // 1st. new element (v1 - vAdd - v3elem1) 
+ // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
+ surfMesh.IEN.Set(elem1,0,v1);
+ surfMesh.IEN.Set(elem1,1,vAdd);
+ surfMesh.IEN.Set(elem1,2,v3elem1);
+
+ // 2nd. new element (v1 - vAdd - v3elem2) 
+ // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
+ surfMesh.IEN.Set(elem2,0,v1);
+ surfMesh.IEN.Set(elem2,1,vAdd);
+ surfMesh.IEN.Set(elem2,2,v3elem2);
+
+ // 3rd. new element (v2 - vAdd - v3elem1) on the last row
+ surfMesh.IEN.AddRow();
+ int elem3 = surfMesh.IEN.DimI()-1;
+ surfMesh.IEN.Set(elem3,0,v2);
+ surfMesh.IEN.Set(elem3,1,vAdd);
+ surfMesh.IEN.Set(elem3,2,v3elem1);
+ surfMesh.numElems++;
+
+ // 4th. new element (v2 - vAdd - v3elem2) on the last row
+ surfMesh.IEN.AddRow();
+ int elem4 = surfMesh.IEN.DimI()-1;
+ surfMesh.IEN.Set(elem4,0,v2);
+ surfMesh.IEN.Set(elem4,1,vAdd);
+ surfMesh.IEN.Set(elem4,2,v3elem2);
+ surfMesh.numElems++;
+ 
+ setMapEdgeTri();
+ setNeighbourSurface();
 }
 
 void Model3D::deletePoint(int _v)
@@ -2263,66 +2266,64 @@ void Model3D::insertPointsByArea()
  }
 }
 
-//--------------------------------------------------
-// /* 
-//  * strategy to ADD points - to be validated
-//  */
-// void Model3D::insertPointsBetweenBubblesByPosition()
-// {
-//  int ny = 4; // number of points between interfaces
-//  int nPoints = 25;
-// 
-//  real Ymax1=100;
-//  real Ymin1=-100;
-//  real Ymax2=-100;
-//  real Ymin2=100;
-// 
-//  for( int i=0;i<surfMesh.numVerts;i++ )
-//  {
-//   // bubble 1 (Y<0)
-//   if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
-//   {
-//    if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
-//    if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
-//   }
-//   // bubble 2 (Y>0)
-//   if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
-//   {
-//    if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
-//    if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
-//   }
-//  }
-// 
-//  // initial position
-//  real xi = -0.80;
-//  real yi = Ymin1;
-//  real zi = -0.40;
-// 
-//  // distance between points
-//  real dx = (-2.0*xi)/(nPoints-1);
-//  real dy = (Ymin2-Ymin1)/(ny+1);
-//  real dz = (-2.0*zi)/(nPoints-1);
-// 
-//  // counter to numberize added points
-//  int count = surfMesh.numVerts;
-// 
-//  for( int i=0;i<nPoints;i++ )
-//  {
-//   for( int j=1;j<=ny;j++ )
-//   {
-//    for( int k=0;k<nPoints;k++ )
-//    {
-// 	in.pointlist[3*count+0] = xi + dx*i;
-// 	in.pointlist[3*count+1] = yi + dy*j;
-// 	in.pointlist[3*count+2] = zi + dz*k;
-// 	in.pointmarkerlist[count] = 11;
-// 
-// 	count++;
-//    }
-//   }
-//  }
-// }
-//-------------------------------------------------- 
+/* 
+ * strategy to ADD points - to be validated
+ */
+void Model3D::insertPointsBetweenBubblesByPosition()
+{
+ int ny = 4; // number of points between interfaces
+ int nPoints = 10;
+
+ real Ymax1=100;
+ real Ymin1=-100;
+ real Ymax2=-100;
+ real Ymin2=100;
+
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  // bubble 1 (Y<0)
+  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
+   if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
+  }
+  // bubble 2 (Y>0)
+  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+  {
+   if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
+   if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
+  }
+ }
+
+ // initial position
+ real xi = -0.60;
+ real yi = Ymin1;
+ real zi = -0.40;
+
+ // distance between points
+ real dx = (-2.0*xi)/(nPoints-1);
+ real dy = (Ymin2-Ymin1)/(ny+1);
+ real dz = (-2.0*zi)/(nPoints-1);
+
+ // counter to numberize added points
+ int count = surfMesh.numVerts;
+
+ for( int i=0;i<nPoints;i++ )
+ {
+  for( int j=1;j<=ny;j++ )
+  {
+   for( int k=0;k<nPoints;k++ )
+   {
+	in.pointlist[3*count+0] = xi + dx*i;
+	in.pointlist[3*count+1] = yi + dy*j;
+	in.pointlist[3*count+2] = zi + dz*k;
+	in.pointmarkerlist[count] = 11;
+
+	count++;
+   }
+  }
+ }
+}
  
 /* This method re-mesh completly the domain preserving only the points
  * located at surface and convex-hull. To do so, surfMesh.numVerts and
@@ -2332,6 +2333,7 @@ void Model3D::mesh2Dto3DOriginal()
 {
  saveVTKSurface("./vtk/","before",0);
  insertPointsByLength();
+ insertPointsByInterfaceDistance();
  saveVTKSurface("./vtk/","between",0);
  removePointsByLength();
  saveVTKSurface("./vtk/","flipBetween",0);
@@ -2343,31 +2345,28 @@ void Model3D::mesh2Dto3DOriginal()
  out.initialize();
 
  in.mesh_dim = 3;
- in.numberofpoints = surfMesh.numVerts;
+ in.numberofpoints = surfMesh.numVerts + 400; // num of add points
  numVerts = in.numberofpoints;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
  convertModel3DtoTetgen(in);
+ 
+ // add points between bubbles
+ insertPointsBetweenBubblesByPosition();
 
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
  cout << endl;
- cout << "|-----------------------------------------------------|" << endl;
- cout << "numElems IN = " << surfMesh.numElems << endl;
- cout << "numNodes IN = " << surfMesh.numNodes << endl;
- cout << "numVerts IN = " << in.numberofpoints << endl;
- cout << endl;
- cout << "----> complete re-meshing the domain... ";
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
+ cout << color(blink,red,black) 
+      << "             | complete re-meshing the domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
- cout << "finished <---- " << endl;;
- cout << endl;
- cout << "numElems OUT = " << out.numberoftetrahedra << endl;
- cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
- cout << "numVerts OUT = " << out.numberofpoints << endl;
- cout << "numfacets OUT = " << out.numberoftrifaces << endl;
- cout << "|-----------------------------------------------------|" << endl;
+ cout << "finished | " << resetColor() << endl;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");
@@ -2744,10 +2743,19 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
    maxElem = i;
   }
  }
+
  cout << "   |------------------------ Mesh Report --------------------------|" 
       << endl;
+ cout << "     number of points   (numVerts):         " 
+      << _tetmesh.numberofpoints << endl;
+ cout << "     number of nodes    (numNodes):         " 
+      << _tetmesh.numberoftetrahedra+_tetmesh.numberofpoints << endl;
+ cout << "     number of elements (numEles):          " 
+      << _tetmesh.numberoftetrahedra << endl;
+ cout << "     number of facets   (numTri):           " 
+      << _tetmesh.numberoftrifaces << endl;
  cout << "     mesh: " << count 
-      << " tets w/ all the 4 verts on the interface " << endl;
+      << " tets w/ all the 4 verts on the interface   " << endl;
  cout << "     interface average element edge length: " << averageTriEdge 
       << endl;
  cout << "     desired tetrahedron volume:            " 
@@ -2776,6 +2784,9 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
 void Model3D::mesh3DPoints()
 {
+ computeSurfaceNormal(); // compute surface normal of all surface points
+ computeKappa();
+
  saveVTKSurface("./vtk/","start",0);
  insertPointsByLength();
  //insertPointsByInterfaceDistance();
@@ -2785,7 +2796,7 @@ void Model3D::mesh3DPoints()
  contractEdgeByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
+ //removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
@@ -2803,20 +2814,14 @@ void Model3D::mesh3DPoints()
  //in.save_nodes("bubble");
  //in.save_elements("in");
  cout << endl;
- cout << "|-----------------------------------------------------|" << endl;
- cout << "numElems IN = " << surfMesh.numElems << endl;
- cout << "numNodes IN = " << in.numberoffacets+in.numberofpoints << endl;
- cout << "numVerts IN = " << in.numberofpoints << endl;
- cout << endl;
- cout << "----> re-meshing 3D points... ";
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
+ cout << color(blink,red,black) 
+      << "             | re-meshing 3D points... ";
  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
- cout << "finished <---- " << endl;;
- cout << endl;
- cout << "numElems OUT = " << out.numberoftetrahedra << endl;
- cout << "numNodes OUT = " << out.numberofpoints+numElems << endl;
- cout << "numVerts OUT = " << out.numberofpoints << endl;
- cout << "numfacets OUT = " << out.numberoftrifaces << endl;
- cout << "|-----------------------------------------------------|" << endl;
+ cout << "finished | " << resetColor() << endl;
+ cout << "         " 
+      << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
  //out.save_poly("out");

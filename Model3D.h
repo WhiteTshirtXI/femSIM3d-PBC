@@ -81,6 +81,7 @@ class Model3D
   void deleteSurfaceElements();
   void insertPoint(int _edge);
   void insertPointWithCurvature(int _edge);
+  void insertPointsBetweenBubblesByPosition();
   void deletePoint(int _v);
   void setPolyhedron(int _v);
   void flipTriangleEdge();

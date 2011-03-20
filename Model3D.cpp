@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.11;
+ triEdge = 0.09;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -443,7 +443,7 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,red,black) 
+ cout << color(blink,blue,black) 
       << "             | meshing 3D points... ";
  tetrahedralize( (char*) "Q",&in,&out );
  cout << "finished | " << resetColor() << endl;
@@ -740,7 +740,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,red,black) 
+ cout << color(blink,blue,black) 
       << "             | meshing 3D points... ";
  tetrahedralize( (char*) "Q",&in,&out );
  cout << "finished | " << resetColor() << endl;
@@ -787,7 +787,7 @@ void Model3D::mesh2Dto3D()
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,red,black) 
+ cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
  cout << "finished | " << resetColor() << endl;
@@ -955,8 +955,8 @@ void Model3D::insertPointsByLength()
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
 	  edgeLength > 1.3*triEdge )//&&
   {
-   insertPoint(i);
-   //insertPointWithCurvature(i); // not working yet
+   //insertPoint(i);
+   insertPointWithCurvature(i); // not working yet
    isp++;
   }
  }
@@ -1653,6 +1653,7 @@ void Model3D::insertPoint(int _edge)
 void Model3D::insertPointWithCurvature(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
+
  cout << "-------------- " << color(none,yellow,black) << "inserting vertex: "
       << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
@@ -1720,10 +1721,11 @@ void Model3D::insertPointWithCurvature(int _edge)
  real res2y = cross2.Get(1);
  real res2z = cross2.Get(2);
 
- // normal vector between 2 elements
- real normalX = res1x+res2x;
- real normalY = res1y+res2y;
- real normalZ = res1z+res2z;
+ // average global normal vector - vertex
+ // normal defined inward the bubble
+ real normalX = surfMesh.xNormal.Get(v1)+surfMesh.xNormal.Get(v2);
+ real normalY = surfMesh.yNormal.Get(v1)+surfMesh.yNormal.Get(v2);
+ real normalZ = surfMesh.zNormal.Get(v1)+surfMesh.zNormal.Get(v2);
 
  real len = vectorLength( normalX,normalY,normalZ );
 
@@ -1842,45 +1844,51 @@ void Model3D::insertPointWithCurvature(int _edge)
  real Zmid = P1z + (v1zUnit*a/2.0);
 
  // vector from mid to Y1;
- real midY1x = Xcurv1-Xmid;
- real midY1y = Ycurv1-Ymid;
- real midY1z = Zcurv1-Zmid;
+ real m1x = Xcurv1-P1x;
+ real m1y = Ycurv1-P1y;
+ real m1z = Zcurv1-P1z;
 
  // vector from mid to Y2;
- real midY2x = Xcurv2-Xmid;
- real midY2y = Ycurv2-Ymid;
- real midY2z = Zcurv2-Zmid;
+ real m2x = Xcurv2-P1x;
+ real m2y = Ycurv2-P1y;
+ real m2z = Zcurv2-P1z;
 
- real up = dotProd(midY1x,midY1y,midY1z,normalXUnit,normalYUnit,normalZUnit);
- real down = dotProd(midY2x,midY2y,midY2z,normalXUnit,normalYUnit,normalZUnit);
+ real up = dotProd(m1x,m1y,m1z,normalXUnit,normalYUnit,normalZUnit);
+ real down = dotProd(m2x,m2y,m2z,normalXUnit,normalYUnit,normalZUnit);
 
  real XvAdd=0;
  real YvAdd=0;
  real ZvAdd=0;
- if( up > 0.0 )  
+ if( (surfMesh.curvature.Get(v1) > 0 && up < 0.0) || 
+     (surfMesh.curvature.Get(v1) < 0 && up > 0.0) )  
  {
   XvAdd = Xcurv1;
   YvAdd = Ycurv1;
   ZvAdd = Zcurv1;
  }
- else  
+ else
+
  {
-  XvAdd = XvAdd;
-  YvAdd = YvAdd;
-  ZvAdd = ZvAdd;
+  XvAdd = Xcurv2;
+  YvAdd = Ycurv2;
+  ZvAdd = Zcurv2;
  }
 
- cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
- cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
- cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
- cout << "add: " << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
- cout << "radius: " << r2D << endl;
- cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
- cout << "center: " << Xc << " " << Yc << endl;
- cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
- cout << surfMesh.curvature.Get(v1) << " " 
-      << surfMesh.curvature.Get(v2) << endl;
- cout << up << " " << down << endl;
+//--------------------------------------------------
+//  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
+//  cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
+//  cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
+//  cout << "add: " << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
+//  cout << "radius: " << r2D << endl;
+//  cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
+//  cout << "center: " << Xc << " " << Yc << endl;
+//  cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
+//  cout << "curvatures v1 - v2: " << surfMesh.curvature.Get(v1) << " " 
+//       << surfMesh.curvature.Get(v2) << endl;
+//  cout << "normal: " << normalXUnit << " " 
+//       << normalYUnit << " " << normalZUnit << endl;
+//  cout << "up: " << up << "  down: " << down << endl;
+//-------------------------------------------------- 
 
  // insert aditional vertice coordinate
  X.AddItem(vAdd,XvAdd);
@@ -2167,8 +2175,8 @@ void Model3D::remove3dMeshPointsByDistance()
 	if( cc.Get(i) != 0.5 && cc.Get(j) != 0.5 )
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
-	   X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<0.2*triEdge )
+	                    X.Get(j),Y.Get(j),Z.Get(j) );
+	 if( d>0 && d<0.3*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2361,7 +2369,7 @@ void Model3D::mesh2Dto3DOriginal()
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,red,black) 
+ cout << color(blink,blue,black) 
       << "             | complete re-meshing the domain... ";
  tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
  cout << "finished | " << resetColor() << endl;
@@ -2796,7 +2804,7 @@ void Model3D::mesh3DPoints()
  contractEdgeByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- //removePointsByInterfaceDistance();
+ removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
@@ -2816,7 +2824,7 @@ void Model3D::mesh3DPoints()
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,red,black) 
+ cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
  cout << "finished | " << resetColor() << endl;

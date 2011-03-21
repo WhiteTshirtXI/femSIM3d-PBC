@@ -43,7 +43,7 @@ $(TARGET): $(OBJECTS)
 
 
 %.o : %.cpp $(wildcard *.h)
-	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
 # Petsc new config
 include ${PETSC_DIR}/conf/variables

@@ -41,7 +41,7 @@ $(TARGET): $(OBJECTS)
 	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
 
 %.o : %.cpp $(wildcard *.h)
-	-${CLINKER} $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules

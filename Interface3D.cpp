@@ -333,7 +333,7 @@ clVector Interface3D::computeKappa2()
   real P0y = Y->Get(surfaceNode);
   real P0z = Z->Get(surfaceNode);
 
-  int c1 = 0;
+  //int c1 = 0;
   xCross = 0;
   yCross = 0;
   zCross = 0;

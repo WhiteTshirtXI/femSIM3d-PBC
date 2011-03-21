@@ -1,31 +1,31 @@
 ## =================================================================== ##
-## this is file Makefile, created at 10-Jun-2007                       ##
+## this is file bubble3d, created at 10-Jun-2009                       ##
 ## maintained by Gustavo Rabello dos Anjos                             ##
 ## e-mail: gustavo.rabello@gmail.com                                   ##
 ## =================================================================== ##
 
 
-TARGET = ns3d
-DIR = .
+TARGET = bubble 
 LIBDIR = ../lib
 CXX = g++
-CXXFLAGS = -O3
-LIBS += -lgsl -lgslcblas -lm 
-LIBS += -L$(HOME)/Programs/tetgen/1.4.0 -ltet
-INCLUDES += -I$(DIR) 
+CXXFLAGS = -O1 -g
+LIBS += -lgsl -lgslcblas -lm
+LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
+INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
-INCLUDES += -I$(HOME)/Programs/tetgen/1.4.0
+INCLUDES += -I/opt/local/include
+INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
+INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I$(HOME)/Programs/triangle
 
 OBJECTS += $(HOME)/Programs/triangle/triangle.o
 OBJECTS += $(LIBDIR)/clVector.o
 OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o
-OBJECTS += $(LIBDIR)/CGSolver.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
-OBJECTS += $(LIBDIR)/CGSSolver.o
 OBJECTS += $(LIBDIR)/GMRes.o
-OBJECTS += $(LIBDIR)/GSLSolver.o
+OBJECTS += $(LIBDIR)/Mumps_Petsc.o
+OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
 OBJECTS += Solver.o
@@ -37,32 +37,20 @@ OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
-OBJECTS += main.o
+
+OBJECTS += mainBubble.o
+#OBJECTS += mainAnnular.o
+#OBJECTS += main2Bubble.o
 
 $(TARGET): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LIBS) -o $(TARGET) 
+	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
 
 %.o : %.cpp $(wildcard *.h)
 	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 
-.PHONY: clean
-
-clean:
-	@rm -f core
-	@rm -f $(TARGET)
-	@rm -f ns3dDiskNuCte 
-	@rm -f ns3dDiskNuZ
-	@rm -f ns3dDiskNuC
-	@rm -f ns3dSurf
-	@rm -f ns3dBubble
-	@find . -name "*~" -exec rm {} \;
-	@rm -f ./oscillating*
-	@rm -f ./mesh*
-	@rm -f ./vtk/*.{vtk,vtu}
-	@rm -f ./msh/*.msh
-	@rm -f ./sim/vk?.*
-	@rm -f ./bin/*.bin
-	@rm -f ./dat/*.dat
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 
 deepclean:
 	@rm -f core
@@ -71,42 +59,11 @@ deepclean:
 	@find . -name "*~" -exec rm {} \;
 	@rm -f $(TARGET)
 	@rm -f ./vtk/*.vtk
-	@rm -f ./sim/vk?.*
+	@rm -f ./sim/vk*.dat
 	@rm -f ./sim/sim*.dat
+	@rm -f ./bin/*.bin
+	@rm -f ./bin/*.dat
+	@rm -f ./*.dat
 	@rm -f ./relatorio.dat
 	@rm -f ./info.dat
-	@rm -f ./msh/*.msh
 
-# -- BUILD SPECIFIC SIMULATION -- #
-
-#--------------------------------------------------
-# nuCte:
-# 	@rm -f main.cpp mainReserv.cpp mainDiskSurf.cpp mainDiskNuZ.cpp
-# 	@rm -f reserv diskSurf diskNuZ
-# 	@rm -f ./malhas/step* ./malhas/reserv*
-# 	@mv diskNuCte Makefile
-# 
-# nuZ:
-# 	@rm -f main.cpp mainReserv.cpp mainDiskSurf.cpp mainDiskNuCte.cpp
-# 	@rm -f reserv diskSurf diskNuCte
-# 	@rm -f ./malhas/step* ./malhas/reserv*
-# 	@mv diskNuZ Makefile
-# 
-# reserv:
-# 	@rm -f main.cpp mainDiskNuCte.cpp mainDiskNuZ.cpp mainDiskSurf.cpp
-# 	@rm -f diskNuCte diskSurf diskNuZ
-# 	@rm -f ./malhas/step* ./malhas/disk*
-# 	@mv reserv Makefile
-# 
-# surf:
-# 	@rm -f main.cpp mainReserv.cpp mainDiskNuCte.cpp mainDiskNuZ
-# 	@rm -f reserv diskNuCte diskNuZ
-# 	@rm -f ./malhas/step* ./malhas/reserv*
-# 	@mv diskSurf Makefile
-#-------------------------------------------------- 
-
-# makefile help
-# $@ is the name of the file to be made
-# $? is the names of the changed dependents
-# $< the name of the related file that caused the action
-# $* the prefix shared by target and dependent files

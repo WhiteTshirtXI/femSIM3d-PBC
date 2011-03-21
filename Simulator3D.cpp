@@ -107,28 +107,36 @@ void Simulator3D::init()
  wSol.CopyFrom( 0,*wc );
  pSol.CopyFrom( 0,*pc );
  cSol.CopyFrom( 0,*cc );
-//--------------------------------------------------
-//  for( int i=0;i<numNodes;i++ )
-//  {
-//   real aux = 1.0;
-//   wSol.Set(i,aux);
-//  }
-//  for( int i=0;i<idbcw->Dim();i++ )
-//   wSol.Set( (int) idbcw->Get(i),0.0 ); 
-//-------------------------------------------------- 
+}
 
-//--------------------------------------------------
-// /* two bubbles */
-//  for( int i=0;i<numNodes;i++ )
-//  {
-//   real aux = X->Get(i);
-//   uSol.Set(i,aux);
-//   aux = -1.0*Y->Get(i);
-//   vSol.Set(i,aux);
-//   aux = 0.0;
-//   wSol.Set(i,aux);
-//  }
-//-------------------------------------------------- 
+void Simulator3D::initFixedBubbleZ()
+{
+ init();
+
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = 1.0;
+  wSol.Set(i,aux);
+ }
+ for( int i=0;i<idbcw->Dim();i++ )
+  wSol.Set( (int) idbcw->Get(i),0.0 ); 
+
+}
+
+void Simulator3D::init2Bubbles()
+{
+ init();
+
+/* two bubbles */
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = X->Get(i);
+  uSol.Set(i,aux);
+  aux = -1.0*Y->Get(i);
+  vSol.Set(i,aux);
+  aux = 0.0;
+  wSol.Set(i,aux);
+ }
 }
 
 void Simulator3D::assemble()

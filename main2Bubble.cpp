@@ -20,13 +20,13 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 0;
- real Re = 100;
+ real Re = 10;
  real Sc = 2;
  real We = 2;
  real Fr = 0.4;
  real alpha = 1;
- real beta = -40;
- real cfl = 0.05;
+ real beta = -10;
+ real cfl = 0.5;
  real mu_l = 1.0;
  real mu_g = 1.0;
  real rho_l = 1.0;
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
   s1.setMu_g(mu_g);
   s1.setRho_l(rho_l);
   s1.setRho_g(rho_g);
-  s1.init();
+  s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
   s1.setMu_g(mu_g);
   s1.setRho_l(rho_l);
   s1.setRho_g(rho_g);
-  s1.init();
+  s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -175,25 +175,27 @@ int main(int argc, char **argv)
 
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
+  m1.setMiniElement();
 
   s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
   s1 = s2;
+  s1.setInterfaceGeo();
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",atoi(*(argv+2)));
-  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
+  saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry",0);
- save.saveMeshInfo("./","meshingInfo" );
- save.saveInfo("./","info",mesh);
+ save.saveMeshInfo(datFolder,"meshingInfo" );
+ save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
  int nIter = 600;
@@ -223,10 +225,10 @@ int main(int argc, char **argv)
    save.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
-   save.bubblesDistance("./","distance",i*nReMesh+j+iter);
-   save.oscillating("./","oscillating",i*nReMesh+j+iter);
-   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   save.bubblesDistance(datFolder,"distance",i*nReMesh+j+iter);
+   save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
+   save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    cout << color(none,magenta,black);
@@ -256,7 +258,7 @@ int main(int argc, char **argv)
   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMeshInfo("./","meshingInfo" );
+  saveEnd.saveMeshInfo(datFolder,"meshingInfo" );
  }
 
  PetscFinalize();

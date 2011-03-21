@@ -30,7 +30,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.09;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -1472,13 +1472,15 @@ void Model3D::flipTriangleEdge()
   real v2y = P2y-P3elem1y;
   real v2z = P2z-P3elem1z;
 
-  real z1x = P1x-P3elem2x;
-  real z1y = P1y-P3elem2y;
-  real z1z = P1z-P3elem2z;
-
-  real z2x = P2x-P3elem2x;
-  real z2y = P2y-P3elem2y;
-  real z2z = P2z-P3elem2z;
+//--------------------------------------------------
+//   real z1x = P1x-P3elem2x;
+//   real z1y = P1y-P3elem2y;
+//   real z1z = P1z-P3elem2z;
+// 
+//   real z2x = P2x-P3elem2x;
+//   real z2y = P2y-P3elem2y;
+//   real z2z = P2z-P3elem2z;
+//-------------------------------------------------- 
 
   real length12 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
   real length13_1 = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
@@ -1668,6 +1670,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  int elem1 = mapEdgeTri.Get(_edge,5);
  int elem2 = mapEdgeTri.Get(_edge,6);
 
+ // points
  real P1x = surfMesh.X.Get(v1);
  real P1y = surfMesh.Y.Get(v1);
  real P1z = surfMesh.Z.Get(v1);
@@ -1676,15 +1679,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  real P2y = surfMesh.Y.Get(v2);
  real P2z = surfMesh.Z.Get(v2);
 
- real P3elem1x = surfMesh.X.Get(v3elem1);
- real P3elem1y = surfMesh.Y.Get(v3elem1);
- real P3elem1z = surfMesh.Z.Get(v3elem1);
-
- real P3elem2x = surfMesh.X.Get(v3elem2);
- real P3elem2y = surfMesh.Y.Get(v3elem2);
- real P3elem2z = surfMesh.Z.Get(v3elem2);
-
- // vector v1-v2
+ // vector v1-v2 to define 2D X axis
  real v1x = P2x-P1x;
  real v1y = P2y-P1y;
  real v1z = P2z-P1z;
@@ -1692,34 +1687,6 @@ void Model3D::insertPointWithCurvature(int _edge)
  real v1xUnit = v1x/a;
  real v1yUnit = v1y/a;
  real v1zUnit = v1z/a;
-
- // vector v1-v3elem1
- real v2x = P3elem1x-P1x;
- real v2y = P3elem1y-P1y;
- real v2z = P3elem1z-P1z;
- real b = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
- real v2xUnit = v2x/b;
- real v2yUnit = v2y/b;
- real v2zUnit = v2z/b;
-
- // vector v1-v3elem2
- real v3x = P3elem2x-P1x;
- real v3y = P3elem2y-P1y;
- real v3z = P3elem2z-P1z;
- real c = distance(P1x,P1y,P1z,P3elem2x,P3elem2y,P3elem2z);
- real v3xUnit = v3x/c;
- real v3yUnit = v3y/c;
- real v3zUnit = v3z/c;
-
- clVector cross1 = crossProd(v1xUnit,v1yUnit,v1zUnit,v2xUnit,v2yUnit,v2zUnit);
- real res1x = cross1.Get(0);
- real res1y = cross1.Get(1);
- real res1z = cross1.Get(2);
-
- clVector cross2 = crossProd(v3xUnit,v3yUnit,v3zUnit,v1xUnit,v1yUnit,v1zUnit);
- real res2x = cross2.Get(0);
- real res2y = cross2.Get(1);
- real res2z = cross2.Get(2);
 
  // average global normal vector - vertex
  // normal defined inward the bubble
@@ -1730,7 +1697,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  real len = vectorLength( normalX,normalY,normalZ );
 
  // normal Unit to be used togheter with vector 1Unit and then create
- // the basis for the plan section
+ // the basis for the plan section (2D Y axis)
  real normalXUnit = normalX/len;
  real normalYUnit = normalY/len;
  real normalZUnit = normalZ/len;
@@ -1793,12 +1760,34 @@ void Model3D::insertPointWithCurvature(int _edge)
   *            det                            det
   *
   * */
-
  real det = (y1/x1)*(-1)*(x2/y2)+1;
  real Xc = a/det;
  real Yc = ( (y1/x1)*a )/det;
- real r2D = distance(Xc,Yc,0,0);
+ real d1 = distance(Xc,Yc,0,0);
+ real d2 = distance(Xc,Yc,a/2,0);
+
+ /* defining the principal vertex according to the distance between the
+  * 2D circumcenter and the vertex itself and calculating the normal 2D
+  * vector
+  * */ 
  real xMid2D = a/2.0;
+ real r2D = 0;
+ real xUnit2D=0;
+ real yUnit2D=0;
+ if( d1>d2 )
+ {
+  real dist2D = vectorLength(x1,y1);
+  r2D=d1;
+  xUnit2D=x1/dist2D;
+  yUnit2D=y1/dist2D;
+ }
+ else
+ {
+  real dist2D = vectorLength(x2,y2);
+  r2D=d2;
+  xUnit2D=x2/dist2D;
+  yUnit2D=y2/dist2D;
+ }
 
  /*
   * Circumference equation:
@@ -1815,59 +1804,52 @@ void Model3D::insertPointWithCurvature(int _edge)
   * y2 = Yc - z;
   *
   * */
-
  real yMidNew1 = Yc + sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
  real yMidNew2 = Yc - sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
 
+ // check the case when there is no yMidNew1 or yMidNew2 (the normal
+ // vectors are parallels)
+ // ---------------- to be implemented! ------------------- //
+
  /* 
   *     3D coords         2D coords
-  * X(v1),Y(v1),Z(v1) |---> (0,0)
-  * X(v2),Y(v2),Z(v2) |---> (a,0)
+  * X(v1),Y(v1),Z(v1) |---> (0,0)x(0,yUnit)
+  * X(v2),Y(v2),Z(v2) |---> (a,0)x(a,yUnit)
   *  
-  * Transforming from the 2D plane coordinates to the 3D global coords
+  * Transforming from the 2D plane coordinates to the 3D global coords:
   *
-  *                     ?
-  *       X,Y,Z       <---| (a/2,yMid2D)
+  *     2D coords           3D coords
+  *       (X,Y) |-----> P1 + v1Unit*xMid + normalUnit*yMidNew
   *
   * */
-
- real Xcurv1 = P1x + (v1xUnit*a/2.0) + (normalXUnit*yMidNew1);
- real Ycurv1 = P1y + (v1yUnit*a/2.0) + (normalYUnit*yMidNew1);
- real Zcurv1 = P1z + (v1zUnit*a/2.0) + (normalZUnit*yMidNew1);
- real Xcurv2 = P1x + (v1xUnit*a/2.0) + (normalXUnit*yMidNew2);
- real Ycurv2 = P1y + (v1yUnit*a/2.0) + (normalYUnit*yMidNew2);
- real Zcurv2 = P1z + (v1zUnit*a/2.0) + (normalZUnit*yMidNew2);
+ real Xcurv1 = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMidNew1);
+ real Ycurv1 = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMidNew1);
+ real Zcurv1 = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMidNew1);
+ real Xcurv2 = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMidNew2);
+ real Ycurv2 = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMidNew2);
+ real Zcurv2 = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMidNew2);
 
  // middle of an edge 
  real Xmid = P1x + (v1xUnit*a/2.0);
  real Ymid = P1y + (v1yUnit*a/2.0);
  real Zmid = P1z + (v1zUnit*a/2.0);
 
- // vector from mid to Y1;
- real m1x = Xcurv1-P1x;
- real m1y = Ycurv1-P1y;
- real m1z = Zcurv1-P1z;
+ real dist1 = distance(Xmid,Ymid,Zmid,Xcurv1,Ycurv1,Zcurv1);
+ real dist2 = distance(Xmid,Ymid,Zmid,Xcurv2,Ycurv2,Zcurv2);
 
- // vector from mid to Y2;
- real m2x = Xcurv2-P1x;
- real m2y = Ycurv2-P1y;
- real m2z = Zcurv2-P1z;
-
- real up = dotProd(m1x,m1y,m1z,normalXUnit,normalYUnit,normalZUnit);
- real down = dotProd(m2x,m2y,m2z,normalXUnit,normalYUnit,normalZUnit);
+ //real up = dotProd(m1x,m1y,m1z,normalXUnit,normalYUnit,normalZUnit);
+ //real down = dotProd(m2x,m2y,m2z,normalXUnit,normalYUnit,normalZUnit);
 
  real XvAdd=0;
  real YvAdd=0;
  real ZvAdd=0;
- if( (surfMesh.curvature.Get(v1) > 0 && up < 0.0) || 
-     (surfMesh.curvature.Get(v1) < 0 && up > 0.0) )  
+ if( dist1<dist2 ) // pick the the closest new vertex 
  {
   XvAdd = Xcurv1;
   YvAdd = Ycurv1;
   ZvAdd = Zcurv1;
  }
  else
-
  {
   XvAdd = Xcurv2;
   YvAdd = Ycurv2;
@@ -1887,7 +1869,6 @@ void Model3D::insertPointWithCurvature(int _edge)
 //       << surfMesh.curvature.Get(v2) << endl;
 //  cout << "normal: " << normalXUnit << " " 
 //       << normalYUnit << " " << normalZUnit << endl;
-//  cout << "up: " << up << "  down: " << down << endl;
 //-------------------------------------------------- 
 
  // insert aditional vertice coordinate
@@ -1905,7 +1886,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.Y.AddItem(YvAdd);
  surfMesh.Z.AddItem(ZvAdd);
  surfMesh.Marker.AddItem(0.5); // interface set up
- // atencao aqui no calculo... verificar!!!
+
+ // curvature is approx. the average between vertices
  real curvature = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))/2.0;
  surfMesh.curvature.AddItem(curvature);
 
@@ -2000,8 +1982,8 @@ void Model3D::contractEdgeByLength()
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1
    int v2 = mapEdgeTri.Get(edge,2); // v2
-   int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
-   int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
+   //int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
+   //int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
    int elem1 = mapEdgeTri.Get(edge,5); // elem1
    int elem2 = mapEdgeTri.Get(edge,6); // elem2
 
@@ -2339,14 +2321,11 @@ void Model3D::insertPointsBetweenBubblesByPosition()
  * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
- saveVTKSurface("./vtk/","before",0);
- insertPointsByLength();
- insertPointsByInterfaceDistance();
- saveVTKSurface("./vtk/","between",0);
- removePointsByLength();
- saveVTKSurface("./vtk/","flipBetween",0);
+ computeSurfaceNormal(); // compute surface normal of all surface points
+ computeKappa();
+
+ //insertPointsByInterfaceDistance();
  flipTriangleEdge();
- saveVTKSurface("./vtk/","after",0);
 
  // clean and init tetgen mesh object
  in.initialize();
@@ -2371,7 +2350,7 @@ void Model3D::mesh2Dto3DOriginal()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | complete re-meshing the domain... ";
- tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
+ tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -2715,7 +2694,8 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
  real aux;
  real minVol = 1.0E+20; // initial value
  real maxVol = 1.0E-20; // initial value
- int minElem,maxElem;
+ int minElem=0;
+ int maxElem=0;
 
  int count=0;
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
@@ -2754,13 +2734,15 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
  cout << "   |------------------------ Mesh Report --------------------------|" 
       << endl;
- cout << "     number of points   (numVerts):         " 
+ cout << "     number of 3D points       (numVerts):  " 
       << _tetmesh.numberofpoints << endl;
- cout << "     number of nodes    (numNodes):         " 
+ cout << "     number of 3D nodes        (numNodes):  " 
       << _tetmesh.numberoftetrahedra+_tetmesh.numberofpoints << endl;
- cout << "     number of elements (numEles):          " 
+ cout << "     number of tetrahedrons     (numEles):  " 
       << _tetmesh.numberoftetrahedra << endl;
- cout << "     number of facets   (numTri):           " 
+ cout << "     number of surface points  (surfMesh):  " 
+      << surfMesh.numVerts << endl;
+ cout << "     number of surface triangles (numTri):  " 
       << _tetmesh.numberoftrifaces << endl;
  cout << "     mesh: " << count 
       << " tets w/ all the 4 verts on the interface   " << endl;
@@ -2804,7 +2786,7 @@ void Model3D::mesh3DPoints()
  contractEdgeByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
+ //removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
  // init tetgen mesh object

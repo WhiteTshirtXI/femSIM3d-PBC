@@ -1,0 +1,29 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+set title "Time evolution of gap" 
+set xlabel "time"
+set ylabel "length gap"
+set label
+#set xrange [0.0:1.2]
+set yrange [-0.1:0.5]
+unset grid
+
+#set terminal pdf
+#set output 'teste.pdf'
+
+# analytical solution of the velocity field
+f(x)=0.5*exp(-x)
+
+# linear evolution of distance
+g(x)=0.5-0.5*x
+
+fileObj = "../dat/distance.dat"
+
+plot fileObj using 1:6 title 'We=2 Re=10' with points ,\
+	 f(x) title 'analytical: 0.5*exp(-x)' with lines ,\
+	 g(x) title 'linear evolution: 0.5-0.5*x' with lines 
+

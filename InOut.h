@@ -181,6 +181,7 @@ class InOut
   void vtkHeader(ofstream& _file);
   void vtkHeaderTime(ofstream& _file,int _iter);
   void vtkCoords(ofstream& _file);
+  void vtkSurfCoords(ofstream& _file);
   void vtkCellArray(ofstream& _file);
   void vtkCellType(ofstream& _file);
   void vtkScalarHeader(ofstream& _file);
@@ -198,6 +199,7 @@ private:
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
   clVector *surface,*outflow;
   clMatrix *IEN;
+  SurfaceMesh *surfMesh;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;

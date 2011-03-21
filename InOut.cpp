@@ -33,6 +33,7 @@ InOut::InOut( Model3D &_m )
  outflow = m->getOutflow();
  IEN = m->getIEN();
  surface = m->getSurface();
+ surfMesh = m->getSurfMesh();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -60,6 +61,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  outflow = m->getOutflow();
  IEN = m->getIEN();
  surface = m->getSurface();
+ surfMesh = m->getSurfMesh();
 
  s = &_s;
  Re = s->getRe();
@@ -1213,9 +1215,9 @@ void InOut::printInfo(const char* _mesh)
 
  // ATTRIBUTES  :none,underscore,blink,reverse,concealed
  // COLORS      :black,red,green,yellow,blue,magenta,cyan,white
+ cout << endl;
+ cout << endl;
  cout << color(bold,cyan,black);
- cout << endl;
- cout << endl;
  cout << "              ";
  cout << "----------------------- INFO -----------------------" << endl; 
  cout << endl;
@@ -1262,9 +1264,9 @@ void InOut::printInfo(const char* _mesh)
  cout << endl;
  cout << "              ";
  cout << "----------------------------------------------------" << endl; 
- cout << endl;
- cout << endl;
  cout << resetColor();
+ cout << endl;
+ cout << endl;
 }
 
 void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
@@ -1580,9 +1582,8 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  string fileAux = (string) _dir + (string) _filename + ".dat";
  const char* filename = fileAux.c_str();
 
- ofstream dist( filename,ios::app );
  ifstream testFile( filename );
-
+ ofstream file( filename,ios::app );
  if( testFile )
  {
   testFile.close();
@@ -1591,12 +1592,12 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  else
  {
   cout << "Creating file " << _filename << ".dat" << endl;
-  dist << "#time" << setw(15) << "Ymin1" 
-				  << setw(15) << "Ymax1"
-                  << setw(15) << "Ymin2" 
-				  << setw(15) << "Ymax2"
-				  << setw(15) << "dist1" 
-				  << setw(15) << "dist2" 
+  file << "#time" << setw(17) << "Ymin1" 
+				  << setw(18) << "Ymax1"
+                  << setw(18) << "Ymin2" 
+				  << setw(17) << "Ymax2"
+				  << setw(17) << "dist1" 
+				  << setw(17) << "dist2" 
 				  << setw(15) << "iter" 
 				  << endl;
  }
@@ -1628,13 +1629,13 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  real dist1 = Ymin2-Ymin1;
  real dist2 = Ymax2-Ymax1;
 
- dist << setprecision(10) << scientific; 
- dist << setw(9) <<  *simTime << " " << Ymin1 << " " << Ymax1 << " " 
+ file << setprecision(10) << scientific; 
+ file << setw(9) <<  *simTime << " " << Ymin1 << " " << Ymax1 << " " 
                                      << Ymin2 << " " << Ymax2 << " " 
 							    	 << dist1 << " " << dist2 << " "
 									 << _iter << endl;
 
- dist.close();
+ file.close();
 
  cout << "2 bubbles distances saved in ASCII " << dist1 << endl;
 }
@@ -2107,6 +2108,17 @@ void InOut::vtkCoords(ofstream& _file)
  _file << endl;
 }
 
+void InOut::vtkSurfCoords(ofstream& _file)
+{
+ _file << "POINTS " << surfMesh->numVerts << " double" << endl;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << surfMesh->X.Get(i) << " " 
+        << surfMesh->Y.Get(i) << " " 
+		<< surfMesh->Z.Get(i) << endl;
+
+ _file << endl;
+}
+
 void InOut::vtkCellArray(ofstream& _file)
 {
  _file << "CELLS " << numElems << " " << 5*numElems << endl;
@@ -2182,8 +2194,6 @@ void InOut::vtkVector(ofstream& _file,string _name,
 
 void InOut::saveMSH( const char* _dir,const char* _filename )
 {
- SurfaceMesh *surfMesh = m->getSurfMesh();
-
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + ".msh";
  const char* filename = file.c_str();

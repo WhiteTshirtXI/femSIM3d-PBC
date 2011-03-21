@@ -196,6 +196,7 @@ int main(int argc, char **argv)
 
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
+  m1.setMiniElement();
 
   s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

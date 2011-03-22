@@ -24,7 +24,7 @@ OBJECTS += $(LIBDIR)/clMatrix.o
 OBJECTS += $(LIBDIR)/clDMatrix.o
 OBJECTS += $(LIBDIR)/PCGSolver.o
 OBJECTS += $(LIBDIR)/GMRes.o
-OBJECTS += $(LIBDIR)/Mumps_Petsc.o
+#OBJECTS += $(LIBDIR)/Mumps_Petsc.o
 OBJECTS += $(LIBDIR)/PetscSolver.o
 OBJECTS += $(LIBDIR)/FEMLinElement3D.o
 OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
@@ -38,9 +38,9 @@ OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
 
-OBJECTS += mainBubble.o
+#OBJECTS += mainBubble.o
 #OBJECTS += mainAnnular.o
-#OBJECTS += main2Bubble.o
+OBJECTS += main2Bubble.o
 
 $(TARGET): $(OBJECTS)
 	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)

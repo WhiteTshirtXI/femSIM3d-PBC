@@ -69,8 +69,8 @@ class Simulator3D
   void setCRHS();
   void setGravity();
   void setGravityBoussinesq();
-  void setInterface();
   void setInterfaceGeo();
+  void setInterfaceLevelSet();
 
   void coupled();
   void unCoupled();
@@ -137,7 +137,6 @@ class Simulator3D
   clVector* getWALE();
   clVector* getUAnt();
   clVector* getCAnt();
-  clVector* getDistance();
   clVector* getFint();
   clDMatrix* getKappa();
   clMatrix* getK();
@@ -183,6 +182,7 @@ class Simulator3D
   clDMatrix *curvature;
   SurfaceMesh *surfMesh;
   Mesh3D *mesh3d;
+  clVector* interfaceDistance;
 
   clMatrix K,Kc,Mrho,M,Mc,G,D;
   clMatrix mat,matc;
@@ -211,7 +211,6 @@ class Simulator3D
   clDMatrix MLumped,invMLumped;
   clVector uTilde,cTilde,pTilde,b1,b1c,b2,ip,ipc;
  
-  clVector distance;
   clDMatrix kappa;
   clVector fint;
   clVector Hsmooth,nu,rho,nuOld,rhoOld;

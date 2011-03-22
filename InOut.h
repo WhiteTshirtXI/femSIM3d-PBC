@@ -102,6 +102,7 @@ class InOut
    **/
   void saveMSH( const char* _dir,const char* _filename );
   void saveVTK( const char* _dir,const char* _filename );
+  void saveVTKSurface( const char* _dir,const char* _filename );
 
   /**
    * @brief grava arquivo do tipo VTK para visualizacao da solucao do
@@ -179,7 +180,7 @@ class InOut
 
   /* VTK Building Tools  */
   void vtkHeader(ofstream& _file);
-  void vtkHeaderTime(ofstream& _file,int _iter);
+  void vtkHeader(ofstream& _file,int _iter);
   void vtkCoords(ofstream& _file);
   void vtkSurfCoords(ofstream& _file);
   void vtkCellArray(ofstream& _file);
@@ -200,6 +201,7 @@ private:
   clVector *surface,*outflow;
   clMatrix *IEN;
   SurfaceMesh *surfMesh;
+  clVector *interfaceDistance;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;
@@ -209,7 +211,7 @@ private:
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
   clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
   clVector *uALE,*vALE,*wALE;
-  clVector *distance,*fint;
+  clVector *fint;
   clDMatrix *kappa;
   clVector *nu,*rho;
 };

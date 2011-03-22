@@ -32,12 +32,12 @@ OBJECTS += Solver.o
 OBJECTS += Model3D.o
 OBJECTS += TElement.o
 OBJECTS += Galerkin.o
-OBJECTS += Interface3D.o
+#OBJECTS += Interface3D.o
 OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
-OBJECTS += main.o
+OBJECTS += mainStep.o
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LIBS) -o $(TARGET) 

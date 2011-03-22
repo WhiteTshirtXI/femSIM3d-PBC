@@ -34,6 +34,7 @@ InOut::InOut( Model3D &_m )
  IEN = m->getIEN();
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
+ interfaceDistance = m->getInterfaceDistance();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -62,6 +63,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  IEN = m->getIEN();
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
+ interfaceDistance = m->getInterfaceDistance();
 
  s = &_s;
  Re = s->getRe();
@@ -97,7 +99,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  cSol = s->getCSol();
  kappa = s->getKappa();
  fint = s->getFint();
- distance = s->getDistance();
  nu = s->getNu();
  rho = s->getRho();
  uSolOld.Dim(numNodes);
@@ -374,7 +375,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- vtkHeaderTime(vtkFile,_iter);
+ vtkHeader(vtkFile,_iter);
  vtkCoords(vtkFile);
  vtkCellArray(vtkFile);
  vtkCellType(vtkFile);
@@ -386,7 +387,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*distance);
+ vtkScalar(vtkFile,"distance",*interfaceDistance);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
@@ -423,7 +424,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- vtkHeaderTime(vtkFile,_iter);
+ vtkHeader(vtkFile,_iter);
  vtkCoords(vtkFile);
 
 
@@ -494,7 +495,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*distance);
+ vtkScalar(vtkFile,"distance",*interfaceDistance);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint);
@@ -520,7 +521,7 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
 
  ofstream vtkFile( filename ); 
 
- vtkHeaderTime(vtkFile,_iter);
+ vtkHeader(vtkFile,_iter);
  vtkCoords(vtkFile);
 
 
@@ -589,7 +590,7 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   vtkScalar(vtkFile,"concentration",*cSol);
 
  vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*distance);
+ vtkScalar(vtkFile,"distance",*interfaceDistance);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint);
@@ -1519,6 +1520,53 @@ void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
  file.close();
 }
 
+void InOut::saveVTKSurface( const char* _dir,const char* _filename )
+{
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "TRI" + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeader(vtkFile);
+ vtkCoords(vtkFile);
+
+ SurfaceMesh *mesh = m->getInterfaceMesh();
+
+ int numTri = mesh->IEN.DimI();
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numTri;i++ )
+ {
+  vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
+                  << mesh->IEN.Get(i,1) << " " 
+                  << mesh->IEN.Get(i,2) << endl;
+ };
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "5 ";
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pc);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cc);
+
+ vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
+ vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ vtkFile.close();
+
+ cout << "surface mesh saved in VTK" << endl;
+
+} // fecha metodo saveVTKSurface
+
 void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
@@ -1532,7 +1580,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  ofstream vtkFile( filename ); 
 
- vtkHeaderTime(vtkFile,_iter);
+ vtkHeader(vtkFile,_iter);
  vtkCoords(vtkFile);
 
  SurfaceMesh *mesh = m->getInterfaceMesh();
@@ -1563,7 +1611,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*distance);
+ vtkScalar(vtkFile,"distance",*interfaceDistance);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
@@ -2085,7 +2133,7 @@ void InOut::vtkHeader(ofstream& _file)
  _file << endl;
 }
 
-void InOut::vtkHeaderTime(ofstream& _file,int _iter)
+void InOut::vtkHeader(ofstream& _file,int _iter)
 {
  _file << "# vtk DataFile Version 1.0" << endl;
  _file << "3D Simulation C++" << endl;

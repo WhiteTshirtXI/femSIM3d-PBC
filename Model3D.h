@@ -160,10 +160,10 @@ class Model3D
   void computeSurfaceNormal();
   void computeSurfaceAverageNormal();
   void setKappaSurface();
+  void setKappaSurface(clVector &_kappa);
   void setCloser();
-  void computeKappa();
-  void computeKappaNorb();
-  void computeKappa2();
+  void setInterfaceDistance();
+  void computeKappaGeo();
 
   // get and set methods
   clVector* getX();
@@ -195,6 +195,7 @@ class Model3D
   clVector* getIdbcp();
   clVector* getIdbcc();
   clMatrix* getIEN();
+  clVector* getInterfaceDistance();
   clDMatrix* getCurvature();
   SurfaceMesh* getSurfMesh();
   SurfaceMesh* getInterfaceMesh();
@@ -256,6 +257,7 @@ class Model3D
   clMatrix mapEdgeTri;
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
+  clVector interfaceDistance;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha

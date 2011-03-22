@@ -2104,16 +2104,6 @@ void Model3D::removePointsByInterfaceDistance()
  clVector surfaceAux = cc==0.5;
  clVector surface = surfaceAux.Find();
 
- setCloser();
-
- clVector dist(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  real aux = distance( X.Get(i),Y.Get(i),Z.Get(i),
-	                 xCloser.Get(i),yCloser.Get(i),zCloser.Get(i) );
-  dist.Set(i,aux);
- }
-
  /*     
   *                l*3^(1/3)
   *   height = h = --------- = l*0.86602
@@ -2122,7 +2112,7 @@ void Model3D::removePointsByInterfaceDistance()
  real h = triEdge*0.86602; 
  for( int i=0;i<numVerts;i++ )
  {
-  real d = dist.Get(i);
+  real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
   if( d>0 && d<h/2 ) // hiRe
   {
@@ -2135,7 +2125,7 @@ void Model3D::removePointsByInterfaceDistance()
    Y.Delete(i);
    Z.Delete(i);
    cc.Delete(i);
-   dist.Delete(i);
+   interfaceDistance.Delete(i);
    numVerts--;
    i--;
    rpi++;
@@ -2322,7 +2312,7 @@ void Model3D::insertPointsBetweenBubblesByPosition()
 void Model3D::mesh2Dto3DOriginal()
 {
  computeSurfaceNormal(); // compute surface normal of all surface points
- computeKappa();
+ computeKappaGeo();
 
  //insertPointsByInterfaceDistance();
  flipTriangleEdge();
@@ -2775,7 +2765,7 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 void Model3D::mesh3DPoints()
 {
  computeSurfaceNormal(); // compute surface normal of all surface points
- computeKappa();
+ computeKappaGeo();
 
  saveVTKSurface("./vtk/","start",0);
  insertPointsByLength();
@@ -5316,6 +5306,7 @@ void Model3D::setSurfaceConfig()
  setInOutVert(); // inVert e outVert
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
+ setInterfaceDistance();
  setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
@@ -5647,6 +5638,7 @@ clVector* Model3D::getIdbcw(){ return &idbcw; }
 clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
+clVector* Model3D::getInterfaceDistance(){ return &interfaceDistance; }
 clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
@@ -6071,7 +6063,7 @@ void Model3D::computeSurfaceAverageNormal()
  * So far for all test cases studied  we have found +- 1% error for
  * non-dimensional bubble diameters changing from 0.1 to 1.3
  * */
-void Model3D::computeKappa()
+void Model3D::computeKappaGeo()
 {
  // compute Surface Normals
  computeSurfaceNormal();
@@ -6232,7 +6224,7 @@ void Model3D::computeKappa()
 
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
-} // fecha metodo computeKappa
+} // fecha metodo computeKappaGeo
 
 void Model3D::setCloser()
 {
@@ -6267,6 +6259,19 @@ void Model3D::setCloser()
  }
 }
 
+void Model3D::setInterfaceDistance()
+{
+ setCloser();
+
+ interfaceDistance.Dim(numVerts);
+ for( int i=0;i<numVerts;i++ )
+ {
+  real aux = distance( X.Get(i),Y.Get(i),Z.Get(i),
+	                   xCloser.Get(i),yCloser.Get(i),zCloser.Get(i) );
+  interfaceDistance.Set(i,aux);
+ }
+}
+
 // espalhando kappa calculado na superfice para todos os pontos da
 // malha, com isso garantimos uma forca distribuida
 void Model3D::setKappaSurface()
@@ -6283,5 +6288,24 @@ void Model3D::setKappaSurface()
   mesh3d.curvature.Set( i,surfMesh.curvature.Get(aux) );
   mesh3d.curvature.Set( i+numNodes,surfMesh.curvature.Get(aux) );
   mesh3d.curvature.Set( i+2*numNodes,surfMesh.curvature.Get(aux) );
+ }
+}
+
+// espalhando kappa calculado na superfice para todos os pontos da
+// malha, com isso garantimos uma forca distribuida
+void Model3D::setKappaSurface(clVector &_kappa)
+{
+ setCloser();
+ curvature.Dim(3*numNodes);
+ mesh3d.curvature.Dim(3*numNodes);
+ for( int i=0;i<numNodes;i++ )
+ {
+  int aux = closer.Get(i);
+  curvature.Set( i,_kappa.Get(aux) );
+  curvature.Set( i+numNodes,_kappa.Get(aux) );
+  curvature.Set( i+2*numNodes,_kappa.Get(aux) );
+  mesh3d.curvature.Set( i,_kappa.Get(aux) );
+  mesh3d.curvature.Set( i+numNodes,_kappa.Get(aux) );
+  mesh3d.curvature.Set( i+2*numNodes,_kappa.Get(aux) );
  }
 }

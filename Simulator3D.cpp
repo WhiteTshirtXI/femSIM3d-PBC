@@ -1354,45 +1354,33 @@ void Simulator3D::setGravityBoussinesq()
  va = va - beta*( Mrho*forceC );
 }
 
-void Simulator3D::setInterface()
+void Simulator3D::setInterfaceGeo()
 {
- matMountC();
- setUnCoupledCBC();
- Interface3D interface(*m);
- distance = interface.curvature1();
-
- // ----------- smoothing step ------------ //
-  vcc = ( (1.0/dt) * McLumped ) * distance;
-  unCoupledC();
-  //clVector kappaAux = invMcLumped*(Kc*distance);
-  clVector kappaAux = invMcLumped*(Kc*cTilde);
- // --------------------------------------- //
- 
- //interface.plotKappa(kappaAux);
- kappa = interface.setKappaSurface(kappaAux);
+ m->computeKappaGeo();
+ m->setKappaSurface();
+ kappa = *m->getCurvature();
 
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
-
+ 
  //va = va + invA*fint;
 } // fecha metodo setInterface 
 
-void Simulator3D::setInterfaceGeo()
+void Simulator3D::setInterfaceLevelSet()
 {
-//--------------------------------------------------
-//  Interface3D interface(*m);
-//  clVector kappaAux = interface.computeKappa1();
-// 
-//  //interface.plotKappa(kappaAux);
-//  kappa = interface.setKappaSurface(kappaAux);
-//  // eu acho que eh necessario neste ponto aplicar a direcao do kappa
-//  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
-//-------------------------------------------------- 
+ // ----------- smoothing step ------------ //
+ matMountC();
+ setUnCoupledCBC();
+ vcc = ( (1.0/dt) * McLumped ) * *interfaceDistance;
+ unCoupledC();
+ //clVector kappaAux = invMcLumped*(Kc * *interfaceDistance);
+ clVector kappaAux = invMcLumped*(Kc*cTilde);
+ // --------------------------------------- //
  
- m->computeKappa();
- m->setKappaSurface();
+ m->setKappaSurface(kappaAux);
  kappa = *m->getCurvature();
+
  fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
- 
+
  //va = va + invA*fint;
 } // fecha metodo setInterface 
 
@@ -1737,25 +1725,25 @@ void Simulator3D::setUAnt(clVector &_uAnt)
 void Simulator3D::setHsmooth()
 {
 //--------------------------------------------------
-//  Interface2D interface(*m);
-//  distance = interface.distanceNodes();
+//  interfaceDistance = *m->getInterfaceDistance();
 //  // -- set para heaviside suavizada -- //
 //  real aux;
 //  real epsilon=0.1;
 //  for( int i=0;i<numNodes;i++ )
 //  {
-//   if( distance.Get(i) < -epsilon )
+//   if( interfaceDistance.Get(i) < -epsilon )
 //   {
 //    Hsmooth.Set(i,0.0);
 //   }
-//   if( distance.Get(i) > epsilon )
+//   if( interfaceDistance.Get(i) > epsilon )
 //   {
 //    Hsmooth.Set(i,1.0);
 //   }
-//   if( (distance.Get(i) >= -epsilon) && distance.Get(i) <= epsilon )
+//   if( (interfaceDistance.Get(i) >= -epsilon) && 
+//        interfaceDistance.Get(i) <= epsilon )
 //   {
-//    aux = (1.0/PI)*sin(PI*distance.Get(i)/epsilon);
-//    aux = 0.5*(1.0 + distance.Get(i)/epsilon + aux);
+//    aux = (1.0/PI)*sin(PI*interfaceDistance.Get(i)/epsilon);
+//    aux = 0.5*(1.0 + interfaceDistance.Get(i)/epsilon + aux);
 //    Hsmooth.Set(i,aux);
 //   }
 //  }
@@ -2029,7 +2017,6 @@ clVector* Simulator3D::getVALE(){return &vALE;}
 clVector* Simulator3D::getWALE(){return &wALE;} 
 clVector* Simulator3D::getUAnt(){return &uAnt;}
 clVector* Simulator3D::getCAnt(){return &cAnt;}
-clVector* Simulator3D::getDistance(){return &distance;}
 clVector* Simulator3D::getFint(){return &fint;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
@@ -2091,6 +2078,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  outflow = _sRight.outflow;
  surface = _sRight.surface;
  IEN = _sRight.IEN;
+ interfaceDistance = _sRight.interfaceDistance;
 
  Re = _sRight.Re;
  Sc = _sRight.Sc;
@@ -2172,7 +2160,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  b2 = _sRight.b2;
  ip = _sRight.ip;
  ipc = _sRight.ipc;
- distance = _sRight.distance;
  kappa = _sRight.kappa;
  fint = _sRight.fint;
  Hsmooth = _sRight.Hsmooth;
@@ -2646,6 +2633,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
  mesh3d = m->getMesh3d();
+ interfaceDistance = m->getInterfaceDistance();
 }
 
 
@@ -2734,8 +2722,6 @@ void Simulator3D::allocateMemoryToAttrib()
  wSmoothCoord.Dim( numNodes );
 
  // interface vectors (two-phase)
- distance.Dim( numVerts );
- kappa.Dim( 3*numNodes );
  fint.Dim ( 3*numNodes );
  Hsmooth.Dim( numNodes );
  nu.Dim( numVerts );

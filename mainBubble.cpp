@@ -197,6 +197,7 @@ int main(int argc, char **argv)
   mOld = m1; 
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
+  m1.setInterfaceDistance();
 
   s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -213,7 +214,7 @@ int main(int argc, char **argv)
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveVTKSurface(vtkFolder,"geometry",0);
+ save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder,"meshingInfo" );
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);

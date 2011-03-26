@@ -100,6 +100,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  kappa = s->getKappa();
  fint = s->getFint();
  nu = s->getNu();
+ mu = s->getMu();
  rho = s->getRho();
  uSolOld.Dim(numNodes);
  vSolOld.Dim(numNodes);
@@ -165,7 +166,7 @@ void InOut::loadSol( const char* _dir,const char* _filename, int _iter )
  fileUVWPC += aux + "UVWPC" + "-" + str + ".bin";
  const char* filenameUVWPC = fileUVWPC.c_str();
 
- clVector aux2(3*numNodes+2*numVerts); // vetor tambem carrega a concentracao
+ clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
 
  ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
 
@@ -179,16 +180,9 @@ void InOut::loadSol( const char* _dir,const char* _filename, int _iter )
  aux2.CopyTo(2*numNodes,*wSol);
  aux2.CopyTo(3*numNodes,*pSol);
  aux2.CopyTo(3*numNodes+numVerts,*cSol);
-
-//--------------------------------------------------
-//  clVector solVel(3*numNodes+numVerts);
-//  aux2.CopyTo(0,solVel);
-//  clVector solC(numVerts);
-//  aux2.CopyTo(3*numNodes+numVerts,solC);
-// 
-//  s->setUAnt(solVel); // impondo a velocidade no simulador
-//  s->setCSol(solC); // impondo a concentracao no simulador
-//-------------------------------------------------- 
+ aux2.CopyTo(3*numNodes+2*numVerts,*uALE);
+ aux2.CopyTo(4*numNodes+2*numVerts,*vALE);
+ aux2.CopyTo(5*numNodes+2*numVerts,*wALE);
 
  cout << "solution No.  " << _iter << " read in binary" << endl;
  
@@ -206,23 +200,36 @@ void InOut::saveSolTXT( const char* _dir,const char* _filename, int _iter )
  vec.Append(*wSol);
  vec.Append(*pSol);
  vec.Append(*cSol); // adicionando o vetor concentracao no vetor Vel+Pressao
+ vec.Append(*uALE);
+ vec.Append(*vALE);
+ vec.Append(*wALE);
 
- int i;
  string fileUVWPC = _dir;
  string aux = _filename;
- fileUVWPC += aux + "-" + str + ".dat";
+ fileUVWPC += aux + "-" + str + ".txt";
  const char* filenameUVWPC = fileUVWPC.c_str();
 
- ofstream UVWPC_file( filenameUVWPC ); 
- UVWPC_file << numVerts << " "  << numNodes << endl << endl;
+ ofstream UVWPC_file( filenameUVWPC, ios::trunc ); 
 
- for( i=0;i<vec.Dim();i++ )
-   UVWPC_file << vec.Get(i) << endl;
+ UVWPC_file << setprecision(10) << scientific; 
+ for( int i=0;i<vec.Dim();i++ )
+  UVWPC_file << vec.Get(i) << endl;
 
- UVWPC_file << endl;
  UVWPC_file.close();
 
- cout << "solucao no.  " << _iter << " gravada em TXT" << endl;
+ /* --------- copying to file sim-last.bin --------- */
+ ifstream inFile( filenameUVWPC ); 
+
+ string last = (string) _dir + "sim-last" + ".bin";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */
+
+ cout << "solution No. " << _iter << " saved in ascii" << endl;
  
 } // fecha metodo saveSolTXT 
 
@@ -345,12 +352,11 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  vtkCellType(vtkFile);
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pc);
+ vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cc);
-
- vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  vtkFile.close();
 
@@ -395,7 +401,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
  }
 
- vtkScalar(vtkFile,"viscosity",*nu);
+ vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
@@ -493,17 +499,21 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
- vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*interfaceDistance);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
- vtkVector(vtkFile,"surface_force",*fint);
- vtkScalar(vtkFile,"viscosity",*nu);
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkVector(vtkFile,"surface_force",*fint);
+ }
+
+ vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
@@ -588,17 +598,21 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
- vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*interfaceDistance);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
- vtkVector(vtkFile,"surface_force",*fint);
- vtkScalar(vtkFile,"viscosity",*nu);
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkVector(vtkFile,"surface_force",*fint);
+ }
+
+ vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
@@ -1538,8 +1552,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  SurfaceMesh *mesh = m->getInterfaceMesh();
 
  int numTri = mesh->IEN.DimI();
- vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  for( int i=0;i<numTri;i++ )
  {
   vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
@@ -1557,12 +1571,12 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pc);
+ vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cc);
 
- vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
  vtkScalar(vtkFile,"distance",*interfaceDistance);
 
  vtkFile.close();
@@ -1590,8 +1604,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  SurfaceMesh *mesh = m->getInterfaceMesh();
 
  int numTri = mesh->IEN.DimI();
- vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  for( int i=0;i<numTri;i++ )
  {
   vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
@@ -1609,17 +1623,21 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
- vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*interfaceDistance);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
- vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
- vtkScalar(vtkFile,"viscosity",*nu);
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+ }
+
+ vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
@@ -1711,8 +1729,8 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
   mesh << "#time" << setw(20) << "numVerts" 
                   << setw(9) << "numNodes" 
 				  << setw(9) << "numElems"
-                  << setw(9) << "surfVerts" 
-				  << setw(9) << "surfElems"
+                  << setw(10) << "surfVerts" 
+				  << setw(10) << "surfElems"
 				  << endl;
  }
 
@@ -1759,8 +1777,10 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
  vtuFile << "DATASET UNSTRUCTURED_GRID " << endl;
  vtuFile << "FIELD FieldData 2 " << endl;
  vtuFile << "TIME 1 1 double " << endl;
+ vtuFile << setprecision(10) << scientific;
  vtuFile << *simTime << endl;
  vtuFile << "ITERATION 1 1 int " << endl;
+ vtuFile << setprecision(0) << fixed;
  vtuFile << _iter << endl;
  vtuFile << "--> " << endl;
  vtuFile << endl;
@@ -1988,6 +2008,7 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
  clVector pLin(nPoints);
  pLin = interpLin*(*pSol);
 
+ vtkFile << setprecision(10) << scientific;
  for( int i=0;i<nPoints;i++ )
   vtkFile << setw(10) << xVert.Get(i) << " " << pLin.Get(i) << endl;
 
@@ -2035,10 +2056,13 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
  clVector pLin(nPoints);
  pLin = interpLin*(*pSol);
 
+ pFile << setprecision(10) << scientific;
  for( int i=0;i<nPoints*nPoints;i++ )
   pFile << setw(10) << xVert.Get(i) << " " 
                     << yVert.Get(i) << " " 
-					<< pLin.Get(i) << endl;
+					<< pLin.Get(i) << " "
+                    << setprecision(0) << fixed
+                    << _iter << endl;
 
  pFile.close();
 
@@ -2116,6 +2140,7 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
 				      << setw(15) << "bubble c-s area"
 					  << setw(15) << "fluid c-s area" 
 					  << setw(15) << "void fraction" 
+					  << setw(15) << "iteration" 
 					  << endl;
  }
 
@@ -2123,11 +2148,14 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  real bubbleArea = gas*dx*dy;
  real fluidArea = totalArea - bubbleArea;
  real voidFraction = bubbleArea/totalArea;
+ voidFile << setprecision(10) << scientific;
  voidFile << setw(10) << *simTime << " " 
                       << totalArea << " " 
 					  << bubbleArea << " " 
 					  << fluidArea << " " 
-					  << voidFraction << endl;
+					  << voidFraction << " " 
+                      << setprecision(0) << fixed
+                      << _iter << endl;
 
  voidFile.close();
 
@@ -2153,8 +2181,10 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "DATASET UNSTRUCTURED_GRID" << endl;
  _file << "FIELD FieldData 2" << endl;
  _file << "TIME 1 1 double" << endl;
+ _file << setprecision(10) << scientific;
  _file << *simTime << endl;
  _file << "ITERATION 1 1 int" << endl;
+ _file << setprecision(0) << fixed;
  _file << _iter << endl;
  _file << endl;
 }
@@ -2162,6 +2192,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
 void InOut::vtkCoords(ofstream& _file)
 {
  _file << "POINTS " << numVerts << " double" << endl;
+ _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   _file << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
 
@@ -2171,6 +2202,7 @@ void InOut::vtkCoords(ofstream& _file)
 void InOut::vtkSurfCoords(ofstream& _file)
 {
  _file << "POINTS " << surfMesh->numVerts << " double" << endl;
+ _file << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
   _file << surfMesh->X.Get(i) << " " 
         << surfMesh->Y.Get(i) << " " 
@@ -2182,6 +2214,7 @@ void InOut::vtkSurfCoords(ofstream& _file)
 void InOut::vtkCellArray(ofstream& _file)
 {
  _file << "CELLS " << numElems << " " << 5*numElems << endl;
+ _file << setprecision(0) << fixed;
  for( int i=0;i<numElems;i++ )
  {
   _file << "4 " << IEN->Get(i,0) << " "  
@@ -2195,6 +2228,7 @@ void InOut::vtkCellArray(ofstream& _file)
 void InOut::vtkCellType(ofstream& _file)
 {
  _file <<  "CELL_TYPES " << numElems << endl;
+ _file << setprecision(0) << fixed;
  for( int i=0;i<numElems;i++ )
   _file << "10 ";
 
@@ -2234,6 +2268,7 @@ void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
 void InOut::vtkVector(ofstream& _file,string _name,clVector &_v)
 {
  _file << "VECTORS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   _file << _v.Get(i) << " " 
         << _v.Get(i+numVerts) << " " 
@@ -2245,6 +2280,7 @@ void InOut::vtkVector(ofstream& _file,string _name,
                       clVector &_vx,clVector &_vy,clVector &_vz)
 {
  _file << "VECTORS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   _file << _vx.Get(i) << " " 
         << _vy.Get(i) << " " 
@@ -2271,6 +2307,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
 
+ mshFile << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
   mshFile << i+1 << " " << X->Get(i) << " " 
                         << Y->Get(i) << " " 
@@ -2280,6 +2317,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "$Elements" << endl;
  mshFile << surfMesh->numElems << endl;
 
+ mshFile << setprecision(0) << fixed;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
   int v1 = surfMesh->IEN.Get(i,0);
@@ -2347,6 +2385,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
 
+ mshFile << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
   mshFile << i+1 << " " << X->Get(i) << " " 
                         << Y->Get(i) << " " 
@@ -2356,6 +2395,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "$Elements" << endl;
  mshFile << surfMesh->numElems << endl;
 
+ mshFile << setprecision(0) << fixed;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
   int v1 = surfMesh->IEN.Get(i,0);

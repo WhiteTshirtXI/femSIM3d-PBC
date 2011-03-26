@@ -35,7 +35,7 @@ int main(int argc, char **argv)
  real rho_g = 1.225;
 //--------------------------------------------------
 //  int iter = 0;
-//  real Re = 1;
+//  real Re = 100;
 //  real Sc = 2;
 //  real We = 1;
 //  real Fr = 1.0;
@@ -43,9 +43,9 @@ int main(int argc, char **argv)
 //  real alpha = 1;
 //  real beta = -40;
 //  real cfl = 0.5;
-//  real mu_l = 2.0;
+//  real mu_l = 10.0;
 //  real mu_g = 1.0;
-//  real rho_l = 1.0;
+//  real rho_l = 10.0;
 //  real rho_g = 1.0;
 //-------------------------------------------------- 
 
@@ -90,10 +90,8 @@ int main(int argc, char **argv)
   s1.setSigma(sigma);
   s1.setCflBubble(cfl);
   //s1.setDt(dt);
-  s1.setMu_l(mu_l);
-  s1.setMu_g(mu_g);
-  s1.setRho_l(rho_l);
-  s1.setRho_g(rho_g);
+  s1.setMu(mu_l,mu_g);
+  s1.setRho(rho_l,rho_g);
   s1.init();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -128,8 +126,8 @@ int main(int argc, char **argv)
   s1.setSigma(sigma);
   s1.setCflBubble(cfl);
   //s1.setDt(dt);
-  s1.setMu_l(mu_l);
-  s1.setMu_g(mu_g);
+  s1.setMu(mu_l,mu_g);
+  s1.setRho(rho_l,rho_g);
   s1.setRho_l(rho_l);
   s1.setRho_g(rho_g);
   s1.init();
@@ -242,16 +240,18 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   InOut save(m1,s1); // cria objeto de gravacao
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
-   save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
-   save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+//--------------------------------------------------
+//    InOut save(m1,s1); // cria objeto de gravacao
+//    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+//    save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
+//    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
+//    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
+//    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+//    save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
+//    save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
+//    save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
+//    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+//-------------------------------------------------- 
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
@@ -277,10 +277,15 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder,"meshingInfo" );
+  saveEnd.oscillating(datFolder,"oscillating",nReMesh+i*nReMesh+iter-1);
+  saveEnd.oscillatingD(datFolder,"oscillatingD",nReMesh+i*nReMesh+iter-1);
+  saveEnd.oscillatingKappa(datFolder,"oscillatingKappa",nReMesh+i*nReMesh+iter-1);
  }
 
  PetscFinalize();

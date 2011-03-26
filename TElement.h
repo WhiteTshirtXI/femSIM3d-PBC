@@ -13,48 +13,49 @@
 #ifndef TElement_H
 #define TElement_H
 
-#include "clMatrix.h"
-#include "Model3D.h"
+/* defining element size and rule */
+#define NUMGLEU 5  // number of velocity nodes per element
+#define NUMGLEP 4  // number of pressure nodes per element
+#define NUMRULE 45 // number of quadrature rule
+#define NUMGLEC 4  // number of scalar nodes per element
+#define NUMRULEC 5 // number of quadrature rule
+
+#include "clVector.h"
 
 class TElement
 {
  public:
   
-  TElement( Model3D &_m );
+  TElement(); 
   virtual ~TElement();
-  int numGLEU;                  ///< numero de graus de liberdade de vel.
-  int numGLEP;                  ///< numero de graus de liberdade de pressao
-  int numGLEC;                  ///< numero de graus de liberdade de pressao
-  Model3D *m;
 
-  double massele[5][5];         ///< matriz de massa do elemento           
-  double kxx[5][5];             ///< matriz do laplaciano do bloco 11
-  double kxy[5][5];             ///< matriz do laplaciano do bloco 12
-  double kxz[5][5];             ///< matriz do laplaciano do bloco 13
-  double kyx[5][5];             ///< matriz do laplaciano do bloco 21
-  double kyy[5][5];             ///< matriz do laplaciano do bloco 22
-  double kyz[5][5];             ///< matriz do laplaciano do bloco 23
-  double kzx[5][5];             ///< matriz do laplaciano do bloco 31
-  double kzy[5][5];             ///< matriz do laplaciano do bloco 32
-  double kzz[5][5];             ///< matriz do laplaciano do bloco 33
-  double gxele[5][4];           ///< matriz do oper. grad do bloco 1
-  double gyele[5][4];           ///< matriz do oper. grad do bloco 2
-  double gzele[5][4];           ///< matriz do oper. grad do bloco 3
-  double dxele[4][5];           ///< matriz do oper. div do bloco 1
-  double dyele[4][5];           ///< matriz do oper. div do bloco 2
-  double dzele[4][5];           ///< matriz do oper. div do bloco 3
-  double masselec[4][4];         ///< matriz de massa do elemento           
-  double masselec2[4][4];         ///< matriz de massa do elemento           
-  double kelec[4][4];             ///< matriz do laplaciano do bloco 11
-  double kxxc[4][4];             ///< matriz do laplaciano do bloco 11
-  double kyyc[4][4];             ///< matriz do laplaciano do bloco 11
-  double kzzc[4][4];             ///< matriz do laplaciano do bloco 11
-  double gxelec[4][4];           ///< matriz do oper. grad do bloco 1
-  double gyelec[4][4];           ///< matriz do oper. grad do bloco 2
-  double gzelec[4][4];           ///< matriz do oper. grad do bloco 3
-  double dxelec[4][4];           ///< matriz do oper. div do bloco 1
-  double dyelec[4][4];           ///< matriz do oper. div do bloco 2
-  double dzelec[4][4];           ///< matriz do oper. div do bloco 3
+  double massele[NUMGLEU][NUMGLEU];  ///< matriz de massa do elemento           
+  double kxx[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 11
+  double kxy[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 12
+  double kxz[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 13
+  double kyx[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 21
+  double kyy[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 22
+  double kyz[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 23
+  double kzx[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 31
+  double kzy[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 32
+  double kzz[NUMGLEU][NUMGLEU];      ///< matriz do laplaciano do bloco 33
+  double gxele[NUMGLEU][NUMGLEP];    ///< matriz do oper. grad do bloco 1
+  double gyele[NUMGLEU][NUMGLEP];    ///< matriz do oper. grad do bloco 2
+  double gzele[NUMGLEU][NUMGLEP];    ///< matriz do oper. grad do bloco 3
+  double dxele[NUMGLEP][NUMGLEU];    ///< matriz do oper. div do bloco 1
+  double dyele[NUMGLEP][NUMGLEU];    ///< matriz do oper. div do bloco 2
+  double dzele[NUMGLEP][NUMGLEU];    ///< matriz do oper. div do bloco 3
+  double masselec[NUMGLEC][NUMGLEC]; ///< matriz de massa do elemento           
+  double kelec[NUMGLEC][NUMGLEC];    ///< matriz do laplaciano do bloco 11
+  double kxxc[NUMGLEC][NUMGLEC];     ///< matriz do laplaciano do bloco 11
+  double kyyc[NUMGLEC][NUMGLEC];     ///< matriz do laplaciano do bloco 11
+  double kzzc[NUMGLEC][NUMGLEC];     ///< matriz do laplaciano do bloco 11
+  double gxelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. grad do bloco 1
+  double gyelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. grad do bloco 2
+  double gzelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. grad do bloco 3
+  double dxelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. div do bloco 1
+  double dyelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. div do bloco 2
+  double dzelec[NUMGLEC][NUMGLEC];   ///< matriz do oper. div do bloco 3
 
 };
 

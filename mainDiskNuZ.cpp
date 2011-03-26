@@ -21,6 +21,7 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real cfl = 10;
+ real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
 
  s1.setRe(Re);
  s1.setCflDisk(cfl);
+ s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
 

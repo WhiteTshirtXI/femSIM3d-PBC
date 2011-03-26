@@ -23,6 +23,8 @@ int main(int argc, char **argv)
  real Fr = 2;
  int beta = 1;
  real cfl = 10;
+ real mu_l = 1.0;
+ real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
@@ -46,6 +48,8 @@ int main(int argc, char **argv)
  s1.setRe(Re);
  s1.setSc(Sc);
  s1.setCflDisk(cfl);
+ s1.setMu(mu_l);
+ s1.setRho(rho_l);
  s1.setFr(Fr);
  s1.setBeta(beta);
  s1.setSolverVelocity(solverV);

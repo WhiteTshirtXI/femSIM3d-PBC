@@ -206,7 +206,7 @@ private:
   clVector *uALE,*vALE,*wALE;
   clVector *fint;
   clDMatrix *kappa;
-  clVector *nu,*rho;
+  clVector *nu,*mu,*rho;
 };
 
 

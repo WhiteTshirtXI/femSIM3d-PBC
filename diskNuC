@@ -10,11 +10,11 @@ LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O3
 LIBS += -lgsl -lgslcblas -lm
-LIBS += -L$(HOME)/Programs/tetgen/1.4.0 -ltet
+LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I.
 INCLUDES += -I$(LIBDIR) 
 INCLUDES += -I/opt/local/include
-INCLUDES += -I$(HOME)/Programs/tetgen/1.4.0
+INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
 INCLUDES += -I${PETSC_DIR}/include
 
 OBJECTS += $(LIBDIR)/clVector.o

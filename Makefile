@@ -38,9 +38,9 @@ OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o
 OBJECTS += InOut.o
 
-#OBJECTS += mainBubble.o
+OBJECTS += mainBubble.o
 #OBJECTS += mainAnnular.o
-OBJECTS += main2Bubble.o
+#OBJECTS += main2Bubble.o
 
 $(TARGET): $(OBJECTS)
 	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)

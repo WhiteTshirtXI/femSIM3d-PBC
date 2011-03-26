@@ -365,6 +365,16 @@ void Simulator3D::assembleNuCte()
   real nuValue = 1.0;
   real rhoValue = 1.0;
 
+  // saving nu and rho in vector
+  nu.Set(v1,nuValue);
+  nu.Set(v2,nuValue);
+  nu.Set(v3,nuValue);
+  nu.Set(v4,nuValue);
+  rho.Set(v1,rhoValue);
+  rho.Set(v2,rhoValue);
+  rho.Set(v3,rhoValue);
+  rho.Set(v4,rhoValue);
+
   //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
 
@@ -423,6 +433,9 @@ void Simulator3D::assembleNuCte()
  Mrho.CopyFrom(          0,          0, Mx_rho );
  Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
  Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
+
+ // waste of memory!!!
+ M = Mrho;
 
  K.CopyFrom(          0,          0,    Kxx );
  K.CopyFrom(   numNodes,   numNodes,    Kxx );
@@ -483,11 +496,15 @@ void Simulator3D::assembleNuC()
   real dif = 1.0/nuC;
   real rhoValue = 1.0;
 
-  // saving nu in vector
+  // saving nu and rho in vector
   nu.Set(v1,nuC);
   nu.Set(v2,nuC);
   nu.Set(v3,nuC);
   nu.Set(v4,nuC);
+  rho.Set(v1,rhoValue);
+  rho.Set(v2,rhoValue);
+  rho.Set(v3,rhoValue);
+  rho.Set(v4,rhoValue);
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -592,6 +609,9 @@ void Simulator3D::assembleNuC()
  Mrho.CopyFrom(          0,          0,  Mx_rho );
  Mrho.CopyFrom(   numNodes,   numNodes,  Mx_rho );
  Mrho.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rho );
+
+ // waste of memory - find solution!!!
+ M = Mrho;
 
  K.CopyFrom(          0,          0,     Kxx );
  K.CopyFrom(          0,   numNodes,     Kxy );
@@ -827,9 +847,18 @@ void Simulator3D::assembleNuZ()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  //
-  real nuValue = nu.Get(v5);
+  
+  real nuValue = ( nu.Get(v1)+
+	               nu.Get(v2)+
+				   nu.Get(v3)+
+				   nu.Get(v4) )*0.25;
   real rhoValue = 1.0;
+  
+  // saving rho in vector
+  rho.Set(v1,rhoValue);
+  rho.Set(v2,rhoValue);
+  rho.Set(v3,rhoValue);
+  rho.Set(v4,rhoValue);
 
   miniElem.getMSlip(v1,v2,v3,v4,v5); 
 
@@ -915,6 +944,9 @@ void Simulator3D::assembleNuZ()
  Mrho.CopyFrom(          0,          0, Mx_rho );
  Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
  Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
+
+ // waste of memory - find solution!!!
+ M = Mrho;
 
  K.CopyFrom(          0,          0,    Kxx );
  K.CopyFrom(          0,   numNodes,    Kxy );
@@ -1213,7 +1245,7 @@ void Simulator3D::stepALEVel()
 
  c1 = 0.0; 
  c2 = 1.0;
- c3 = 0.03; 
+ c3 = 0.05; 
 
  uALE = c1*uSol+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSol+c2*vSmooth+c3*vSmoothCoord;
@@ -1960,7 +1992,7 @@ void Simulator3D::setNuZ()
  }
 
  int j;
- for( int i=0;i<numNodes;i++ )
+ for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<1001;j++ )
   {
@@ -2323,74 +2355,10 @@ void Simulator3D::loadSolution( const char* _dir,
  
 } // fecha metodo loadSol 
 
-int Simulator3D::loadIteration()
-{
- ifstream simTime( "./sim/simTime.dat",ios::in ); 
-
- real _time;
- int iterNumber;
-
- simTime >> iterNumber;
- simTime >> _time;
- time = _time;
-
- simTime.close();
-
- cout << "time = " << _time << " " << "itereracao: " << iterNumber << endl;
- return iterNumber+1;
-} // fecha metodo loadIteration
-
 int Simulator3D::loadIteration( const char* _dir, 
                                 const char* _filename )
 {
  string filename = (string) _dir + (string) _filename  + ".vtk";
- const char* File = filename.c_str();
-
- ifstream vtkFile( File,ios::in );
-
- char auxstr[255];
- real time;
- int iterNumber;
-
- if( !vtkFile )
- {
-  cerr << "VTK Mesh file is missing for TIME and ITERATION reading!" << endl;
-  exit(1);
- }
-
- while( ( !vtkFile.eof())&&(strcmp(auxstr,"TIME") != 0) )
-  vtkFile >> auxstr;
-
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> time;
-
- while( ( !vtkFile.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
-  vtkFile >> auxstr;
-
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> iterNumber;
-
- vtkFile.close();
-
- setTime(time); 
-
- return iterNumber+1;
-} // fecha metodo loadIteration
-
-int Simulator3D::loadIteration( const char* _dir, 
-                                const char* _filename, 
-								int _iter)
-{
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- string filename = (string) _dir + (string) _filename + "-" + str + ".vtk";
  const char* File = filename.c_str();
 
  ifstream vtkFile( File,ios::in );

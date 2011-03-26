@@ -381,16 +381,20 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkCellType(vtkFile);
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
- vtkScalar(vtkFile,"kappa",*kappa);
- vtkScalar(vtkFile,"distance",*interfaceDistance);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
- vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+ }
+
  vtkScalar(vtkFile,"viscosity",*nu);
  vtkScalar(vtkFile,"density",*rho);
 
@@ -1707,6 +1711,8 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
   mesh << "#time" << setw(20) << "numVerts" 
                   << setw(9) << "numNodes" 
 				  << setw(9) << "numElems"
+                  << setw(9) << "surfVerts" 
+				  << setw(9) << "surfElems"
 				  << endl;
  }
 
@@ -1714,7 +1720,10 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
  mesh << setprecision(10) << scientific; 
  mesh << setw(9) <<  *time << " " << numVerts << " " 
                                   << numNodes << " " 
-								  << numElems << endl; 
+								  << numElems << " "
+								  << surfMesh->numVerts << " "
+								  << surfMesh->numElems << " "
+								  << endl; 
 
  mesh.close();
 
@@ -1811,22 +1820,6 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
   vtuFile << "     " << pSol->Get(i) << endl;
  vtuFile << "    </DataArray>" << endl;
 
- // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
- {
-  vtuFile << "    <DataArray type=\"Float32\" Name=\"Concentration\" format=\"ascii\"> " << endl;
-  vtuFile << setprecision(10) << scientific;
-  for( int i=0;i<numVerts;i++ )
-   vtuFile << "     " << cSol->Get(i) << endl;
-  vtuFile << "    </DataArray>" << endl;
- }
-
- vtuFile << "    <DataArray type=\"Float32\" Name=\"kappa\" format=\"ascii\"> " << endl;
- vtuFile << setprecision(10) << scientific;
- for( int i=0;i<numVerts;i++ )
-  vtuFile << "     " << kappa->Get(i) << endl;
- vtuFile << "    </DataArray>" << endl;
-
  /* vector data points */
  vtuFile << "    <DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
  vtuFile << setprecision(10) << scientific;
@@ -1844,6 +1837,24 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
 				     << wALE->Get(i) << endl;
  vtuFile << "    </DataArray>" << endl;
 
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+ {
+  vtuFile << "    <DataArray type=\"Float32\" Name=\"Concentration\" format=\"ascii\"> " << endl;
+  vtuFile << setprecision(10) << scientific;
+  for( int i=0;i<numVerts;i++ )
+   vtuFile << "     " << cSol->Get(i) << endl;
+  vtuFile << "    </DataArray>" << endl;
+ }
+
+ if( kappa->Dim() > 0 )
+ {
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"kappa\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << kappa->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
  vtuFile << "    <DataArray type=\"Float32\" Name=\"surface force\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
  vtuFile << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
@@ -1851,6 +1862,7 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
                      << fint->Get(i+numVerts) << " " 
 				     << fint->Get(i+numVerts*2) << endl;
  vtuFile << "    </DataArray>" << endl;
+ }
 
  /* end of file */
  vtuFile << "   </PointData> " << endl;

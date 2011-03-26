@@ -22,6 +22,7 @@ int main(int argc, char **argv)
  const char *txt  = "txt/txt";
  const char *bin  = "bin/bin";
  const char *vtk  = "vtk/sim";
+ const char *datFolder = "dat/sim";
 
  Model3D m1;
  m1.readVTK(mesh);
@@ -40,7 +41,7 @@ int main(int argc, char **argv)
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(dir,vtk);
- save.saveInfo(dir,mesh);
+ save.saveInfo(datFolder,"info",mesh);
 
  s1.init();
  s1.assembleSlip();

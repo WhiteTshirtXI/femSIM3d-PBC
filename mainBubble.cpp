@@ -15,6 +15,8 @@
 #include "petscksp.h"
 #include "colors.h"
 
+#define NUMPHASES 2
+
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
@@ -128,8 +130,6 @@ int main(int argc, char **argv)
   //s1.setDt(dt);
   s1.setMu(mu_l,mu_g);
   s1.setRho(rho_l,rho_g);
-  s1.setRho_l(rho_l);
-  s1.setRho_g(rho_g);
   s1.init();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -240,18 +240,16 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-//--------------------------------------------------
-//    InOut save(m1,s1); // cria objeto de gravacao
-//    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-//    save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
-//    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-//    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-//    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
-//    save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
-//    save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
-//    save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
-//    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
-//-------------------------------------------------- 
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
+   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
+   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+   save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
+   save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
+   save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
+   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
@@ -280,12 +278,9 @@ int main(int argc, char **argv)
   saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder,"meshingInfo" );
-  saveEnd.oscillating(datFolder,"oscillating",nReMesh+i*nReMesh+iter-1);
-  saveEnd.oscillatingD(datFolder,"oscillatingD",nReMesh+i*nReMesh+iter-1);
-  saveEnd.oscillatingKappa(datFolder,"oscillatingKappa",nReMesh+i*nReMesh+iter-1);
  }
 
  PetscFinalize();

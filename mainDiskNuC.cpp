@@ -12,6 +12,8 @@
 #include "PetscSolver.h"
 #include "PCGSolver.h"
 
+#define NUMPHASES 1
+
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);

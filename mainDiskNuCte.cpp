@@ -22,18 +22,18 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real cfl = 1;
- Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
- //Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
  const char *binFolder  = "./bin/";
+ const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,10,20);
- //m1.readVTK(mesh);
+ m1.setMeshDisk(6,6,10);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCteDiskBC();
@@ -48,7 +48,6 @@ int main(int argc, char **argv)
  s1.setCflDisk(cfl);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
-
  s1.init();
  s1.assembleNuCte();
  //s1.assembleC();
@@ -68,10 +67,11 @@ int main(int argc, char **argv)
   cout << endl;
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
-  s1.loadSolution(binFolder,"sim-last");
-  iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",70);
-  //iter = s1.loadIteration(vtkFolder,"sim",70);
+
+  string file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
  }
  
  InOut save(m1,s1); // cria objeto de gravacao
@@ -108,8 +108,8 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk11",i*nR+j+iter,8);
    save.saveVonKarman(simFolder,"vk12",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
-   save.saveConvergence("./","convergence");
+   save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveConvergence(datFolder,"convergence");
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of "

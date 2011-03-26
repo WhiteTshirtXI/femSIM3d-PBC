@@ -27,13 +27,6 @@
 #include "colors.h" 
 #include "interpolations.h" 
 
-// necessario para leitura do objeto triangle.o escrito em ANSI C
-extern "C"
-{
-#include "triangle.h"
-}
-
-
 /**
  * @brief classe responsavel pela manipulacao de entrada e saida de
  * dados em arquivos ASCII e binario.

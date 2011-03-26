@@ -26,11 +26,11 @@ int main(int argc, char **argv)
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
  const char *binFolder  = "./bin/";
+ const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- //m1.readVTK(mesh);
  m1.setMeshDisk(5,5,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
@@ -61,10 +61,11 @@ int main(int argc, char **argv)
   cout << endl;
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
-  s1.loadSolution(binFolder,"sim-last");
-  iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",70);
-  //iter = s1.loadIteration(vtkFolder,"sim",70);
+
+  string file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -92,8 +93,8 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
    save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
-   save.saveConvergence("./","convergence");
+   save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveConvergence(datFolder,"convergence");
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;

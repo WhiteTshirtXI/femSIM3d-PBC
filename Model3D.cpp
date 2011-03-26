@@ -7,12 +7,6 @@
 
 #include "Model3D.h"
 
-// necessario para leitura do objeto triangle.o escrito em ANSI C
-extern "C"
-{
-#include "triangle.h"
-}
-
 using namespace std;
 
 Model3D::Model3D()
@@ -466,8 +460,6 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
   }
  }
 
- mesh3d = convertTetgenToMesh3d(out);
-
  in.initialize();
  out.initialize();
 }
@@ -762,7 +754,9 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
- mesh3d = convertTetgenToMesh3d(out);
+ 
+ // como nao ha regiao predefinida, este metodo nao funciona aqui!
+ //mesh3d = convertTetgenToMesh3d(out);
 
  in.initialize();
  out.initialize();
@@ -2252,23 +2246,29 @@ void Model3D::insertPointsByArea()
 void Model3D::insertPointsBetweenBubblesByPosition()
 {
  int ny = 4; // number of points between interfaces
- int nPoints = 10;
+ int nPoints = 20;
 
- real Ymax1=100;
- real Ymin1=-100;
- real Ymax2=-100;
- real Ymin2=100;
+ real Xmax1=0.0;  real Ymax1=0.0; 
+ real Xmin1=0.0;  real Ymin1=Y.Min();     
+ real Zmax1=0.0;  real Ymax2=0.0; 
+ real Zmin1=0.0;  real Ymin2=Y.Max();     
 
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   // bubble 1 (Y<0)
-  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+  if( surfMesh.Y.Get(i) < 0 && surfMesh.Marker.Get(i)==0.5 )
   {
+   if(X.Get(i)>Xmax1) Xmax1=X.Get(i);
+   if(X.Get(i)<Xmin1) Xmin1=X.Get(i);
+
    if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
    if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
+
+   if(Z.Get(i)>Zmax1) Zmax1=Z.Get(i);
+   if(Z.Get(i)<Zmin1) Zmin1=Z.Get(i);
   }
   // bubble 2 (Y>0)
-  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+  if( surfMesh.Y.Get(i) > 0 && surfMesh.Marker.Get(i)==0.5 )
   {
    if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
    if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
@@ -2276,14 +2276,14 @@ void Model3D::insertPointsBetweenBubblesByPosition()
  }
 
  // initial position
- real xi = -0.60;
+ real xi = Xmin1;
  real yi = Ymin1;
- real zi = -0.40;
+ real zi = Zmin1;
 
  // distance between points
- real dx = (-2.0*xi)/(nPoints-1);
+ real dx = (Xmax1-Xmin1)/(nPoints-1);
  real dy = (Ymin2-Ymin1)/(ny+1);
- real dz = (-2.0*zi)/(nPoints-1);
+ real dz = (Zmax1-Zmin1)/(nPoints-1);
 
  // counter to numberize added points
  int count = surfMesh.numVerts;
@@ -2322,7 +2322,7 @@ void Model3D::mesh2Dto3DOriginal()
  out.initialize();
 
  in.mesh_dim = 3;
- in.numberofpoints = surfMesh.numVerts + 400; // num of add points
+ in.numberofpoints = surfMesh.numVerts + 1600; // num of add points
  numVerts = in.numberofpoints;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
@@ -2724,39 +2724,40 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
  cout << "   |------------------------ Mesh Report --------------------------|" 
       << endl;
- cout << "     number of 3D points       (numVerts):  " 
+ cout << "     number of 3D points          (numVerts): " 
       << _tetmesh.numberofpoints << endl;
- cout << "     number of 3D nodes        (numNodes):  " 
+ cout << "     number of 3D nodes           (numNodes): " 
       << _tetmesh.numberoftetrahedra+_tetmesh.numberofpoints << endl;
- cout << "     number of tetrahedrons     (numEles):  " 
+ cout << "     number of tetrahedrons        (numEles): " 
       << _tetmesh.numberoftetrahedra << endl;
- cout << "     number of surface points  (surfMesh):  " 
+ cout << "     number of surface points     (surfMesh): " 
       << surfMesh.numVerts << endl;
- cout << "     number of surface triangles (numTri):  " 
+ cout << "     number of surface triangles    (numTri): " 
       << _tetmesh.numberoftrifaces << endl;
- cout << "     mesh: " << count 
-      << " tets w/ all the 4 verts on the interface   " << endl;
- cout << "     interface average element edge length: " << averageTriEdge 
-      << endl;
- cout << "     desired tetrahedron volume:            " 
+ cout << "     interface average element edge length:   " 
+      << averageTriEdge << endl;
+ cout << "     desired tetrahedron volume:              " 
       << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
- cout << "     triangle edge size:                    " << triEdge << endl;
- cout << "     min tetrahedron volume:                " 
+ cout << "     triangle edge size:                      " << triEdge << endl;
+ cout << "     min tetrahedron volume:                  " 
       << minVol << " (" << minElem << ")" << endl;
- cout << "     max tetrahedron volume:                " 
+ cout << "     max tetrahedron volume:                  " 
       << maxVol <<  " (" << maxElem << ")" << endl;
  cout << "     number of " << color(none,yellow,black) 
-      << "inserted" << resetColor() << " surface points:     " << isp << endl;
-
+      << "inserted" << resetColor() << " surface points:       " 
+	  << isp << endl;
  cout << "     number of " << color(none,red,black)
-      << "removed" << resetColor() << " surface points:      " << rsp << endl;
- cout << "     number of inserted mesh points:        " << ip << endl;
- cout << "     number of removed mesh points:         " << rp+rpi 
+      << "removed" << resetColor() << " surface points:        " 
+	  << rsp << endl;
+ cout << "     number of inserted mesh points:          " << ip << endl;
+ cout << "     number of removed mesh points:           " << rp+rpi 
       << " (" << rpi << "," << rp << ")" << endl;
- cout << "     number of " << color(none,green,black)
-      << "flipped" << resetColor() << " operations:          " << flip << endl; 
- cout << "     number of " << color(none,blue,black) 
-      << "contracted" << resetColor() << " surface points:   " << csp << endl; 
+ cout << "     number of " << color(none,green,black) << "flipped" 
+      << resetColor() << " operations:            " << flip << endl; 
+ cout << "     number of " << color(none,blue,black) << "contracted" 
+      << resetColor() << " surface points:     " << csp << endl; 
+ cout << "     number of tets with 4 verts on surface:  " 
+      << count << endl;
  cout << "   |---------------------------------------------------------------|" 
       << endl;
 }

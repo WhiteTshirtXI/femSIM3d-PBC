@@ -70,10 +70,11 @@ int main(int argc, char **argv)
   cout << endl;
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
-  s1.loadSolution(binFolder,"sim-last");
-  iter = s1.loadIteration(vtkFolder,"sim-last");
-  //s1.loadSolution(binFolder,"UVWPC",50);
-  //iter = s1.loadIteration(vtkFolder,"sim",50);
+
+  string file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao

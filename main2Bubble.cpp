@@ -20,13 +20,13 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 0;
- real Re = 10;
+ real Re = 100;
  real Sc = 2;
  real We = 2;
  real Fr = 0.4;
  real alpha = 1;
  real beta = -10;
- real cfl = 0.5;
+ real cfl = 0.25;
  real mu_l = 1.0;
  real mu_g = 1.0;
  real rho_l = 1.0;
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
- int nIter = 600;
+ int nIter = 120;
  int nReMesh = 1;
  for( int i=0;i<nIter;i++ )
  {

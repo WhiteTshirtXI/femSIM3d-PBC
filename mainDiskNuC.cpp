@@ -24,9 +24,9 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
-
  const char *mesh = "../../db/mesh/3d/disk5-15-60.vtk";
  const char *binFolder  = "./bin/";
+ const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
 
@@ -61,10 +61,12 @@ int main(int argc, char **argv)
   cout << endl;
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
-  //s1.loadSolution(binFolder,"sim-last");
-  //iter = s1.loadIteration(vtkFolder,"sim-last");
-  s1.loadSolution(binFolder,"UVWPC",10);
-  iter = s1.loadIteration(vtkFolder,"sim",10);
+
+  string file = (string) "sim-" + *(argv+2);
+  const char *sol = file.c_str();
+  s1.loadSolution(binFolder,sol);
+  iter = s1.loadIteration(vtkFolder,sol);
+
   s1.assembleK();
  }
 
@@ -100,8 +102,8 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
    save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveSol(binFolder,"UVWPC",i*nR+j+iter);
-   save.saveConvergence("./","convergence");
+   save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveConvergence(datFolder,"convergence");
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;

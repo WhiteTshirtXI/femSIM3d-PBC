@@ -13,6 +13,8 @@
 #include "InOut.h"
 #include "PetscSolver.h"
 
+#define NUMPHASES 1
+
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);

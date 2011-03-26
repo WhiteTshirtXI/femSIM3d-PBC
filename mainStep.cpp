@@ -12,6 +12,8 @@
 #include "Simulator3D.h"
 #include "InOut.h"
 
+#define NUMPHASES 1
+
 int main(int argc, char **argv)
 {
  int iter = 0;

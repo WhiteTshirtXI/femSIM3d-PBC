@@ -15,6 +15,8 @@
 #include "petscksp.h"
 #include "colors.h"
 
+#define NUMPHASES 2
+
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);

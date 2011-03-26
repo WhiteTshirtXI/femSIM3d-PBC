@@ -81,8 +81,8 @@ class Simulator3D
   void setUnCoupledCBC();
 
   void setHsmooth();
-  void setMuRho(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
   void setMuZ();
+  void setMuC();
   void setRe(real _Re);
   real getRe();
   void setSc(real _Sc);
@@ -108,9 +108,7 @@ class Simulator3D
   real getCfl();
   void setMu(real _mu_l);
   void setMu(real _mu_l,real _mu_g);
-  void setMu_l(real _mu_l);
   real getMu_l();
-  void setMu_g(real _mu_g);
   real getMu_g();
   void setRho(real _rho_l);
   void setRho(real _rho_l,real _rho_g);

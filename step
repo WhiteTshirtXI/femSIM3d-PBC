@@ -5,7 +5,7 @@
 ## =================================================================== ##
 
 
-TARGET = step
+TARGET = ns3d
 DIR = .
 LIBDIR = ../lib
 CXX = g++
@@ -32,7 +32,6 @@ OBJECTS += Solver.o
 OBJECTS += Model3D.o
 OBJECTS += TElement.o
 OBJECTS += Galerkin.o
-#OBJECTS += Interface3D.o
 OBJECTS += MeshSmooth.o
 OBJECTS += SemiLagrangean.o
 OBJECTS += Simulator3D.o

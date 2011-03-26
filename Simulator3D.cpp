@@ -498,15 +498,15 @@ void Simulator3D::assembleNuC()
 	         cSol.Get(v4) )*0.25;
 
   real eme = 0.81315;
-  real nuC = exp(eme*c);
-  real dif = 1.0/nuC;
+  real muC = exp(eme*c);
+  real dif = 1.0/muC;
   real rhoValue = 1.0;
 
   // updating mu
-  mu.Set(v1,nuC);
-  mu.Set(v2,nuC);
-  mu.Set(v3,nuC);
-  mu.Set(v4,nuC);
+  mu.Set(v1,muC);
+  mu.Set(v2,muC);
+  mu.Set(v3,muC);
+  mu.Set(v4,muC);
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -519,7 +519,7 @@ void Simulator3D::assembleNuC()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuC*( 2*miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + muC*( 2*miniElem.kxx[i][j] + 
 	                               miniElem.kyy[i][j] + 
 								   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
@@ -528,25 +528,25 @@ void Simulator3D::assembleNuC()
 	Mx_rho.Set(ii,jj,aux); // matriz de massa
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuC*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + muC*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuC*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + muC*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kyy.Get(ii,jj) + muC*( miniElem.kxx[i][j] + 
 	                           2*miniElem.kyy[i][j] + 
 							     miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuC*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + muC*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kzz.Get(ii,jj) + muC*( miniElem.kxx[i][j] + 
 	                             miniElem.kyy[i][j] + 
 							   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
@@ -995,8 +995,8 @@ void Simulator3D::assembleK()
 	         cSol.Get(v4) )*0.25;
 
   real eme = 0.81315;
-  real nuC = exp(eme*c);
-  real dif = 1.0/nuC;
+  real muC = exp(eme*c);
+  real dif = 1.0/muC;
 
   miniElem.getK(v1,v2,v3,v4,v5);
   linElem.getK(v1,v2,v3,v4); 
@@ -1009,31 +1009,31 @@ void Simulator3D::assembleK()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuC*( 2*miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + muC*( 2*miniElem.kxx[i][j] + 
 	                               miniElem.kyy[i][j] + 
 								   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuC*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + muC*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuC*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + muC*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kyy.Get(ii,jj) + muC*( miniElem.kxx[i][j] + 
 	                           2*miniElem.kyy[i][j] + 
 							     miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuC*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + muC*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuC*( miniElem.kxx[i][j] + 
+	aux = Kzz.Get(ii,jj) + muC*( miniElem.kxx[i][j] + 
 	                             miniElem.kyy[i][j] + 
 							   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
@@ -1781,85 +1781,6 @@ void Simulator3D::setHsmooth()
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setMuRho(real _mu_l,real _mu_g,
-                           real _rho_l,real _rho_g)
-{
- /* Since we are working here with non-dimensional equations and also
-  * because the referential Reynolds used in two-phase flow is the one
-  * from the liquid phase, we set the liquid viscosity (mu_fluid) as
-  * equal to 1.0.
-  *
-  *          rho_0 * v_0 * D     
-  * Re_ref = ---------------     
-  *               mu_0            
-  *
-  *               rho_l                   rho_g
-  * rho_lAdimen = -----     rho_gAdimen = -----
-  *               rho_0                   rho_0
-  *
-  *               mu_l                   mu_g
-  * muAdimen_l =  ----      muAdimen_g = ----
-  *               mu_0                   mu_0
-  *
-  *
-  *        rho_l * v_l * D          rho_g * v_g * D 
-  * Re_l = ---------------   Re_g = --------------- 
-  *             mu_l                     mu_g       
-  *
-  * Navier-Stokes Viscous Term (liquid):
-  *
-  *    mu_0                 [            (                       ) ]
-  * --------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [            (                       ) ]
-  *
-  *
-  * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
-  *
-  *    mu_0                 [ mu_g   (                       ) ]
-  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [ mu_0   (                       ) ]
-  *
-  *
-  * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
-  *
-  *    mu_0                 [ mu_l   (                       ) ]
-  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [ mu_0   (                       ) ]
-  *
-  * */
- 
- rho_0 = rho_l; 
- rho_lAdimen = _rho_l/rho_0; 
- rho_gAdimen = _rho_g/rho_0;
-
- mu_0 = _mu_l;
- mu_lAdimen = _mu_l/mu_0;
- mu_gAdimen = _mu_g/mu_0;
-
- for( int i=0;i<numVerts;i++ )
- {
-  // gas phase (bubble)
-  if( cc->Get(i)>0.5 )
-  {
-   nu.Set(i,mu_gAdimen); 
-   rho.Set(i,rho_gAdimen);
-  }
-  // liquid phase
-  else if( cc->Get(i)<0.5 )
-  {
-   nu.Set(i,mu_lAdimen); 
-   rho.Set(i,rho_lAdimen);
-  }
-  else
-  {
-   nu.Set(i,(mu_gAdimen+mu_lAdimen)*0.5);
-   rho.Set(i,(rho_gAdimen+rho_lAdimen)*0.5);
-  }
- }
- nu = setTetCentroid(*IEN,nu);
- rho = setTetCentroid(*IEN,rho);
-}
-
 void Simulator3D::setCSol(clVector &_cSol)
 {
  cSol = _cSol;
@@ -1908,6 +1829,31 @@ void Simulator3D::setMuZ()
  }
 }
 
+void Simulator3D::setMuC()
+{
+ // -- Leitura do perfil de nu variavel em Z para os nos da malha -- //
+ for( int mele=0;mele<numElems;mele++ )
+ {
+  int v1 = (int) IEN->Get(mele,0);
+  int v2 = (int) IEN->Get(mele,1);
+  int v3 = (int) IEN->Get(mele,2);
+  int v4 = (int) IEN->Get(mele,3);
+  real c = ( cSol.Get(v1)+
+	         cSol.Get(v2)+
+	         cSol.Get(v3)+
+	         cSol.Get(v4) )*0.25;
+
+  real eme = 0.81315;
+  real muC = exp(eme*c);
+
+  // updating mu
+  mu.Set(v1,muC);
+  mu.Set(v2,muC);
+  mu.Set(v3,muC);
+  mu.Set(v4,muC);
+ }
+}
+
 void Simulator3D::setSolverVelocity(Solver *s){solverV = s;}
 void Simulator3D::setSolverPressure(Solver *s){solverP = s;}
 void Simulator3D::setSolverConcentration(Solver *s){solverC = s;}
@@ -1940,6 +1886,58 @@ void Simulator3D::setMu(real _mu_l)
  mu.SetAll(mu_lAdimen); 
 }
 
+void Simulator3D::setRho(real _rho_l)
+{ 
+ rho_l = _rho_l;
+ rho_0 = rho_l; 
+ rho_lAdimen = rho_l/rho_0; 
+
+ rho.SetAll(rho_lAdimen); 
+}
+
+/* Since we are working here with non-dimensional equations and also
+ * because the referential Reynolds used in two-phase flow is the one
+ * from the liquid phase, we set the liquid viscosity (mu_fluid) as
+ * equal to 1.0.
+ *
+ *          rho_0 * v_0 * D     
+ * Re_ref = ---------------     
+ *               mu_0            
+ *
+ *               rho_l                   rho_g
+ * rho_lAdimen = -----     rho_gAdimen = -----
+ *               rho_0                   rho_0
+ *
+ *               mu_l                   mu_g
+ * muAdimen_l =  ----      muAdimen_g = ----
+ *               mu_0                   mu_0
+ *
+ *
+ *        rho_l * v_l * D          rho_g * v_g * D 
+ * Re_l = ---------------   Re_g = --------------- 
+ *             mu_l                     mu_g       
+ *
+ * Navier-Stokes Viscous Term (liquid):
+ *
+ *    mu_0                 [            (                       ) ]
+ * --------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
+ * rho_0*v*D               [            (                       ) ]
+ *
+ *
+ * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
+ *
+ *    mu_0                 [ mu_g   (                       ) ]
+ * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+ * rho_0*v*D               [ mu_0   (                       ) ]
+ *
+ *
+ * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
+ *
+ *    mu_0                 [ mu_l   (                       ) ]
+ * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
+ * rho_0*v*D               [ mu_0   (                       ) ]
+ *
+ * */
 void Simulator3D::setMu(real _mu_l,real _mu_g)
 { 
  mu_l = _mu_l;
@@ -1960,15 +1958,6 @@ void Simulator3D::setMu(real _mu_l,real _mu_g)
   else
    mu.Set(i,(mu_gAdimen+mu_lAdimen)*0.5);
  }
-}
-
-void Simulator3D::setRho(real _rho_l)
-{ 
- rho_l = _rho_l;
- rho_0 = rho_l; 
- rho_lAdimen = rho_l/rho_0; 
-
- rho.SetAll(rho_lAdimen); 
 }
 
 void Simulator3D::setRho(real _rho_l,real _rho_g)
@@ -1993,13 +1982,9 @@ void Simulator3D::setRho(real _rho_l,real _rho_g)
  }
 }
 
-void Simulator3D::setMu_l(real _mu_l){mu_l = _mu_l;}
 real Simulator3D::getMu_l(){return mu_l;}
-void Simulator3D::setMu_g(real _mu_g){mu_g = _mu_g;}
 real Simulator3D::getMu_g(){return mu_g;}
-void Simulator3D::setRho_l(real _rho_l){rho_l = _rho_l;}
 real Simulator3D::getRho_l(){return rho_l;}
-void Simulator3D::setRho_g(real _rho_g){rho_g = _rho_g;}
 real Simulator3D::getRho_g(){return rho_g;}
 real* Simulator3D::getTime(){return &time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 

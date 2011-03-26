@@ -20,6 +20,7 @@ int main(int argc, char **argv)
  real Re = 1;
  real Sc = 2000;
  real cfl = 1;
+ real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
@@ -44,6 +45,7 @@ int main(int argc, char **argv)
  s1.setRe(Re); // Reynolds do disco (~1)
  s1.setSc(Sc); // Schmidt da concentracao (~2000)
  s1.setCflDisk(cfl);
+ s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
  s1.setSolverConcentration(solverC);

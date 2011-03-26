@@ -88,6 +88,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
  nuOld = *_s.getNu();
+ muOld = *_s.getMu();
  rhoOld = *_s.getRho();
  kappaOld = *_s.getKappa();
  fintOld = *_s.getFint();
@@ -160,10 +161,12 @@ void Simulator3D::assemble()
  clMatrix Gz( numNodes,numVerts );
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
- FEMMiniElement3D miniElem(*m);
- FEMLinElement3D linElem(*m);
 
- setMuRho( mu_l,mu_g,rho_l,rho_g );
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+ FEMLinElement3D linElem(*X,*Y,*Z);
+
+ setMu( mu_l,mu_g );
+ setRho( rho_l,rho_g );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -173,10 +176,10 @@ void Simulator3D::assemble()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  real nuValue = ( nu.Get(v1)+
-	               nu.Get(v2)+
-	               nu.Get(v3)+
-	               nu.Get(v4) )*0.25;
+  real muValue = ( mu.Get(v1)+
+	               mu.Get(v2)+
+	               mu.Get(v3)+
+	               mu.Get(v4) )*0.25;
   real rhoValue = ( rho.Get(v1)+
 	                rho.Get(v2)+
 	                rho.Get(v3)+
@@ -193,7 +196,7 @@ void Simulator3D::assemble()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + muValue*( 2*miniElem.kxx[i][j] + 
 	                                   miniElem.kyy[i][j] + 
 									   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
@@ -205,25 +208,25 @@ void Simulator3D::assemble()
 	Mx.Set(ii,jj,aux); // matriz de massa sem rho
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + muValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + muValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	aux = Kyy.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
 	                               2*miniElem.kyy[i][j] + 
 							         miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + muValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	aux = Kzz.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
 	                                 miniElem.kyy[i][j] + 
 								   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
@@ -302,7 +305,7 @@ void Simulator3D::assembleC()
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
- FEMLinElement3D linElem(*m);
+ FEMLinElement3D linElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -352,7 +355,10 @@ void Simulator3D::assembleNuCte()
  clMatrix Dy( numVerts,numNodes );
  clMatrix Dz( numVerts,numNodes );
 
- FEMMiniElement3D miniElem(*m);
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+
+ setMu(mu_l);
+ setRho(rho_l);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -362,18 +368,15 @@ void Simulator3D::assembleNuCte()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  real nuValue = 1.0;
-  real rhoValue = 1.0;
 
-  // saving nu and rho in vector
-  nu.Set(v1,nuValue);
-  nu.Set(v2,nuValue);
-  nu.Set(v3,nuValue);
-  nu.Set(v4,nuValue);
-  rho.Set(v1,rhoValue);
-  rho.Set(v2,rhoValue);
-  rho.Set(v3,rhoValue);
-  rho.Set(v4,rhoValue);
+  real muValue = ( mu.Get(v1)+
+	               mu.Get(v2)+
+	               mu.Get(v3)+
+	               mu.Get(v4) )*0.25;
+  real rhoValue = ( rho.Get(v1)+
+	                rho.Get(v2)+
+	                rho.Get(v3)+
+	                rho.Get(v4) )*0.25;
 
   //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
@@ -386,7 +389,7 @@ void Simulator3D::assembleNuCte()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
 	                                 miniElem.kyy[i][j] + 
 							         miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
@@ -475,8 +478,11 @@ void Simulator3D::assembleNuC()
  clMatrix Dz( numVerts,numNodes );
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
- FEMMiniElement3D miniElem(*m);
- FEMLinElement3D linElem(*m);
+
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+ FEMLinElement3D linElem(*X,*Y,*Z);
+
+ setRho(rho_l);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -496,15 +502,11 @@ void Simulator3D::assembleNuC()
   real dif = 1.0/nuC;
   real rhoValue = 1.0;
 
-  // saving nu and rho in vector
-  nu.Set(v1,nuC);
-  nu.Set(v2,nuC);
-  nu.Set(v3,nuC);
-  nu.Set(v4,nuC);
-  rho.Set(v1,rhoValue);
-  rho.Set(v2,rhoValue);
-  rho.Set(v3,rhoValue);
-  rho.Set(v4,rhoValue);
+  // updating mu
+  mu.Set(v1,nuC);
+  mu.Set(v2,nuC);
+  mu.Set(v3,nuC);
+  mu.Set(v4,nuC);
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -657,10 +659,8 @@ void Simulator3D::assembleSlip()
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
- FEMMiniElement3D miniElem(*m);
- FEMLinElement3D linElem(*m);
-
- setMuRho( mu_l,mu_g,rho_l,rho_g );
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+ FEMLinElement3D linElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -671,16 +671,15 @@ void Simulator3D::assembleSlip()
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
 
-  real nuValue = ( nu.Get(v1)+
-	               nu.Get(v2)+
-	               nu.Get(v3)+
-	               nu.Get(v4) )*0.25;
+  real muValue = ( mu.Get(v1)+
+	               mu.Get(v2)+
+	               mu.Get(v3)+
+	               mu.Get(v4) )*0.25;
+
   real rhoValue = ( rho.Get(v1)+
 	                rho.Get(v2)+
 	                rho.Get(v3)+
 	                rho.Get(v4) )*0.25;
-
-  rhoValue = 1.0;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -693,9 +692,9 @@ void Simulator3D::assembleSlip()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
-	                               miniElem.kyy[i][j] + 
-								   miniElem.kzz[i][j] ); 
+	aux = Kxx.Get(ii,jj) + muValue*( 2*miniElem.kxx[i][j] + 
+	                                   miniElem.kyy[i][j] + 
+									   miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
 
 	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
@@ -705,27 +704,27 @@ void Simulator3D::assembleSlip()
 	Mx.Set(ii,jj,aux); // matriz de massa sem rho
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + muValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + muValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
-	                           2*miniElem.kyy[i][j] + 
-							     miniElem.kzz[i][j] ); 
+	aux = Kyy.Get(ii,jj) + muValue*(   miniElem.kxx[i][j] + 
+	                                 2*miniElem.kyy[i][j] + 
+							           miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + muValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
-	                             miniElem.kyy[i][j] + 
-							   2*miniElem.kzz[i][j] ); 
+	aux = Kzz.Get(ii,jj) + muValue*(   miniElem.kxx[i][j] + 
+	                                   miniElem.kyy[i][j] + 
+							         2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
 
    };
@@ -835,9 +834,10 @@ void Simulator3D::assembleNuZ()
  clMatrix Dy( numVerts,numNodes );
  clMatrix Dz( numVerts,numNodes );
 
- setNuZ();      // carregando o arquivo de perfil nuZ
+ setMuZ();      // carregando o arquivo de perfil nuZ
+ setRho(rho_l);
  
- FEMMiniElement3D miniElem(*m);
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -848,17 +848,15 @@ void Simulator3D::assembleNuZ()
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
   
-  real nuValue = ( nu.Get(v1)+
-	               nu.Get(v2)+
-				   nu.Get(v3)+
-				   nu.Get(v4) )*0.25;
-  real rhoValue = 1.0;
-  
-  // saving rho in vector
-  rho.Set(v1,rhoValue);
-  rho.Set(v2,rhoValue);
-  rho.Set(v3,rhoValue);
-  rho.Set(v4,rhoValue);
+  real muValue = ( mu.Get(v1)+
+	               mu.Get(v2)+
+				   mu.Get(v3)+
+				   mu.Get(v4) )*0.25;
+
+  real rhoValue = ( rho.Get(v1)+
+	                rho.Get(v2)+
+				    rho.Get(v3)+
+				    rho.Get(v4) )*0.25;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5); 
 
@@ -870,7 +868,7 @@ void Simulator3D::assembleNuZ()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + nuValue*( 2*miniElem.kxx[i][j] + 
+	aux = Kxx.Get(ii,jj) + muValue*( 2*miniElem.kxx[i][j] + 
 	                                   miniElem.kyy[i][j] + 
 								       miniElem.kzz[i][j] ); 
 	Kxx.Set(ii,jj,aux);
@@ -879,25 +877,25 @@ void Simulator3D::assembleNuZ()
 	Mx_rho.Set(ii,jj,aux);
 
 	// bloco 12
-	aux = Kxy.Get(ii,jj) + nuValue*( miniElem.kxy[i][j] ); 
+	aux = Kxy.Get(ii,jj) + muValue*( miniElem.kxy[i][j] ); 
 	Kxy.Set(ii,jj,aux);
 
 	// bloco 13
-	aux = Kxz.Get(ii,jj) + nuValue*( miniElem.kxz[i][j] ); 
+	aux = Kxz.Get(ii,jj) + muValue*( miniElem.kxz[i][j] ); 
 	Kxz.Set(ii,jj,aux);
 
 	// bloco 22
-	aux = Kyy.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	aux = Kyy.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
 	                               2*miniElem.kyy[i][j] + 
 								     miniElem.kzz[i][j] ); 
 	Kyy.Set(ii,jj,aux);
 
 	// bloco 23
-	aux = Kyz.Get(ii,jj) + nuValue*( miniElem.kyz[i][j] ); 
+	aux = Kyz.Get(ii,jj) + muValue*( miniElem.kyz[i][j] ); 
 	Kyz.Set(ii,jj,aux);
 
 	// bloco 33
-	aux = Kzz.Get(ii,jj) + nuValue*( miniElem.kxx[i][j] + 
+	aux = Kzz.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
 	                                 miniElem.kyy[i][j] + 
 								   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
@@ -979,8 +977,9 @@ void Simulator3D::assembleK()
  clMatrix Kyz( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
  clMatrix KcMat( numVerts,numVerts );
- FEMMiniElement3D miniElem(*m);
- FEMLinElement3D linElem(*m);
+
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+ FEMLinElement3D linElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -1861,114 +1860,18 @@ void Simulator3D::setMuRho(real _mu_l,real _mu_g,
  rho = setTetCentroid(*IEN,rho);
 }
 
-void Simulator3D::setMuRho2(real _mu_l,real _mu_g,
-                           real _rho_l,real _rho_g)
-{
- /* Since we are working here with non-dimensional equations and also
-  * because the referential Reynolds used in two-phase flow is the one
-  * from the liquid phase, we set the liquid viscosity (mu_fluid) as
-  * equal to 1.0.
-  *
-  *          rho_0 * v_0 * D     
-  * Re_ref = ---------------     
-  *               mu_0            
-  *
-  *               rho_l                   rho_g
-  * rho_lAdimen = -----     rho_gAdimen = -----
-  *               rho_0                   rho_0
-  *
-  *               mu_l                   mu_g
-  * muAdimen_l =  ----      muAdimen_g = ----
-  *               mu_0                   mu_0
-  *
-  *
-  *        rho_l * v_l * D          rho_g * v_g * D 
-  * Re_l = ---------------   Re_g = --------------- 
-  *             mu_l                     mu_g       
-  *
-  * Navier-Stokes Viscous Term (liquid):
-  *
-  *    mu_0                 [            (                       ) ]
-  * --------- * \nabla \dot [ muAdimen * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [            (                       ) ]
-  *
-  *
-  * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
-  *
-  *    mu_0                 [ mu_g   (                       ) ]
-  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [ mu_0   (                       ) ]
-  *
-  *
-  * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
-  *
-  *    mu_0                 [ mu_l   (                       ) ]
-  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
-  * rho_0*v*D               [ mu_0   (                       ) ]
-  *
-  * */
- 
- rho_0= _rho_l-_rho_g; 
- rho_lAdimen = _rho_l/rho_0; 
- rho_gAdimen = _rho_g/rho_0;
-
- mu_0 = _mu_l;
- mu_lAdimen = _mu_l/mu_0;
- mu_gAdimen = _mu_g/mu_0;
-
- // gas phase (bubble)
- list<int> *inElem;
- inElem = m->getInElem();
- for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
- {
-  int v1 = IEN->Get(*it,0); 
-  int v2 = IEN->Get(*it,1); 
-  int v3 = IEN->Get(*it,2); 
-  int v4 = IEN->Get(*it,3); 
-  int v5 = IEN->Get(*it,3); 
-  nu.Set(v1,mu_gAdimen); rho.Set(v1,rho_gAdimen);
-  nu.Set(v2,mu_gAdimen); rho.Set(v2,rho_gAdimen);
-  nu.Set(v3,mu_gAdimen); rho.Set(v3,rho_gAdimen);
-  nu.Set(v4,mu_gAdimen); rho.Set(v4,rho_gAdimen);
-  nu.Set(v5,mu_gAdimen); rho.Set(v5,rho_gAdimen);  }
-
- // liquid phase
- list<int> *outElem;
- outElem = m->getOutElem();
- for (list<int>::iterator it=outElem->begin(); it!=outElem->end(); ++it)
- {
-  int v1 = IEN->Get(*it,0); 
-  int v2 = IEN->Get(*it,1); 
-  int v3 = IEN->Get(*it,2); 
-  int v4 = IEN->Get(*it,3); 
-  int v5 = IEN->Get(*it,3); 
-  nu.Set(v1,mu_lAdimen); rho.Set(v1,rho_lAdimen);
-  nu.Set(v2,mu_lAdimen); rho.Set(v2,rho_lAdimen);
-  nu.Set(v3,mu_lAdimen); rho.Set(v3,rho_lAdimen);
-  nu.Set(v4,mu_lAdimen); rho.Set(v4,rho_lAdimen);
-  nu.Set(v5,mu_lAdimen); rho.Set(v5,rho_lAdimen);
- }
- // interface as average value
- for( int i=0;i<surface->Dim();i++ )
- {
-  int surfaceNode = surface->Get(i);
-  nu.Set(surfaceNode,(mu_gAdimen+mu_lAdimen)*0.5);
-  rho.Set(surfaceNode,(rho_gAdimen+rho_lAdimen)*0.5);
- }
-}
-
 void Simulator3D::setCSol(clVector &_cSol)
 {
  cSol = _cSol;
 }
 
-void Simulator3D::setNuZ()
+void Simulator3D::setMuZ()
 {
  // -- Leitura do perfil de nu variavel em Z para os nos da malha -- //
 
  real aux;
  real dist1,dist2;
- clMatrix nuFile(1002,2); // vetor super dimensionado!
+ clMatrix muFile(1002,2); // vetor super dimensionado!
 
  const char* _filename = "../../db/baseState/nuZ/nuZ.dat";
  ifstream file( _filename,ios::in );
@@ -1985,9 +1888,9 @@ void Simulator3D::setNuZ()
   for( int i=0;i<1001;i++ )
   {
    file >> aux;
-   nuFile.Set(i,0,aux);
+   muFile.Set(i,0,aux);
    file >> aux;
-   nuFile.Set(i,1,aux);
+   muFile.Set(i,1,aux);
   }
  }
 
@@ -1996,12 +1899,12 @@ void Simulator3D::setNuZ()
  {
   for( j=0;j<1001;j++ )
   {
-   dist1 = fabs( Z->Get(i) - nuFile(j,0) );
-   dist2 = fabs( Z->Get(i) - nuFile(j+1,0) );
+   dist1 = fabs( Z->Get(i) - muFile(j,0) );
+   dist2 = fabs( Z->Get(i) - muFile(j+1,0) );
    if( dist2 > dist1 ) break;
   }
-  aux = nuFile(j,1);
-  nu.Set(i,aux);
+  aux = muFile(j,1);
+  mu.Set(i,aux);
  }
 }
 
@@ -2027,6 +1930,69 @@ void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
 real Simulator3D::getTime2(){return time;}
 real Simulator3D::getCfl(){return cfl;}
+
+void Simulator3D::setMu(real _mu_l)
+{ 
+ mu_l = _mu_l;
+ mu_0 = _mu_l;
+ mu_lAdimen = mu_l/mu_0;
+
+ mu.SetAll(mu_lAdimen); 
+}
+
+void Simulator3D::setMu(real _mu_l,real _mu_g)
+{ 
+ mu_l = _mu_l;
+ mu_g = _mu_g;
+ mu_0 = mu_l;
+ mu_lAdimen = mu_l/mu_0;
+ mu_gAdimen = mu_g/mu_0;
+ 
+ mu.Dim(numVerts);
+ for( int i=0;i<numVerts;i++ )
+ {
+  // gas phase (bubble)
+  if( cc->Get(i)>0.5 )
+   mu.Set(i,mu_gAdimen); 
+  // liquid phase
+  else if( cc->Get(i)<0.5 )
+   mu.Set(i,mu_lAdimen); 
+  else
+   mu.Set(i,(mu_gAdimen+mu_lAdimen)*0.5);
+ }
+}
+
+void Simulator3D::setRho(real _rho_l)
+{ 
+ rho_l = _rho_l;
+ rho_0 = rho_l; 
+ rho_lAdimen = rho_l/rho_0; 
+
+ rho.SetAll(rho_lAdimen); 
+}
+
+void Simulator3D::setRho(real _rho_l,real _rho_g)
+{ 
+ rho_l = _rho_l;
+ rho_g = _rho_g;
+ rho_0 = rho_l; 
+ rho_lAdimen = rho_l/rho_0; 
+ rho_gAdimen = rho_g/rho_0;
+
+ rho.Dim(numVerts);
+ for( int i=0;i<numVerts;i++ )
+ {
+  // gas phase (bubble)
+  if( cc->Get(i)>0.5 )
+   rho.Set(i,rho_gAdimen);
+  // liquid phase
+  else if( cc->Get(i)<0.5 )
+   rho.Set(i,rho_lAdimen);
+  else
+   rho.Set(i,(rho_gAdimen+rho_lAdimen)*0.5);
+ }
+}
+
 void Simulator3D::setMu_l(real _mu_l){mu_l = _mu_l;}
 real Simulator3D::getMu_l(){return mu_l;}
 void Simulator3D::setMu_g(real _mu_g){mu_g = _mu_g;}
@@ -2059,6 +2025,7 @@ clMatrix* Simulator3D::getGz(){return &gz;}
 clMatrix* Simulator3D::getG(){return &G;}
 clMatrix* Simulator3D::getD(){return &D;}
 clVector* Simulator3D::getNu(){return &nu;}
+clVector* Simulator3D::getMu(){return &mu;}
 clVector* Simulator3D::getRho(){return &rho;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 
@@ -2195,9 +2162,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappa = _sRight.kappa;
  fint = _sRight.fint;
  Hsmooth = _sRight.Hsmooth;
- nu = _sRight.nu;
- rho = _sRight.rho;
  Fold = _sRight.Fold;
+ nu = _sRight.nu;
+ mu = _sRight.mu;
+ rho = _sRight.rho;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;
@@ -2267,6 +2235,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
  nuOld = *_s.getNu();
+ muOld = *_s.getMu();
  rhoOld = *_s.getRho();
  kappaOld = *_s.getKappa();
  fintOld = *_s.getFint();
@@ -2421,6 +2390,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
  nu.Dim( numVerts );
+ mu.Dim( numVerts );
  rho.Dim( numVerts );
 
  // only 1 component because the 2 others are exactly the same
@@ -2453,6 +2423,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vALE = interpLin*(vALEOld);
  wALE = interpLin*(wALEOld);
  nu = interpLin*(nuOld);
+ mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
  clVector xKappa = interpLin*(xKappaOld);
  clVector xFint = interpLin*(xFintOld);
@@ -2693,6 +2664,7 @@ void Simulator3D::allocateMemoryToAttrib()
  fint.Dim ( 3*numNodes );
  Hsmooth.Dim( numNodes );
  nu.Dim( numVerts );
+ mu.Dim( numVerts );
  rho.Dim( numVerts );
 }
 

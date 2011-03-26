@@ -82,8 +82,7 @@ class Simulator3D
 
   void setHsmooth();
   void setMuRho(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
-  void setMuRho2(real _mu_l,real _mu_g,real _rho_l,real _rho_g);
-  void setNuZ();
+  void setMuZ();
   void setRe(real _Re);
   real getRe();
   void setSc(real _Sc);
@@ -107,10 +106,14 @@ class Simulator3D
   void setCflDisk(real _cfl);
   void setCflBubble(real _cfl);
   real getCfl();
+  void setMu(real _mu_l);
+  void setMu(real _mu_l,real _mu_g);
   void setMu_l(real _mu_l);
   real getMu_l();
   void setMu_g(real _mu_g);
   real getMu_g();
+  void setRho(real _rho_l);
+  void setRho(real _rho_l,real _rho_g);
   void setRho_l(real _rho_l);
   real getRho_l();
   void setRho_g(real _rho_g);
@@ -147,6 +150,7 @@ class Simulator3D
   clMatrix* getGy();
   clMatrix* getGz();
   clVector* getNu();
+  clVector* getMu();
   clVector* getRho();
   void operator=(Simulator3D &_s);
   void operator()(Model3D &_m);
@@ -213,7 +217,7 @@ class Simulator3D
  
   clDMatrix kappa;
   clVector fint;
-  clVector Hsmooth,nu,rho,nuOld,rhoOld;
+  clVector Hsmooth,nu,mu,muOld,rho,nuOld,rhoOld;
   clVector Fold;
 
 };

@@ -70,10 +70,8 @@ int main(int argc, char **argv)
   s1.setBeta(beta);
   //s1.setSigma(sigma);
   s1.setCflBubble(cfl);
-  s1.setMu_l(mu_l);
-  s1.setMu_g(mu_g);
-  s1.setRho_l(rho_l);
-  s1.setRho_g(rho_g);
+  s1.setMu(mu_l,mu_g);
+  s1.setRho(rho_l,rho_g);
   s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -107,10 +105,8 @@ int main(int argc, char **argv)
   s1.setBeta(beta);
   //s1.setSigma(sigma);
   s1.setCflBubble(cfl);
-  s1.setMu_l(mu_l);
-  s1.setMu_g(mu_g);
-  s1.setRho_l(rho_l);
-  s1.setRho_g(rho_g);
+  s1.setMu(mu_l,mu_g);
+  s1.setRho(rho_l,rho_g);
   s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);

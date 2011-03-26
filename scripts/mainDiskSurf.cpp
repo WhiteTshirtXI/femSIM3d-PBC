@@ -83,8 +83,7 @@ int main(int argc, char **argv)
 
   cout << "__________________________________________ End: " 
        << i << endl;
-  }
- };
+ }
 
  PetscFinalize();
  return 0;

@@ -20,8 +20,8 @@ int main(int argc, char **argv)
  real Re = 10000;
  real Sc = 2000;
  real Fr = 10;
- real alpha = 1;
- real beta = 0;
+ //real alpha = 1;
+ //real beta = 0;
  real cfl = 3;
  real mu_l = 1.0;
  real rho_l = 1.0;
@@ -29,12 +29,11 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- const char *dir  = "./";
  const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
- const char *txtFolder  = "./txt/";
+ //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
+ //const char *datFolder  = "./dat/";
 
  Model3D m1;
  m1.setMeshStep(40,20,2);

@@ -4,60 +4,74 @@
 ## e-mail: gustavo.rabello@gmail.com                                   ##
 ## =================================================================== ##
 
-
-TARGET = bubble 
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O1 -g
-LIBS += -lgsl -lgslcblas -lm
-LIBS += -L$(HOME)/Programs/tetgen/1.4.3 -ltet
-INCLUDES += -I.
-INCLUDES += -I$(LIBDIR) 
-INCLUDES += -I/opt/local/include
-INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
+LIBS += -lgsl -lm
+LIBS += -L. -L$(HOME)/Programs/tetgen/1.4.3 -ltet
+INCLUDES += -I. -I$(LIBDIR) 
 INCLUDES += -I${PETSC_DIR}/include
-INCLUDES += -I$(HOME)/Programs/triangle
+INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
 
-OBJECTS += $(HOME)/Programs/triangle/triangle.o
-OBJECTS += $(LIBDIR)/clVector.o
-OBJECTS += $(LIBDIR)/clMatrix.o
-OBJECTS += $(LIBDIR)/clDMatrix.o
-OBJECTS += $(LIBDIR)/PCGSolver.o
-OBJECTS += $(LIBDIR)/GMRes.o
-#OBJECTS += $(LIBDIR)/Mumps_Petsc.o
-OBJECTS += $(LIBDIR)/PetscSolver.o
-OBJECTS += $(LIBDIR)/FEMLinElement3D.o
-OBJECTS += $(LIBDIR)/FEMMiniElement3D.o
-OBJECTS += Solver.o
-OBJECTS += Model3D.o
-OBJECTS += TElement.o
-OBJECTS += Galerkin.o
-OBJECTS += Interface3D.o
-OBJECTS += MeshSmooth.o
-OBJECTS += SemiLagrangean.o
-OBJECTS += Simulator3D.o
-OBJECTS += InOut.o
+src += $(LIBDIR)/clVector.cpp
+src += $(LIBDIR)/clMatrix.cpp
+src += $(LIBDIR)/clDMatrix.cpp
+src += $(LIBDIR)/PCGSolver.cpp
+src += $(LIBDIR)/GMRes.cpp
+src += $(LIBDIR)/PetscSolver.cpp
+src += $(LIBDIR)/FEMLinElement3D.cpp
+src += $(LIBDIR)/FEMMiniElement3D.cpp
+src += $(wildcard ./*.cpp)
 
-OBJECTS += mainBubble.o
-#OBJECTS += mainAnnular.o
-#OBJECTS += main2Bubble.o
+obj = $(src:%.cpp=%.o)
 
-$(TARGET): $(OBJECTS)
-	-${CLINKER} $(OBJECTS) $(LIBS) ${PETSC_KSP_LIB} -o $(TARGET)
+all: step bubble 2bubble diskNuC diskNuCte diskNuZ
 
-%.o : %.cpp $(wildcard *.h)
-	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+diskNuC: ./scripts/mainDiskNuC.o libtest
+	$(CXX) $< -L. -ltest -o $@
 
+diskNuCte: ./scripts/mainDiskNuCte.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+diskNuZ: ./scripts/mainDiskNuZ.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+diskSurf: ./scripts/mainDiskSurf.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+2bubble: ./scripts/main2Bubble.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+bubble: ./scripts/mainBubble.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+step: ./scripts/mainStep.o libtest
+	$(CXX) $< -L. -ltest -o $@
+
+#--------------------------------------------------
+# libtest: $(obj)
+# 	$(CXX) -shared $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
+# 	ln -s libtest libtest.so
+#-------------------------------------------------- 
+
+libtest: $(obj)
+	$(CXX) -dynamiclib $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
+	ln -s libtest libtest.dylib
+
+%.o: %.cpp $(wildcard *.h)
+	$(CXX) -fPIC $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+	
 # Petsc new config
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 deepclean:
+	@rm -f step bubble 2bubble diskNuC diskNuCte diskNuZ
+	@rm -f libtest*
 	@rm -f core
 	@find $(LIBDIR) -name "*.o" -exec rm {} \;
 	@find . -name "*.o" -exec rm {} \;
 	@find . -name "*~" -exec rm {} \;
-	@rm -f $(TARGET)
 	@rm -f ./vtk/*.vtk
 	@rm -f ./sim/vk*.dat
 	@rm -f ./sim/sim*.dat

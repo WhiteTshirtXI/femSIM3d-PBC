@@ -14,9 +14,6 @@ InOut::InOut( Model3D &_m )
  numVerts = m->getNumVerts();
  numNodes = m->getNumNodes();
  numElems = m->getNumElems();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
  X = m->getX();
  Y = m->getY();
  Z = m->getZ();
@@ -35,6 +32,7 @@ InOut::InOut( Model3D &_m )
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
  interfaceDistance = m->getInterfaceDistance();
+ triEdge = m->getTriEdge();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -43,9 +41,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  numVerts = m->getNumVerts();
  numNodes = m->getNumNodes();
  numElems = m->getNumElems();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
  X = m->getX();
  Y = m->getY();
  Z = m->getZ();
@@ -64,6 +59,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
  interfaceDistance = m->getInterfaceDistance();
+ triEdge = m->getTriEdge();
 
  s = &_s;
  Re = s->getRe();
@@ -79,9 +75,10 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  mu_g = s->getMu_g();
  rho_l = s->getRho_l();
  rho_g = s->getRho_g();
+ c1 = s->getC1();
+ c2 = s->getC2();
+ c3 = s->getC3();
 
- uAnt = s->getUAnt();
- cAnt = s->getCAnt();
  K = s->getK();
  M = s->getM();
  G = s->getG();
@@ -174,7 +171,6 @@ void InOut::loadSol( const char* _dir,const char* _filename, int _iter )
 
  UVWPC_file.close();
 
- //aux2.CopyTo(0,*uAnt);
  aux2.CopyTo(0,*uSol);
  aux2.CopyTo(numNodes,*vSol);
  aux2.CopyTo(2*numNodes,*wSol);
@@ -2179,13 +2175,22 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "3D Simulation C++" << endl;
  _file << "ASCII" << endl;
  _file << "DATASET UNSTRUCTURED_GRID" << endl;
- _file << "FIELD FieldData 2" << endl;
- _file << "TIME 1 1 double" << endl;
- _file << setprecision(10) << scientific;
- _file << *simTime << endl;
+ _file << "FIELD FieldData 7" << endl;
+ _file << "TIME 1 3 double" << endl;
+ _file << dt << " " << cfl << " " << *simTime << endl;
  _file << "ITERATION 1 1 int" << endl;
- _file << setprecision(0) << fixed;
  _file << _iter << endl;
+ _file << "NODES 1 3 int" << endl;
+ _file << numVerts << " " << numNodes << " " << numElems << endl;
+ _file << "PARAMETERS 1 4 float" << endl;
+ _file << Re << " " << Sc << " " << Fr << " " << We << endl;
+ _file << "PROPERTIES 1 4 float" << endl;
+ _file << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << endl;
+ _file << "COEFFICIENTS 1 5 float" << endl;
+ _file << c1 << " " << c2 << " " << c3 << " " 
+     << alpha << " " << beta << endl;
+ _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
+ _file << triEdge << endl;
  _file << endl;
 }
 

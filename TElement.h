@@ -14,13 +14,14 @@
 #define TElement_H
 
 /* defining element size and rule */
+#define NUMGLE 4   // number of nodes per element
+
 #define NUMGLEU 5  // number of velocity nodes per element
 #define NUMGLEP 4  // number of pressure nodes per element
 #define NUMRULE 45 // number of quadrature rule
+
 #define NUMGLEC 4  // number of scalar nodes per element
 #define NUMRULEC 5 // number of quadrature rule
-
-#include "clVector.h"
 
 class TElement
 {

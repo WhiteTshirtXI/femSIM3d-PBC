@@ -42,10 +42,16 @@ Simulator3D::Simulator3D( Model3D &_m )
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
+
+ c1    = 1.0;
+ c2    = 0.0;
+ c3    = 0.0;
+
  mu_l  = 1.0;
  mu_g  = 1.0;
  rho_l = 1.0;
  rho_g = 1.0;
+
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
@@ -72,10 +78,17 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  mu_g  = _s.getMu_g();
  rho_l = _s.getRho_l();
  rho_g = _s.getRho_g();
+ c1    = _s.getC1();
+ c2    = _s.getC2();
+ c3    = _s.getC3();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
  setSolverConcentration( new PCGSolver() );
+
+ numVertsOld = _s.m->getNumVerts();
+ numNodesOld = _s.m->getNumNodes();
+ numElemsOld = _s.m->getNumElems();
 
  allocateMemoryToAttrib();
 
@@ -84,14 +97,15 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  vSolOld = *_s.getVSol();
  wSolOld = *_s.getWSol();
  pSolOld = *_s.getPSol();
+ cSolOld = *_s.getCSol();
  uALEOld = *_s.getUALE();
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
+ kappaOld = *_s.getKappa();
+ fintOld = *_s.getFint();
  nuOld = *_s.getNu();
  muOld = *_s.getMu();
  rhoOld = *_s.getRho();
- kappaOld = *_s.getKappa();
- fintOld = *_s.getFint();
 }
 
 Simulator3D::~Simulator3D()
@@ -103,11 +117,11 @@ Simulator3D::~Simulator3D()
 
 void Simulator3D::init()
 {
- uSol.CopyFrom( 0,*uc );
- vSol.CopyFrom( 0,*vc );
- wSol.CopyFrom( 0,*wc );
- pSol.CopyFrom( 0,*pc );
- cSol.CopyFrom( 0,*cc );
+ uSolOld.CopyFrom( 0,*uc );
+ vSolOld.CopyFrom( 0,*vc );
+ wSolOld.CopyFrom( 0,*wc );
+ pSolOld.CopyFrom( 0,*pc );
+ cSolOld.CopyFrom( 0,*cc );
 }
 
 void Simulator3D::initFixedBubbleZ()
@@ -117,10 +131,10 @@ void Simulator3D::initFixedBubbleZ()
  for( int i=0;i<numNodes;i++ )
  {
   real aux = 1.0;
-  wSol.Set(i,aux);
+  wSolOld.Set(i,aux);
  }
  for( int i=0;i<idbcw->Dim();i++ )
-  wSol.Set( (int) idbcw->Get(i),0.0 ); 
+  wSolOld.Set( (int) idbcw->Get(i),0.0 ); 
 
 }
 
@@ -132,11 +146,11 @@ void Simulator3D::init2Bubbles()
  for( int i=0;i<numNodes;i++ )
  {
   real aux = X->Get(i);
-  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
   aux = -1.0*Y->Get(i);
-  vSol.Set(i,aux);
+  vSolOld.Set(i,aux);
   aux = 0.0;
-  wSol.Set(i,aux);
+  wSolOld.Set(i,aux);
  }
 }
 
@@ -188,10 +202,10 @@ void Simulator3D::assemble()
   miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   linElem.getM(v1,v2,v3,v4); 
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -231,7 +245,7 @@ void Simulator3D::assemble()
 								   2*miniElem.kzz[i][j] ); 
 	Kzz.Set(ii,jj,aux);
    }
-   for( j=0;j<numGLEP;j++ )
+   for( j=0;j<NUMGLEP;j++ )
    {
 	jj=v[j];
 	
@@ -246,10 +260,10 @@ void Simulator3D::assemble()
 	Gz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEC;i++ )
+  for( i=0;i<NUMGLEC;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEC;j++ )
+   for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
 	aux = KcMat.Get(ii,jj) + ( linElem.kxxc[i][j] + 
@@ -319,10 +333,10 @@ void Simulator3D::assembleC()
 
   linElem.getM(v1,v2,v3,v4); 
 
-  for( i=0;i<numGLEC;i++ )
+  for( i=0;i<NUMGLEC;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEC;j++ )
+   for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
 	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
@@ -381,10 +395,10 @@ void Simulator3D::assembleNuCte()
   //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -398,7 +412,7 @@ void Simulator3D::assembleNuCte()
 	Mx_rho.Set(ii,jj,aux); // matriz de massa
    };
 
-   for( j=0;j<numGLEP;j++ )
+   for( j=0;j<NUMGLEP;j++ )
    {
 	jj=v[j];
 	
@@ -413,10 +427,10 @@ void Simulator3D::assembleNuCte()
 	Gz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEP;i++ )
+  for( i=0;i<NUMGLEP;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 	
@@ -511,10 +525,10 @@ void Simulator3D::assembleNuC()
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -553,7 +567,7 @@ void Simulator3D::assembleNuC()
 
    };
 
-   for( j=0;j<numGLEP;j++ )
+   for( j=0;j<NUMGLEP;j++ )
    {
 	jj=v[j];
 	
@@ -568,10 +582,10 @@ void Simulator3D::assembleNuC()
 	Gz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEP;i++ )
+  for( i=0;i<NUMGLEP;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 	
@@ -586,10 +600,10 @@ void Simulator3D::assembleNuC()
 	Dz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEC;i++ )
+  for( i=0;i<NUMGLEC;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEC;j++ )
+   for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
 	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
@@ -684,10 +698,10 @@ void Simulator3D::assembleSlip()
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -729,7 +743,7 @@ void Simulator3D::assembleSlip()
 
    };
 
-   for( j=0;j<numGLEP;j++ )
+   for( j=0;j<NUMGLEP;j++ )
    {
 	jj=v[j];
 	
@@ -744,10 +758,10 @@ void Simulator3D::assembleSlip()
 	Gz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEP;i++ )
+  for( i=0;i<NUMGLEP;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 	
@@ -762,10 +776,10 @@ void Simulator3D::assembleSlip()
 	Dz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEC;i++ )
+  for( i=0;i<NUMGLEC;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEC;j++ )
+   for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
 	aux = KcMat.Get(ii,jj) + ( linElem.kxxc[i][j] + 
@@ -860,10 +874,10 @@ void Simulator3D::assembleNuZ()
 
   miniElem.getMSlip(v1,v2,v3,v4,v5); 
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -901,7 +915,7 @@ void Simulator3D::assembleNuZ()
 	Kzz.Set(ii,jj,aux);
 
    };
-   for( j=0;j<numGLEP;j++ )
+   for( j=0;j<NUMGLEP;j++ )
    {
 	jj=v[j];
 	
@@ -916,10 +930,10 @@ void Simulator3D::assembleNuZ()
 	Gz.Set(ii,jj,aux);
    }
   }
-  for( i=0;i<numGLEP;i++ )
+  for( i=0;i<NUMGLEP;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 	// bloco 1
@@ -1001,10 +1015,10 @@ void Simulator3D::assembleK()
   miniElem.getK(v1,v2,v3,v4,v5);
   linElem.getK(v1,v2,v3,v4); 
 
-  for( i=0;i<numGLEU;i++ )
+  for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEU;j++ )
+   for( j=0;j<NUMGLEU;j++ )
    {
 	jj=v[j];
 
@@ -1040,10 +1054,10 @@ void Simulator3D::assembleK()
 
    };
   }
-  for( i=0;i<numGLEC;i++ )
+  for( i=0;i<NUMGLEC;i++ )
   {
    ii=v[i];
-   for( j=0;j<numGLEC;j++ )
+   for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
 	aux = KcMat.Get(ii,jj) + dif*( linElem.kxxc[i][j] + 
@@ -1077,11 +1091,11 @@ void Simulator3D::assembleK()
 void Simulator3D::stepSL()
 {
 
- clVector velU = uSol-uALE;
- clVector velV = vSol-vALE;
- clVector velW = wSol-wALE;
+ clVector velU = uSolOld-uALE;
+ clVector velV = vSolOld-vALE;
+ clVector velW = wSolOld-wALE;
 
- SemiLagrangean sl(*m,uSol,vSol,wSol,velU,velV,velW,cSol);
+ SemiLagrangean sl(*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
 
  sl.compute(dt);
  uSL = *sl.getUSL();
@@ -1104,7 +1118,7 @@ void Simulator3D::stepSL()
 
 void Simulator3D::step()
 {
- Galerkin galerkin(*m,uSol,vSol,wSol,cSol,gx,gy,gz);
+ Galerkin galerkin(*m,uSolOld,vSolOld,wSolOld,cSolOld,gx,gy,gz);
 
  galerkin.compute(dt);
  clVector uGalerkin = *galerkin.getConvU();
@@ -1115,8 +1129,10 @@ void Simulator3D::step()
  convUVW.CopyFrom(2*numNodes,wGalerkin);
  convC = *galerkin.getConvC();
 
- clVector uvwSol(3*numNodes);
- uAnt.CopyTo(0,uvwSol);
+ clVector uvwSol(0);
+ uvwSol.Append(uSolOld);
+ uvwSol.Append(vSolOld);
+ uvwSol.Append(wSolOld);
 
  // sem correcao na pressao
  va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
@@ -1126,7 +1142,7 @@ void Simulator3D::step()
 
  // ainda nao funcionando
  //vcc = ( (1.0/dt) * Mc + (1-alpha) * -(1.0/(Re*Sc)) * Kc ) * cSol;
- vcc = ( (1.0/dt) * McLumped ) * cSol;
+ vcc = ( (1.0/dt) * McLumped ) * cSolOld;
 
  va = va + convUVW;
  vcc = vcc + convC;
@@ -1137,17 +1153,17 @@ void Simulator3D::step()
 // puramente lagrangiana
 void Simulator3D::stepLagrangian()
 {
- m->moveXPoints(uSol,dt);
- m->moveYPoints(vSol,dt);
- m->moveZPoints(wSol,dt);
+ m->moveXPoints(uSolOld,dt);
+ m->moveYPoints(vSolOld,dt);
+ m->moveZPoints(wSolOld,dt);
 
  //assemble();
  assembleSlip();
 
- convUVW.CopyFrom(0,uSol);
- convUVW.CopyFrom(numNodes,vSol);
- convUVW.CopyFrom(2*numNodes,wSol);
- convC = cSol;
+ convUVW.CopyFrom(0,uSolOld);
+ convUVW.CopyFrom(numNodes,vSolOld);
+ convUVW.CopyFrom(2*numNodes,wSolOld);
+ convC = cSolOld;
 
 } // fecha metodo stepLagrangian
 
@@ -1159,7 +1175,7 @@ void Simulator3D::stepLagrangianZ()
 {
  m->moveZPoints(wSol,dt);
 
- SemiLagrangean sl(*m,uSol,vSol,wSol,velU,velV,velW,cSol);
+ SemiLagrangean sl(*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
 
  sl.computeFreeSurface(dt);
  uSL = *sl.getUSL();
@@ -1190,9 +1206,9 @@ void Simulator3D::stepALE()
  c2 = 1.0;
  c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
 
- uALE = c1*uSol+c2*uSmoothCoord;
- vALE = c1*vSol+c2*vSmoothCoord;
- wALE = c1*wSol+c2*wSmoothCoord;
+ uALE = c1*uSolOld+c2*uSmoothCoord;
+ vALE = c1*vSolOld+c2*vSmoothCoord;
+ wALE = c1*wSolOld+c2*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
  setInterfaceVelNormal();
@@ -1237,7 +1253,7 @@ void Simulator3D::stepALEVel()
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
  e1.stepSmoothFujiwara();
- //e1.stepSmooth();
+ e1.setCentroid();
  uSmoothCoord = *e1.getUSmooth();
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
@@ -1246,9 +1262,9 @@ void Simulator3D::stepALEVel()
  c2 = 1.0;
  c3 = 0.05; 
 
- uALE = c1*uSol+c2*uSmooth+c3*uSmoothCoord;
- vALE = c1*vSol+c2*vSmooth+c3*vSmoothCoord;
- wALE = c1*wSol+c2*wSmooth+c3*wSmoothCoord;
+ uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
+ vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
+ wALE = c1*wSolOld+c2*wSmooth+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
  setInterfaceVelNormal();
@@ -1278,10 +1294,10 @@ void Simulator3D::setInterfaceVel()
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
-  uALE.Set(surfaceNode,uSol.Get(surfaceNode));
-  vALE.Set(surfaceNode,vSol.Get(surfaceNode));
-  wALE.Set(surfaceNode,wSol.Get(surfaceNode));
-  //wALE.Set(aux,wSol.Get(aux)-bubbleZVelocity);
+  uALE.Set(surfaceNode,uSolOld.Get(surfaceNode));
+  vALE.Set(surfaceNode,vSolOld.Get(surfaceNode));
+  wALE.Set(surfaceNode,wSolOld.Get(surfaceNode));
+  //wALE.Set(aux,wSolOld.Get(aux)-bubbleZVelocity);
  }
 } // fecha metodo setInterfaceVel 
 
@@ -1299,9 +1315,9 @@ void Simulator3D::setInterfaceVelNormal()
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod = uSol.Get(surfaceNode)*xNormalUnit+ 
-              vSol.Get(surfaceNode)*yNormalUnit + 
-			  wSol.Get(surfaceNode)*zNormalUnit;
+  real prod = uSolOld.Get(surfaceNode)*xNormalUnit+ 
+              vSolOld.Get(surfaceNode)*yNormalUnit + 
+			  wSolOld.Get(surfaceNode)*zNormalUnit;
   real uSolNormal = xNormalUnit*prod;
   real vSolNormal = yNormalUnit*prod;
   real wSolNormal = zNormalUnit*prod;
@@ -1372,7 +1388,9 @@ void Simulator3D::setGravity()
  g.Append(gy);
  g.Append(gz);
 
- va = va + ( 1.0/(Fr*Fr) )*( (rho_lAdimen*M - Mrho)*g );
+ clVector gravity = ( 1.0/(Fr*Fr) )*( (rho_lAdimen*M - Mrho)*g );
+
+ va = va + gravity;
 }
 
 void Simulator3D::setGravityBoussinesq()
@@ -1382,7 +1400,9 @@ void Simulator3D::setGravityBoussinesq()
  forceC.Append(convC); 
  forceC.Append(zeroAux);
 
- va = va - beta*( Mrho*forceC );
+ clVector gravity = beta*( Mrho*forceC );
+
+ va = va - gravity;
 }
 
 void Simulator3D::setInterfaceGeo()
@@ -1391,7 +1411,7 @@ void Simulator3D::setInterfaceGeo()
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
+ fint = (1.0/We) * sigma * ( kappa*(GTilde*cSolOld) );
  
  //va = va + invA*fint;
 } // fecha metodo setInterface 
@@ -1410,7 +1430,7 @@ void Simulator3D::setInterfaceLevelSet()
  m->setKappaSurface(kappaAux);
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * sigma * ( kappa*(GTilde*cSol) );
+ fint = (1.0/We) * sigma * ( kappa*(GTilde*cSolOld) );
 
  //va = va + invA*fint;
 } // fecha metodo setInterface 
@@ -1420,37 +1440,40 @@ void Simulator3D::matMount()
  mat = ( (1.0/dt) * Mrho) + (alpha * (1.0/Re) * K );
 
  for( int i = 0; i < 3*numNodes; i++ )
-  MrhoLumped.Set(i, Mrho.SumLine(i));
+ {
+  real sumMat = mat.SumLine(i);
+  invA.Set( i,1.0/sumMat );
 
- for( int i = 0; i < 3*numNodes; i++ )
-  invA.Set(i, mat.SumLine(i));
+  real sumM = M.SumLine(i);
+  MLumped.Set( i,sumM );
+  invMLumped.Set( i,1.0/sumM );
 
- // if M != 0
- for( int i = 0; i < 3*numNodes; i++ )
-  MLumped.Set(i, M.SumLine(i));
-
- invMLumped = MLumped.Inverse();
-
- invA = invA.Inverse();
- //invMrhoLumped = MLumped.Inverse();
- invMrhoLumped = MrhoLumped.Inverse();
+  real sumMrho = Mrho.SumLine(i);
+  MrhoLumped.Set( i,sumMrho );
+  invMrhoLumped.Set( i,1.0/sumMrho );
+ }
 }
 
 void Simulator3D::matMountC()
 {
+ // set para Matriz Lumped da concentracao
  for( int i=0;i<numVerts;i++ )
-  McLumped.Set(i, Mc.SumLine(i));
+ {
+  real sumMc = Mc.SumLine(i);
+  McLumped.Set( i,sumMc );
+  invMcLumped.Set( i,1.0/sumMc );
+ }
 
  //matc = ((1.0/dt) * Mc) + (alpha * (1.0/(Sc)) * Kc);
  //matc = ((1.0/dt) * Mc) + (alpha * (1.0/(Sc*Re)) * Kc);
  matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc)) * Kc);
  //matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc*Re)) * Kc);
 
- for( int i = 0; i < numVerts; i++ )
-  invC.Set(i, matc.SumLine(i));
-
- invC = invC.Inverse();
- invMcLumped = McLumped.Inverse();
+ for( int i=0;i<numVerts;i++ )
+ {
+  real sumMatc = matc.SumLine(i);
+  invC.Set( i,sumMatc );
+ }
 }
 
 void Simulator3D::coupled()
@@ -1469,14 +1492,21 @@ void Simulator3D::coupled()
  b.Append(zeros);
  setCoupledBC();
 
+ clVector u(3*numNodes+numVerts);
+
  cout << " --> solving velocity and pressure -- " << endl;
- solverV->solve(1E-15,A,uAnt,b);
+ solverV->solve(1E-15,A,u,b);
  cout << " ------------------------------------ " << endl;
  
- uAnt.CopyTo(0,uSol);
- uAnt.CopyTo(numNodes,vSol);
- uAnt.CopyTo(numNodes*2,wSol);
- uAnt.CopyTo(numNodes*3,pSol);
+ u.CopyTo(0,uSol);
+ u.CopyTo(numNodes,vSol);
+ u.CopyTo(numNodes*2,wSol);
+ u.CopyTo(numNodes*3,pSol);
+
+ uSolOld = uSol;
+ vSolOld = vSol;
+ wSolOld = wSol;
+ pSolOld = pSol;
  
 } // fecha metodo coupled 
 
@@ -1501,7 +1531,7 @@ void Simulator3D::unCoupled()
  //uvw = uTilde;
 
  b2Tilde = b2 - (DTilde * uvw); // D com c.c.
- b2Tilde = (-1) * b2Tilde;
+ b2Tilde = (-1.0) * b2Tilde;
 
  // resolve sistema E pTilde = b2
  cout << " --------> solving pressure --------- " << endl;
@@ -1518,8 +1548,10 @@ void Simulator3D::unCoupled()
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao
 
- uAnt.CopyFrom(0,uvw);
- uAnt.CopyFrom(numNodes*3,pSol);
+ uSolOld = uSol;
+ vSolOld = vSol;
+ wSolOld = wSol;
+ pSolOld = pSol;
 
  time = time + dt;
 } // fecha metodo unCoupled 
@@ -1541,6 +1573,7 @@ void Simulator3D::unCoupledC()
  // comentar em caso de utilizacao de setInterface()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
+ cSolOld = cSol;
 }
 
 /**
@@ -1670,8 +1703,8 @@ void Simulator3D::setUnCoupledBC()
  }
  cout << " boundary condition P --> SET " << endl;
 
- //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
  ETilde = E - ((DTilde * invA) * GTilde); 
+ //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
 } // fecha metodo setUnCoupledBC 
 
 void Simulator3D::setUnCoupledCBC()
@@ -1737,20 +1770,10 @@ void Simulator3D::setCflBubble(real _cfl)
   * */
 
  cfl = _cfl;
- real triEdge = m->getTriEdge();
 
  real capillary = sqrt( ( 0.5*(rho_l+rho_g)*triEdge*triEdge*triEdge)
                   /(2*3.141592*sigma) );
  dt = cfl*capillary;
-}
-
-void Simulator3D::setUAnt(clVector &_uAnt)
-{
- uAnt = _uAnt;
- uAnt.CopyTo(0,uSol); 
- uAnt.CopyTo(numNodes,vSol); 
- uAnt.CopyTo(numNodes*2,wSol); 
- uAnt.CopyTo(numNodes*3,pSol); 
 }
 
 void Simulator3D::setHsmooth()
@@ -1876,6 +1899,9 @@ void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
 real Simulator3D::getTime2(){return time;}
 real Simulator3D::getCfl(){return cfl;}
+real Simulator3D::getC1(){return c1;}
+real Simulator3D::getC2(){return c2;}
+real Simulator3D::getC3(){return c3;}
 
 void Simulator3D::setMu(real _mu_l)
 { 
@@ -1998,8 +2024,6 @@ clVector* Simulator3D::getCSol(){return &cSol;}
 clVector* Simulator3D::getUALE(){return &uALE;} 
 clVector* Simulator3D::getVALE(){return &vALE;} 
 clVector* Simulator3D::getWALE(){return &wALE;} 
-clVector* Simulator3D::getUAnt(){return &uAnt;}
-clVector* Simulator3D::getCAnt(){return &cAnt;}
 clVector* Simulator3D::getFint(){return &fint;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
@@ -2043,9 +2067,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  numVerts = _sRight.numVerts;
  numNodes = _sRight.numNodes;
  numElems = _sRight.numElems;
- numGLEU = _sRight.numGLEU;
- numGLEP = _sRight.numGLEP;
- numGLEC = _sRight.numGLEC;
  X = _sRight.X;
  Y = _sRight.Y;
  Z = _sRight.Z;
@@ -2063,6 +2084,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  surface = _sRight.surface;
  IEN = _sRight.IEN;
  interfaceDistance = _sRight.interfaceDistance;
+ triEdge = _sRight.triEdge;
 
  Re = _sRight.Re;
  Sc = _sRight.Sc;
@@ -2081,6 +2103,12 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  mu_g = _sRight.mu_g;
  rho_l = _sRight.rho_l;
  rho_g = _sRight.rho_g;
+ rho_0 = _sRight.rho_0;
+ mu_0 = _sRight.mu_0;
+ rho_lAdimen = _sRight.rho_lAdimen;
+ rho_gAdimen = _sRight.rho_gAdimen;
+ mu_lAdimen = _sRight.mu_lAdimen;
+ mu_gAdimen = _sRight.mu_gAdimen;
 
  K = _sRight.K;
  Kc = _sRight.Kc;
@@ -2130,8 +2158,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  vSmooth = _sRight.vSmooth;
  wSmooth = _sRight.wSmooth;
 
- uAnt = _sRight.uAnt;
- cAnt = _sRight.cAnt;
  va = _sRight.va;
  vcc = _sRight.vcc;
  convUVW = _sRight.convUVW;
@@ -2144,6 +2170,8 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  b2 = _sRight.b2;
  ip = _sRight.ip;
  ipc = _sRight.ipc;
+
+ // two-phase vectors
  kappa = _sRight.kappa;
  fint = _sRight.fint;
  Hsmooth = _sRight.Hsmooth;
@@ -2151,6 +2179,27 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  nu = _sRight.nu;
  mu = _sRight.mu;
  rho = _sRight.rho;
+ 
+ // old ints
+ numVertsOld = _sRight.numVerts;
+ numNodesOld = _sRight.numNodes;
+ numElemsOld = _sRight.numElems;
+ 
+ // oldSol vectors
+ uSolOld = _sRight.uSolOld;
+ vSolOld = _sRight.vSolOld;
+ wSolOld = _sRight.wSolOld;
+ pSolOld = _sRight.pSolOld;
+ cSolOld = _sRight.cSolOld;
+ uALEOld = _sRight.uALEOld;
+ vALEOld = _sRight.vALEOld;
+ wALEOld = _sRight.wALEOld;
+ kappaOld = _sRight.kappaOld;
+ fintOld = _sRight.fintOld;
+ //gravityOld = _sRight.gravityOld;
+ nuOld = _sRight.nuOld;
+ muOld = _sRight.muOld;
+ rhoOld = _sRight.rhoOld;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;
@@ -2182,7 +2231,6 @@ void Simulator3D::operator()(Model3D &_m)
  setSolverConcentration( new PCGSolver() );
 
  allocateMemoryToAttrib();
-
 }
 
 void Simulator3D::operator()(Model3D &_m,Simulator3D &_s) 
@@ -2200,10 +2248,13 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
- mu_l = _s.getMu_l();
- mu_g = _s.getMu_g();
+ mu_l  = _s.getMu_l();
+ mu_g  = _s.getMu_g();
  rho_l = _s.getRho_l();
  rho_g = _s.getRho_g();
+ c1    = _s.getC1();
+ c2    = _s.getC2();
+ c3    = _s.getC3();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2211,11 +2262,16 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
 
  allocateMemoryToAttrib();
 
+ numVertsOld = _s.m->getNumVerts();
+ numNodesOld = _s.m->getNumNodes();
+ numElemsOld = _s.m->getNumElems();
+
  // recuperando campo de velocidade e pressao da malha antiga
  uSolOld = *_s.getUSol();
  vSolOld = *_s.getVSol();
  wSolOld = *_s.getWSol();
  pSolOld = *_s.getPSol();
+ cSolOld = *_s.getCSol();
  uALEOld = *_s.getUALE();
  vALEOld = *_s.getVALE();
  wALEOld = *_s.getWALE();
@@ -2226,129 +2282,152 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  fintOld = *_s.getFint();
 }
 
-void Simulator3D::loadSolution( const char* _dir,
-                                const char* _filename )
-{
- string fileUVWPC = (string) _dir + (string) _filename + ".bin";
- const char* filenameUVWPC = fileUVWPC.c_str();
-
- clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
-
- ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
-
- if( !UVWPC_file)
- {
-  cerr << "Solution file is missing for reading!" << endl;
-  exit(1);
- }
-
- UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
-
- UVWPC_file.close();
-
- // setting vel+pressure+concentration
- aux2.CopyTo(0,uSol);
- aux2.CopyTo(numNodes,vSol);
- aux2.CopyTo(2*numNodes,wSol);
- aux2.CopyTo(3*numNodes,pSol);
- aux2.CopyTo(3*numNodes+numVerts,cSol);
- aux2.CopyTo(3*numNodes+2*numVerts,uALE);
- aux2.CopyTo(4*numNodes+2*numVerts,vALE);
- aux2.CopyTo(5*numNodes+2*numVerts,wALE);
-
- // setting uAnt, Fold
- aux2.CopyTo(0,uAnt);
- aux2.CopyTo(0,Fold);
-
- cout << "solucao <<" << _filename << ">> lida em binario" << endl;
- 
-} // fecha metodo loadSol 
-
-void Simulator3D::loadSolution( const char* _dir,
-                                const char* _filename, 
-								int _iter )
+int Simulator3D::loadSolution( const char* _filename,int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
  ss << _iter;
  ss >> str;
 
- string fileUVWPC = _dir;
- string aux = _filename;
- fileUVWPC += aux + "-" + str + ".bin";
- const char* filenameUVWPC = fileUVWPC.c_str();
+ // read numVerts and numNodes and all the simulation parameters
+ // iteration
+ string file = "./vtk/" + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
 
- clVector aux2(6*numNodes+2*numVerts); // vetor tambem carrega a concentracao
-
- ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
-
- if( !UVWPC_file)
+ ifstream fileP( filename,ios::in ); 
+ if( !fileP )
  {
-  cerr << "Solution file is missing for reading!" << endl;
+  cerr << "VTK file is missing for reading!" << endl;
   exit(1);
  }
-
- UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
-
- UVWPC_file.close();
-
- aux2.CopyTo(0,uSol);
- aux2.CopyTo(numNodes,vSol);
- aux2.CopyTo(2*numNodes,wSol);
- aux2.CopyTo(3*numNodes,pSol);
- aux2.CopyTo(3*numNodes+numVerts,cSol);
- aux2.CopyTo(3*numNodes+2*numVerts,uALE);
- aux2.CopyTo(4*numNodes+2*numVerts,vALE);
- aux2.CopyTo(5*numNodes+2*numVerts,wALE);
-
- // setting uAnt, Fold
- aux2.CopyTo(0,uAnt);
- aux2.CopyTo(0,Fold);
-
- cout << "solucao no. " << _iter << " lida em binario" << endl;
- 
-} // fecha metodo loadSol 
-
-int Simulator3D::loadIteration( const char* _dir, 
-                                const char* _filename )
-{
- string filename = (string) _dir + (string) _filename  + ".vtk";
- const char* File = filename.c_str();
-
- ifstream vtkFile( File,ios::in );
 
  char auxstr[255];
  real time;
  int iterNumber;
 
- if( !vtkFile )
+ while( ( !fileP.eof())&&(strcmp(auxstr,"TIME") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> dt;
+ fileP >> cfl;
+ fileP >> time;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> iterNumber;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"NODES") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> numVertsOld;
+ fileP >> numNodesOld;
+ fileP >> numElemsOld;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"PARAMETERS") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> Re;
+ fileP >> Sc;
+ fileP >> Fr;
+ fileP >> We;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"PROPERTIES") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> mu_l;
+ fileP >> mu_g;
+ fileP >> rho_l;
+ fileP >> rho_g;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> c1;
+ fileP >> c2;
+ fileP >> c3;
+ fileP >> alpha;
+ fileP >> beta;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISCTICLENGTH") != 0) )
+  fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> triEdge;
+
+//--------------------------------------------------
+//  cout << dt << " " << cfl << " " << time << endl;
+//  cout << iterNumber << endl;
+//  cout << numVertsOld << " " << numNodesOld << " " << numElemsOld << endl;
+//  cout << Re << " " << Sc << " " << Fr << " " << We << " " << endl;
+//  cout << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << " " << endl;
+//  cout << c1 << " " << c2 << " " << c3 << " " << alpha << " " << beta << endl;
+//  cout << lineEdge << endl;
+//-------------------------------------------------- 
+
+ // read solution of U, V, W and P
+ string fileUVWPC = "./bin/" + (string) _filename + "-" + str + ".bin";
+ const char* filenameUVPC = fileUVWPC.c_str();
+
+ clVector aux2(6*numNodesOld+2*numVertsOld); // vetor tambem carrega a concentracao
+
+ ifstream UVPC_file( filenameUVPC,ios::in | ios::binary ); 
+
+ if( !UVPC_file)
  {
-  cerr << "VTK Mesh file is missing for TIME and ITERATION reading!" << endl;
+  cerr << "Solution file is missing for reading!" << endl;
   exit(1);
  }
 
- while( ( !vtkFile.eof())&&(strcmp(auxstr,"TIME") != 0) )
-  vtkFile >> auxstr;
+ UVPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
 
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> time;
+ UVPC_file.close();
 
- while( ( !vtkFile.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
-  vtkFile >> auxstr;
+ uSol.Dim(numNodesOld);
+ vSol.Dim(numNodesOld);
+ wSol.Dim(numNodesOld);
+ pSol.Dim(numVertsOld);
+ cSol.Dim(numVertsOld);
+ uALE.Dim(numNodesOld);
+ vALE.Dim(numNodesOld);
+ wALE.Dim(numNodesOld);
 
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> auxstr;
- vtkFile >> iterNumber;
+ aux2.CopyTo(0,uSol);
+ aux2.CopyTo(numNodesOld,vSol);
+ aux2.CopyTo(2*numNodesOld,wSol);
+ aux2.CopyTo(3*numNodesOld,pSol);
+ aux2.CopyTo(3*numNodesOld+numVertsOld,cSol);
+ aux2.CopyTo(3*numNodesOld+2*numVertsOld,uALE);
+ aux2.CopyTo(4*numNodesOld+2*numVertsOld,vALE);
+ aux2.CopyTo(5*numNodesOld+2*numVertsOld,wALE);
 
- vtkFile.close();
+ // copy to SolOld
+ uSolOld = uSol;
+ vSolOld = vSol;
+ wSolOld = wSol;
+ pSolOld = pSol;
+ cSolOld = cSol;
+ uALEOld = uALE;
+ vALEOld = vALE;
+ wALEOld = wALE;
 
- setTime(time); 
+ cout << "Solution No. " << _iter << " read" << endl;
 
  return iterNumber+1;
-} // fecha metodo loadIteration
+} // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na
 // malha antiga (Model3D mold) para malha nova (this). Note que a
@@ -2357,8 +2436,6 @@ int Simulator3D::loadIteration( const char* _dir,
 // pertencente aos elementos
 void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
 {
- SemiLagrangean semi(_mOld,uSol,vSol,wSol,velU,velV,velW,cSol);
-
  // xVert da malha nova
  clVector xVert(numVerts);
  clVector yVert(numVerts);
@@ -2366,6 +2443,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  X->CopyTo(0,xVert);
  Y->CopyTo(0,yVert);
  Z->CopyTo(0,zVert);
+
  uSol.Dim( numVerts );
  vSol.Dim( numVerts );
  wSol.Dim( numVerts );
@@ -2404,6 +2482,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vSol = interpLin*(vSolOld);
  wSol = interpLin*(wSolOld);
  pSol = interpLin*(pSolOld);
+ cSol.CopyFrom( 0,*cc ); // copying new cc
  uALE = interpLin*(uALEOld);
  vALE = interpLin*(vALEOld);
  wALE = interpLin*(wALEOld);
@@ -2414,8 +2493,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector xFint = interpLin*(xFintOld);
  clVector yFint = interpLin*(yFintOld);
  clVector zFint = interpLin*(zFintOld);
-
- cSol.CopyFrom( 0,*cc ); // copying new cc
 
  // set do centroid
  uSol = setTetCentroid(*IEN,uSol);
@@ -2428,13 +2505,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  xFint = setTetCentroid(*IEN,xFint);
  yFint = setTetCentroid(*IEN,yFint);
  zFint = setTetCentroid(*IEN,zFint);
-
- // setting uAnt
- uAnt.Dim( 3*numNodes+numVerts );
- uAnt.CopyFrom(numNodes*0,uSol);
- uAnt.CopyFrom(numNodes*1,vSol);
- uAnt.CopyFrom(numNodes*2,wSol);
- uAnt.CopyFrom(numNodes*3,pSol);
 
  // setting kappa
  kappa.Dim(3*numNodes);
@@ -2452,6 +2522,19 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  fint.CopyFrom(numNodes*1,yFint);
  fint.CopyFrom(numNodes*2,zFint);
 
+ uSolOld = uSol;
+ vSolOld = vSol;
+ wSolOld = wSol;
+ pSolOld = pSol;
+ cSolOld = cSol;
+ uALEOld = uALE;
+ vALEOld = vALE;
+ wALEOld = wALE;
+ fintOld = fint;
+ kappaOld = kappa;
+ nuOld = nu;
+ muOld = mu;
+ rhoOld = rho;
 } // fecha metodo applyLinearInterpolation
 
 // calcula velocidade media da bolha tomando como referencia o centro de
@@ -2535,9 +2618,6 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  numVerts = m->getNumVerts();
  numElems = m->getNumElems();
  numNodes = m->getNumNodes();
- numGLEP = m->getNumGLEP();
- numGLEU = m->getNumGLEU();
- numGLEC = m->getNumGLEC();
  X = m->getX();
  Y = m->getY();
  Z = m->getZ();
@@ -2558,6 +2638,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  surfMesh = m->getSurfMesh();
  mesh3d = m->getMesh3d();
  interfaceDistance = m->getInterfaceDistance();
+ triEdge = m->getTriEdge();
 }
 
 
@@ -2619,8 +2700,6 @@ void Simulator3D::allocateMemoryToAttrib()
 
  // auxiliar vectors
  Fold.Dim( 3*numNodes+numVerts );
- uAnt.Dim( 3*numNodes+numVerts );
- cAnt.Dim( numVerts );
  ip.Dim( 3*numNodes,1 );
  ipc.Dim( numVerts,1 );
 
@@ -2644,6 +2723,22 @@ void Simulator3D::allocateMemoryToAttrib()
  uSmoothCoord.Dim( numNodes );
  vSmoothCoord.Dim( numNodes );
  wSmoothCoord.Dim( numNodes );
+ 
+ // oldSol vectors
+ uSolOld.Dim( numNodes );
+ vSolOld.Dim( numNodes );
+ wSolOld.Dim( numNodes );
+ pSolOld.Dim( numVerts );
+ cSolOld.Dim( numVerts );
+ uALEOld.Dim( numNodes );
+ vALEOld.Dim( numNodes );
+ wALEOld.Dim( numNodes );
+ kappaOld.Dim( numNodes );
+ fintOld.Dim( numNodes );
+ //gravityOld.Dim( numVerts );
+ nuOld.Dim( numVerts );
+ muOld.Dim( numVerts );
+ rhoOld.Dim( numVerts );
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );

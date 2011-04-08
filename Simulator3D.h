@@ -106,6 +106,9 @@ class Simulator3D
   void setCflDisk(real _cfl);
   void setCflBubble(real _cfl);
   real getCfl();
+  real getC1();
+  real getC2();
+  real getC3();
   void setMu(real _mu_l);
   void setMu(real _mu_l,real _mu_g);
   real getMu_l();
@@ -158,6 +161,7 @@ class Simulator3D
   int loadIteration( const char* _dir,const char* _filename,int _iter );
   void loadSolution( const char* _dir,const char* _filename );
   void loadSolution( const char* _dir,const char* _filename,int _iter );
+  int loadSolution( const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   void getBubbleVelocity();
   void getBubbleVelocity(clVector _uVel,clVector _vVel,clVector _wVel);
@@ -168,13 +172,14 @@ class Simulator3D
   Solver *solverV,*solverP,*solverC;
 
   int numVerts,numElems,numNodes;
-  int numGLEU,numGLEP,numGLEC;
+  int numVertsOld,numElemsOld,numNodesOld;
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
   real c1,c2,c3;
   real bubbleXVel,bubbleYVel,bubbleZVel;
   real rho_l,rho_g,mu_l,mu_g;
   real rho_0,mu_0;
   real rho_lAdimen,rho_gAdimen,mu_lAdimen,mu_gAdimen;
+  real triEdge;
 
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
@@ -195,7 +200,7 @@ class Simulator3D
   clVector uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
   clVector uALEOld,vALEOld,wALEOld;
-  clVector uSolOld,vSolOld,wSolOld,pSolOld;
+  clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
   clVector fintOld;
   clDMatrix kappaOld;
 

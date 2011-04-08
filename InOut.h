@@ -187,7 +187,6 @@ class InOut
 private:
   Model3D *m;
   int numVerts,numNodes,numElems;
-  int numGLEP,numGLEU,numGLEC;
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
@@ -195,6 +194,7 @@ private:
   clMatrix *IEN;
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
+  real triEdge;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;
@@ -207,6 +207,7 @@ private:
   clVector *fint;
   clDMatrix *kappa;
   clVector *nu,*mu,*rho;
+  real c1,c2,c3;
 };
 
 

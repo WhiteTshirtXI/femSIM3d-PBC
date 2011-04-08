@@ -23,7 +23,7 @@ g(x)=0.5-0.5*x
 
 fileObj = "../dat/distance.dat"
 
-plot fileObj using 1:6 title 'We=2 Re=10' with points ,\
+plot fileObj using 1:6 title 'We=10 Re=20' with points ,\
 	 f(x) title 'analytical: 0.5*exp(-x)' with lines ,\
 	 g(x) title 'linear evolution: 0.5-0.5*x' with lines 
 

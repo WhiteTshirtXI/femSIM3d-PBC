@@ -24,6 +24,7 @@
 #include "clVector.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
+#include "TElement.h"
 #include "math.h"
 #include "compare.h"
 #include "colors.h"
@@ -207,9 +208,6 @@ class Model3D
   int getNumVerts();
   int getNumNodes();
   int getNumElems();
-  int getNumGLEU();
-  int getNumGLEP();
-  int getNumGLEC();
   real getVolume(int _v1,int _v2,int _v3,int _v4);
   real getVolume(int _elem);
   real getAreaVert(int _v1,int _v2,int _v3);
@@ -264,9 +262,6 @@ class Model3D
   int numNodes;                   // numero total de nos da malha
   int dVerts;                     // delta vertices (v_new-v_old)
   int numTriangles;
-  int numGLEU;                    // numero de graus de liberdade de vel.
-  int numGLEP;                    // numero de graus de liberdade de P.
-  int numGLEC;                    // numero de graus de liberdade de C.
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;

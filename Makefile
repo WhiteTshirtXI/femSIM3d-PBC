@@ -6,8 +6,8 @@
 
 LIBDIR = ../lib
 CXX = g++
-CXXFLAGS = -O1 -g
-LIBS += -lgsl -lm
+CXXFLAGS = -O1 -g -fPIC
+LIBS += -L/urs/lib -lgsl -lgslcblas -lm
 LIBS += -L. -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I. -I$(LIBDIR) 
 INCLUDES += -I${PETSC_DIR}/include
@@ -27,39 +27,43 @@ obj = $(src:%.cpp=%.o)
 
 all: step bubble 2bubble diskNuC diskNuCte diskNuZ
 
-diskNuC: ./scripts/mainDiskNuC.o libtest
-	$(CXX) $< -L. -ltest -o $@
+diskNuC: ./scripts/mainDiskNuC.o $(obj)
+	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuCte: ./scripts/mainDiskNuCte.o libtest
-	$(CXX) $< -L. -ltest -o $@
+diskNuCte: ./scripts/mainDiskNuCte.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuZ: ./scripts/mainDiskNuZ.o libtest
-	$(CXX) $< -L. -ltest -o $@
+diskNuZ: ./scripts/mainDiskNuZ.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskSurf: ./scripts/mainDiskSurf.o libtest
-	$(CXX) $< -L. -ltest -o $@
+diskSurf: ./scripts/mainDiskSurf.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-2bubble: ./scripts/main2Bubble.o libtest
-	$(CXX) $< -L. -ltest -o $@
+2bubbles: ./scripts/main2Bubble.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-bubble: ./scripts/mainBubble.o libtest
-	$(CXX) $< -L. -ltest -o $@
+bubble: ./scripts/mainBubble.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-step: ./scripts/mainStep.o libtest
-	$(CXX) $< -L. -ltest -o $@
+#--------------------------------------------------
+# step: ./scripts/mainStep.o libtest.so
+# 	$(CXX) -L. -ltest -o $@ $<
+#-------------------------------------------------- 
+
+step: ./scripts/mainStep.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+libtest.so: $(obj)
+	$(CXX) -shared $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
 
 #--------------------------------------------------
 # libtest: $(obj)
-# 	$(CXX) -shared $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
-# 	ln -s libtest libtest.so
+# 	$(CXX) -dynamiclib $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
+# 	ln -s libtest libtest.dylib
 #-------------------------------------------------- 
 
-libtest: $(obj)
-	$(CXX) -dynamiclib $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
-	ln -s libtest libtest.dylib
-
 %.o: %.cpp $(wildcard *.h)
-	$(CXX) -fPIC $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 	
 # Petsc new config
 include ${PETSC_DIR}/conf/variables

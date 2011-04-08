@@ -78,8 +78,7 @@ int main(int argc, char **argv)
 
   string file = (string) "sim-" + *(argv+2);
   const char *sol = file.c_str();
-  s1.loadSolution(binFolder,sol);
-  iter = s1.loadIteration(vtkFolder,sol);
+  iter = s1.loadSolution("sim",atoi(*(argv+2)));
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -103,7 +102,7 @@ int main(int argc, char **argv)
    s1.unCoupledC();
    save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
    save.saveVTU(vtkFolder,"sim",i*nRe+j+iter);
-   save.saveSol(binFolder,"UVWPC",i*nRe+j+iter);
+   save.saveSol(binFolder,"sim",i*nRe+j+iter);
 
    cout << "________________________________________ END of "
 	    << i*nRe+j+iter << endl;

@@ -16,9 +16,6 @@ Model3D::Model3D()
  numNodes = 0;                
  dVerts = 0;                  
  numTriangles = 0;
- numGLEU = 0;                 
- numGLEP = 0;                 
- numGLEC = 0;                 
  rMax = 0;                    
  xCenter = 0;
  yCenter = 0;
@@ -2322,7 +2319,8 @@ void Model3D::mesh2Dto3DOriginal()
  out.initialize();
 
  in.mesh_dim = 3;
- in.numberofpoints = surfMesh.numVerts + 1600; // num of add points
+ //in.numberofpoints = surfMesh.numVerts + 1600; // num of add points
+ in.numberofpoints = surfMesh.numVerts; // num of add points
  numVerts = in.numberofpoints;
  in.pointlist = new REAL[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
@@ -2330,7 +2328,7 @@ void Model3D::mesh2Dto3DOriginal()
  convertModel3DtoTetgen(in);
  
  // add points between bubbles
- insertPointsBetweenBubblesByPosition();
+ //insertPointsBetweenBubblesByPosition();
 
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
@@ -2777,7 +2775,7 @@ void Model3D::mesh3DPoints()
  contractEdgeByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
- //removePointsByInterfaceDistance();
+ removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
@@ -3904,9 +3902,6 @@ void Model3D::setMiniElement()
  real centroidX,centroidY,centroidZ;
  int v1,v2,v3,v4,v5;
 
- numGLEP = 4; // triangulo linear
- numGLEU = 5; // elemento MINI
- numGLEC = 4; // elemento linear
  numNodes = numVerts + numElems;
 
  clearBC();
@@ -4087,9 +4082,6 @@ void Model3D::setQuadElement()
  }
 
  // atualizado vetores com numero total de nos
- numGLEP = 4; // tetraedro linear
- numGLEC = 4; // tetraedro linear
- numGLEU = 10; // tetraedro quadratico
  numNodes = numVerts+it; // atualizando numNodes
 
  clearBC();
@@ -4166,7 +4158,7 @@ void Model3D::setNeighbour()
  neighbourElem.resize (0);
  neighbourElem.resize (numVerts);
  for( int i=0;i<numElems;i++ )
-  for( int j= 0;j<numGLEP;j++ )
+  for( int j= 0;j<NUMGLE;j++ )
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
 }
 
@@ -4843,24 +4835,24 @@ void Model3D::setInOutElem()
 void Model3D::setOFace()
 {
  clMatrix mapViz(numElems,numElems);
- clMatrix faceFace(1000,numGLEP+1);
- //clMatrix freeFace(1000,numGLEP+1);
- freeFace.Dim(1000,numGLEP+1);
+ clMatrix faceFace(1000,NUMGLE+1);
+ //clMatrix freeFace(1000,NUMGLE+1);
+ freeFace.Dim(1000,NUMGLE+1);
  clMatrix faceFaceAux;
  clMatrix freeFaceAux;
- clMatrix mapVizAux(numElems*numGLEP,numGLEP);
- clMatrix mapVizAux2(numElems*numGLEP,numGLEP);
- clMatrix comb(numGLEP,numGLEP-1);  // triangulo = 2
- clVector verts(numGLEP);           // tetraedro = 3
- clVector face(numGLEP-1);
- clVector index(numElems*numGLEP);
- clVector index2(numElems*numGLEP);
- clVector index3(numElems*numGLEP);
- clVector idcol(numElems*numGLEP);
- clVector idcol2(numElems*numGLEP);
- clVector idcol3(numElems*numGLEP);
- clVector vect1(numGLEP+1);
- clVector vert(numGLEP-1);
+ clMatrix mapVizAux(numElems*NUMGLE,NUMGLE);
+ clMatrix mapVizAux2(numElems*NUMGLE,NUMGLE);
+ clMatrix comb(NUMGLE,NUMGLE-1);  // triangulo = 2
+ clVector verts(NUMGLE);           // tetraedro = 3
+ clVector face(NUMGLE-1);
+ clVector index(numElems*NUMGLE);
+ clVector index2(numElems*NUMGLE);
+ clVector index3(numElems*NUMGLE);
+ clVector idcol(numElems*NUMGLE);
+ clVector idcol2(numElems*NUMGLE);
+ clVector idcol3(numElems*NUMGLE);
+ clVector vect1(NUMGLE+1);
+ clVector vert(NUMGLE-1);
 
  //        - nome: comb
  //        - definicao:  matriz de aresta/face para um elemento de referencia
@@ -4899,13 +4891,13 @@ void Model3D::setOFace()
  neighbourElem.resize (numVerts);
  for( int i=0;i<numElems;i++ )
  {
-  for( int j=0;j<numGLEP;j++ )
+  for( int j=0;j<NUMGLE;j++ )
   {
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
   }
 
   verts.CopyRow(i,IEN);
-  for( int j=0;j<numGLEP;j++ )
+  for( int j=0;j<NUMGLE;j++ )
   {
    face.Set(0,comb.Get(j,0));
    face.Set(1,comb.Get(j,1));
@@ -5096,7 +5088,7 @@ void Model3D::setOFace()
    if( iFace == faceFace.DimI() ) 
    {
 	faceFaceAux = faceFace;
-	faceFace.Dim(iFace+faceFaceAux.DimI(),numGLEP+1);
+	faceFace.Dim(iFace+faceFaceAux.DimI(),NUMGLE+1);
 	faceFace.CopyFrom(0,0,faceFaceAux);
    }
    faceFace.Set(iFace,0,mapVizAux.Get(ii+1,3));
@@ -5117,7 +5109,7 @@ void Model3D::setOFace()
    if( iFree == freeFace.DimI() ) 
    {
 	freeFaceAux = freeFace;
-	freeFace.Dim(iFree+freeFaceAux.DimI(),numGLEP+1);
+	freeFace.Dim(iFree+freeFaceAux.DimI(),NUMGLE+1);
 	freeFace.CopyFrom(0,0,freeFaceAux);
    }
    freeFace.Set(iFree,0,0);
@@ -5136,7 +5128,7 @@ void Model3D::setOFace()
    if( iFree == freeFace.DimI() ) 
    {
 	freeFaceAux = freeFace;
-	freeFace.Dim(iFree+freeFaceAux.DimI(),numGLEP+1);
+	freeFace.Dim(iFree+freeFaceAux.DimI(),NUMGLE+1);
 	freeFace.CopyFrom(0,0,freeFaceAux);
    }
    freeFace.Set(iFree,0,0);
@@ -5153,8 +5145,8 @@ void Model3D::setOFace()
  // redimensionalizando...
  faceFaceAux = faceFace;
  freeFaceAux = freeFace;
- faceFace.Dim(iFace,numGLEP+1);
- freeFace.Dim(iFree,numGLEP+1);
+ faceFace.Dim(iFace,NUMGLE+1);
+ freeFace.Dim(iFree,NUMGLE+1);
  faceFaceAux.CopyTo(0,0,faceFace);
  freeFaceAux.CopyTo(0,0,freeFace);
 
@@ -5184,9 +5176,9 @@ void Model3D::setOFace()
  //          |________ d ________|
  //     	 |                   |
  
- oFace.Dim(numElems,numGLEP);
+ oFace.Dim(numElems,NUMGLE);
  for( int i=0;i<numElems;i++ )
-  for( int j=0;j<numGLEP;j++ )
+  for( int j=0;j<NUMGLE;j++ )
    oFace.Set(i,j,-1);
 
  clVector tetra(IEN.DimJ());
@@ -5205,7 +5197,7 @@ void Model3D::setOFace()
 
   tetra.CopyRow(elem1,IEN);
 
-  for( int kk=0;kk<numGLEP;kk++)
+  for( int kk=0;kk<NUMGLE;kk++)
    if( (tetra.Get(kk) != vert.Get(0)) && 
 	   (tetra.Get(kk) != vert.Get(1)) && 
 	   (tetra.Get(kk) != vert.Get(2)) )
@@ -5215,7 +5207,7 @@ void Model3D::setOFace()
    }
 
   tetra.CopyRow(elem2,IEN);
-  for ( int kk=0;kk<numGLEP;kk++ )
+  for ( int kk=0;kk<NUMGLE;kk++ )
    if( (tetra.Get(kk) != vert.Get(0)) && 
 	   (tetra.Get(kk) != vert.Get(1)) && 
 	   (tetra.Get(kk) != vert.Get(2)) )
@@ -5243,7 +5235,7 @@ void Model3D::setOFace()
   vec[0] = (int) freeFace.Get(i,2); 
   vec[1] = (int) freeFace.Get(i,3); 
   vec[2] = (int) freeFace.Get(i,4); 
-  for( int j=0;j<numGLEP-1;j++ )
+  for( int j=0;j<NUMGLE-1;j++ )
   {
    ii = (int) freeFace.Get(i,j+2);
    plist = neighbourElem.at(ii);
@@ -5512,7 +5504,7 @@ void Model3D::reAllocStruct()
  Z.CopyFrom(0,aux);
  clMatrix IENaux;
  IENaux = IEN;
- IEN.Dim(numElems,numGLEU); // 4 nos por elemento + 1 centroide
+ IEN.Dim(numElems,NUMGLEU); // 4 nos por elemento + 1 centroide
  IEN.CopyFrom(0,0,IENaux);
 }
 
@@ -5644,9 +5636,6 @@ clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
 int Model3D::getNumElems(){ return numElems; }
-int Model3D::getNumGLEU(){ return numGLEU; }
-int Model3D::getNumGLEP(){ return numGLEP; }
-int Model3D::getNumGLEC(){ return numGLEC; }
 //clMatrix Model3D::getMapViz(){ return mapViz; }
 //clMatrix Model3D::getFaceFace(){ return faceFace; }
 clMatrix* Model3D::getOFace(){ return &oFace; }
@@ -5677,9 +5666,6 @@ void Model3D::operator=(Model3D &_mRight)
   // ints and floats
   numVerts = _mRight.numVerts;
   numNodes = _mRight.numNodes;
-  numGLEU = _mRight.numGLEU;
-  numGLEP = _mRight.numGLEP;
-  numGLEC = _mRight.numGLEC;
   rMax = _mRight.rMax;
   xCenter = _mRight.xCenter;
   yCenter = _mRight.yCenter;

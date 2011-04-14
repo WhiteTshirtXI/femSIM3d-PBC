@@ -2131,7 +2131,8 @@ void Model3D::remove3dMeshPointsByDistance()
 
  if( dVerts>0 )
  {
-  for( int i=numVerts-dVerts;i<numVerts;i++ )
+  //for( int i=numVerts-dVerts;i<numVerts;i++ )
+  for( int i=surfMesh.numVerts;i<numVerts;i++ )
   {
    for( int j=surfMesh.numVerts;j<numVerts;j++ )
    {
@@ -5666,11 +5667,22 @@ void Model3D::operator=(Model3D &_mRight)
   // ints and floats
   numVerts = _mRight.numVerts;
   numNodes = _mRight.numNodes;
+  numElems = _mRight.numElems;
   rMax = _mRight.rMax;
   xCenter = _mRight.xCenter;
   yCenter = _mRight.yCenter;
   zCenter = _mRight.zCenter;
   bubbleRadius = _mRight.bubbleRadius;
+  dVerts = _mRight.dVerts;                  
+  numTriangles = _mRight.numTriangles;
+  triEdge = _mRight.triEdge;
+  averageTriEdge = _mRight.averageTriEdge;
+  isp = _mRight.isp;
+  rsp = _mRight.rsp;        
+  ip = _mRight.ip;                    
+  rp = _mRight.rp;              
+  rpi = _mRight.rpi;                   
+  flip = _mRight.flip;
 
   // clVector and clMatrix
   surface = _mRight.surface;

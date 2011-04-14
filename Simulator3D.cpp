@@ -106,6 +106,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  nuOld = *_s.getNu();
  muOld = *_s.getMu();
  rhoOld = *_s.getRho();
+ hSmoothOld = *_s.getHSmooth();
 }
 
 Simulator3D::~Simulator3D()
@@ -179,8 +180,11 @@ void Simulator3D::assemble()
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  FEMLinElement3D linElem(*X,*Y,*Z);
 
- setMu( mu_l,mu_g );
- setRho( rho_l,rho_g );
+ setHSmooth();
+ setMuSmooth( mu_l,mu_g );
+ setRhoSmooth( rho_l,rho_g );
+ //setMu( mu_l,mu_g );
+ //setRho( rho_l,rho_g );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -1776,34 +1780,6 @@ void Simulator3D::setCflBubble(real _cfl)
  dt = cfl*capillary;
 }
 
-void Simulator3D::setHsmooth()
-{
-//--------------------------------------------------
-//  interfaceDistance = *m->getInterfaceDistance();
-//  // -- set para heaviside suavizada -- //
-//  real aux;
-//  real epsilon=0.1;
-//  for( int i=0;i<numNodes;i++ )
-//  {
-//   if( interfaceDistance.Get(i) < -epsilon )
-//   {
-//    Hsmooth.Set(i,0.0);
-//   }
-//   if( interfaceDistance.Get(i) > epsilon )
-//   {
-//    Hsmooth.Set(i,1.0);
-//   }
-//   if( (interfaceDistance.Get(i) >= -epsilon) && 
-//        interfaceDistance.Get(i) <= epsilon )
-//   {
-//    aux = (1.0/PI)*sin(PI*interfaceDistance.Get(i)/epsilon);
-//    aux = 0.5*(1.0 + interfaceDistance.Get(i)/epsilon + aux);
-//    Hsmooth.Set(i,aux);
-//   }
-//  }
-//-------------------------------------------------- 
-}
-
 void Simulator3D::setCSol(clVector &_cSol)
 {
  cSol = _cSol;
@@ -2008,6 +1984,55 @@ void Simulator3D::setRho(real _rho_l,real _rho_g)
  }
 }
 
+void Simulator3D::setMuSmooth(real _mu_l,real _mu_g)
+{ 
+ mu_l = _mu_l;
+ mu_g = _mu_g;
+ mu_0 = mu_l; 
+ mu_lAdimen = mu_l/mu_0; 
+ mu_gAdimen = mu_g/mu_0;
+
+ clVector one(numVerts);one.SetAll(1.0);
+ mu = mu_gAdimen*hSmooth + mu_lAdimen*(one-hSmooth);
+}
+
+void Simulator3D::setRhoSmooth(real _rho_l,real _rho_g)
+{ 
+ rho_l = _rho_l;
+ rho_g = _rho_g;
+ rho_0 = rho_l; 
+ rho_lAdimen = rho_l/rho_0; 
+ rho_gAdimen = rho_g/rho_0;
+
+ clVector one(numVerts);one.SetAll(1.0);
+ rho = rho_gAdimen*hSmooth + rho_lAdimen*(one-hSmooth);
+}
+
+void Simulator3D::setHSmooth()
+{
+ hSmooth.Dim(numVerts);
+ clVector half(numVerts);half.SetAll(0.5);
+ clVector zeroLevel = (cSolOld-half)*2;
+ real triEdge = m->getTriEdge();
+ for( int i=0;i<numVerts;i++ )
+ {
+  real len = 3*triEdge;
+  real d = interfaceDistance->Get(i);
+  real aux = zeroLevel.Get(i)*d;
+
+  if( aux < -len )
+   hSmooth.Set( i,0.0 );
+  else if( aux > len )
+   hSmooth.Set( i,1.0 );
+  else
+  {
+   //real func = 0.5;
+   real func = 0.5*( 1.0+(aux/len)+(1.0/3.1415)*sin(3.1415*(aux/len)) );
+   hSmooth.Set( i,func );
+  }
+ }
+}
+
 real Simulator3D::getMu_l(){return mu_l;}
 real Simulator3D::getMu_g(){return mu_g;}
 real Simulator3D::getRho_l(){return rho_l;}
@@ -2036,6 +2061,7 @@ clMatrix* Simulator3D::getD(){return &D;}
 clVector* Simulator3D::getNu(){return &nu;}
 clVector* Simulator3D::getMu(){return &mu;}
 clVector* Simulator3D::getRho(){return &rho;}
+clVector* Simulator3D::getHSmooth(){return &hSmooth;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 
 // set do centroide para o elemento mini apos a interpolacao linear
@@ -2174,11 +2200,11 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  // two-phase vectors
  kappa = _sRight.kappa;
  fint = _sRight.fint;
- Hsmooth = _sRight.Hsmooth;
  Fold = _sRight.Fold;
  nu = _sRight.nu;
  mu = _sRight.mu;
  rho = _sRight.rho;
+ hSmooth = _sRight.hSmooth;
  
  // old ints
  numVertsOld = _sRight.numVerts;
@@ -2200,6 +2226,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  nuOld = _sRight.nuOld;
  muOld = _sRight.muOld;
  rhoOld = _sRight.rhoOld;
+ hSmoothOld = _sRight.hSmoothOld;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;
@@ -2278,6 +2305,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  nuOld = *_s.getNu();
  muOld = *_s.getMu();
  rhoOld = *_s.getRho();
+ hSmoothOld = *_s.getHSmooth();
  kappaOld = *_s.getKappa();
  fintOld = *_s.getFint();
 }
@@ -2455,6 +2483,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  nu.Dim( numVerts );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
+ hSmooth.Dim( numVerts );
 
  // only 1 component because the 2 others are exactly the same
  clVector xKappaOld(_mOld.getNumVerts());
@@ -2477,6 +2506,34 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
   * Then it is ready to be applied to some vector.
   * */ 
  clMatrix interpLin = meshInterp(_mOld,xVert,yVert,zVert);
+ 
+ // solution of old mesh
+ clVector uSolOldVert(_mOld.getNumVerts());
+ clVector vSolOldVert(_mOld.getNumVerts());
+ clVector wSolOldVert(_mOld.getNumVerts());
+ clVector pSolOldVert(_mOld.getNumVerts());
+ clVector uALEOldVert(_mOld.getNumVerts());
+ clVector vALEOldVert(_mOld.getNumVerts());
+ clVector wALEOldVert(_mOld.getNumVerts());
+ clDMatrix kappaOldVert(_mOld.getNumVerts());
+ clVector fintOldVert(_mOld.getNumVerts());
+ //clVector gravityOldVert(_mOld.getNumVerts());
+ clVector muOldVert(_mOld.getNumVerts());
+ clVector rhoOldVert(_mOld.getNumVerts());
+ clVector hSmoothOldVert(_mOld.getNumVerts());
+ 
+ uSolOld.CopyTo(0,uSolOldVert);
+ vSolOld.CopyTo(0,vSolOldVert);
+ wSolOld.CopyTo(0,wSolOldVert);
+ pSolOld.CopyTo(0,pSolOldVert);
+ uALEOld.CopyTo(0,uALEOldVert);
+ vALEOld.CopyTo(0,vALEOldVert);
+ wALEOld.CopyTo(0,wALEOldVert);
+ fintOld.CopyTo(0,fintOldVert);
+ //gravityOld.CopyTo(0,gravityOldVert);
+ muOld.CopyTo(0,muOldVert);
+ rhoOld.CopyTo(0,rhoOldVert);
+ hSmoothOld.CopyTo(0,hSmoothOldVert);
 
  uSol = interpLin*(uSolOld);
  vSol = interpLin*(vSolOld);
@@ -2489,10 +2546,14 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  nu = interpLin*(nuOld);
  mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
+ hSmooth = interpLin*(hSmoothOld);
  clVector xKappa = interpLin*(xKappaOld);
  clVector xFint = interpLin*(xFintOld);
  clVector yFint = interpLin*(yFintOld);
  clVector zFint = interpLin*(zFintOld);
+ //clVector xGravity = *interpLin*(xGravityOld);
+ //clVector yGravity = *interpLin*(yGravityOld);
+ //clVector zGravity = *interpLin*(zGravityOld);
 
  // set do centroid
  uSol = setTetCentroid(*IEN,uSol);
@@ -2505,6 +2566,10 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  xFint = setTetCentroid(*IEN,xFint);
  yFint = setTetCentroid(*IEN,yFint);
  zFint = setTetCentroid(*IEN,zFint);
+ //xGravity = setTetCentroid(*IEN,xGravity);
+ //yGravity = setTetCentroid(*IEN,yGravity);
+ //zGravity = setTetCentroid(*IEN,zGravity);
+
 
  // setting kappa
  kappa.Dim(3*numNodes);
@@ -2516,11 +2581,15 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
   kappa.Set(i+numNodes*2,aux);
  }
 
- // setting fint
+ // setting fint and gravity
  fint.Dim(3*numNodes);
  fint.CopyFrom(numNodes*0,xFint);
  fint.CopyFrom(numNodes*1,yFint);
  fint.CopyFrom(numNodes*2,zFint);
+ //gravity.Dim(3*numNodes);
+ //gravity.CopyFrom(numNodes*0,xGravity);
+ //gravity.CopyFrom(numNodes*1,yGravity);
+ //gravity.CopyFrom(numNodes*2,zGravity);
 
  uSolOld = uSol;
  vSolOld = vSol;
@@ -2535,6 +2604,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  nuOld = nu;
  muOld = mu;
  rhoOld = rho;
+ hSmoothOld = hSmooth;
 } // fecha metodo applyLinearInterpolation
 
 // calcula velocidade media da bolha tomando como referencia o centro de
@@ -2739,12 +2809,13 @@ void Simulator3D::allocateMemoryToAttrib()
  nuOld.Dim( numVerts );
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
+ hSmoothOld.Dim( numVerts );
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
- Hsmooth.Dim( numNodes );
  nu.Dim( numVerts );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
+ hSmooth.Dim( numVerts );
 }
 

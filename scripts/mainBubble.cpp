@@ -39,15 +39,15 @@ int main(int argc, char **argv)
 //  int iter = 0;
 //  real Re = 100;
 //  real Sc = 2;
-//  real We = 1;
+//  real We = 10;
 //  real Fr = 1.0;
 //  real sigma = 1.0;
 //  real alpha = 1;
 //  real beta = -40;
-//  real cfl = 0.5;
+//  real cfl = 1.0;
 //  real mu_l = 10.0;
 //  real mu_g = 1.0;
-//  real rho_l = 10.0;
+//  real rho_l = 2.0;
 //  real rho_g = 1.0;
 //-------------------------------------------------- 
 

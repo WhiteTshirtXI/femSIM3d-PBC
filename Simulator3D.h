@@ -159,11 +159,6 @@ class Simulator3D
   void operator=(Simulator3D &_s);
   void operator()(Model3D &_m);
   void operator()(Model3D &_m,Simulator3D &_s);
-  int loadIteration();
-  int loadIteration( const char* _dir,const char* _filename );
-  int loadIteration( const char* _dir,const char* _filename,int _iter );
-  void loadSolution( const char* _dir,const char* _filename );
-  void loadSolution( const char* _dir,const char* _filename,int _iter );
   int loadSolution( const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   void getBubbleVelocity();

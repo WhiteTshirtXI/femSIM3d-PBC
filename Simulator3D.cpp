@@ -42,6 +42,7 @@ Simulator3D::Simulator3D( Model3D &_m )
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
+ iter  = 1;
 
  c1    = 1.0;
  c2    = 0.0;
@@ -78,6 +79,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  mu_g  = _s.getMu_g();
  rho_l = _s.getRho_l();
  rho_g = _s.getRho_g();
+ iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
@@ -93,19 +95,18 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  allocateMemoryToAttrib();
 
  // recuperando campo de velocidade e pressao da malha antiga
- uSolOld = *_s.getUSol();
- vSolOld = *_s.getVSol();
- wSolOld = *_s.getWSol();
- pSolOld = *_s.getPSol();
- cSolOld = *_s.getCSol();
- uALEOld = *_s.getUALE();
- vALEOld = *_s.getVALE();
- wALEOld = *_s.getWALE();
- kappaOld = *_s.getKappa();
- fintOld = *_s.getFint();
- nuOld = *_s.getNu();
- muOld = *_s.getMu();
- rhoOld = *_s.getRho();
+ uSolOld    = *_s.getUSol();
+ vSolOld    = *_s.getVSol();
+ wSolOld    = *_s.getWSol();
+ pSolOld    = *_s.getPSol();
+ cSolOld    = *_s.getCSol();
+ uALEOld    = *_s.getUALE();
+ vALEOld    = *_s.getVALE();
+ wALEOld    = *_s.getWALE();
+ kappaOld   = *_s.getKappa();
+ fintOld    = *_s.getFint();
+ muOld      = *_s.getMu();
+ rhoOld     = *_s.getRho();
  hSmoothOld = *_s.getHSmooth();
 }
 
@@ -136,7 +137,6 @@ void Simulator3D::initFixedBubbleZ()
  }
  for( int i=0;i<idbcw->Dim();i++ )
   wSolOld.Set( (int) idbcw->Get(i),0.0 ); 
-
 }
 
 void Simulator3D::init2Bubbles()
@@ -1874,6 +1874,8 @@ void Simulator3D::setDt(real _dt){dt = _dt;}
 void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
 real Simulator3D::getTime2(){return time;}
+void Simulator3D::setIter(real _iter){iter = _iter;}
+int  Simulator3D::getIter(){return iter;}
 real Simulator3D::getCfl(){return cfl;}
 real Simulator3D::getC1(){return c1;}
 real Simulator3D::getC2(){return c2;}
@@ -2058,7 +2060,6 @@ clMatrix* Simulator3D::getGy(){return &gy;}
 clMatrix* Simulator3D::getGz(){return &gz;}
 clMatrix* Simulator3D::getG(){return &G;}
 clMatrix* Simulator3D::getD(){return &D;}
-clVector* Simulator3D::getNu(){return &nu;}
 clVector* Simulator3D::getMu(){return &mu;}
 clVector* Simulator3D::getRho(){return &rho;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
@@ -2131,6 +2132,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  rho_g = _sRight.rho_g;
  rho_0 = _sRight.rho_0;
  mu_0 = _sRight.mu_0;
+ iter = _sRight.iter;
  rho_lAdimen = _sRight.rho_lAdimen;
  rho_gAdimen = _sRight.rho_gAdimen;
  mu_lAdimen = _sRight.mu_lAdimen;
@@ -2201,7 +2203,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappa = _sRight.kappa;
  fint = _sRight.fint;
  Fold = _sRight.Fold;
- nu = _sRight.nu;
  mu = _sRight.mu;
  rho = _sRight.rho;
  hSmooth = _sRight.hSmooth;
@@ -2223,7 +2224,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappaOld = _sRight.kappaOld;
  fintOld = _sRight.fintOld;
  //gravityOld = _sRight.gravityOld;
- nuOld = _sRight.nuOld;
  muOld = _sRight.muOld;
  rhoOld = _sRight.rhoOld;
  hSmoothOld = _sRight.hSmoothOld;
@@ -2252,6 +2252,14 @@ void Simulator3D::operator()(Model3D &_m)
  mu_g  = 1.0;
  rho_l = 1.0;
  rho_g = 1.0;
+ iter  = 1;
+ mu_l  = 1.0;
+ mu_g  = 1.0;
+ rho_l = 1.0;
+ rho_g = 1.0;
+ c1    = 1.0;
+ c2    = 0.0;
+ c3    = 0.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2279,6 +2287,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  mu_g  = _s.getMu_g();
  rho_l = _s.getRho_l();
  rho_g = _s.getRho_g();
+ iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
@@ -2294,20 +2303,19 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  numElemsOld = _s.m->getNumElems();
 
  // recuperando campo de velocidade e pressao da malha antiga
- uSolOld = *_s.getUSol();
- vSolOld = *_s.getVSol();
- wSolOld = *_s.getWSol();
- pSolOld = *_s.getPSol();
- cSolOld = *_s.getCSol();
- uALEOld = *_s.getUALE();
- vALEOld = *_s.getVALE();
- wALEOld = *_s.getWALE();
- nuOld = *_s.getNu();
- muOld = *_s.getMu();
- rhoOld = *_s.getRho();
+ uSolOld    = *_s.getUSol();
+ vSolOld    = *_s.getVSol();
+ wSolOld    = *_s.getWSol();
+ pSolOld    = *_s.getPSol();
+ cSolOld    = *_s.getCSol();
+ uALEOld    = *_s.getUALE();
+ vALEOld    = *_s.getVALE();
+ wALEOld    = *_s.getWALE();
+ muOld      = *_s.getMu();
+ rhoOld     = *_s.getRho();
  hSmoothOld = *_s.getHSmooth();
- kappaOld = *_s.getKappa();
- fintOld = *_s.getFint();
+ kappaOld   = *_s.getKappa();
+ fintOld    = *_s.getFint();
 }
 
 int Simulator3D::loadSolution( const char* _filename,int _iter )
@@ -2330,8 +2338,6 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  }
 
  char auxstr[255];
- real time;
- int iterNumber;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"TIME") != 0) )
   fileP >> auxstr;
@@ -2347,7 +2353,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
- fileP >> iterNumber;
+ fileP >> iter;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"NODES") != 0) )
   fileP >> auxstr;
@@ -2398,7 +2404,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
 //--------------------------------------------------
 //  cout << dt << " " << cfl << " " << time << endl;
-//  cout << iterNumber << endl;
+//  cout << iter << endl;
 //  cout << numVertsOld << " " << numNodesOld << " " << numElemsOld << endl;
 //  cout << Re << " " << Sc << " " << Fr << " " << We << " " << endl;
 //  cout << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << " " << endl;
@@ -2452,9 +2458,9 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  vALEOld = vALE;
  wALEOld = wALE;
 
- cout << "Solution No. " << _iter << " read" << endl;
+ cout << "Solution No. " << iter << " read" << endl;
 
- return iterNumber+1;
+ return iter+1;
 } // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na
@@ -2480,7 +2486,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE.Dim( numVerts );
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
- nu.Dim( numVerts );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );
@@ -2543,7 +2548,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE = interpLin*(uALEOld);
  vALE = interpLin*(vALEOld);
  wALE = interpLin*(wALEOld);
- nu = interpLin*(nuOld);
  mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
  hSmooth = interpLin*(hSmoothOld);
@@ -2601,7 +2605,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALEOld = wALE;
  fintOld = fint;
  kappaOld = kappa;
- nuOld = nu;
  muOld = mu;
  rhoOld = rho;
  hSmoothOld = hSmooth;
@@ -2806,14 +2809,12 @@ void Simulator3D::allocateMemoryToAttrib()
  kappaOld.Dim( numNodes );
  fintOld.Dim( numNodes );
  //gravityOld.Dim( numVerts );
- nuOld.Dim( numVerts );
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
  hSmoothOld.Dim( numVerts );
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
- nu.Dim( numVerts );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );

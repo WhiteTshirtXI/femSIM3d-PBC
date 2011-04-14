@@ -206,8 +206,9 @@ private:
   clVector *uALE,*vALE,*wALE;
   clVector *fint;
   clDMatrix *kappa;
-  clVector *nu,*mu,*rho;
+  clVector *mu,*rho;
   clVector *hSmooth;
+  int iter;
   real c1,c2,c3;
 };
 

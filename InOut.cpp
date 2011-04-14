@@ -75,6 +75,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  mu_g = s->getMu_g();
  rho_l = s->getRho_l();
  rho_g = s->getRho_g();
+ iter = s->getIter();
  c1 = s->getC1();
  c2 = s->getC2();
  c3 = s->getC3();
@@ -96,7 +97,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  cSol = s->getCSol();
  kappa = s->getKappa();
  fint = s->getFint();
- nu = s->getNu();
  mu = s->getMu();
  rho = s->getRho();
  hSmooth = s->getHSmooth();
@@ -742,7 +742,7 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
  int v1 = (int) Xaux.Get(0);
  int v2;
  vonKarmanFile << setprecision(10) << scientific; 
- vonKarmanFile << "#z     F      G      H      c      p     nu" << endl; 
+ vonKarmanFile << "#z     F      G      H      c      p     mu" << endl; 
  for( int i=0;i<Xaux.Dim();i++ )
  {
   v2 = (int) Xaux.Get(i);
@@ -752,7 +752,7 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
 		        << setw(9) <<  (-1)*wSol->Get( v2 ) << " " 
 				<< setw(9) <<  cSol->Get(v2) << " " 
 				<< setw(9) <<  pSol->Get(v2) << " "
-				<< setw(9) <<  nu->Get(v2) << endl;
+				<< setw(9) <<  mu->Get(v2) << endl;
  }
  vonKarmanFile << endl;
  vonKarmanFile << "X = " << X->Get( (int) Xaux.Get(0) ) << endl;

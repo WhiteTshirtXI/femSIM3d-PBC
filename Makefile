@@ -77,6 +77,7 @@ deepclean:
 	@find . -name "*.o" -exec rm {} \;
 	@find . -name "*~" -exec rm {} \;
 	@rm -f ./vtk/*.vtk
+	@rm -f ./msh/*.msh
 	@rm -f ./sim/vk*.dat
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin

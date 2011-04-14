@@ -105,6 +105,8 @@ class Simulator3D
   void setCflDisk(real _cfl);
   void setCflBubble(real _cfl);
   real getCfl();
+  void setIter(real _Iter);
+  int getIter();
   real getC1();
   real getC2();
   real getC3();
@@ -152,7 +154,6 @@ class Simulator3D
   clMatrix* getGx();
   clMatrix* getGy();
   clMatrix* getGz();
-  clVector* getNu();
   clVector* getMu();
   clVector* getRho();
   clVector* getHSmooth();
@@ -177,6 +178,7 @@ class Simulator3D
   real rho_l,rho_g,mu_l,mu_g;
   real rho_0,mu_0;
   real rho_lAdimen,rho_gAdimen,mu_lAdimen,mu_gAdimen;
+  int iter;
   real triEdge;
 
   clVector *X,*Y,*Z;
@@ -193,14 +195,6 @@ class Simulator3D
   clMatrix mat,matc;
 
   clDMatrix MrhoLumped,McLumped;
-  clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
-  clVector uSL,vSL,wSL,cSL;
-  clVector uALE,vALE,wALE;
-  clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
-  clVector uALEOld,vALEOld,wALEOld;
-  clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
-  clVector fintOld;
-  clDMatrix kappaOld;
 
   clMatrix gx,gy,gz;
   clVector uAnt,cAnt;
@@ -215,10 +209,17 @@ class Simulator3D
   clDMatrix invA,invC,invMrhoLumped,invMcLumped;
   clDMatrix MLumped,invMLumped;
   clVector uTilde,cTilde,pTilde,b1,b1c,b2,ip,ipc;
- 
+  clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
+  clVector uSL,vSL,wSL,cSL;
+  clVector uALE,vALE,wALE;
+  clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
+  clVector uALEOld,vALEOld,wALEOld;
+  clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
+  clVector fintOld;
+  clDMatrix kappaOld;
   clDMatrix kappa;
   clVector fint;
-  clVector nu,mu,muOld,rho,nuOld,rhoOld;
+  clVector mu,muOld,rho,rhoOld;
   clVector Fold;
   clVector hSmooth,hSmoothOld;
 

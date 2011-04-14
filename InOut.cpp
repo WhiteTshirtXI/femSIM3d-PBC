@@ -99,6 +99,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  nu = s->getNu();
  mu = s->getMu();
  rho = s->getRho();
+ hSmooth = s->getHSmooth();
  uSolOld.Dim(numNodes);
  vSolOld.Dim(numNodes);
  wSolOld.Dim(numNodes);
@@ -394,6 +395,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  {
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
   vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
  }
 
@@ -506,6 +508,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  {
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
   vtkVector(vtkFile,"surface_force",*fint);
  }
 
@@ -605,6 +608,7 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
  {
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
   vtkVector(vtkFile,"surface_force",*fint);
  }
 

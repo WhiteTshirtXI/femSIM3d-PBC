@@ -7,7 +7,7 @@
 LIBDIR = ../lib
 CXX = g++
 CXXFLAGS = -O1 -g -fPIC
-LIBS += -L/urs/lib -lgsl -lgslcblas -lm
+LIBS += -lgsl -lgslcblas -lm
 LIBS += -L. -L$(HOME)/Programs/tetgen/1.4.3 -ltet
 INCLUDES += -I. -I$(LIBDIR) 
 INCLUDES += -I${PETSC_DIR}/include

@@ -207,6 +207,7 @@ private:
   clVector *fint;
   clDMatrix *kappa;
   clVector *nu,*mu,*rho;
+  clVector *hSmooth;
   real c1,c2,c3;
 };
 

@@ -80,7 +80,6 @@ class Simulator3D
   void setUnCoupledBC();
   void setUnCoupledCBC();
 
-  void setHsmooth();
   void setMuZ();
   void setMuC();
   void setRe(real _Re);
@@ -111,11 +110,14 @@ class Simulator3D
   real getC3();
   void setMu(real _mu_l);
   void setMu(real _mu_l,real _mu_g);
+  void setMuSmooth(real _mu_l,real _mu_g);
   real getMu_l();
   real getMu_g();
   void setRho(real _rho_l);
   void setRho(real _rho_l,real _rho_g);
   void setRho_l(real _rho_l);
+  void setRhoSmooth(real _rho_l,real _rho_g);
+  void setHSmooth();
   real getRho_l();
   void setRho_g(real _rho_g);
   real getRho_g();
@@ -153,6 +155,7 @@ class Simulator3D
   clVector* getNu();
   clVector* getMu();
   clVector* getRho();
+  clVector* getHSmooth();
   void operator=(Simulator3D &_s);
   void operator()(Model3D &_m);
   void operator()(Model3D &_m,Simulator3D &_s);
@@ -220,8 +223,9 @@ class Simulator3D
  
   clDMatrix kappa;
   clVector fint;
-  clVector Hsmooth,nu,mu,muOld,rho,nuOld,rhoOld;
+  clVector nu,mu,muOld,rho,nuOld,rhoOld;
   clVector Fold;
+  clVector hSmooth,hSmoothOld;
 
 };
 

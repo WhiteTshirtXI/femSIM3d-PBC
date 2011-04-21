@@ -124,9 +124,7 @@ int main(int argc, char **argv)
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"UVWPC",i*nReMesh+j+iter);
-   save.oscillating("./","oscillating",i*nReMesh+j+iter);
-   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   save.saveBubbleInfo(datFolder);
   }
   mOld = m1; 
   m1.mesh2Dto3DOriginal();

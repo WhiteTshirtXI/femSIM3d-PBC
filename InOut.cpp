@@ -33,6 +33,8 @@ InOut::InOut( Model3D &_m )
  surfMesh = m->getSurfMesh();
  interfaceDistance = m->getInterfaceDistance();
  triEdge = m->getTriEdge();
+ inElem = m->getInElem();
+ outElem = m->getOutElem();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -60,6 +62,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  surfMesh = m->getSurfMesh();
  interfaceDistance = m->getInterfaceDistance();
  triEdge = m->getTriEdge();
+ inElem = m->getInElem();
+ outElem = m->getOutElem();
 
  s = &_s;
  Re = s->getRe();
@@ -1710,10 +1714,10 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  cout << "2 bubbles distances saved in ASCII " << dist1 << endl;
 }
 
-void InOut::saveMeshInfo(const char* _dir,const char* _filename )
+void InOut::saveMeshInfo(const char* _dir)
 {
  real *time = s->getTime();
- string file = (string) _dir + (string) _filename + ".dat";
+ string file = (string) _dir + "meshingInfo.dat";
  const char* filename = file.c_str();
 
  ifstream testFile( filename );
@@ -1721,26 +1725,28 @@ void InOut::saveMeshInfo(const char* _dir,const char* _filename )
  if( testFile )
  {
   testFile.close();
-  cout << "appending on file " << _filename << ".dat" << endl;
+  cout << "appending on file meshingInfo.dat" << endl;
  }
  else
  {
-  cout << "Creating file " << _filename << ".dat" << endl;
-  mesh << "#time" << setw(20) << "numVerts" 
-                  << setw(9) << "numNodes" 
-				  << setw(9) << "numElems"
-                  << setw(10) << "surfVerts" 
-				  << setw(10) << "surfElems"
+  cout << "Creating file meshingInfo.dat" << endl;
+  mesh << "#time" << setw(21) << "numVerts" 
+                  << setw(10) << "numNodes" 
+				  << setw(10) << "numElems"
+                  << setw(11) << "surfVerts" 
+				  << setw(11) << "surfElems"
+				  << setw(6) << "iter"
 				  << endl;
  }
 
 
  mesh << setprecision(10) << scientific; 
- mesh << setw(9) <<  *time << " " << numVerts << " " 
-                                  << numNodes << " " 
-								  << numElems << " "
-								  << surfMesh->numVerts << " "
-								  << surfMesh->numElems << " "
+ mesh << setw(9) <<  *time << " " << setw(9) << numVerts << " " 
+                                  << setw(9) <<numNodes << " " 
+								  << setw(9) <<numElems << " "
+								  << setw(10) <<surfMesh->numVerts << " "
+								  << setw(10) <<surfMesh->numElems << " "
+								  << setw(5) << iter << " "
 								  << endl; 
 
  mesh.close();
@@ -2458,3 +2464,226 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveMSH
 
+void InOut::saveBubbleInfo(const char* _dir)
+{
+ // kappa
+ string fileAux = (string) _dir + "kappa" + ".dat";
+ const char* filenameKappa = fileAux.c_str();
+
+ ifstream testFileKappa( filenameKappa );
+ ofstream fileKappa( filenameKappa,ios::app );
+ if( testFileKappa )
+ {
+  testFileKappa.close();
+  cout << "appending on file kappa.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file kappa.dat" << endl;
+  fileKappa << "#time" << setw(29) << "kappa" 
+			    	   << setw(6) << "iter" 
+					   << endl;
+ }
+
+ real sumKappa = 0;
+ for( int i=0;i<kappa->Dim();i++ )
+  sumKappa += kappa->Get(i);
+
+ real kappaAverage = sumKappa/kappa->Dim();
+
+ fileKappa << setprecision(10) << scientific; 
+ fileKappa << setw(10) << *simTime << " " 
+           << setw(17) << kappaAverage << " " 
+	       << setw(5)  << setprecision(0) << fixed << iter 
+		   << endl;
+ fileKappa.close();
+
+ // oscillating velocity
+ fileAux = (string) _dir + "velocity" + ".dat";
+ const char* filenameVel = fileAux.c_str();
+
+ ifstream testFileVel( filenameVel );
+ ofstream fileVel( filenameVel,ios::app );
+ if( testFileVel )
+ {
+  testFileVel.close();
+  cout << "appending on file velocity.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file velocity.dat" << endl;
+  fileVel << "#time" << setw(29) << "velocity U" 
+                     << setw(18) << "velocity V" 
+					 << setw(18) << "velocity W"
+					 << setw(6) << "iter" 
+					 << endl;
+ }
+
+ real aux;
+ int dim = surface->Dim();
+ clVector xSurface(dim);
+ clVector ySurface(dim);
+ clVector zSurface(dim);
+ clVector uSolSurface(dim);
+ clVector vSolSurface(dim);
+ clVector wSolSurface(dim);
+ for( int i=0;i<dim;i++ )
+ {
+  aux = surface->Get(i);
+  xSurface.Set(i,X->Get(aux));
+  ySurface.Set(i,Y->Get(aux));
+  zSurface.Set(i,Z->Get(aux));
+  uSolSurface.Set(i,uSol->Get(aux));
+  vSolSurface.Set(i,vSol->Get(aux));
+  wSolSurface.Set(i,wSol->Get(aux));
+ }
+ clVector xSurfaceAux = xSurface==xSurface.Max();
+ clVector xSurfaceMax = xSurfaceAux.Find(); // retorna o vertice de maior X
+ clVector ySurfaceAux = ySurface==ySurface.Max();
+ clVector ySurfaceMax = ySurfaceAux.Find(); // retorna o vertice de maior Y
+ clVector zSurfaceAux = zSurface==zSurface.Max();
+ clVector zSurfaceMax = zSurfaceAux.Find(); // retorna o vertice de maior Z
+
+ // retorna o valor de maior Y da interface 
+ real pointX = uSolSurface.Get((int) xSurfaceMax.Get(0));
+ real pointY = vSolSurface.Get((int) ySurfaceMax.Get(0));
+ real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
+
+ fileVel << setprecision(10) << scientific; 
+ fileVel << setw(10) << *simTime << " " 
+         << setw(17) << pointX << " " 
+		 << setw(17) << pointY << " " 
+		 << setw(17) << pointZ << " " 
+		 << setw(5) << setprecision(0) << fixed << iter 
+		 << endl;
+
+ fileVel.close();
+
+ // oscillating diameter
+ fileAux = (string) _dir + "diameter" + ".dat";
+ const char* filenameD = fileAux.c_str();
+
+ ifstream testFileD( filenameD );
+ ofstream fileD( filenameD,ios::app );
+ if( testFileD )
+ {
+  testFileD.close();
+  cout << "appending on file diameter.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file diameter.dat" << endl;
+  fileD << "#time" << setw(29) << "diameter X" 
+                   << setw(18) << "diameter Y" 
+				   << setw(18) << "diameter Z"
+				   << setw(6) << "iter" 
+				   << endl;
+ }
+ 
+ // pega o 1o. valor da interface
+ real xMax = xSurface.Get(0); 
+ real yMax = ySurface.Get(0); 
+ real zMax = zSurface.Get(0); 
+ real xMin = xSurface.Get(0); 
+ real yMin = ySurface.Get(0); 
+ real zMin = zSurface.Get(0); 
+ for( int i=1;i<dim;i++ )
+ {
+  if( xSurface.Get(i) > xMax )
+   xMax = xSurface.Get(i);
+  if( ySurface.Get(i) > yMax )
+   yMax = ySurface.Get(i);
+  if( zSurface.Get(i) > zMax )
+   zMax = zSurface.Get(i);
+  if( xSurface.Get(i) < xMin )
+   xMin = xSurface.Get(i);
+  if( ySurface.Get(i) < yMin )
+   yMin = ySurface.Get(i);
+  if( zSurface.Get(i) < zMin )
+   zMin = zSurface.Get(i);
+ }
+
+ // retorna o valor do maior diametro em X na interface 
+ real diameterX = xMax - xMin; 
+ // retorna o valor do maior diametro em Y na interface 
+ real diameterY = yMax - yMin; 
+ // retorna o valor do maior diametro em Z na interface 
+ real diameterZ = zMax - zMin; 
+
+ fileD << setprecision(10) << scientific; 
+ fileD << setw(10) << *simTime << " " 
+       << setw(17) << diameterX << " " 
+	   << setw(17) << diameterY << " " 
+	   << setw(17) << diameterZ << " " 
+	   << setw(5) << setprecision(0) << fixed << iter 
+	   << endl;
+ fileD.close();
+ 
+ // bubble volume
+ fileAux = (string) _dir + "volume" + ".dat";
+ const char* filenameVol = fileAux.c_str();
+
+ ifstream testFileVol( filenameVol );
+ ofstream fileVol( filenameVol,ios::app );
+ if( testFileVol )
+ {
+  testFileVol.close();
+  cout << "appending on file volume.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file volume.dat" << endl;
+  fileVol << "#time" << setw(29) << "volume" 
+                     << setw(18) << "vel centroid X" 
+                     << setw(18) << "vel centroid Y" 
+                     << setw(18) << "vel centroid Z" 
+					 << setw(6)  << "iter" 
+					 << endl;
+ }
+
+ real velX,velY,velZ;
+ real volume=0;
+ real sumVolume=0;
+ real sumXVelVolume=0;
+ real sumYVelVolume=0;
+ real sumZVelVolume=0;
+ for( list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it )
+ {
+  int v1 = IEN->Get(*it,0);
+  int v2 = IEN->Get(*it,1);
+  int v3 = IEN->Get(*it,2);
+  int v4 = IEN->Get(*it,3);
+
+  velX = ( uSol->Get(v1)+
+	       uSol->Get(v2)+
+		   uSol->Get(v3)+
+		   uSol->Get(v4) )*0.25;
+
+  velY = ( vSol->Get(v1)+
+           vSol->Get(v2)+
+           vSol->Get(v3)+
+	 	   vSol->Get(v4) )*0.25;
+
+  velZ = ( wSol->Get(v1)+
+           wSol->Get(v2)+
+           wSol->Get(v3)+
+	 	   wSol->Get(v4) )*0.25;
+
+  volume = m->getVolume(*it);
+
+  sumXVelVolume += velX * volume;
+  sumYVelVolume += velY * volume;
+  sumZVelVolume += velZ * volume;
+  sumVolume += volume;
+ }
+
+ fileVol << setprecision(10) << scientific; 
+ fileVol << setw(10) << *simTime << " " 
+         << setw(17) << sumVolume << " " 
+	     << setw(17) << sumXVelVolume/sumVolume << " " 
+	     << setw(17) << sumYVelVolume/sumVolume << " " 
+	     << setw(17) << sumZVelVolume/sumVolume << " " 
+	     << setw(5) << setprecision(0) << fixed << iter 
+		 << endl;
+ fileVol.close();
+}

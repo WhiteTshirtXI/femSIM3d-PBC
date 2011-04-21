@@ -189,7 +189,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry");
- save.saveMeshInfo(datFolder,"meshingInfo" );
+ save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
@@ -223,9 +223,7 @@ int main(int argc, char **argv)
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.bubblesDistance(datFolder,"distance",i*nReMesh+j+iter);
-   save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
-   save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
+   save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    cout << color(none,magenta,black);
@@ -257,7 +255,7 @@ int main(int argc, char **argv)
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMeshInfo(datFolder,"meshingInfo" );
+  saveEnd.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

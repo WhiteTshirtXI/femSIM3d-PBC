@@ -21,35 +21,35 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- int iter = 0;
- real Re = 42.574;
- real Sc = 2;
- real We = 115.5566;
- real Fr = 1.0;
- real sigma = 1;
- real alpha = 1;
- real beta = -40;
- real cfl = 0.5;
- //real dt = 0.00528;
- real mu_l = 2.73;
- real mu_g = 1.7894E-05;
- real rho_l = 1350;
- real rho_g = 1.225;
 //--------------------------------------------------
 //  int iter = 0;
-//  real Re = 100;
+//  real Re = 42.574;
 //  real Sc = 2;
-//  real We = 10;
+//  real We = 115.5566;
 //  real Fr = 1.0;
-//  real sigma = 1.0;
+//  real sigma = 1;
 //  real alpha = 1;
 //  real beta = -40;
-//  real cfl = 1.0;
-//  real mu_l = 10.0;
-//  real mu_g = 1.0;
-//  real rho_l = 2.0;
-//  real rho_g = 1.0;
+//  real cfl = 0.5;
+//  //real dt = 0.00528;
+//  real mu_l = 2.73;
+//  real mu_g = 1.7894E-05;
+//  real rho_l = 1350;
+//  real rho_g = 1.225;
 //-------------------------------------------------- 
+ int iter = 0;
+ real Re = 100;
+ real Sc = 2;
+ real We = 1;
+ real Fr = 1.0;
+ real sigma = 1.0;
+ real alpha = 1;
+ real beta = -40;
+ real cfl = 1.0;
+ real mu_l = 100.0;
+ real mu_g = 1.0;
+ real rho_l = 1.0;
+ real rho_g = 1.0;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -59,8 +59,8 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
- //const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
+ //const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
  //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
 
  Model3D m1;
@@ -209,13 +209,13 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry");
- save.saveMeshInfo(datFolder,"meshingInfo" );
+ save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
  int nIter = 3000;
  int nReMesh = 1;
- for( int i=0;i<nIter;i++ )
+ for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
   {
@@ -237,14 +237,12 @@ int main(int argc, char **argv)
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
+   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
-   save.oscillating(datFolder,"oscillating",i*nReMesh+j+iter);
-   save.oscillatingD(datFolder,"oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa(datFolder,"oscillatingKappa",i*nReMesh+j+iter);
+   save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    cout << color(none,magenta,black);
@@ -268,15 +266,14 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMeshInfo(datFolder,"meshingInfo" );
+  saveEnd.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

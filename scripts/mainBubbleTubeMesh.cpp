@@ -125,9 +125,7 @@ int main(int argc, char **argv)
    save.saveVTKSurface(dir,vtk,i*nReMesh+j+iter);
    save.saveSol(dir,bin,i*nReMesh+j+iter);
    save.saveSimTime(dir,sim,i*nReMesh+j+iter+1);
-   save.oscillating("./","oscillating",i*nReMesh+j+iter);
-   save.oscillatingD("./","oscillatingD",i*nReMesh+j+iter);
-   save.oscillatingKappa("./","oscillatingKappa",i*nReMesh+j+iter);
+   save.saveBubbleInfo("./dat");
    cout << "________________________time: " << s1.getTime2() << endl;
 
 

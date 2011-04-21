@@ -165,11 +165,12 @@ class InOut
   void oscillatingD(const char* _dir,const char* _filename, int _iter);
   void oscillatingKappa(const char* _dir,const char* _filename, int _iter);
   void bubblesDistance(const char* _dir,const char* _filename,int _iter);
-  void saveMeshInfo(const char* _dir,const char* _filename );
+  void saveMeshInfo(const char* _dir);
   void saveConvergence(const char* _dir,const char* _filename);
   void chordalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter );
+  void saveBubbleInfo(const char* _dir);
 
   /* VTK Building Tools  */
   void vtkHeader(ofstream& _file);
@@ -195,6 +196,7 @@ private:
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
   real triEdge;
+  list<int> *inElem,*outElem;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;

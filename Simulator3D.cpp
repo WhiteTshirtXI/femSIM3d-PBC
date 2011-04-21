@@ -42,7 +42,7 @@ Simulator3D::Simulator3D( Model3D &_m )
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
- iter  = 1;
+ iter  = 0;
 
  c1    = 1.0;
  c2    = 0.0;
@@ -1558,6 +1558,7 @@ void Simulator3D::unCoupled()
  pSolOld = pSol;
 
  time = time + dt;
+ iter++;
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()
@@ -2252,7 +2253,7 @@ void Simulator3D::operator()(Model3D &_m)
  mu_g  = 1.0;
  rho_l = 1.0;
  rho_g = 1.0;
- iter  = 1;
+ iter  = 0;
  mu_l  = 1.0;
  mu_g  = 1.0;
  rho_l = 1.0;
@@ -2460,7 +2461,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  cout << "Solution No. " << iter << " read" << endl;
 
- return iter+1;
+ return iter;
 } // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na

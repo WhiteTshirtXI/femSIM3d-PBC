@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file mainStep.cpp, created at 10-Jun-2007                   //
+// this is file mainDiskNuCte.cpp, created at 10-Jun-2007              //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -9,60 +9,50 @@
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
-#include "Simulator3D.h"
 #include "InOut.h"
+#include "Simulator3D.h"
+#include "PetscSolver.h"
+#include "petscpc.h"
 
 #define NUMPHASES 1
 
 int main(int argc, char **argv)
 {
- int iter = 0;
- real Re = 10000;
- real Sc = 2000;
- real Fr = 10;
- //real alpha = 1;
- //real beta = 0;
- real cfl = 3;
- real mu_l = 1.0;
- real rho_l = 1.0;
- Solver *solverP = new PCGSolver();
- Solver *solverV = new PCGSolver();
- Solver *solverC = new PCGSolver();
+ PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
- const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
- //const char *txtFolder  = "./txt/";
+ int iter = 0;
+ real Re = 1;
+ real cfl = 10;
+ real rho_l = 1.0;
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
+
+ const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
  const char *binFolder  = "./bin/";
+ const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
+ const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshStep(40,20,2);
- m1.setAdimenStep();
+ m1.setMeshDisk(5,5,20);
+ m1.setAdimenDisk();
  m1.setMiniElement();
- //m1.setQuadElement();
- m1.setStepBC();
- m1.setCStepBC();
+ m1.setNuZDiskBC();;
  m1.setOFace();
+ //m1.readBaseStateNu("NuCte");
 
  Simulator3D s1(m1);
 
  s1.setRe(Re);
- s1.setSc(Sc);
- s1.setFr(Fr);
- //s1.setDt(dt);
- s1.setCfl(cfl);
- s1.setMu(mu_l);
+ s1.setCflDisk(cfl);
  s1.setRho(rho_l);
- s1.setSolverPressure(solverP);
  s1.setSolverVelocity(solverV);
- s1.setSolverConcentration(solverC);
+ s1.setSolverPressure(solverP);
 
  s1.init();
- s1.assembleSlip();
+ s1.assembleNuZ();
  s1.matMount();
- s1.matMountC();
  s1.setUnCoupledBC(); 
- s1.setUnCoupledCBC(); 
 
  if( (*(argv+1)) == NULL )
  {
@@ -76,9 +66,8 @@ int main(int argc, char **argv)
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
 
-  string file = (string) "sim-" + *(argv+2);
-  const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  s1.setCflDisk(cfl);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -86,29 +75,35 @@ int main(int argc, char **argv)
  save.saveInfo("./","info",mesh);
  save.printInfo(mesh);
 
- int nIter = 100;
- int nRe = 5;
+ int nIter = 1000;
+ int nR = 10;
  for( int i=0;i<nIter;i++ )
  {
-  for( int j=0;j<nRe;j++ )
+  for( int j=0;j<nR;j++ )
   {
    cout << "____________________________________ Iteration: " 
-	    << i*nRe+j+iter << endl;
+	    << i*nR+j+iter << endl;
 
    s1.stepSL();
    s1.setRHS();
-   s1.setCRHS();
    s1.unCoupled();
-   s1.unCoupledC();
-   save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
-   save.saveVTU(vtkFolder,"sim",i*nRe+j+iter);
-   save.saveSol(binFolder,"sim",i*nRe+j+iter);
+   save.saveVonKarman(simFolder,"vk1",i*nR+j+iter,4);
+   save.saveVonKarman(simFolder,"vk2",i*nR+j+iter,5);
+   save.saveVonKarman(simFolder,"vk3",i*nR+j+iter,6);
+   save.saveVonKarman(simFolder,"vk4",i*nR+j+iter,7);
+   save.saveVonKarman(simFolder,"vk5",i*nR+j+iter,8);
+   save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
+   save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
+   save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
+   save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveConvergence(datFolder,"convergence");
 
-   cout << "________________________________________ END of "
-	    << i*nRe+j+iter << endl;
+   cout << "__________________________________________ End: " 
+	    << i*nR+j+iter << endl;
   }
  }
 
+ PetscFinalize();
  return 0;
 }
 

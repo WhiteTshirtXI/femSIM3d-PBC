@@ -1530,12 +1530,11 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- //uvw = uTilde + dt*invMLumped*fint;
- uvw = uTilde + invA*fint;
+ uvw = uTilde + dt*invMLumped*fint;
+ //uvw = uTilde + invA*fint;
  //uvw = uTilde;
 
- b2Tilde = b2 - (DTilde * uvw); // D com c.c.
- b2Tilde = (-1.0) * b2Tilde;
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
 
  // resolve sistema E pTilde = b2
  cout << " --------> solving pressure --------- " << endl;
@@ -2342,6 +2341,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"TIME") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2351,6 +2351,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"ITERATION") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2358,6 +2359,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"NODES") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2367,6 +2369,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"PARAMETERS") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2377,6 +2380,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"PROPERTIES") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2387,6 +2391,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
@@ -2398,6 +2403,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISCTICLENGTH") != 0) )
   fileP >> auxstr;
+
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;

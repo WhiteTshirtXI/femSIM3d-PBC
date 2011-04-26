@@ -27,30 +27,30 @@ obj = $(src:%.cpp=%.o)
 
 all: step bubble 2bubble diskNuC diskNuCte diskNuZ
 
-diskNuC: ./scripts/mainDiskNuC.o $(obj)
+diskNuC: ./script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuCte: ./scripts/mainDiskNuCte.o $(obj)
+diskNuCte: ./script/mainDiskNuCte.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuZ: ./scripts/mainDiskNuZ.o $(obj)
+diskNuZ: ./script/mainDiskNuZ.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskSurf: ./scripts/mainDiskSurf.o $(obj)
+diskSurf: ./script/mainDiskSurf.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-2bubbles: ./scripts/main2Bubble.o $(obj)
+2bubbles: ./script/main2Bubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-bubble: ./scripts/mainBubble.o $(obj)
+bubble: ./script/mainBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 #--------------------------------------------------
-# step: ./scripts/mainStep.o libtest.so
+# step: ./script/mainStep.o libtest.so
 # 	$(CXX) -L. -ltest -o $@ $<
 #-------------------------------------------------- 
 
-step: ./scripts/mainStep.o $(obj)
+step: ./script/mainStep.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 libtest.so: $(obj)
@@ -81,8 +81,5 @@ deepclean:
 	@rm -f ./sim/vk*.dat
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin
-	@rm -f ./bin/*.dat
-	@rm -f ./*.dat
-	@rm -f ./relatorio.dat
-	@rm -f ./info.dat
+	@rm -f ./dat/*.dat
 

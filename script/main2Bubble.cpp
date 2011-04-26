@@ -27,7 +27,7 @@ int main(int argc, char **argv)
  real sigma = 1.0;
  real alpha = 1;
  real beta = -10;
- real cfl = 0.3;
+ real cfl = 0.05;
  real mu_l = 1.0;
  real mu_g = 1.0;
  real rho_l = 1.0;
@@ -70,10 +70,10 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
-  s1.setCflBubble(cfl);
   //s1.setDt(dt);
   s1.setMu(mu_l,mu_g);
   s1.setRho(rho_l,rho_g);
+  s1.setCflBubble(cfl);
   s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -113,6 +113,7 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  s1.setCflBubble(cfl);
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -145,6 +146,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  s1.setCflBubble(cfl);
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -175,6 +177,7 @@ int main(int argc, char **argv)
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  s1.setCflBubble(cfl);
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao

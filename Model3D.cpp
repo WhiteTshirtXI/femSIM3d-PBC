@@ -780,7 +780,7 @@ void Model3D::mesh2Dto3D()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
- tetrahedralize( (char*) "QYYCApq1.414q10a0.1",&in,&out );
+ tetrahedralize( (char*) "QYYCApq1.414q10a",&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -1964,7 +1964,7 @@ void Model3D::contractEdgeByLength()
  // number of removed 3d mesh points by interface distance
  csp=0;
 
- real test = 0.3*triEdge; // 30% + of triEdge
+ real test = 0.5*triEdge; // 30% + of triEdge
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
   // verifying the length of each surface edge
@@ -2028,7 +2028,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.1*triEdge; // 20% of triEdge
+ real test = 0.5*triEdge; // 20% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2105,7 +2105,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h/2 ) // hiRe
+  if( d>0 && d<h*0.8 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2339,7 +2339,7 @@ void Model3D::mesh2Dto3DOriginal()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | complete re-meshing the domain... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+ tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -2365,7 +2365,7 @@ void Model3D::mesh2Dto3DOriginal()
   convertModel3DtoTetgen(in);
 
   cout << "----> fixing 3D mesh points... ";
-  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
   cout << "finished <---- " << endl;;
 
   convertTetgenToModel3D(out);
@@ -2384,6 +2384,9 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  /* ------------ pontos da malha separados em 2 loops ------------ */
  // adiciona na estrutura tetgen as coordenadas dos pontos da 
  // superficie e do convex-hull
+ real xMin = surfMesh.X.Max();
+ real yMin = surfMesh.Y.Max();
+ real zMin = surfMesh.Z.Max();
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   in.pointlist[3*i+0] = surfMesh.X.Get(i); 
@@ -2392,7 +2395,17 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   if( surfMesh.Marker.Get(i) == 0.0 ) // convex-hull
    in.pointmarkerlist[i] = 11;
   if( surfMesh.Marker.Get(i) == 0.5 ) // interface
-   in.pointmarkerlist[i] = 22;
+  {
+   in.pointmarkerlist[i] = 22; // interface
+   if( surfMesh.X.Get(i) < xMin && 
+	   surfMesh.Y.Get(i) < yMin &&
+	   surfMesh.Z.Get(i) < zMin )
+   {
+	xMin = surfMesh.X.Get(i);
+	yMin = surfMesh.Y.Get(i);
+	zMin = surfMesh.Z.Get(i);
+   }
+  }
  }
 
  // adicionando pontos que nao sao da interface e do convex-hull
@@ -2426,14 +2439,22 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   * SENDO 1.0 DENTRO DA BOLHA, 0.5 NA SUPERFICIE E 0.0 FORA 
   * E NECESSARIO DEFINIR 1 PONTO EM CADA REGIAO */
  // fluido interior + fluido exterior + superficie
- in.numberofregions = 1; 
- in.regionlist = new REAL[in.numberofregions*4];
+ in.numberofregions = 2; 
+ in.regionlist = new REAL[in.numberofregions*5];
 
  // fora da bolha
  in.regionlist[0] = surfMesh.X.Min()+0.01;
  in.regionlist[1] = surfMesh.Y.Min()+0.01;
  in.regionlist[2] = surfMesh.Z.Min()+0.01;
  in.regionlist[3] = 1;
+ in.regionlist[4] = 0.1;
+
+ // dentro da bolha
+ in.regionlist[5] = xMin+0.01;
+ in.regionlist[6] = yMin+0.01;
+ in.regionlist[7] = zMin+0.01;
+ in.regionlist[8] = 2;
+ in.regionlist[9] = 0.1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -2644,17 +2665,17 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
    real xMid = ( _tetmesh.pointlist[3*v1+0]+
                  _tetmesh.pointlist[3*v2+0]+
 				 _tetmesh.pointlist[3*v3+0]+
-				 _tetmesh.pointlist[3*v4+0] )*0.25;
+				 _tetmesh.pointlist[3*v4+0] )/4.0;
 
    real yMid = ( _tetmesh.pointlist[3*v1+1]+
                  _tetmesh.pointlist[3*v2+1]+
 				 _tetmesh.pointlist[3*v3+1]+
-				 _tetmesh.pointlist[3*v4+1] )*0.25;
+				 _tetmesh.pointlist[3*v4+1] )/4.0;
 
    real zMid = ( _tetmesh.pointlist[3*v1+2]+
                  _tetmesh.pointlist[3*v2+2]+
 				 _tetmesh.pointlist[3*v3+2]+
-				 _tetmesh.pointlist[3*v4+2] )*0.25;
+				 _tetmesh.pointlist[3*v4+2] )/4.0;
 
    X.AddItem(numVerts,xMid);
    Y.AddItem(numVerts,yMid);
@@ -2771,9 +2792,9 @@ void Model3D::mesh3DPoints()
  insertPointsByLength();
  //insertPointsByInterfaceDistance();
  saveVTKSurface("./vtk/","inserted",0);
- removePointsByLength();
  saveVTKSurface("./vtk/","removed",0);
  contractEdgeByLength();
+ removePointsByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
  removePointsByInterfaceDistance();
@@ -2798,7 +2819,7 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+ tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -2827,7 +2848,7 @@ void Model3D::mesh3DPoints()
   convertModel3DtoTetgen(in);
 
   cout << "----> fixing " << badtet << " shit tetrahedron elements... ";
-  tetrahedralize( (char*) "QYYRCApq1.414q10a0.1",&in,&out );
+  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
   cout << "finished <---- " << endl;;
 
   convertTetgenToModel3D(out);
@@ -3934,9 +3955,9 @@ void Model3D::setMiniElement()
   v5=numVerts+i;
 
   IEN.Set(i,4,v5);
-  centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )*0.25;
-  centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )*0.25;
-  centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )*0.25;
+  centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )/4.0;
+  centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )/4.0;
+  centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )/4.0;
   X.Set(v5,centroidX);
   Y.Set(v5,centroidY);
   Z.Set(v5,centroidZ);

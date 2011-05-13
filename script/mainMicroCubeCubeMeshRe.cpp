@@ -113,8 +113,8 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity();
-   //s1.setGravityBoussinesq();
+   //s1.setGravity("Z");
+   //s1.setGravityBoussinesq("Z");
    s1.setInterfaceGeo();
    s1.unCoupled();
 

@@ -104,6 +104,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  mu = s->getMu();
  rho = s->getRho();
  hSmooth = s->getHSmooth();
+ gravity = s->getGravity();
  uSolOld.Dim(numNodes);
  vSolOld.Dim(numNodes);
  wSolOld.Dim(numNodes);
@@ -400,7 +401,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
   vtkScalar(vtkFile,"hSmooth",*hSmooth);
-  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+  vtkVector(vtkFile,"gravity",*gravity);
+  vtkVector(vtkFile,"surface_force",*fint);
  }
 
  vtkScalar(vtkFile,"viscosity",*mu);
@@ -513,6 +515,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
   vtkScalar(vtkFile,"hSmooth",*hSmooth);
+  vtkVector(vtkFile,"gravity",*gravity);
   vtkVector(vtkFile,"surface_force",*fint);
  }
 
@@ -613,6 +616,7 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
   vtkScalar(vtkFile,"hSmooth",*hSmooth);
+  vtkVector(vtkFile,"gravity",*gravity);
   vtkVector(vtkFile,"surface_force",*fint);
  }
 
@@ -1638,7 +1642,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  {
   vtkScalar(vtkFile,"kappa",*kappa);
   vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkVector(vtkFile,"surface_force",*fint,*fint,*fint);
+  vtkVector(vtkFile,"gravity",*gravity);
+  vtkVector(vtkFile,"surface_force",*fint);
  }
 
  vtkScalar(vtkFile,"viscosity",*mu);
@@ -2286,8 +2291,8 @@ void InOut::vtkVector(ofstream& _file,string _name,clVector &_v)
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
   _file << _v.Get(i) << " " 
-        << _v.Get(i+numVerts) << " " 
-		<< _v.Get(i+numVerts*2) << endl;
+        << _v.Get(i+numNodes) << " " 
+		<< _v.Get(i+numNodes*2) << endl;
  _file << endl;
 }
 
@@ -2576,6 +2581,15 @@ void InOut::saveBubbleInfo(const char* _dir)
   fileD << "#time" << setw(29) << "diameter X" 
                    << setw(18) << "diameter Y" 
 				   << setw(18) << "diameter Z"
+				   << setw(18) << "X max"
+				   << setw(18) << "X min"
+				   << setw(18) << "X mid"
+				   << setw(18) << "Y max"
+				   << setw(18) << "Y min"
+				   << setw(18) << "Y mid"
+				   << setw(18) << "Z max"
+				   << setw(18) << "Z min"
+				   << setw(18) << "Z mid"
 				   << setw(6) << "iter" 
 				   << endl;
  }
@@ -2615,6 +2629,15 @@ void InOut::saveBubbleInfo(const char* _dir)
        << setw(17) << diameterX << " " 
 	   << setw(17) << diameterY << " " 
 	   << setw(17) << diameterZ << " " 
+	   << setw(17) << xMin << " " 
+	   << setw(17) << xMax << " " 
+	   << setw(17) << (xMax-xMin)*0.5 << " " 
+	   << setw(17) << yMin << " " 
+	   << setw(17) << yMax << " " 
+	   << setw(17) << (yMax-yMin)*0.5 << " " 
+	   << setw(17) << zMin << " " 
+	   << setw(17) << zMax << " " 
+	   << setw(17) << (zMax-zMin)*0.5 << " " 
 	   << setw(5) << setprecision(0) << fixed << iter 
 	   << endl;
  fileD.close();
@@ -2637,16 +2660,23 @@ void InOut::saveBubbleInfo(const char* _dir)
                      << setw(18) << "vel centroid X" 
                      << setw(18) << "vel centroid Y" 
                      << setw(18) << "vel centroid Z" 
+                     << setw(18) << "centroid X" 
+                     << setw(18) << "centroid Y" 
+                     << setw(18) << "centroid Z" 
 					 << setw(6)  << "iter" 
 					 << endl;
  }
 
  real velX,velY,velZ;
+ real posX,posY,posZ;
  real volume=0;
  real sumVolume=0;
  real sumXVelVolume=0;
  real sumYVelVolume=0;
  real sumZVelVolume=0;
+ real sumXPosVolume=0;
+ real sumYPosVolume=0;
+ real sumZPosVolume=0;
  for( list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it )
  {
   int v1 = IEN->Get(*it,0);
@@ -2657,23 +2687,41 @@ void InOut::saveBubbleInfo(const char* _dir)
   velX = ( uSol->Get(v1)+
 	       uSol->Get(v2)+
 		   uSol->Get(v3)+
-		   uSol->Get(v4) )*0.25;
+		   uSol->Get(v4) )/4.0;
 
   velY = ( vSol->Get(v1)+
            vSol->Get(v2)+
            vSol->Get(v3)+
-	 	   vSol->Get(v4) )*0.25;
+	 	   vSol->Get(v4) )/4.0;
 
   velZ = ( wSol->Get(v1)+
            wSol->Get(v2)+
            wSol->Get(v3)+
-	 	   wSol->Get(v4) )*0.25;
+	 	   wSol->Get(v4) )/4.0;
+
+  posX = ( X->Get(v1)+
+	       X->Get(v2)+
+		   X->Get(v3)+
+		   X->Get(v4) )/4.0;
+
+  posY = ( Y->Get(v1)+
+	       Y->Get(v2)+
+		   Y->Get(v3)+
+		   Y->Get(v4) )/4.0;
+
+  posZ = ( Z->Get(v1)+
+	       Z->Get(v2)+
+		   Z->Get(v3)+
+		   Z->Get(v4) )/4.0;
 
   volume = m->getVolume(*it);
 
   sumXVelVolume += velX * volume;
   sumYVelVolume += velY * volume;
   sumZVelVolume += velZ * volume;
+  sumXPosVolume += posX * volume;
+  sumYPosVolume += posY * volume;
+  sumZPosVolume += posZ * volume;
   sumVolume += volume;
  }
 
@@ -2683,6 +2731,9 @@ void InOut::saveBubbleInfo(const char* _dir)
 	     << setw(17) << sumXVelVolume/sumVolume << " " 
 	     << setw(17) << sumYVelVolume/sumVolume << " " 
 	     << setw(17) << sumZVelVolume/sumVolume << " " 
+	     << setw(17) << sumXPosVolume/sumVolume << " " 
+	     << setw(17) << sumYPosVolume/sumVolume << " " 
+	     << setw(17) << sumZPosVolume/sumVolume << " " 
 	     << setw(5) << setprecision(0) << fixed << iter 
 		 << endl;
  fileVol.close();

@@ -36,7 +36,6 @@ Simulator3D::Simulator3D( Model3D &_m )
  Sc    = 2;
  Fr    = 0.1;
  We    = 10;
- sigma = 1;
  alpha = 1;
  beta  = 0;
  dt    = 0.01;
@@ -48,6 +47,8 @@ Simulator3D::Simulator3D( Model3D &_m )
  c2    = 0.0;
  c3    = 0.0;
 
+ g     = 9.81;
+ sigma = 0.1;
  mu_l  = 1.0;
  mu_g  = 1.0;
  rho_l = 1.0;
@@ -75,6 +76,8 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
+ g     = _s.getGrav();
+ sigma = _s.getSigma();
  mu_l  = _s.getMu_l();
  mu_g  = _s.getMu_g();
  rho_l = _s.getRho_l();
@@ -105,6 +108,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  wALEOld    = *_s.getWALE();
  kappaOld   = *_s.getKappa();
  fintOld    = *_s.getFint();
+ gravityOld = *_s.getGravity();
  muOld      = *_s.getMu();
  rhoOld     = *_s.getRho();
  hSmoothOld = *_s.getHSmooth();
@@ -180,11 +184,11 @@ void Simulator3D::assemble()
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  FEMLinElement3D linElem(*X,*Y,*Z);
 
- setHSmooth();
- setMuSmooth( mu_l,mu_g );
- setRhoSmooth( rho_l,rho_g );
- //setMu( mu_l,mu_g );
- //setRho( rho_l,rho_g );
+ //setHSmooth();
+ //setMuSmooth( mu_l,mu_g );
+ //setRhoSmooth( rho_l,rho_g );
+ setMu( mu_l,mu_g );
+ setRho( rho_l,rho_g );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -194,14 +198,29 @@ void Simulator3D::assemble()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  real muValue = ( mu.Get(v1)+
-	               mu.Get(v2)+
-	               mu.Get(v3)+
-	               mu.Get(v4) )*0.25;
-  real rhoValue = ( rho.Get(v1)+
-	                rho.Get(v2)+
-	                rho.Get(v3)+
-	                rho.Get(v4) )*0.25;
+//--------------------------------------------------
+//   real muValue = ( mu.Get(v1)+
+// 	               mu.Get(v2)+
+// 	               mu.Get(v3)+
+// 	               mu.Get(v4) )/4.0;
+//   real rhoValue = ( rho.Get(v1)+
+// 	                rho.Get(v2)+
+// 	                rho.Get(v3)+
+// 	                rho.Get(v4) )/4.0;
+//-------------------------------------------------- 
+
+  real muValue=0;
+  real rhoValue=0;
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
+  {
+   muValue = mu_gAdimen;
+   rhoValue = rho_gAdimen;
+  }
+  else
+  {
+   muValue = mu_lAdimen;
+   rhoValue = rho_lAdimen;
+  }
 
   miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -390,11 +409,11 @@ void Simulator3D::assembleNuCte()
   real muValue = ( mu.Get(v1)+
 	               mu.Get(v2)+
 	               mu.Get(v3)+
-	               mu.Get(v4) )*0.25;
+	               mu.Get(v4) )/4.0;
   real rhoValue = ( rho.Get(v1)+
 	                rho.Get(v2)+
 	                rho.Get(v3)+
-	                rho.Get(v4) )*0.25;
+	                rho.Get(v4) )/4.0;
 
   //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
@@ -513,7 +532,7 @@ void Simulator3D::assembleNuC()
   real c = ( cSol.Get(v1)+
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
-	         cSol.Get(v4) )*0.25;
+	         cSol.Get(v4) )/4.0;
 
   real eme = 0.81315;
   real muC = exp(eme*c);
@@ -692,12 +711,12 @@ void Simulator3D::assembleSlip()
   real muValue = ( mu.Get(v1)+
 	               mu.Get(v2)+
 	               mu.Get(v3)+
-	               mu.Get(v4) )*0.25;
+	               mu.Get(v4) )/4.0;
 
   real rhoValue = ( rho.Get(v1)+
 	                rho.Get(v2)+
 	                rho.Get(v3)+
-	                rho.Get(v4) )*0.25;
+	                rho.Get(v4) )/4.0;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -869,12 +888,12 @@ void Simulator3D::assembleNuZ()
   real muValue = ( mu.Get(v1)+
 	               mu.Get(v2)+
 				   mu.Get(v3)+
-				   mu.Get(v4) )*0.25;
+				   mu.Get(v4) )/4.0;
 
   real rhoValue = ( rho.Get(v1)+
 	                rho.Get(v2)+
 				    rho.Get(v3)+
-				    rho.Get(v4) )*0.25;
+				    rho.Get(v4) )/4.0;
 
   miniElem.getMSlip(v1,v2,v3,v4,v5); 
 
@@ -1010,7 +1029,7 @@ void Simulator3D::assembleK()
   real c = ( cSol.Get(v1)+
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
-	         cSol.Get(v4) )*0.25;
+	         cSol.Get(v4) )/4.0;
 
   real eme = 0.81315;
   real muC = exp(eme*c);
@@ -1262,7 +1281,7 @@ void Simulator3D::stepALEVel()
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
 
- c1 = 0.0; 
+ c1 = mu_g/mu_l; 
  c2 = 1.0;
  c3 = 0.05; 
 
@@ -1341,7 +1360,7 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.1;
+  real a = 0.01;
   uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
@@ -1379,34 +1398,75 @@ void Simulator3D::setCRHS()
  vcc = ( (1.0/dt) * McLumped ) * convC;
 }
 
-void Simulator3D::setGravity()
+void Simulator3D::setGravity(const char* _direction)
 {
- real gAdimen = 1.0;
+ g = 9.81;
+ g_0 = g;
+ gAdimen = g/g_0;
 
- clVector gx(numNodes);gx.SetAll(0.0);
- clVector gy(numNodes);gy.SetAll(0.0);
- clVector gz(numNodes);gz.SetAll(gAdimen);
+ clVector gx(numNodes);
+ clVector gy(numNodes);
+ clVector gz(numNodes);
 
- clVector g(0);
- g.Append(gx);
- g.Append(gy);
- g.Append(gz);
+ if( strcmp( _direction,"x") == 0 || strcmp( _direction,"X") == 0 ) 
+ {
+  gx.SetAll(gAdimen);
+  gy.SetAll(0.0);
+  gz.SetAll(0.0);
+ }
+ if( strcmp( _direction,"y") == 0 || strcmp( _direction,"Y") == 0 ) 
+ {
+  gx.SetAll(0.0);
+  gy.SetAll(gAdimen);
+  gz.SetAll(0.0);
+ }
+ if( strcmp( _direction,"z") == 0 || strcmp( _direction,"Z") == 0 ) 
+ {
+  gx.SetAll(0.0);
+  gy.SetAll(0.0);
+  gz.SetAll(gAdimen);
+ }
 
- clVector gravity = ( 1.0/(Fr*Fr) )*( (rho_lAdimen*M - Mrho)*g );
+ clVector gUnit(0);
+ gUnit.Append(gx);
+ gUnit.Append(gy);
+ gUnit.Append(gz);
 
- va = va + gravity;
+ //gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
+ gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_lAdimen*M)*gUnit );
+
+ // update RHS
+ //va = va + gravity;
 }
 
-void Simulator3D::setGravityBoussinesq()
+void Simulator3D::setGravityBoussinesq(const char* _direction)
 {
  clVector zeroAux(numNodes-numVerts);
- clVector forceC(2*numNodes);
- forceC.Append(convC); 
- forceC.Append(zeroAux);
+ clVector forceC(numNodes);
 
- clVector gravity = beta*( Mrho*forceC );
+ if( strcmp( _direction,"x") == 0 || strcmp( _direction,"X") == 0 ) 
+ {
+  forceC.Append(convC); 
+  forceC.Append(zeroAux);
+  forceC.Append(zeroAux);
+ }
+ if( strcmp( _direction,"y") == 0 || strcmp( _direction,"Y") == 0 ) 
+ {
+  forceC.Append(zeroAux);
+  forceC.Append(convC); 
+  forceC.Append(zeroAux);
+ }
+ if( strcmp( _direction,"z") == 0 || strcmp( _direction,"Z") == 0 ) 
+ {
+  forceC.Append(zeroAux);
+  forceC.Append(zeroAux);
+  forceC.Append(convC); 
+ }
 
- va = va - gravity;
+ gravity =  beta*( Mrho*forceC );
+
+ // update RHS
+ va = va + gravity;
 }
 
 void Simulator3D::setInterfaceGeo()
@@ -1415,26 +1475,36 @@ void Simulator3D::setInterfaceGeo()
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * sigma * ( kappa*(GTilde*cSolOld) );
+ fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
  
- //va = va + invA*fint;
+ //va = va + fint;
 } // fecha metodo setInterface 
 
 void Simulator3D::setInterfaceLevelSet()
 {
+ clVector half(numVerts);half.SetAll(0.5);
+ clVector zeroLevel = ((*cc)-half)*2;
+ clVector levelSet(numVerts);
+ for( int i=0;i<numVerts;i++ )
+ {
+  real aux = zeroLevel.Get(i)*interfaceDistance->Get(i);
+  levelSet.Set(i,aux);
+ }
+
  // ----------- smoothing step ------------ //
  matMountC();
  setUnCoupledCBC();
- vcc = ( (1.0/dt) * McLumped ) * *interfaceDistance;
+ vcc = ( (1.0/dt) * McLumped ) * levelSet;
  unCoupledC();
- //clVector kappaAux = invMcLumped*(Kc * *interfaceDistance);
- clVector kappaAux = invMcLumped*(Kc*cTilde);
+ //clVector kappaAux = invMcLumped*(Kc * vcc);
+ //clVector kappaAux = invMcLumped*(Kc * levelSet);
+ clVector kappaAux = invMcLumped*(Kc * cTilde);
  // --------------------------------------- //
- 
+
  m->setKappaSurface(kappaAux);
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * sigma * ( kappa*(GTilde*cSolOld) );
+ fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
 
  //va = va + invA*fint;
 } // fecha metodo setInterface 
@@ -1530,8 +1600,8 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- uvw = uTilde + dt*invMLumped*fint;
- //uvw = uTilde + invA*fint;
+ //uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+ uvw = uTilde + invA*fint + invA*gravity;
  //uvw = uTilde;
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
@@ -1840,7 +1910,7 @@ void Simulator3D::setMuC()
   real c = ( cSol.Get(v1)+
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
-	         cSol.Get(v4) )*0.25;
+	         cSol.Get(v4) )/4.0;
 
   real eme = 0.81315;
   real muC = exp(eme*c);
@@ -1851,6 +1921,13 @@ void Simulator3D::setMuC()
   mu.Set(v3,muC);
   mu.Set(v4,muC);
  }
+}
+
+void Simulator3D::setSigma(real _sigma)
+{
+ sigma = _sigma;
+ sigma_0 = sigma;
+ sigmaAdimen = sigma/sigma_0;
 }
 
 void Simulator3D::setSolverVelocity(Solver *s){solverV = s;}
@@ -1868,7 +1945,6 @@ void Simulator3D::setAlpha(real _alpha){alpha = _alpha;}
 real Simulator3D::getAlpha(){return alpha;}
 void Simulator3D::setBeta(real _beta){beta = _beta;}
 real Simulator3D::getBeta(){return beta;}
-void Simulator3D::setSigma(real _sigma){sigma = _sigma;}
 real Simulator3D::getSigma(){return sigma;}
 void Simulator3D::setDt(real _dt){dt = _dt;}
 void Simulator3D::setTime(real _time){time = _time;}
@@ -1946,51 +2022,46 @@ void Simulator3D::setMu(real _mu_l,real _mu_g)
 { 
  mu_l = _mu_l;
  mu_g = _mu_g;
- mu_0 = mu_l;
+
+ if( mu_l >= mu_g )
+  mu_0 = mu_l; 
+ else
+  mu_0 = mu_g;
+
  mu_lAdimen = mu_l/mu_0;
  mu_gAdimen = mu_g/mu_0;
- 
- mu.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  // gas phase (bubble)
-  if( cc->Get(i)>0.5 )
-   mu.Set(i,mu_gAdimen); 
-  // liquid phase
-  else if( cc->Get(i)<0.5 )
-   mu.Set(i,mu_lAdimen); 
-  else
-   mu.Set(i,(mu_gAdimen+mu_lAdimen)*0.5);
- }
+
+ clVector one(numVerts);one.SetAll(1.0);
+ mu = mu_gAdimen*(*cc) + mu_lAdimen*(one-(*cc));
 }
 
 void Simulator3D::setRho(real _rho_l,real _rho_g)
 { 
  rho_l = _rho_l;
  rho_g = _rho_g;
- rho_0 = rho_l; 
+
+ if( rho_l >= rho_g )
+  rho_0 = rho_l; 
+ else
+  rho_0 = rho_g; 
+
  rho_lAdimen = rho_l/rho_0; 
  rho_gAdimen = rho_g/rho_0;
 
- rho.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  // gas phase (bubble)
-  if( cc->Get(i)>0.5 )
-   rho.Set(i,rho_gAdimen);
-  // liquid phase
-  else if( cc->Get(i)<0.5 )
-   rho.Set(i,rho_lAdimen);
-  else
-   rho.Set(i,(rho_gAdimen+rho_lAdimen)*0.5);
- }
+ clVector one(numVerts);one.SetAll(1.0);
+ rho = rho_gAdimen*(*cc) + rho_lAdimen*(one-(*cc));
 }
 
 void Simulator3D::setMuSmooth(real _mu_l,real _mu_g)
 { 
  mu_l = _mu_l;
  mu_g = _mu_g;
- mu_0 = mu_l; 
+
+ if( mu_l >= mu_g )
+  mu_0 = mu_l; 
+ else
+  mu_0 = mu_g;
+
  mu_lAdimen = mu_l/mu_0; 
  mu_gAdimen = mu_g/mu_0;
 
@@ -2002,7 +2073,12 @@ void Simulator3D::setRhoSmooth(real _rho_l,real _rho_g)
 { 
  rho_l = _rho_l;
  rho_g = _rho_g;
- rho_0 = rho_l; 
+
+ if( rho_l >= rho_g )
+  rho_0 = rho_l; 
+ else
+  rho_0 = rho_g; 
+
  rho_lAdimen = rho_l/rho_0; 
  rho_gAdimen = rho_g/rho_0;
 
@@ -2014,11 +2090,11 @@ void Simulator3D::setHSmooth()
 {
  hSmooth.Dim(numVerts);
  clVector half(numVerts);half.SetAll(0.5);
- clVector zeroLevel = (cSolOld-half)*2;
+ clVector zeroLevel = ((*cc)-half)*2;
  real triEdge = m->getTriEdge();
  for( int i=0;i<numVerts;i++ )
  {
-  real len = 3*triEdge;
+  real len = 2.5*triEdge;
   real d = interfaceDistance->Get(i);
   real aux = zeroLevel.Get(i)*d;
 
@@ -2034,6 +2110,56 @@ void Simulator3D::setHSmooth()
   }
  }
 }
+
+//--------------------------------------------------
+// real Simulator3D::computeReynolds()
+// {
+//  real D = 1.0;
+//  real L = D;
+//  real U = sqrt(g*D);
+//  Re = rho_l*L*U/mu_l;
+// }
+// 
+// real Simulator3D::computeFroud()
+// {
+//  real D = 1.0;
+//  real L = D;
+//  real U = sqrt(g*D);
+//  Fr = U/sqrt(g*L);
+// }
+// 
+// real Simulator3D::computeWebber()
+// {
+//  real D = 1.0;
+//  real L = D;
+//  real U = sqrt(g*D);
+//  We = rho_l*L*U*U/sigma;
+// }
+// 
+// real Simulator3D::computeEotvos()
+// {
+//  real D = 1.0;
+//  Eo = rho_l*g*D*D/sigma;
+//  We = Eo;
+// }
+// 
+// real Simulator3D::computeGalileo()
+// {
+//  real D = 1.0;
+//  real L = D;
+//  real U = sqrt(g*D);
+//  N = rho_l*U*L/mu_l;
+//  Re = N;
+// }
+// 
+// real Simulator3D::computeMorton()
+// {
+//  real D = 1.0;
+//  real L = D;
+//  real U = sqrt(g*D);
+//  Mo = (rho_l-rho_g)*mu_l*mu_l*mu_l*mu_l*g/(rho_l*rho_l*sigma*sigma*sigma); 
+// }
+//-------------------------------------------------- 
 
 real Simulator3D::getMu_l(){return mu_l;}
 real Simulator3D::getMu_g(){return mu_g;}
@@ -2052,6 +2178,8 @@ clVector* Simulator3D::getUALE(){return &uALE;}
 clVector* Simulator3D::getVALE(){return &vALE;} 
 clVector* Simulator3D::getWALE(){return &wALE;} 
 clVector* Simulator3D::getFint(){return &fint;}
+clVector* Simulator3D::getGravity(){return &gravity;}
+real Simulator3D::getGrav(){return g;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
 clMatrix* Simulator3D::getM(){return &Mrho;}
@@ -2081,7 +2209,7 @@ clVector Simulator3D::setCentroid(clVector &_vector)
   int v4 = (int) IEN->Get(mele,3);
   int v5 = (int) IEN->Get(mele,4);
   aux = ( _vector.Get(v1)+_vector.Get(v2)+_vector.Get(v3)+_vector.Get(v4) );
-  aux = aux*0.25;
+  aux = aux/4.0;
   _vector.Set(v5,aux);
  }
   return _vector;
@@ -2122,17 +2250,25 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  dt = _sRight.dt;
  cfl = _sRight.cfl;
  time = _sRight.time;
- sigma = _sRight.sigma;
  c1 = _sRight.c1;
  c2 = _sRight.c2;
  c3 = _sRight.c3;
- mu_l = _sRight.mu_l;
- mu_g = _sRight.mu_g;
+ iter = _sRight.iter;
+
+ g = _sRight.g;
+ sigma = _sRight.sigma;
  rho_l = _sRight.rho_l;
  rho_g = _sRight.rho_g;
+ mu_l = _sRight.mu_l;
+ mu_g = _sRight.mu_g;
+
+ g_0 = _sRight.g_0;
+ sigma_0 = _sRight.sigma_0;
  rho_0 = _sRight.rho_0;
  mu_0 = _sRight.mu_0;
- iter = _sRight.iter;
+
+ gAdimen = _sRight.gAdimen;
+ sigmaAdimen = _sRight.sigmaAdimen;
  rho_lAdimen = _sRight.rho_lAdimen;
  rho_gAdimen = _sRight.rho_gAdimen;
  mu_lAdimen = _sRight.mu_lAdimen;
@@ -2200,11 +2336,12 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  ipc = _sRight.ipc;
 
  // two-phase vectors
- kappa = _sRight.kappa;
- fint = _sRight.fint;
- Fold = _sRight.Fold;
- mu = _sRight.mu;
- rho = _sRight.rho;
+ kappa   = _sRight.kappa;
+ fint    = _sRight.fint;
+ gravity = _sRight.gravity;
+ Fold    = _sRight.Fold;
+ mu      = _sRight.mu;
+ rho     = _sRight.rho;
  hSmooth = _sRight.hSmooth;
  
  // old ints
@@ -2213,19 +2350,19 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  numElemsOld = _sRight.numElems;
  
  // oldSol vectors
- uSolOld = _sRight.uSolOld;
- vSolOld = _sRight.vSolOld;
- wSolOld = _sRight.wSolOld;
- pSolOld = _sRight.pSolOld;
- cSolOld = _sRight.cSolOld;
- uALEOld = _sRight.uALEOld;
- vALEOld = _sRight.vALEOld;
- wALEOld = _sRight.wALEOld;
- kappaOld = _sRight.kappaOld;
- fintOld = _sRight.fintOld;
- //gravityOld = _sRight.gravityOld;
- muOld = _sRight.muOld;
- rhoOld = _sRight.rhoOld;
+ uSolOld    = _sRight.uSolOld;
+ vSolOld    = _sRight.vSolOld;
+ wSolOld    = _sRight.wSolOld;
+ pSolOld    = _sRight.pSolOld;
+ cSolOld    = _sRight.cSolOld;
+ uALEOld    = _sRight.uALEOld;
+ vALEOld    = _sRight.vALEOld;
+ wALEOld    = _sRight.wALEOld;
+ kappaOld   = _sRight.kappaOld;
+ fintOld    = _sRight.fintOld;
+ gravityOld = _sRight.gravityOld;
+ muOld      = _sRight.muOld;
+ rhoOld     = _sRight.rhoOld;
  hSmoothOld = _sRight.hSmoothOld;
 
  solverV = _sRight.solverV;
@@ -2248,18 +2385,16 @@ void Simulator3D::operator()(Model3D &_m)
  dt    = 0.01;
  time  = 0.0;
  cfl   = 0.5;
- mu_l  = 1.0;
- mu_g  = 1.0;
- rho_l = 1.0;
- rho_g = 1.0;
  iter  = 0;
- mu_l  = 1.0;
- mu_g  = 1.0;
- rho_l = 1.0;
- rho_g = 1.0;
  c1    = 1.0;
  c2    = 0.0;
  c3    = 0.0;
+ g     = 9.81;
+ sigma = 0.1;
+ mu_l  = 1.0;
+ mu_g  = 1.0;
+ rho_l = 1.0;
+ rho_g = 1.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2283,14 +2418,16 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  dt    = _s.getDt();
  time  = _s.getTime2();
  cfl   = _s.getCfl();
- mu_l  = _s.getMu_l();
- mu_g  = _s.getMu_g();
- rho_l = _s.getRho_l();
- rho_g = _s.getRho_g();
  iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
+ g     = _s.getGrav();
+ sigma = _s.getSigma();
+ mu_l  = _s.getMu_l();
+ mu_g  = _s.getMu_g();
+ rho_l = _s.getRho_l();
+ rho_g = _s.getRho_g();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2316,6 +2453,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  hSmoothOld = *_s.getHSmooth();
  kappaOld   = *_s.getKappa();
  fintOld    = *_s.getFint();
+ gravityOld = *_s.getGravity();
 }
 
 int Simulator3D::loadSolution( const char* _filename,int _iter )
@@ -2511,6 +2649,13 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  fintOld.CopyTo(_mOld.getNumNodes()*1,yFintOld);
  fintOld.CopyTo(_mOld.getNumNodes()*2,zFintOld);
 
+ clVector xGravityOld(_mOld.getNumVerts());
+ clVector yGravityOld(_mOld.getNumVerts());
+ clVector zGravityOld(_mOld.getNumVerts());
+ gravityOld.CopyTo(_mOld.getNumNodes()*0,xGravityOld);
+ gravityOld.CopyTo(_mOld.getNumNodes()*1,yGravityOld);
+ gravityOld.CopyTo(_mOld.getNumNodes()*2,zGravityOld);
+
  /*
   * linear interpolation of mesh - numVerts - (lib/interpolation.h)
   * interpLin is a interpolation matrix, considering the Model3D passed
@@ -2529,7 +2674,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector wALEOldVert(_mOld.getNumVerts());
  clDMatrix kappaOldVert(_mOld.getNumVerts());
  clVector fintOldVert(_mOld.getNumVerts());
- //clVector gravityOldVert(_mOld.getNumVerts());
+ clVector gravityOldVert(_mOld.getNumVerts());
  clVector muOldVert(_mOld.getNumVerts());
  clVector rhoOldVert(_mOld.getNumVerts());
  clVector hSmoothOldVert(_mOld.getNumVerts());
@@ -2542,7 +2687,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vALEOld.CopyTo(0,vALEOldVert);
  wALEOld.CopyTo(0,wALEOldVert);
  fintOld.CopyTo(0,fintOldVert);
- //gravityOld.CopyTo(0,gravityOldVert);
+ gravityOld.CopyTo(0,gravityOldVert);
  muOld.CopyTo(0,muOldVert);
  rhoOld.CopyTo(0,rhoOldVert);
  hSmoothOld.CopyTo(0,hSmoothOldVert);
@@ -2562,9 +2707,9 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector xFint = interpLin*(xFintOld);
  clVector yFint = interpLin*(yFintOld);
  clVector zFint = interpLin*(zFintOld);
- //clVector xGravity = *interpLin*(xGravityOld);
- //clVector yGravity = *interpLin*(yGravityOld);
- //clVector zGravity = *interpLin*(zGravityOld);
+ clVector xGravity = interpLin*(xGravityOld);
+ clVector yGravity = interpLin*(yGravityOld);
+ clVector zGravity = interpLin*(zGravityOld);
 
  // set do centroid
  uSol = setTetCentroid(*IEN,uSol);
@@ -2577,9 +2722,9 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  xFint = setTetCentroid(*IEN,xFint);
  yFint = setTetCentroid(*IEN,yFint);
  zFint = setTetCentroid(*IEN,zFint);
- //xGravity = setTetCentroid(*IEN,xGravity);
- //yGravity = setTetCentroid(*IEN,yGravity);
- //zGravity = setTetCentroid(*IEN,zGravity);
+ xGravity = setTetCentroid(*IEN,xGravity);
+ yGravity = setTetCentroid(*IEN,yGravity);
+ zGravity = setTetCentroid(*IEN,zGravity);
 
 
  // setting kappa
@@ -2597,23 +2742,24 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  fint.CopyFrom(numNodes*0,xFint);
  fint.CopyFrom(numNodes*1,yFint);
  fint.CopyFrom(numNodes*2,zFint);
- //gravity.Dim(3*numNodes);
- //gravity.CopyFrom(numNodes*0,xGravity);
- //gravity.CopyFrom(numNodes*1,yGravity);
- //gravity.CopyFrom(numNodes*2,zGravity);
+ gravity.Dim(3*numNodes);
+ gravity.CopyFrom(numNodes*0,xGravity);
+ gravity.CopyFrom(numNodes*1,yGravity);
+ gravity.CopyFrom(numNodes*2,zGravity);
 
- uSolOld = uSol;
- vSolOld = vSol;
- wSolOld = wSol;
- pSolOld = pSol;
- cSolOld = cSol;
- uALEOld = uALE;
- vALEOld = vALE;
- wALEOld = wALE;
- fintOld = fint;
- kappaOld = kappa;
- muOld = mu;
- rhoOld = rho;
+ uSolOld    = uSol;
+ vSolOld    = vSol;
+ wSolOld    = wSol;
+ pSolOld    = pSol;
+ cSolOld    = cSol;
+ uALEOld    = uALE;
+ vALEOld    = vALE;
+ wALEOld    = wALE;
+ fintOld    = fint;
+ gravityOld = gravity;
+ kappaOld   = kappa;
+ muOld      = mu;
+ rhoOld     = rho;
  hSmoothOld = hSmooth;
 } // fecha metodo applyLinearInterpolation
 
@@ -2642,17 +2788,17 @@ void Simulator3D::getBubbleVelocity(clVector _uVel,
   velX = ( _uVel.Get(v1)+
 	       _uVel.Get(v2)+
 		   _uVel.Get(v3)+
-		   _uVel.Get(v4) )*0.25;
+		   _uVel.Get(v4) )/4.0;
 
   velY = ( _vVel.Get(v1)+
            _vVel.Get(v2)+
            _vVel.Get(v3)+
-	 	   _vVel.Get(v4) )*0.25;
+	 	   _vVel.Get(v4) )/4.0;
 
   velZ = ( _wVel.Get(v1)+
            _wVel.Get(v2)+
            _wVel.Get(v3)+
-	 	   _wVel.Get(v4) )*0.25;
+	 	   _wVel.Get(v4) )/4.0;
 
   volume = m->getVolume(*it);
 
@@ -2815,7 +2961,7 @@ void Simulator3D::allocateMemoryToAttrib()
  wALEOld.Dim( numNodes );
  kappaOld.Dim( numNodes );
  fintOld.Dim( numNodes );
- //gravityOld.Dim( numVerts );
+ gravityOld.Dim( numVerts );
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
  hSmoothOld.Dim( numVerts );

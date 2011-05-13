@@ -24,14 +24,14 @@ int main(int argc, char **argv)
 //--------------------------------------------------
 //  // J. Hua et al JCP (2008)
 //  int iter = 0;
-//  real Re = 15.24;
+//  real Re = 134.6;
 //  real Sc = 1;
-//  real We = 243;
+//  real We = 115;
 //  real Fr = 1.0;
 //  real sigma = 1;
 //  real alpha = 1;
 //  real beta = 1;
-//  real cfl = 0.05;
+//  real cfl = 0.03;
 //  real mu_l = 100;
 //  real mu_g = 1;
 //  real rho_l = 1000;
@@ -41,32 +41,51 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010
  int iter = 0;
- real Re = sqrt(42.574);
- real Sc = 2;
- real We = 115.5566;
+ real Re = 6.53;
+ real Sc = 1;
+ real We = 115.66;
  real Fr = 1.0;
- real sigma = 1;
  real alpha = 1;
- real beta = -40;
- real cfl = 0.05;
- //real dt = 0.00528;
+ real beta = 1;
+ real sigma = 0.078;
  real mu_l = 2.73;
- real mu_g = 1.7894E-05;
+ real mu_g = 0.0000178;
  real rho_l = 1350;
  real rho_g = 1.225;
+ real cfl = 0.03;
  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+ 
+//--------------------------------------------------
+//  // bogdan's thesis 2010
+//  int iter = 0;
+//  real Re = 10.800;
+//  real Sc = 1;
+//  real We = 9.602;
+//  real Fr = 0.7071;
+//  real sigma = 1;
+//  real alpha = 1;
+//  real beta = -40;
+//  real cfl = 0.01;
+//  //real dt = 0.00528;
+//  real mu_l = 0.118;
+//  real rho_l = 875.5;
+//  real mu_g = 1.7894E-05;
+//  real rho_g = 1.225;
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+//-------------------------------------------------- 
 
 //--------------------------------------------------
 //  // static bubble test (Fabricio's thesis (2005))
 //  int iter = 0;
-//  real Re = 100;
+//  real Re = 10;
 //  real Sc = 2;
-//  real We = 1;
+//  real We = 10;
 //  real Fr = 1.0;
 //  real sigma = 1.0;
 //  real alpha = 1;
-//  real beta = -40;
+//  real beta = 1;
 //  real cfl = 0.05;
 //  real mu_l = 100.0;
 //  real mu_g = 1.0;
@@ -256,7 +275,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity();
+   s1.setGravity("Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();

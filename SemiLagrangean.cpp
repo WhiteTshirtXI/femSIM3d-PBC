@@ -137,19 +137,19 @@ void SemiLagrangean::setCentroid()
   aux = ( uParticle.Get(v[0])+
 	      uParticle.Get(v[1])+
 		  uParticle.Get(v[2])+
-		  uParticle.Get(v[3]) )*0.25;
+		  uParticle.Get(v[3]) )/4.0;
   uParticle.Set(v[4],aux);
 
   aux = ( vParticle.Get(v[0])+
           vParticle.Get(v[1])+
           vParticle.Get(v[2])+
-	 	  vParticle.Get(v[3]) )*0.25;
+	 	  vParticle.Get(v[3]) )/4.0;
   vParticle.Set(v[4],aux);
 
   aux = ( wParticle.Get(v[0])+
 	      wParticle.Get(v[1])+
           wParticle.Get(v[2])+
-		  wParticle.Get(v[3]) )*0.25;
+		  wParticle.Get(v[3]) )/4.0;
   wParticle.Set(v[4],aux);
  }
 

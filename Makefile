@@ -25,7 +25,7 @@ src += $(wildcard ./*.cpp)
 
 obj = $(src:%.cpp=%.o)
 
-all: step bubble 2bubble diskNuC diskNuCte diskNuZ
+all: step bubble 2bubbles diskNuC diskNuCte diskNuZ
 
 diskNuC: ./script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
@@ -39,7 +39,10 @@ diskNuZ: ./script/mainDiskNuZ.o $(obj)
 diskSurf: ./script/mainDiskSurf.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-2bubbles: ./script/main2Bubble.o $(obj)
+2bubbles: ./script/main2Bubbles.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+static: ./script/mainStatic.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 bubble: ./script/mainBubble.o $(obj)
@@ -69,7 +72,17 @@ libtest.so: $(obj)
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
-deepclean:
+erase:
+	@rm -f core
+	@find . -name "*~" -exec rm {} \;
+	@rm -f ./vtk/*.vtk
+	@rm -f ./msh/*.msh
+	@rm -f ./sim/vk*.dat
+	@rm -f ./sim/sim*.dat
+	@rm -f ./bin/*.bin
+	@rm -f ./dat/*.dat
+
+deepclean: 
 	@rm -f step bubble 2bubble diskNuC diskNuCte diskNuZ
 	@rm -f libtest*
 	@rm -f core

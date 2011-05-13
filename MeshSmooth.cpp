@@ -202,13 +202,13 @@ void MeshSmooth::setCentroid()
   v[4] = (int) IEN->Get(mele,4);
 
   aux = ( uSmooth.Get(v[0])+uSmooth.Get(v[1])+
-	      uSmooth.Get(v[2])+uSmooth.Get(v[3]) )*0.25;
+	      uSmooth.Get(v[2])+uSmooth.Get(v[3]) )/4.0;
   uSmooth.Set( v[4],aux );
   aux = ( vSmooth.Get(v[0])+vSmooth.Get(v[1])+
-	      vSmooth.Get(v[2])+vSmooth.Get(v[3]) )*0.25;
+	      vSmooth.Get(v[2])+vSmooth.Get(v[3]) )/4.0;
   vSmooth.Set( v[4],aux );
   aux = ( wSmooth.Get(v[0])+wSmooth.Get(v[1])+
-	      wSmooth.Get(v[2])+wSmooth.Get(v[3]) )*0.25;
+	      wSmooth.Get(v[2])+wSmooth.Get(v[3]) )/4.0;
   wSmooth.Set( v[4],aux );
  }
 }

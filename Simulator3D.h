@@ -67,8 +67,8 @@ class Simulator3D
 
   void setRHS();
   void setCRHS();
-  void setGravity();
-  void setGravityBoussinesq();
+  void setGravity(const char* _direction);
+  void setGravityBoussinesq(const char* _direction);
   void setInterfaceGeo();
   void setInterfaceLevelSet();
 
@@ -146,6 +146,8 @@ class Simulator3D
   clVector* getUAnt();
   clVector* getCAnt();
   clVector* getFint();
+  clVector* getGravity();
+  real getGrav();
   clDMatrix* getKappa();
   clMatrix* getK();
   clMatrix* getM();
@@ -168,19 +170,9 @@ class Simulator3D
 
  private:
   Model3D *m;
-  Solver *solverV,*solverP,*solverC;
-
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
-  real Re,Sc,Fr,We,alpha,beta,dt,cfl,time,sigma;
-  real c1,c2,c3;
-  real bubbleXVel,bubbleYVel,bubbleZVel;
-  real rho_l,rho_g,mu_l,mu_g;
-  real rho_0,mu_0;
-  real rho_lAdimen,rho_gAdimen,mu_lAdimen,mu_gAdimen;
-  int iter;
   real triEdge;
-
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
@@ -191,38 +183,36 @@ class Simulator3D
   Mesh3D *mesh3d;
   clVector* interfaceDistance;
 
-  clMatrix K,Kc,Mrho,M,Mc,G,D;
+
+  real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;
+  real c1,c2,c3;
+  real bubbleXVel,bubbleYVel,bubbleZVel;
+  real sigma,g,rho_l,rho_g,mu_l,mu_g;
+  real sigma_0,g_0,rho_0,mu_0;
+  real sigmaAdimen,gAdimen,rho_lAdimen,rho_gAdimen,mu_lAdimen,mu_gAdimen;
+  int iter;
+  clMatrix K,Kc,Mrho,M,Mc,G,D,A;
   clMatrix mat,matc;
-
-  clDMatrix MrhoLumped,McLumped;
-
   clMatrix gx,gy,gz;
-  clVector uAnt,cAnt;
-
-  clVector va,vcc;
-  clVector convUVW,convC;
-
-  clMatrix A;
-  clVector b;
-  
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
+  clDMatrix MrhoLumped,McLumped;
   clDMatrix invA,invC,invMrhoLumped,invMcLumped;
   clDMatrix MLumped,invMLumped;
+  clDMatrix kappa;
+  clVector va,vcc,b;
+  clVector convUVW,convC;
   clVector uTilde,cTilde,pTilde,b1,b1c,b2,ip,ipc;
   clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
-  clVector uSL,vSL,wSL,cSL;
-  clVector uALE,vALE,wALE;
+  clVector uSL,vSL,wSL,cSL,uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
+  clVector fint,gravity,hSmooth,mu,rho;
+
+  clDMatrix kappaOld;
   clVector uALEOld,vALEOld,wALEOld;
   clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
-  clVector fintOld;
-  clDMatrix kappaOld;
-  clDMatrix kappa;
-  clVector fint;
-  clVector mu,muOld,rho,rhoOld;
-  clVector Fold;
-  clVector hSmooth,hSmoothOld;
+  clVector fintOld,gravityOld,Fold,muOld,rhoOld,hSmoothOld;
 
+  Solver *solverV,*solverP,*solverC;
 };
 
 #endif

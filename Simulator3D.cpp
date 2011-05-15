@@ -46,6 +46,7 @@ Simulator3D::Simulator3D( Model3D &_m )
  c1    = 1.0;
  c2    = 0.0;
  c3    = 0.0;
+ c4    = 0.01;
 
  g     = 9.81;
  sigma = 0.1;
@@ -86,6 +87,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
+ c4    = _s.getC4();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -1283,7 +1285,7 @@ void Simulator3D::stepALEVel()
 
  c1 = mu_g/mu_l; 
  c2 = 1.0;
- c3 = 0.05; 
+ c3 = 0.1; 
 
  uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
@@ -1360,10 +1362,10 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  real a = 0.01;
-  uALE.Set(surfaceNode,uSolNormal+a*uSmoothTangent);
-  vALE.Set(surfaceNode,vSolNormal+a*vSmoothTangent);
-  wALE.Set(surfaceNode,wSolNormal+a*wSmoothTangent);
+  c4 = 0.00;
+  uALE.Set(surfaceNode,uSolNormal+c4*uSmoothTangent);
+  vALE.Set(surfaceNode,vSolNormal+c4*vSmoothTangent);
+  wALE.Set(surfaceNode,wSolNormal+c4*wSmoothTangent);
 
   //uALE.Set(surfaceNode,uSmoothTangent);
   //vALE.Set(surfaceNode,vSmoothTangent);
@@ -1432,8 +1434,8 @@ void Simulator3D::setGravity(const char* _direction)
  gUnit.Append(gy);
  gUnit.Append(gz);
 
- //gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
- gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_lAdimen*M)*gUnit );
+ gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
+ //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_lAdimen*M)*gUnit );
 
  // update RHS
  //va = va + gravity;
@@ -1956,6 +1958,7 @@ real Simulator3D::getCfl(){return cfl;}
 real Simulator3D::getC1(){return c1;}
 real Simulator3D::getC2(){return c2;}
 real Simulator3D::getC3(){return c3;}
+real Simulator3D::getC4(){return c4;}
 
 void Simulator3D::setMu(real _mu_l)
 { 
@@ -2253,6 +2256,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  c1 = _sRight.c1;
  c2 = _sRight.c2;
  c3 = _sRight.c3;
+ c4 = _sRight.c4;
  iter = _sRight.iter;
 
  g = _sRight.g;
@@ -2389,6 +2393,7 @@ void Simulator3D::operator()(Model3D &_m)
  c1    = 1.0;
  c2    = 0.0;
  c3    = 0.0;
+ c4    = 0.01;
  g     = 9.81;
  sigma = 0.1;
  mu_l  = 1.0;
@@ -2422,6 +2427,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
+ c4    = _s.getC4();
  g     = _s.getGrav();
  sigma = _s.getSigma();
  mu_l  = _s.getMu_l();
@@ -2536,6 +2542,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> c1;
  fileP >> c2;
  fileP >> c3;
+ fileP >> c4;
  fileP >> alpha;
  fileP >> beta;
 
@@ -2553,7 +2560,8 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 //  cout << numVertsOld << " " << numNodesOld << " " << numElemsOld << endl;
 //  cout << Re << " " << Sc << " " << Fr << " " << We << " " << endl;
 //  cout << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << " " << endl;
-//  cout << c1 << " " << c2 << " " << c3 << " " << alpha << " " << beta << endl;
+//  cout << c1 << " " << c2 << " " << c3 << " " << c4 << " " << alpha 
+//       << " " << beta << endl;
 //  cout << lineEdge << endl;
 //-------------------------------------------------- 
 

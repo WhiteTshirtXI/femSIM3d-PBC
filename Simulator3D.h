@@ -110,6 +110,7 @@ class Simulator3D
   real getC1();
   real getC2();
   real getC3();
+  real getC4();
   void setMu(real _mu_l);
   void setMu(real _mu_l,real _mu_g);
   void setMuSmooth(real _mu_l,real _mu_g);
@@ -185,7 +186,7 @@ class Simulator3D
 
 
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;
-  real c1,c2,c3;
+  real c1,c2,c3,c4;
   real bubbleXVel,bubbleYVel,bubbleZVel;
   real sigma,g,rho_l,rho_g,mu_l,mu_g;
   real sigma_0,g_0,rho_0,mu_0;

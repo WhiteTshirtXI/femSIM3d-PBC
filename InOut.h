@@ -211,7 +211,7 @@ private:
   clVector *mu,*rho;
   clVector *hSmooth,*gravity;
   int iter;
-  real c1,c2,c3;
+  real c1,c2,c3,c4;
 };
 
 

@@ -52,7 +52,7 @@ int main(int argc, char **argv)
  real mu_g = 0.0000178;
  real rho_l = 1350;
  real rho_g = 1.225;
- real cfl = 0.03;
+ real cfl = 0.02;
  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
  

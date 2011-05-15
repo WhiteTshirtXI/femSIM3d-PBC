@@ -83,6 +83,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  c1 = s->getC1();
  c2 = s->getC2();
  c3 = s->getC3();
+ c4 = s->getC4();
 
  K = s->getK();
  M = s->getM();
@@ -2201,9 +2202,9 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << Re << " " << Sc << " " << Fr << " " << We << endl;
  _file << "PROPERTIES 1 4 float" << endl;
  _file << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << endl;
- _file << "COEFFICIENTS 1 5 float" << endl;
- _file << c1 << " " << c2 << " " << c3 << " " 
-     << alpha << " " << beta << endl;
+ _file << "COEFFICIENTS 1 6 float" << endl;
+ _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
+       << alpha << " " << beta << endl;
  _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
  _file << triEdge << endl;
  _file << endl;

@@ -1285,7 +1285,7 @@ void Simulator3D::stepALEVel()
 
  c1 = mu_g/mu_l; 
  c2 = 1.0;
- c3 = 0.1; 
+ c3 = 0.05; 
 
  uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;

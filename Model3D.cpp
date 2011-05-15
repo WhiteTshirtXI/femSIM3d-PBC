@@ -1537,7 +1537,7 @@ void Model3D::flipTriangleEdge()
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
 	  area1+area2  > area3+area4 &&
-	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
+	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
 	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {

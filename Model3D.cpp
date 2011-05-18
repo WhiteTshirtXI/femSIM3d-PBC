@@ -944,7 +944,7 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.7*triEdge )//&&
+	  edgeLength > 1.5*triEdge )//&&
   {
    //insertPoint(i);
    insertPointWithCurvature(i); // not working yet
@@ -1964,7 +1964,7 @@ void Model3D::contractEdgeByLength()
  // number of removed 3d mesh points by interface distance
  csp=0;
 
- real test = 0.7*triEdge; // 30% + of triEdge
+ real test = 0.5*triEdge; // 30% + of triEdge
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
   // verifying the length of each surface edge
@@ -2028,7 +2028,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.8*triEdge; // 20% of triEdge
+ real test = 0.3*triEdge; // 20% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2105,7 +2105,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*0.7 ) // hiRe
+  if( d>0 && d<h*1.0 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2140,7 +2140,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<0.5*triEdge )
+	 if( d>0 && d<0.7*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 

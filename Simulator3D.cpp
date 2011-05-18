@@ -200,29 +200,35 @@ void Simulator3D::assemble()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
+  real muValue = ( mu.Get(v1)+
+	               mu.Get(v2)+
+	               mu.Get(v3)+
+	               mu.Get(v4) )/4.0;
+  real rhoValue = ( rho.Get(v1)+
+	                rho.Get(v2)+
+	                rho.Get(v3)+
+	                rho.Get(v4) )/4.0;
+
 //--------------------------------------------------
-//   real muValue = ( mu.Get(v1)+
-// 	               mu.Get(v2)+
-// 	               mu.Get(v3)+
-// 	               mu.Get(v4) )/4.0;
-//   real rhoValue = ( rho.Get(v1)+
-// 	                rho.Get(v2)+
-// 	                rho.Get(v3)+
-// 	                rho.Get(v4) )/4.0;
+//   real muValue=0;
+//   real rhoValue=0;
+//   if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
+//   {
+//    muValue = mu_gAdimen;
+//    rhoValue = rho_gAdimen;
+//   }
+//   else
+//   {
+//    muValue = mu_lAdimen;
+//    rhoValue = rho_lAdimen;
+//   }
 //-------------------------------------------------- 
 
-  real muValue=0;
-  real rhoValue=0;
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
-  {
-   muValue = mu_gAdimen;
-   rhoValue = rho_gAdimen;
-  }
-  else
-  {
-   muValue = mu_lAdimen;
-   rhoValue = rho_lAdimen;
-  }
+//--------------------------------------------------
+//   // by elements
+//   real muValue = mu.Get(mele);
+//   real rhoValue = rho.Get(mele);
+//-------------------------------------------------- 
 
   miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -1283,9 +1289,9 @@ void Simulator3D::stepALEVel()
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
 
- c1 = mu_g/mu_l; 
+ c1 = 0.0;; 
  c2 = 1.0;
- c3 = 0.05; 
+ c3 = 0.03; 
 
  uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
@@ -2036,6 +2042,15 @@ void Simulator3D::setMu(real _mu_l,real _mu_g)
 
  clVector one(numVerts);one.SetAll(1.0);
  mu = mu_gAdimen*(*cc) + mu_lAdimen*(one-(*cc));
+
+//--------------------------------------------------
+//  mu.Dim(numNodes);
+//  mu.SetAll(mu_lAdimen);
+//  list<int> *inElem;
+//  inElem = m->getInElem();
+//  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
+//   mu.Set(*it,mu_gAdimen);
+//-------------------------------------------------- 
 }
 
 void Simulator3D::setRho(real _rho_l,real _rho_g)
@@ -2053,6 +2068,15 @@ void Simulator3D::setRho(real _rho_l,real _rho_g)
 
  clVector one(numVerts);one.SetAll(1.0);
  rho = rho_gAdimen*(*cc) + rho_lAdimen*(one-(*cc));
+
+//--------------------------------------------------
+//  rho.Dim(numNodes);
+//  rho.SetAll(rho_lAdimen);
+//  list<int> *inElem;
+//  inElem = m->getInElem();
+//  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
+//   rho.Set(*it,rho_gAdimen);
+//-------------------------------------------------- 
 }
 
 void Simulator3D::setMuSmooth(real _mu_l,real _mu_g)
@@ -2097,7 +2121,7 @@ void Simulator3D::setHSmooth()
  real triEdge = m->getTriEdge();
  for( int i=0;i<numVerts;i++ )
  {
-  real len = 2.5*triEdge;
+  real len = 1.3*triEdge;
   real d = interfaceDistance->Get(i);
   real aux = zeroLevel.Get(i)*d;
 
@@ -2639,6 +2663,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE.Dim( numVerts );
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
+ //mu.Dim( numNodes );
+ //rho.Dim( numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );
@@ -2976,6 +3002,8 @@ void Simulator3D::allocateMemoryToAttrib()
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
+ //mu.Dim( numNodes );
+ //rho.Dim( numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );

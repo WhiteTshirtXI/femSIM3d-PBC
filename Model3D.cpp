@@ -1550,13 +1550,71 @@ void Model3D::flipTriangleEdge()
 		<< " --> " << resetColor()
 		<< v3elem1 << " " << v3elem2 << endl;
 
+ // checking the orientation
+ // vo1 - vo2 - vo3 (elem1 old)
+ // reference vertices
+ int v1r = surfMesh.IEN.Get(elem1,0);
+ int v2r = surfMesh.IEN.Get(elem1,1);
+ int v3r = surfMesh.IEN.Get(elem1,2);
+
+ real b1x = surfMesh.X.Get(v1r);
+ real b1y = surfMesh.Y.Get(v1r);
+ real b1z = surfMesh.Z.Get(v1r);
+
+ real b2x = surfMesh.X.Get(v2r);
+ real b2y = surfMesh.Y.Get(v2r);
+ real b2z = surfMesh.Z.Get(v2r);
+
+ real b3x = surfMesh.X.Get(v3r);
+ real b3y = surfMesh.Y.Get(v3r);
+ real b3z = surfMesh.Z.Get(v3r);
+
+ real t1x = b2x-b1x;
+ real t1y = b2y-b1y;
+ real t1z = b2z-b1z;
+
+ real t2x = b3x-b2x;
+ real t2y = b3y-b2y;
+ real t2z = b3z-b2z;
+
+ // normal vector
+ // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+ clVector cross1 = crossProd(t1x,t1y,t1z,t2x,t2y,t2z);
+ real tx = cross1.Get(0);
+ real ty = cross1.Get(1);
+ real tz = cross1.Get(2);
+
+ real p3elem1x = surfMesh.X.Get(v3elem1);
+ real p3elem1y = surfMesh.Y.Get(v3elem1);
+ real p3elem1z = surfMesh.Z.Get(v3elem1);
+ real v2x = p3elem1x-P2x;
+ real v2y = p3elem1y-P2y;
+ real v2z = p3elem1z-P2z;
+ 
+ // normal vector
+ // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+ clVector cross2 = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ real x2t = cross2.Get(0);
+ real y2t = cross2.Get(1);
+ real z2t = cross2.Get(2);
+
+ real prodEsc = tx*x2t + ty*y2t + tz*z2t;
+
+ //if( prodEsc < 0 )
+ if( prodEsc < 0 )
+ {
+  int aux = v1;
+  v1 = v2;
+  v2 = aux;
+ }
+
    surfMesh.IEN.Set(elem1,0,v1);
    surfMesh.IEN.Set(elem1,1,v3elem1);
    surfMesh.IEN.Set(elem1,2,v3elem2);
 
    surfMesh.IEN.Set(elem2,0,v2);
-   surfMesh.IEN.Set(elem2,1,v3elem1);
-   surfMesh.IEN.Set(elem2,2,v3elem2);
+   surfMesh.IEN.Set(elem2,1,v3elem2);
+   surfMesh.IEN.Set(elem2,2,v3elem1);
 
    setMapEdgeTri();
    setNeighbourSurface();
@@ -1890,27 +1948,93 @@ void Model3D::insertPointWithCurvature(int _edge)
   * original element and also the oposite element by 2, becoming 4
   * elements in total. */
 
+
+ // checking the orientation
+ // vo1 - vo2 - vo3 (elem1 old)
+ // reference vertices
+ int v1r = surfMesh.IEN.Get(elem1,0);
+ int v2r = surfMesh.IEN.Get(elem1,1);
+ int v3r = surfMesh.IEN.Get(elem1,2);
+
+ real b1x = surfMesh.X.Get(v1r);
+ real b1y = surfMesh.Y.Get(v1r);
+ real b1z = surfMesh.Z.Get(v1r);
+
+ real b2x = surfMesh.X.Get(v2r);
+ real b2y = surfMesh.Y.Get(v2r);
+ real b2z = surfMesh.Z.Get(v2r);
+
+ real b3x = surfMesh.X.Get(v3r);
+ real b3y = surfMesh.Y.Get(v3r);
+ real b3z = surfMesh.Z.Get(v3r);
+
+ real t1x = b2x-b1x;
+ real t1y = b2y-b1y;
+ real t1z = b2z-b1z;
+
+ real t2x = b3x-b2x;
+ real t2y = b3y-b2y;
+ real t2z = b3z-b2z;
+
+ // normal vector
+ // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+ clVector cross1 = crossProd(t1x,t1y,t1z,t2x,t2y,t2z);
+ real tx = cross1.Get(0);
+ real ty = cross1.Get(1);
+ real tz = cross1.Get(2);
+
+ real p3elem1x = surfMesh.X.Get(v3elem1);
+ real p3elem1y = surfMesh.Y.Get(v3elem1);
+ real p3elem1z = surfMesh.Z.Get(v3elem1);
+ real v2x = p3elem1x-P2x;
+ real v2y = p3elem1y-P2y;
+ real v2z = p3elem1z-P2z;
+ 
+ // normal vector
+ // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+ clVector cross2 = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ real x2t = cross2.Get(0);
+ real y2t = cross2.Get(1);
+ real z2t = cross2.Get(2);
+
+ real prodEsc = tx*x2t + ty*y2t + tz*z2t;
+
+ //if( prodEsc < 0 )
+ if( prodEsc < 0 )
+ {
+  int aux = v1;
+  v1 = v2;
+  v2 = aux;
+ }
+
+ // v1 - v2 - v3elem1
+ // v1 - v3elem2 - v2
+ 
  // 1st. new element (v1 - vAdd - v3elem1) 
  // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
+ // OLD ELEM1 //
  surfMesh.IEN.Set(elem1,0,v1);
  surfMesh.IEN.Set(elem1,1,vAdd);
  surfMesh.IEN.Set(elem1,2,v3elem1);
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
+ // OLD ELEM2 //
  surfMesh.IEN.Set(elem2,0,v1);
- surfMesh.IEN.Set(elem2,1,vAdd);
- surfMesh.IEN.Set(elem2,2,v3elem2);
+ surfMesh.IEN.Set(elem2,1,v3elem2);
+ surfMesh.IEN.Set(elem2,2,vAdd);
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
+ // OLD ELEM1 //
  surfMesh.IEN.AddRow();
  int elem3 = surfMesh.IEN.DimI()-1;
  surfMesh.IEN.Set(elem3,0,v2);
- surfMesh.IEN.Set(elem3,1,vAdd);
- surfMesh.IEN.Set(elem3,2,v3elem1);
+ surfMesh.IEN.Set(elem3,1,v3elem1);
+ surfMesh.IEN.Set(elem3,2,vAdd);
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
+ // OLD ELEM2 //
  surfMesh.IEN.AddRow();
  int elem4 = surfMesh.IEN.DimI()-1;
  surfMesh.IEN.Set(elem4,0,v2);
@@ -2140,7 +2264,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<0.7*triEdge )
+	 if( d>0 && d<1.0*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2690,6 +2814,35 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  return flag;
 }
 
+void Model3D::removePointByVolume()
+{
+ int count=0;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN.Get(i,0);
+  int v2 = IEN.Get(i,1);
+  int v3 = IEN.Get(i,2);
+  int v4 = IEN.Get(i,3);
+
+  if( fabs(getVolume(i)) < 1E-06 ) 
+  {
+   if( cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4) < 0.5 || 
+       cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4) > 3.5 ) 
+   {
+	X.Delete(i);
+	Y.Delete(i);
+	Z.Delete(i);
+	cc.Delete(i);
+	numVerts--;
+	count++;
+   }
+  }
+ }
+ cout << " -----------------------------" << endl;
+ cout << "  removed by volume: " << count << endl;
+ cout << " -----------------------------" << endl;
+}
+
 void Model3D::printMeshReport(tetgenio &_tetmesh)
 {
  /* **************************************
@@ -2794,7 +2947,7 @@ void Model3D::mesh3DPoints()
  saveVTKSurface("./vtk/","inserted",0);
  saveVTKSurface("./vtk/","removed",0);
  contractEdgeByLength();
- removePointsByLength();
+ //removePointsByLength();
  flipTriangleEdge();
  saveVTKSurface("./vtk/","flipped",0);
  removePointsByInterfaceDistance();
@@ -2833,28 +2986,32 @@ void Model3D::mesh3DPoints()
  convertTetgenToModel3D(out);
  mesh3d = convertTetgenToMesh3d(out);
 
- cout << endl;
- while( checkMeshQuality(out) == true ) 
- //if( checkMeshQuality(out) == true ) 
- {
-  in.initialize();
-  out.initialize();
-
-  in.mesh_dim = 3;
-  in.numberofpoints = numVerts;
-  in.pointlist = new REAL[in.numberofpoints * 3];
-  in.pointmarkerlist = new int[in.numberofpoints];
-
-  convertModel3DtoTetgen(in);
-
-  cout << "----> fixing " << badtet << " shit tetrahedron elements... ";
-  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
-  cout << "finished <---- " << endl;;
-
-  convertTetgenToModel3D(out);
-  mesh3d = convertTetgenToMesh3d(out);
- }
- cout << endl;
+//--------------------------------------------------
+//  cout << endl;
+//  while( checkMeshQuality(out) == true ) 
+//  //if( checkMeshQuality(out) == true ) 
+//  {
+//   in.initialize();
+//   out.initialize();
+// 
+//   removePointByVolume();
+// 
+//   in.mesh_dim = 3;
+//   in.numberofpoints = numVerts;
+//   in.pointlist = new REAL[in.numberofpoints * 3];
+//   in.pointmarkerlist = new int[in.numberofpoints];
+// 
+//   convertModel3DtoTetgen(in);
+// 
+//   cout << "----> fixing " << badtet << " shit tetrahedron elements... ";
+//   tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+//   cout << "finished <---- " << endl;;
+// 
+//   convertTetgenToModel3D(out);
+//   mesh3d = convertTetgenToMesh3d(out);
+//  }
+//  cout << endl;
+//-------------------------------------------------- 
 
  printMeshReport(out);
 
@@ -4472,6 +4629,59 @@ void Model3D::setSurfaceFace()
  neighbourFaceVert.resize (count); // trim vector para numero real de itens
 }
 
+void Model3D::setSurfaceFace2()
+{
+ int v1,v2,v3;
+ list<int> plist;
+ list<int>::iterator mele;
+ int surfaceNode;
+ 
+ // mapeamento de faces da interface com numeracao
+ elemSurface.resize ( 0 ); 
+ elemSurface.resize ( numVerts ); 
+ // mapeamento de vertices das faces numeradas por elemSurface
+ // super dimensionado!!!
+ neighbourFaceVert.resize ( 0 );
+ neighbourFaceVert.resize ( 5*numNodes );
+ int count=0;
+
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  surfaceNode = surface.Get(i);
+
+  // lista de elementos que contem surfaceNode
+  plist = neighbourSurfaceElem.at(surfaceNode);
+  for( mele=plist.begin(); mele != plist.end();++mele )
+  {
+   v1 = (int) surfMesh.IEN.Get(*mele,0);
+   v2 = (int) surfMesh.IEN.Get(*mele,1);
+   v3 = (int) surfMesh.IEN.Get(*mele,2);
+
+   elemSurface.at( surfaceNode ).push_back(count);
+
+   if( v1 == surfaceNode )
+   {
+	neighbourFaceVert.at( count ).push_back(v3);
+	neighbourFaceVert.at( count ).push_back(v2);
+	count++;
+   }
+   if( v2 == surfaceNode )
+   {
+	neighbourFaceVert.at( count ).push_back(v1);
+	neighbourFaceVert.at( count ).push_back(v3);
+	count++;
+   }
+   if( v3 == surfaceNode )
+   {
+	neighbourFaceVert.at( count ).push_back(v2);
+	neighbourFaceVert.at( count ).push_back(v1);
+	count++;
+   }
+  }
+ }
+ neighbourFaceVert.resize (count); // trim vector para numero real de itens
+}
+
 /* cria matriz IEN para os elementos da superficie que no caso 3D sao
  * triagulos. Este metodo utiliza neighbourFaceVert e elemSurface 
  * como input e a funcao qsort para ordenacao de arestas.
@@ -5322,13 +5532,14 @@ void Model3D::setSurfaceConfig()
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setInterfaceDistance();
- setSurfaceFace(); // elemSurface e neighbourFaceVert
+ setNeighbourSurface(); 
+ setSurfaceFace2(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
 
  setMapEdgeTri(); 
- setNeighbourSurface(); 
+ //setNeighbourSurface(); 
  computeAverageTriangleEdge(); 
 
  computeSurfaceNormal(); // compute surface normal of all surface points
@@ -5800,7 +6011,7 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  /* ---- update interfaceMesh ---- */
  //setSurface(); // surface and nonSurface 
  //setNeighbour(); // neighbourElem
- //setSurfaceFace(); // elemSurface and neighbourFaceVert
+ //setSurfaceFace2(); // elemSurface and neighbourFaceVert
  //setSurfaceTri(); // interfaceMesh
  /* ------------------------------ */
 

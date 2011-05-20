@@ -90,6 +90,7 @@ class Model3D
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();
+  void removePointByVolume();
   void breakup();
   clVector triangleQuality(int _v);
   void setMapEdgeTri();

@@ -1858,8 +1858,6 @@ void Simulator3D::setCflBubble(real _cfl)
 
  cfl = _cfl;
 
- cout << rho_l << " " << rho_g << " " << triEdge << endl;
-
  real capillary = sqrt( ( 0.5*(rho_l+rho_g)*triEdge*triEdge*triEdge)
                   /(2*3.141592*sigma) );
  dt = cfl*capillary;

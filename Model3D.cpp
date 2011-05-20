@@ -2729,6 +2729,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  IEN.Dim(numElems,4);
  cc.Dim(numVerts);
  cc.SetAll(0.0);
+ phase.Dim(numElems);
+ phase.SetAll(1.0);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
@@ -2739,6 +2741,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,0.0);
+	phase.Set(i,1.0);
    }
   }
   // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
@@ -2749,6 +2752,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	cc.Set(vertice,1.0);
+	phase.Set(i,2.0);
    }
   }
  }
@@ -5865,6 +5869,7 @@ clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
 clVector* Model3D::getInterfaceDistance(){ return &interfaceDistance; }
+clVector* Model3D::getPhase(){ return &phase; }
 clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
@@ -5942,6 +5947,7 @@ void Model3D::operator=(Model3D &_mRight)
   surfMesh = _mRight.surfMesh;
   interfaceMesh = _mRight.interfaceMesh;
   convexMesh = _mRight.convexMesh;
+  phase = _mRight.phase;
 
   // STL: list and vectors
   neighbourElem = _mRight.neighbourElem; 

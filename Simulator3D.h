@@ -182,7 +182,7 @@ class Simulator3D
   clDMatrix *curvature;
   SurfaceMesh *surfMesh;
   Mesh3D *mesh3d;
-  clVector* interfaceDistance;
+  clVector* interfaceDistance,*phase;
 
 
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;

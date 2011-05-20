@@ -213,15 +213,15 @@ void Simulator3D::assemble()
 
   real muValue=0;
   real rhoValue=0;
-  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
-  {
-   muValue = mu_gAdimen;
-   rhoValue = rho_gAdimen;
-  }
-  else
+  if( phase->Get(mele) == 1.0 ) // fora
   {
    muValue = mu_lAdimen;
    rhoValue = rho_lAdimen;
+  }
+  else
+  {
+   muValue = mu_gAdimen;
+   rhoValue = rho_gAdimen;
   }
 
 //--------------------------------------------------
@@ -1483,7 +1483,8 @@ void Simulator3D::setInterfaceGeo()
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
+ fint = (1.0/We) * ( kappa*(G*(*cc)) );
+ //fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
  
  //va = va + fint;
 } // fecha metodo setInterface 
@@ -1608,9 +1609,12 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
+ // BUBBLE
  uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+
+ // DROPLET
  //uvw = uTilde + invA*fint + invA*gravity;
- //uvw = uTilde + invA*fint + invA*gravity;
+ 
  //uvw = uTilde;
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
@@ -1853,6 +1857,8 @@ void Simulator3D::setCflBubble(real _cfl)
   * */
 
  cfl = _cfl;
+
+ cout << rho_l << " " << rho_g << " " << triEdge << endl;
 
  real capillary = sqrt( ( 0.5*(rho_l+rho_g)*triEdge*triEdge*triEdge)
                   /(2*3.141592*sigma) );
@@ -2267,6 +2273,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  surface = _sRight.surface;
  IEN = _sRight.IEN;
  interfaceDistance = _sRight.interfaceDistance;
+ phase = _sRight.phase;
  triEdge = _sRight.triEdge;
 
  Re = _sRight.Re;
@@ -2899,6 +2906,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  surfMesh = m->getSurfMesh();
  mesh3d = m->getMesh3d();
  interfaceDistance = m->getInterfaceDistance();
+ phase = m->getPhase();
  triEdge = m->getTriEdge();
 }
 

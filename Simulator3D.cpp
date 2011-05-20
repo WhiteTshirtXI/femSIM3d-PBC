@@ -200,29 +200,29 @@ void Simulator3D::assemble()
   v[3]= v4 = (int) IEN->Get(mele,3);
   v[4]= v5 = (int) IEN->Get(mele,4);
   //cout << (float) mele/numElems << endl;
-  real muValue = ( mu.Get(v1)+
-	               mu.Get(v2)+
-	               mu.Get(v3)+
-	               mu.Get(v4) )/4.0;
-  real rhoValue = ( rho.Get(v1)+
-	                rho.Get(v2)+
-	                rho.Get(v3)+
-	                rho.Get(v4) )/4.0;
-
 //--------------------------------------------------
-//   real muValue=0;
-//   real rhoValue=0;
-//   if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
-//   {
-//    muValue = mu_gAdimen;
-//    rhoValue = rho_gAdimen;
-//   }
-//   else
-//   {
-//    muValue = mu_lAdimen;
-//    rhoValue = rho_lAdimen;
-//   }
+//   real muValue = ( mu.Get(v1)+
+// 	               mu.Get(v2)+
+// 	               mu.Get(v3)+
+// 	               mu.Get(v4) )/4.0;
+//   real rhoValue = ( rho.Get(v1)+
+// 	                rho.Get(v2)+
+// 	                rho.Get(v3)+
+// 	                rho.Get(v4) )/4.0;
 //-------------------------------------------------- 
+
+  real muValue=0;
+  real rhoValue=0;
+  if( cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5 )
+  {
+   muValue = mu_gAdimen;
+   rhoValue = rho_gAdimen;
+  }
+  else
+  {
+   muValue = mu_lAdimen;
+   rhoValue = rho_lAdimen;
+  }
 
 //--------------------------------------------------
 //   // by elements
@@ -1608,8 +1608,9 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- //uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
- uvw = uTilde + invA*fint + invA*gravity;
+ uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+ //uvw = uTilde + invA*fint + invA*gravity;
+ //uvw = uTilde + invA*fint + invA*gravity;
  //uvw = uTilde;
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 

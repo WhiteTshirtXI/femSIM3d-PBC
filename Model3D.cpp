@@ -2508,9 +2508,9 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  /* ------------ pontos da malha separados em 2 loops ------------ */
  // adiciona na estrutura tetgen as coordenadas dos pontos da 
  // superficie e do convex-hull
- real xMin = surfMesh.X.Max();
- real yMin = surfMesh.Y.Max();
- real zMin = surfMesh.Z.Max();
+ real xMax = surfMesh.X.Min();
+ real yMax = surfMesh.Y.Min();
+ real zMax = surfMesh.Z.Min();
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   in.pointlist[3*i+0] = surfMesh.X.Get(i); 
@@ -2521,13 +2521,13 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   if( surfMesh.Marker.Get(i) == 0.5 ) // interface
   {
    in.pointmarkerlist[i] = 22; // interface
-   if( surfMesh.X.Get(i) < xMin && 
-	   surfMesh.Y.Get(i) < yMin &&
-	   surfMesh.Z.Get(i) < zMin )
+   if( surfMesh.X.Get(i) > xMax && 
+	   surfMesh.Y.Get(i) > yMax &&
+	   surfMesh.Z.Get(i) > zMax )
    {
-	xMin = surfMesh.X.Get(i);
-	yMin = surfMesh.Y.Get(i);
-	zMin = surfMesh.Z.Get(i);
+	xMax = surfMesh.X.Get(i);
+	yMax = surfMesh.Y.Get(i);
+	zMax = surfMesh.Z.Get(i);
    }
   }
  }
@@ -2574,9 +2574,9 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[4] = 0.1;
 
  // dentro da bolha
- in.regionlist[5] = xMin+0.01;
- in.regionlist[6] = yMin+0.01;
- in.regionlist[7] = zMin+0.01;
+ in.regionlist[5] = xMax-0.01;
+ in.regionlist[6] = yMax-0.01;
+ in.regionlist[7] = zMax-0.01;
  in.regionlist[8] = 2;
  in.regionlist[9] = 0.1;
 

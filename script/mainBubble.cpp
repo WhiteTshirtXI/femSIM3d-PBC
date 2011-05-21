@@ -96,7 +96,9 @@ int main(int argc, char **argv)
 //-------------------------------------------------- 
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";

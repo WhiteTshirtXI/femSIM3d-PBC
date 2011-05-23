@@ -22,6 +22,7 @@ InOut::InOut( Model3D &_m )
  wc = m->getWC();
  pc = m->getPC();
  cc = m->getCC();
+ heaviside = m->getHeaviside();
  idbcu = m->getIdbcu();
  idbcv = m->getIdbcv();
  idbcw = m->getIdbcw();
@@ -51,6 +52,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  wc = m->getWC();
  pc = m->getPC();
  cc = m->getCC();
+ heaviside = m->getHeaviside();
  idbcu = m->getIdbcu();
  idbcv = m->getIdbcv();
  idbcw = m->getIdbcw();
@@ -75,10 +77,10 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  alpha = s->getAlpha();
  beta = s->getBeta();
  simTime = s->getTime();
- mu_l = s->getMu_l();
- mu_g = s->getMu_g();
- rho_l = s->getRho_l();
- rho_g = s->getRho_g();
+ mu_in = s->getMu_in();
+ mu_out = s->getMu_out();
+ rho_in = s->getRho_in();
+ rho_out = s->getRho_out();
  iter = s->getIter();
  c1 = s->getC1();
  c2 = s->getC2();
@@ -361,6 +363,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cc);
 
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
+
  vtkFile.close();
 
  cout << "mesh saved in VTK" << endl;
@@ -396,6 +401,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
  {
@@ -444,9 +452,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
 
  // conta numero de elementos
- real plane1 = ( X->Max()-X->Min() )/2.0;
- real plane2 = ( Y->Max()-Y->Min() )+1;
- //real plane2 = ( Y->Max()-Y->Min() )/2.0;
+ real plane1 = ( X->Max()+X->Min() )/2.0;
+ real plane2 = ( Y->Max()+Y->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -454,7 +461,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
@@ -470,7 +478,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
@@ -491,7 +500,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
       (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
@@ -504,12 +514,16 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkScalar(vtkFile,"concentration",*cSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
+ if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
  {
@@ -555,7 +569,8 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (Z->Get( v1 ) <  plane1) && 
 	  (Z->Get( v2 ) <  plane1) && 
 	  (Z->Get( v3 ) <  plane1) && 
@@ -571,7 +586,8 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (Z->Get( v1 ) <  plane1) && 
 	  (Z->Get( v2 ) <  plane1) && 
 	  (Z->Get( v3 ) <  plane1) && 
@@ -592,7 +608,8 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (cc->Get(v1)+cc->Get(v2)+cc->Get(v3)+cc->Get(v4) > 1.5) || 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
     ( (Z->Get( v1 ) <  plane1) && 
 	  (Z->Get( v2 ) <  plane1) && 
 	  (Z->Get( v3 ) <  plane1) && 
@@ -605,12 +622,16 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkScalar(vtkFile,"concentration",*cSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
+ if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
  {
@@ -1221,10 +1242,10 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  file << "Webber number:    " << We << endl;
  file << "alpha number:     " << alpha << endl;
  file << "beta number:      " << beta << endl;
- file << "liquid viscosity: " << mu_l << endl;
- file << "gas viscosity:    " << mu_g << endl;
- file << "liquid density:   " << rho_l << endl;
- file << "gas density:      " << rho_g << endl;
+ file << "liquid viscosity: " << mu_in << endl;
+ file << "gas viscosity:    " << mu_out << endl;
+ file << "liquid density:   " << rho_in << endl;
+ file << "gas density:      " << rho_out << endl;
  file << "CFL number:       " << cfl << endl;
  file << "dt:               " << dt << endl;
  file << "----------------------------------------------------" << endl; 
@@ -1278,13 +1299,13 @@ void InOut::printInfo(const char* _mesh)
  cout << "               ";
  cout << "beta number:      " << beta << endl;
  cout << "               ";
- cout << "liquid viscosity: " << mu_l << endl;
+ cout << "liquid viscosity: " << mu_in << endl;
  cout << "               ";
- cout << "gas viscosity:    " << mu_g << endl;
+ cout << "gas viscosity:    " << mu_out << endl;
  cout << "               ";
- cout << "liquid density:   " << rho_l << endl;
+ cout << "liquid density:   " << rho_in << endl;
  cout << "               ";
- cout << "gas density:      " << rho_g << endl;
+ cout << "gas density:      " << rho_out << endl;
  cout << "               ";
  cout << "CFL number:       " << cfl << endl;
  cout << "               ";
@@ -1580,11 +1601,15 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pc);
+ vtkScalar(vtkFile,"concentration",*cc);
  vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
+ if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cc);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
 
  vtkScalar(vtkFile,"distance",*interfaceDistance);
 
@@ -1632,12 +1657,16 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
+ vtkScalar(vtkFile,"concentration",*cSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
+ if( cc->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
  {
@@ -1693,13 +1722,13 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  for( int i=0;i<interfaceMesh->numVerts;i++ )
  {
   // bubble 1 (Y<0)
-  if( Y->Get(i) < 0 && cc->Get(i)==0.5 )
+  if( Y->Get(i) < 0 && heaviside->Get(i)==0.5 )
   {
    if(Y->Get(i)>Ymin1) Ymin1=Y->Get(i);
    if(Y->Get(i)<Ymax1) Ymax1=Y->Get(i);
   }
   // bubble 2 (Y>0)
-  if( Y->Get(i) > 0 && cc->Get(i)==0.5 )
+  if( Y->Get(i) > 0 && heaviside->Get(i)==0.5 )
   {
    if(Y->Get(i)<Ymin2) Ymin2=Y->Get(i);
    if(Y->Get(i)>Ymax2) Ymax2=Y->Get(i);
@@ -1852,6 +1881,12 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
   vtuFile << "     " << pSol->Get(i) << endl;
  vtuFile << "    </DataArray>" << endl;
 
+ vtuFile << "    <DataArray type=\"Float32\" Name=\"Concentration\" format=\"ascii\"> " << endl;
+ vtuFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtuFile << "     " << cSol->Get(i) << endl;
+ vtuFile << "    </DataArray>" << endl;
+
  /* vector data points */
  vtuFile << "    <DataArray type=\"Float32\" Name=\"Velocity\" NumberOfComponents=\"3\" format=\"ascii\"> " << endl;
  vtuFile << setprecision(10) << scientific;
@@ -1870,12 +1905,12 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
  vtuFile << "    </DataArray>" << endl;
 
  // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
+ if( heaviside->Dim() > 0 )
  {
-  vtuFile << "    <DataArray type=\"Float32\" Name=\"Concentration\" format=\"ascii\"> " << endl;
+  vtuFile << "    <DataArray type=\"Float32\" Name=\"Heaviside\" format=\"ascii\"> " << endl;
   vtuFile << setprecision(10) << scientific;
   for( int i=0;i<numVerts;i++ )
-   vtuFile << "     " << cSol->Get(i) << endl;
+   vtuFile << "     " << heaviside->Get(i) << endl;
   vtuFile << "    </DataArray>" << endl;
  }
 
@@ -2128,7 +2163,7 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  // linear interpolation on nTotal
  clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
  clVector cLin(nTotal);
- cLin = interpLin*(*cc);
+ cLin = interpLin*(*heaviside);
 
  int gas=0;
  for( int i=0;i<cLin.Dim();i++ )
@@ -2201,7 +2236,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "PARAMETERS 1 4 float" << endl;
  _file << Re << " " << Sc << " " << Fr << " " << We << endl;
  _file << "PROPERTIES 1 4 float" << endl;
- _file << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << endl;
+ _file << mu_in << " " << mu_out << " " << rho_in << " " << rho_out << endl;
  _file << "COEFFICIENTS 1 6 float" << endl;
  _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
        << alpha << " " << beta << endl;

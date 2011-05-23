@@ -196,11 +196,12 @@ private:
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
   real triEdge;
+  clVector *heaviside;
   list<int> *inElem,*outElem;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;
-  real mu_l,mu_g,rho_l,rho_g;
+  real mu_in,mu_out,rho_in,rho_out;
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;

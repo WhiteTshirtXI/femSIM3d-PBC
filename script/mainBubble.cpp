@@ -32,10 +32,10 @@ int main(int argc, char **argv)
 //  real alpha = 1;
 //  real beta = 1;
 //  real cfl = 0.03;
-//  real mu_l = 100;
-//  real mu_g = 1;
-//  real rho_l = 1000;
-//  real rho_g = 1;
+//  real mu_in = 100;
+//  real mu_out = 1;
+//  real rho_in = 1000;
+//  real rho_out = 1;
 //  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
 //-------------------------------------------------- 
 
@@ -45,13 +45,21 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 115.66;
  real Fr = 1.0;
+ real c1 = 0.0; // lagrangian
+ real c2 = 0.03; // smooth
+ real c3 = 0.0;
+ real c4 = 0.03; // surface
  real alpha = 1;
  real beta = 1;
+
  real sigma = 0.078;
- real mu_l = 2.73;
- real mu_g = 0.0000178;
- real rho_l = 1350;
- real rho_g = 1.225;
+
+ real mu_in = 0.0000178;
+ real mu_out = 2.73;
+
+ real rho_in = 1.225;
+ real rho_out = 1350;
+
  real cfl = 0.02;
  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
@@ -68,10 +76,10 @@ int main(int argc, char **argv)
 //  real beta = -40;
 //  real cfl = 0.01;
 //  //real dt = 0.00528;
-//  real mu_l = 0.118;
-//  real rho_l = 875.5;
-//  real mu_g = 1.7894E-05;
-//  real rho_g = 1.225;
+//  real mu_in = 0.118;
+//  real rho_in = 875.5;
+//  real mu_out = 1.7894E-05;
+//  real rho_out = 1.225;
 //  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
 //  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
 //-------------------------------------------------- 
@@ -87,10 +95,10 @@ int main(int argc, char **argv)
 //  real alpha = 1;
 //  real beta = 1;
 //  real cfl = 0.05;
-//  real mu_l = 100.0;
-//  real mu_g = 1.0;
-//  real rho_l = 1.0;
-//  real rho_g = 1.0;
+//  real mu_in = 100.0;
+//  real mu_out = 1.0;
+//  real rho_in = 1.0;
+//  real rho_out = 1.0;
 //  const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
 //  //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
 //-------------------------------------------------- 
@@ -122,6 +130,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -130,12 +139,16 @@ int main(int argc, char **argv)
   s1.setSc(Sc);
   s1.setWe(We);
   s1.setFr(Fr);
+  s1.setC1(c1);
+  s1.setC2(c2);
+  s1.setC3(c3);
+  s1.setC4(c4);
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
   //s1.setDt(dt);
-  s1.setMu(mu_l,mu_g);
-  s1.setRho(rho_l,rho_g);
+  s1.setMu(mu_in,mu_out);
+  s1.setRho(rho_in,rho_out);
   s1.setCflBubble(cfl);
   s1.init();
   s1.setSolverPressure(solverP);
@@ -164,9 +177,10 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
   m1.setMiniElement();
-  m1.readVTKCC(vtkFile);
+  m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -189,7 +203,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new mesh
@@ -201,6 +215,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -223,7 +238,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new one
@@ -235,6 +250,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -302,6 +318,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.applyBubbleVolumeCorrection();
   m1.setWallBC();
 
   Simulator3D s2(m1,s1);

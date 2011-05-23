@@ -50,10 +50,10 @@ Simulator3D::Simulator3D( Model3D &_m )
 
  g     = 9.81;
  sigma = 0.1;
- mu_l  = 1.0;
- mu_g  = 1.0;
- rho_l = 1.0;
- rho_g = 1.0;
+ mu_in  = 1.0;
+ mu_out  = 1.0;
+ rho_in = 1.0;
+ rho_out = 1.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -79,10 +79,10 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  cfl   = _s.getCfl();
  g     = _s.getGrav();
  sigma = _s.getSigma();
- mu_l  = _s.getMu_l();
- mu_g  = _s.getMu_g();
- rho_l = _s.getRho_l();
- rho_g = _s.getRho_g();
+ mu_in  = _s.getMu_in();
+ mu_out  = _s.getMu_out();
+ rho_in = _s.getRho_in();
+ rho_out = _s.getRho_out();
  iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
@@ -187,10 +187,10 @@ void Simulator3D::assemble()
  FEMLinElement3D linElem(*X,*Y,*Z);
 
  //setHSmooth();
- //setMuSmooth( mu_l,mu_g );
- //setRhoSmooth( rho_l,rho_g );
- setMu( mu_l,mu_g );
- setRho( rho_l,rho_g );
+ //setMuSmooth( mu_in,mu_out );
+ //setRhoSmooth( rho_in,rho_out );
+ setMu( mu_in,mu_out );
+ setRho( rho_in,rho_out );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -213,15 +213,15 @@ void Simulator3D::assemble()
 
   real muValue=0;
   real rhoValue=0;
-  if( phase->Get(mele) == 1.0 ) // fora
+  if( phase->Get(mele) == 1.0 ) // out
   {
-   muValue = mu_lAdimen;
-   rhoValue = rho_lAdimen;
+   muValue = mu_outAdimen;
+   rhoValue = rho_outAdimen;
   }
   else
   {
-   muValue = mu_gAdimen;
-   rhoValue = rho_gAdimen;
+   muValue = mu_inAdimen;
+   rhoValue = rho_inAdimen;
   }
 
 //--------------------------------------------------
@@ -402,8 +402,8 @@ void Simulator3D::assembleNuCte()
 
  FEMMiniElement3D miniElem(*X,*Y,*Z);
 
- setMu(mu_l);
- setRho(rho_l);
+ setMu(mu_in);
+ setRho(rho_in);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -527,7 +527,7 @@ void Simulator3D::assembleNuC()
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  FEMLinElement3D linElem(*X,*Y,*Z);
 
- setRho(rho_l);
+ setRho(rho_in);
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -880,7 +880,7 @@ void Simulator3D::assembleNuZ()
  clMatrix Dz( numVerts,numNodes );
 
  setMuZ();      // carregando o arquivo de perfil nuZ
- setRho(rho_l);
+ setRho(rho_in);
  
  FEMMiniElement3D miniElem(*X,*Y,*Z);
 
@@ -1233,10 +1233,6 @@ void Simulator3D::stepALE()
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
 
- c1 = 1.0; 
- c2 = 1.0;
- c3 = 0.0; // uSLSurface vSLSurface apresentam problema para c3=1.0
-
  uALE = c1*uSolOld+c2*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmoothCoord;
  wALE = c1*wSolOld+c2*wSmoothCoord;
@@ -1288,10 +1284,6 @@ void Simulator3D::stepALEVel()
  uSmoothCoord = *e1.getUSmooth();
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
-
- c1 = 0.0;; 
- c2 = 1.0;
- c3 = 0.03; 
 
  uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
@@ -1368,7 +1360,6 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
 
-  c4 = 0.00;
   uALE.Set(surfaceNode,uSolNormal+c4*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+c4*vSmoothTangent);
   wALE.Set(surfaceNode,wSolNormal+c4*wSmoothTangent);
@@ -1441,7 +1432,7 @@ void Simulator3D::setGravity(const char* _direction)
  gUnit.Append(gz);
 
  gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
- //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_lAdimen*M)*gUnit );
+ //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_inAdimen*M)*gUnit );
 
  // update RHS
  //va = va + gravity;
@@ -1483,8 +1474,8 @@ void Simulator3D::setInterfaceGeo()
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * ( kappa*(G*(*cc)) );
- //fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
+ fint = (1.0/We) * ( kappa*(G*(*heaviside)) );
+ //fint = (1.0/We) * ( kappa*(GTilde*(*heaviside)) );
  
  //va = va + fint;
 } // fecha metodo setInterface 
@@ -1492,7 +1483,7 @@ void Simulator3D::setInterfaceGeo()
 void Simulator3D::setInterfaceLevelSet()
 {
  clVector half(numVerts);half.SetAll(0.5);
- clVector zeroLevel = ((*cc)-half)*2;
+ clVector zeroLevel = ((*heaviside)-half)*2;
  clVector levelSet(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
@@ -1513,7 +1504,7 @@ void Simulator3D::setInterfaceLevelSet()
  m->setKappaSurface(kappaAux);
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * ( kappa*(GTilde*(*cc)) );
+ fint = (1.0/We) * ( kappa*(GTilde*(*heaviside)) );
 
  //va = va + invA*fint;
 } // fecha metodo setInterface 
@@ -1609,11 +1600,16 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- // BUBBLE
- uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
-
- // DROPLET
- //uvw = uTilde + invA*fint + invA*gravity;
+ if( mu_in < mu_out ) // BUBBLE
+ {
+  cout << "                                 " << "BUBBLE SIMULATION" << endl;
+  uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+ }
+ else // DROPLET
+ {
+  cout << "                                 " << "DROPLET SIMULATION" << endl;
+  uvw = uTilde + invA*fint + invA*gravity;
+ }
  
  //uvw = uTilde;
 
@@ -1858,7 +1854,7 @@ void Simulator3D::setCflBubble(real _cfl)
 
  cfl = _cfl;
 
- real capillary = sqrt( ( 0.5*(rho_l+rho_g)*triEdge*triEdge*triEdge)
+ real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
                   /(2*3.141592*sigma) );
  dt = cfl*capillary;
 }
@@ -1966,27 +1962,31 @@ real Simulator3D::getTime2(){return time;}
 void Simulator3D::setIter(real _iter){iter = _iter;}
 int  Simulator3D::getIter(){return iter;}
 real Simulator3D::getCfl(){return cfl;}
+void Simulator3D::setC1(real _c1){c1 = _c1;}
+void Simulator3D::setC2(real _c2){c2 = _c2;}
+void Simulator3D::setC3(real _c3){c3 = _c3;}
+void Simulator3D::setC4(real _c4){c4 = _c4;}
 real Simulator3D::getC1(){return c1;}
 real Simulator3D::getC2(){return c2;}
 real Simulator3D::getC3(){return c3;}
 real Simulator3D::getC4(){return c4;}
 
-void Simulator3D::setMu(real _mu_l)
+void Simulator3D::setMu(real _mu_in)
 { 
- mu_l = _mu_l;
- mu_0 = _mu_l;
- mu_lAdimen = mu_l/mu_0;
+ mu_in = _mu_in;
+ mu_0 = _mu_in;
+ mu_inAdimen = mu_in/mu_0;
 
- mu.SetAll(mu_lAdimen); 
+ mu.SetAll(mu_inAdimen); 
 }
 
-void Simulator3D::setRho(real _rho_l)
+void Simulator3D::setRho(real _rho_in)
 { 
- rho_l = _rho_l;
- rho_0 = rho_l; 
- rho_lAdimen = rho_l/rho_0; 
+ rho_in = _rho_in;
+ rho_0 = rho_in; 
+ rho_inAdimen = rho_in/rho_0; 
 
- rho.SetAll(rho_lAdimen); 
+ rho.SetAll(rho_inAdimen); 
 }
 
 /* Since we are working here with non-dimensional equations and also
@@ -1998,18 +1998,18 @@ void Simulator3D::setRho(real _rho_l)
  * Re_ref = ---------------     
  *               mu_0            
  *
- *               rho_l                   rho_g
- * rho_lAdimen = -----     rho_gAdimen = -----
+ *               rho_in                   rho_out
+ * rho_inAdimen = -----     rho_outAdimen = -----
  *               rho_0                   rho_0
  *
- *               mu_l                   mu_g
+ *               mu_in                   mu_out
  * muAdimen_l =  ----      muAdimen_g = ----
  *               mu_0                   mu_0
  *
  *
- *        rho_l * v_l * D          rho_g * v_g * D 
+ *        rho_in * v_l * D          rho_out * v_g * D 
  * Re_l = ---------------   Re_g = --------------- 
- *             mu_l                     mu_g       
+ *             mu_in                     mu_out       
  *
  * Navier-Stokes Viscous Term (liquid):
  *
@@ -2020,109 +2020,109 @@ void Simulator3D::setRho(real _rho_l)
  *
  * Navier-Stokes Viscous Term (gas phase): [INSIDE BUBBLE]
  *
- *    mu_0                 [ mu_g   (                       ) ]
+ *    mu_0                 [ mu_out   (                       ) ]
  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
  * rho_0*v*D               [ mu_0   (                       ) ]
  *
  *
  * Navier-Stokes Viscous Term (liquid phase): [OUTSIDE BUBBLE]
  *
- *    mu_0                 [ mu_l   (                       ) ]
+ *    mu_0                 [ mu_in   (                       ) ]
  * --------- * \nabla \dot [ ---- * ( \nabla u + \nabla u^T ) ]
  * rho_0*v*D               [ mu_0   (                       ) ]
  *
  * */
-void Simulator3D::setMu(real _mu_l,real _mu_g)
+void Simulator3D::setMu(real _mu_in,real _mu_out)
 { 
- mu_l = _mu_l;
- mu_g = _mu_g;
+ mu_in = _mu_in;
+ mu_out = _mu_out;
 
- if( mu_l >= mu_g )
-  mu_0 = mu_l; 
+ if( mu_in >= mu_out )
+  mu_0 = mu_in; 
  else
-  mu_0 = mu_g;
+  mu_0 = mu_out;
 
- mu_lAdimen = mu_l/mu_0;
- mu_gAdimen = mu_g/mu_0;
+ mu_inAdimen = mu_in/mu_0;
+ mu_outAdimen = mu_out/mu_0;
 
  clVector one(numVerts);one.SetAll(1.0);
- mu = mu_gAdimen*(*cc) + mu_lAdimen*(one-(*cc));
+ mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
 //--------------------------------------------------
 //  mu.Dim(numNodes);
-//  mu.SetAll(mu_lAdimen);
+//  mu.SetAll(mu_inAdimen);
 //  list<int> *inElem;
 //  inElem = m->getInElem();
 //  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
-//   mu.Set(*it,mu_gAdimen);
+//   mu.Set(*it,mu_outAdimen);
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setRho(real _rho_l,real _rho_g)
+void Simulator3D::setRho(real _rho_in,real _rho_out)
 { 
- rho_l = _rho_l;
- rho_g = _rho_g;
+ rho_in = _rho_in;
+ rho_out = _rho_out;
 
- if( rho_l >= rho_g )
-  rho_0 = rho_l; 
+ if( rho_in >= rho_out )
+  rho_0 = rho_in; 
  else
-  rho_0 = rho_g; 
+  rho_0 = rho_out; 
 
- rho_lAdimen = rho_l/rho_0; 
- rho_gAdimen = rho_g/rho_0;
+ rho_inAdimen = rho_in/rho_0; 
+ rho_outAdimen = rho_out/rho_0;
 
  clVector one(numVerts);one.SetAll(1.0);
- rho = rho_gAdimen*(*cc) + rho_lAdimen*(one-(*cc));
+ rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
 
 //--------------------------------------------------
 //  rho.Dim(numNodes);
-//  rho.SetAll(rho_lAdimen);
+//  rho.SetAll(rho_inAdimen);
 //  list<int> *inElem;
 //  inElem = m->getInElem();
 //  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
-//   rho.Set(*it,rho_gAdimen);
+//   rho.Set(*it,rho_outAdimen);
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setMuSmooth(real _mu_l,real _mu_g)
+void Simulator3D::setMuSmooth(real _mu_in,real _mu_out)
 { 
- mu_l = _mu_l;
- mu_g = _mu_g;
+ mu_in = _mu_in;
+ mu_out = _mu_out;
 
- if( mu_l >= mu_g )
-  mu_0 = mu_l; 
+ if( mu_in >= mu_out )
+  mu_0 = mu_in; 
  else
-  mu_0 = mu_g;
+  mu_0 = mu_out;
 
- mu_lAdimen = mu_l/mu_0; 
- mu_gAdimen = mu_g/mu_0;
+ mu_inAdimen = mu_in/mu_0; 
+ mu_outAdimen = mu_out/mu_0;
 
  clVector one(numVerts);one.SetAll(1.0);
- mu = mu_gAdimen*hSmooth + mu_lAdimen*(one-hSmooth);
+ mu = mu_inAdimen*hSmooth + mu_outAdimen*(one-hSmooth);
 }
 
-void Simulator3D::setRhoSmooth(real _rho_l,real _rho_g)
+void Simulator3D::setRhoSmooth(real _rho_in,real _rho_out)
 { 
- rho_l = _rho_l;
- rho_g = _rho_g;
+ rho_in = _rho_in;
+ rho_out = _rho_out;
 
- if( rho_l >= rho_g )
-  rho_0 = rho_l; 
+ if( rho_in >= rho_out )
+  rho_0 = rho_in; 
  else
-  rho_0 = rho_g; 
+  rho_0 = rho_out; 
 
- rho_lAdimen = rho_l/rho_0; 
- rho_gAdimen = rho_g/rho_0;
+ rho_inAdimen = rho_in/rho_0; 
+ rho_outAdimen = rho_out/rho_0;
 
  clVector one(numVerts);one.SetAll(1.0);
- rho = rho_gAdimen*hSmooth + rho_lAdimen*(one-hSmooth);
+ rho = rho_inAdimen*hSmooth + rho_outAdimen*(one-hSmooth);
 }
 
 void Simulator3D::setHSmooth()
 {
  hSmooth.Dim(numVerts);
  clVector half(numVerts);half.SetAll(0.5);
- clVector zeroLevel = ((*cc)-half)*2;
+ clVector zeroLevel = ((*heaviside)-half)*2;
  real triEdge = m->getTriEdge();
  for( int i=0;i<numVerts;i++ )
  {
@@ -2149,7 +2149,7 @@ void Simulator3D::setHSmooth()
 //  real D = 1.0;
 //  real L = D;
 //  real U = sqrt(g*D);
-//  Re = rho_l*L*U/mu_l;
+//  Re = rho_in*L*U/mu_in;
 // }
 // 
 // real Simulator3D::computeFroud()
@@ -2165,13 +2165,13 @@ void Simulator3D::setHSmooth()
 //  real D = 1.0;
 //  real L = D;
 //  real U = sqrt(g*D);
-//  We = rho_l*L*U*U/sigma;
+//  We = rho_in*L*U*U/sigma;
 // }
 // 
 // real Simulator3D::computeEotvos()
 // {
 //  real D = 1.0;
-//  Eo = rho_l*g*D*D/sigma;
+//  Eo = rho_in*g*D*D/sigma;
 //  We = Eo;
 // }
 // 
@@ -2180,7 +2180,7 @@ void Simulator3D::setHSmooth()
 //  real D = 1.0;
 //  real L = D;
 //  real U = sqrt(g*D);
-//  N = rho_l*U*L/mu_l;
+//  N = rho_in*U*L/mu_in;
 //  Re = N;
 // }
 // 
@@ -2189,14 +2189,14 @@ void Simulator3D::setHSmooth()
 //  real D = 1.0;
 //  real L = D;
 //  real U = sqrt(g*D);
-//  Mo = (rho_l-rho_g)*mu_l*mu_l*mu_l*mu_l*g/(rho_l*rho_l*sigma*sigma*sigma); 
+//  Mo = (rho_in-rho_out)*mu_in*mu_in*mu_in*mu_in*g/(rho_in*rho_in*sigma*sigma*sigma); 
 // }
 //-------------------------------------------------- 
 
-real Simulator3D::getMu_l(){return mu_l;}
-real Simulator3D::getMu_g(){return mu_g;}
-real Simulator3D::getRho_l(){return rho_l;}
-real Simulator3D::getRho_g(){return rho_g;}
+real Simulator3D::getMu_in(){return mu_in;}
+real Simulator3D::getMu_out(){return mu_out;}
+real Simulator3D::getRho_in(){return rho_in;}
+real Simulator3D::getRho_out(){return rho_out;}
 real* Simulator3D::getTime(){return &time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 void Simulator3D::setUSol(clVector &_uSol){uSol = _uSol;}
@@ -2262,6 +2262,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  wc = _sRight.wc;
  pc = _sRight.pc;
  cc = _sRight.cc;
+ heaviside = _sRight.heaviside;
  idbcu = _sRight.idbcu;
  idbcv = _sRight.idbcv;
  idbcw = _sRight.idbcw;
@@ -2291,10 +2292,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
 
  g = _sRight.g;
  sigma = _sRight.sigma;
- rho_l = _sRight.rho_l;
- rho_g = _sRight.rho_g;
- mu_l = _sRight.mu_l;
- mu_g = _sRight.mu_g;
+ rho_in = _sRight.rho_in;
+ rho_out = _sRight.rho_out;
+ mu_in = _sRight.mu_in;
+ mu_out = _sRight.mu_out;
 
  g_0 = _sRight.g_0;
  sigma_0 = _sRight.sigma_0;
@@ -2303,10 +2304,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
 
  gAdimen = _sRight.gAdimen;
  sigmaAdimen = _sRight.sigmaAdimen;
- rho_lAdimen = _sRight.rho_lAdimen;
- rho_gAdimen = _sRight.rho_gAdimen;
- mu_lAdimen = _sRight.mu_lAdimen;
- mu_gAdimen = _sRight.mu_gAdimen;
+ rho_inAdimen = _sRight.rho_inAdimen;
+ rho_outAdimen = _sRight.rho_outAdimen;
+ mu_inAdimen = _sRight.mu_inAdimen;
+ mu_outAdimen = _sRight.mu_outAdimen;
 
  K = _sRight.K;
  Kc = _sRight.Kc;
@@ -2426,10 +2427,10 @@ void Simulator3D::operator()(Model3D &_m)
  c4    = 0.01;
  g     = 9.81;
  sigma = 0.1;
- mu_l  = 1.0;
- mu_g  = 1.0;
- rho_l = 1.0;
- rho_g = 1.0;
+ mu_in  = 1.0;
+ mu_out  = 1.0;
+ rho_in = 1.0;
+ rho_out = 1.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2460,10 +2461,10 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  c4    = _s.getC4();
  g     = _s.getGrav();
  sigma = _s.getSigma();
- mu_l  = _s.getMu_l();
- mu_g  = _s.getMu_g();
- rho_l = _s.getRho_l();
- rho_g = _s.getRho_g();
+ mu_in  = _s.getMu_in();
+ mu_out  = _s.getMu_out();
+ rho_in = _s.getRho_in();
+ rho_out = _s.getRho_out();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2558,10 +2559,10 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
- fileP >> mu_l;
- fileP >> mu_g;
- fileP >> rho_l;
- fileP >> rho_g;
+ fileP >> mu_in;
+ fileP >> mu_out;
+ fileP >> rho_in;
+ fileP >> rho_out;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
   fileP >> auxstr;
@@ -2589,7 +2590,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 //  cout << iter << endl;
 //  cout << numVertsOld << " " << numNodesOld << " " << numElemsOld << endl;
 //  cout << Re << " " << Sc << " " << Fr << " " << We << " " << endl;
-//  cout << mu_l << " " << mu_g << " " << rho_l << " " << rho_g << " " << endl;
+//  cout << mu_in << " " << mu_out << " " << rho_in << " " << rho_out << " " << endl;
 //  cout << c1 << " " << c2 << " " << c3 << " " << c4 << " " << alpha 
 //       << " " << beta << endl;
 //  cout << lineEdge << endl;
@@ -2669,8 +2670,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  uALE.Dim( numVerts );
  vALE.Dim( numVerts );
  wALE.Dim( numVerts );
- //mu.Dim( numNodes );
- //rho.Dim( numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );
@@ -2736,7 +2735,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vSol = interpLin*(vSolOld);
  wSol = interpLin*(wSolOld);
  pSol = interpLin*(pSolOld);
- cSol.CopyFrom( 0,*cc ); // copying new cc
+ cSol = interpLin*(cSolOld);
  uALE = interpLin*(uALEOld);
  vALE = interpLin*(vALEOld);
  wALE = interpLin*(wALEOld);
@@ -2892,6 +2891,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  wc = m->getWC();
  pc = m->getPC();
  cc = m->getCC();
+ heaviside = m->getHeaviside();
  idbcu = m->getIdbcu();
  idbcv = m->getIdbcv();
  idbcw = m->getIdbcw();
@@ -3009,8 +3009,7 @@ void Simulator3D::allocateMemoryToAttrib()
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
- //mu.Dim( numNodes );
- //rho.Dim( numNodes );
+ gravity.Dim( 3*numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );

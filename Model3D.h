@@ -47,7 +47,7 @@ class Model3D
 
   // reading files
   void readVTK( const char* filename );
-  void readVTKCC( const char* filename );
+  void readVTKHeaviside( const char* filename );
   void readVTKSurface( const char* filename );
   void readMSH( const char* filename );
   void readBC( const char* filename );
@@ -100,6 +100,9 @@ class Model3D
   void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
+  void setInitBubbleVolume();
+  real computeBubbleVolume();
+  void applyBubbleVolumeCorrection();
 
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
@@ -189,7 +192,7 @@ class Model3D
   clVector* getWC();
   clVector* getPC();
   clVector* getCC();
-  clVector* getCCOriginal();
+  clVector* getHeaviside();
   clVector* getOutflow();
   clVector* getIdbcu();
   clVector* getIdbcv();
@@ -252,6 +255,7 @@ class Model3D
   clMatrix faceFace,freeFace,mapViz;
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
+  clVector heaviside;
   clVector idRegion;
   clVector surface,nonSurface;
   clMatrix mapEdgeTri;
@@ -269,6 +273,7 @@ class Model3D
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
   real triEdge,averageTriEdge;
+  real initBubbleVolume;
   int isp;                        // isp: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
   int csp;                        // csp: num of contracted surface points

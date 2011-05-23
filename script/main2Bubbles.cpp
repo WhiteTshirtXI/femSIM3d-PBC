@@ -24,14 +24,21 @@ int main(int argc, char **argv)
  real Sc = 2;
  real We = 10;
  real Fr = 0.4;
- real sigma = 1.0;
+ real c1 = 0.0; // lagrangian
+ real c2 = 0.03; // smooth
+ real c3 = 0.0; 
+ real c4 = 0.03; // surface
  real alpha = 1;
  real beta = -10;
- real cfl = 0.05;
+
+ real sigma = 1.0;
+
  real mu_l = 1.0;
  real mu_g = 1.0;
  real rho_l = 1.0;
  real rho_g = 1.0;
+
+ real cfl = 0.05;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -67,6 +74,10 @@ int main(int argc, char **argv)
   s1.setSc(Sc);
   s1.setWe(We);
   s1.setFr(Fr);
+  s1.setC1(c1);
+  s1.setC2(c2);
+  s1.setC3(c3);
+  s1.setC4(c4);
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
@@ -101,7 +112,7 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
   m1.setMiniElement();
-  m1.readVTKCC(vtkFile);
+  m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.set2BubbleBC();
@@ -126,7 +137,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new mesh
@@ -160,7 +171,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new one

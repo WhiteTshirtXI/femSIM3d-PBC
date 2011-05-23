@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
   m1.readVTK(mesh2);
   m1.setMiniElement();
-  m1.readVTKCC(mesh2);
+  m1.readVTKHeaviside(mesh2);
   m1.setCubeBC();
   m1.setOFace();
   m1.setSurfaceConfig();

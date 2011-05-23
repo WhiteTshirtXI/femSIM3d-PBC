@@ -42,7 +42,10 @@ diskSurf: ./script/mainDiskSurf.o $(obj)
 2bubbles: ./script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-static: ./script/mainStatic.o $(obj)
+staticDroplet: ./script/mainStaticDroplet.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+oscillating: ./script/mainOscillating.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 bubble: ./script/mainBubble.o $(obj)
@@ -83,7 +86,8 @@ erase:
 	@rm -f ./dat/*.dat
 
 deepclean: 
-	@rm -f step bubble 2bubble diskNuC diskNuCte diskNuZ
+	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
+	@rm -f 2bubbles
 	@rm -f libtest*
 	@rm -f core
 	@find $(LIBDIR) -name "*.o" -exec rm {} \;

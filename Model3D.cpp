@@ -21,7 +21,8 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- triEdge = 0.09;
+ initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  rsp = 0;                    
@@ -94,17 +95,17 @@ void Model3D::readVTK( const char* filename )
  vtkFile.close();
 } // fim do metodo vtkRead
 
-void Model3D::readVTKCC( const char* filename )
+void Model3D::readVTKHeaviside( const char* filename )
 {
  char auxstr[255];
  real fl;
- cc.Dim(numVerts);
+ heaviside.Dim(numVerts);
 
  ifstream vtkFile( filename,ios::in );
 
  if( !vtkFile )
  {
-  cerr << "Esta faltando o arquivo de leitura de CC!" << endl;
+  cerr << "Esta faltando o arquivo de leitura de heaviside!" << endl;
   exit(1);
  }
 
@@ -120,7 +121,7 @@ void Model3D::readVTKCC( const char* filename )
   for( int i=0; i < numVerts; i++ )
   {
    vtkFile >> fl;
-   cc.Set(i,fl);
+   heaviside.Set(i,fl);
   }
  }
  vtkFile.close();
@@ -292,9 +293,9 @@ void Model3D::readMSH( const char* filename )
 // 	int v1 = IEN.Get(i,0);
 // 	int v2 = IEN.Get(i,1);
 // 	int v3 = IEN.Get(i,2);
-// 	cc.Set(v1,0.5);
-// 	cc.Set(v2,0.5);
-// 	cc.Set(v3,0.5);
+// 	heaviside.Set(v1,0.5);
+// 	heaviside.Set(v2,0.5);
+// 	heaviside.Set(v3,0.5);
 //    }
 //-------------------------------------------------- 
   }
@@ -963,13 +964,13 @@ void Model3D::insertPointsByInterfaceDistance()
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   // bubble 1 (Y<0)
-  if( Y.Get(i) < 0 && cc.Get(i)==0.5 )
+  if( Y.Get(i) < 0 && heaviside.Get(i)==0.5 )
   {
    if(Y.Get(i)>Ymin1) Ymin1=Y.Get(i);
    if(Y.Get(i)<Ymax1) Ymax1=Y.Get(i);
   }
   // bubble 2 (Y>0)
-  if( Y.Get(i) > 0 && cc.Get(i)==0.5 )
+  if( Y.Get(i) > 0 && heaviside.Get(i)==0.5 )
   {
    if(Y.Get(i)<Ymin2) Ymin2=Y.Get(i);
    if(Y.Get(i)>Ymax2) Ymax2=Y.Get(i);
@@ -1250,7 +1251,7 @@ void Model3D::deleteSurfacePoint(int _v)
  X.Delete(_v);
  Y.Delete(_v);
  Z.Delete(_v);
- cc.Delete(_v);
+ heaviside.Delete(_v);
  numVerts--;
 
  surfMesh.X.Delete(_v);
@@ -2216,7 +2217,7 @@ void Model3D::removePointsByInterfaceDistance()
  // number of removed 3d mesh points by interface distance
  rpi=0;
 
- clVector surfaceAux = cc==0.5;
+ clVector surfaceAux = heaviside==0.5;
  clVector surface = surfaceAux.Find();
 
  /*     
@@ -2239,7 +2240,7 @@ void Model3D::removePointsByInterfaceDistance()
    X.Delete(i);
    Y.Delete(i);
    Z.Delete(i);
-   cc.Delete(i);
+   heaviside.Delete(i);
    interfaceDistance.Delete(i);
    numVerts--;
    i--;
@@ -2260,7 +2261,7 @@ void Model3D::remove3dMeshPointsByDistance()
   {
    for( int j=surfMesh.numVerts;j<numVerts;j++ )
    {
-	if( cc.Get(i) != 0.5 && cc.Get(j) != 0.5 )
+	if( heaviside.Get(i) != 0.5 && heaviside.Get(j) != 0.5 )
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
@@ -2274,7 +2275,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	  X.Delete(i);
 	  Y.Delete(i);
 	  Z.Delete(i);
-	  cc.Delete(i);
+	  heaviside.Delete(i);
 	  numVerts--;
 	  dVerts--;
 	  i--;
@@ -2295,13 +2296,13 @@ void Model3D::breakup()
   int v2 = IEN.Get(i,1);
   int v3 = IEN.Get(i,2);
   int v4 = IEN.Get(i,3);
-  if( cc.Get(v1) == 0.5 && cc.Get(v2) == 0.5 &&
-	  cc.Get(v3) == 0.5 && cc.Get(v4) == 0.5 )
+  if( heaviside.Get(v1) == 0.5 && heaviside.Get(v2) == 0.5 &&
+	  heaviside.Get(v3) == 0.5 && heaviside.Get(v4) == 0.5 )
   {
-   cc.Set(v1,0.0);
-   cc.Set(v2,0.0);
-   cc.Set(v3,0.0);
-   cc.Set(v4,0.0);
+   heaviside.Set(v1,0.0);
+   heaviside.Set(v2,0.0);
+   heaviside.Set(v3,0.0);
+   heaviside.Set(v4,0.0);
   }
  }
 }
@@ -2327,7 +2328,7 @@ void Model3D::insertPointsByArea()
    X.AddItem(v4,centroidX);
    Y.AddItem(v4,centroidY);
    Z.AddItem(v4,centroidZ);
-   cc.AddItem(v4,0.5); // interface set up
+   heaviside.AddItem(v4,0.5); // interface set up
 
    surfMesh.X.AddItem(v4,centroidX);
    surfMesh.Y.AddItem(v4,centroidY);
@@ -2538,9 +2539,9 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.pointlist[3*i+0] = X.Get(i);
   in.pointlist[3*i+1] = Y.Get(i);
   in.pointlist[3*i+2] = Z.Get(i);
-  if( cc.Get(i) == 0.0 ) // fora da bolha
+  if( heaviside.Get(i) == 0.0 ) // fora da bolha
    in.pointmarkerlist[i] = 11;
-  if( cc.Get(i) == 1.0 ) // dentro da bolha
+  if( heaviside.Get(i) == 1.0 ) // dentro da bolha
    in.pointmarkerlist[i] = 33;
  }
  /* -------------------------------------------------------------- */
@@ -2571,14 +2572,14 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[1] = surfMesh.Y.Min()+0.01;
  in.regionlist[2] = surfMesh.Z.Min()+0.01;
  in.regionlist[3] = 1;
- in.regionlist[4] = 0.1;
+ in.regionlist[4] = 0.08;
 
  // dentro da bolha
  in.regionlist[5] = xMax-0.01;
  in.regionlist[6] = yMax-0.01;
  in.regionlist[7] = zMax-0.01;
  in.regionlist[8] = 2;
- in.regionlist[9] = 0.1;
+ in.regionlist[9] = 0.05;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -2680,7 +2681,7 @@ Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_tetmesh)
  // varre lista de elementos e passa para estrutura IEN
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
-  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  // setting de heaviside = 0 para fora da bolha e heaviside = 0.5 para interface
   if( _tetmesh.tetrahedronattributelist[i] == 1 )
   {
    for( int j=0;j<4;j++ )
@@ -2690,7 +2691,7 @@ Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_tetmesh)
 	mesh.Marker.Set(vertice,0.0);
    }
   }
-  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  // setting de heaviside = 1 para dentro da bolha e heaviside = 0.5 para interface
   else 
   {
    for( int j=0;j<4;j++ )
@@ -2727,31 +2728,31 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  
  // varre lista de elementos e passa para estrutura IEN
  IEN.Dim(numElems,4);
- cc.Dim(numVerts);
- cc.SetAll(0.0);
+ heaviside.Dim(numVerts);
+ heaviside.SetAll(0.0);
  phase.Dim(numElems);
  phase.SetAll(1.0);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
-  // setting de cc = 0 para fora da bolha e cc = 0.5 para interface
+  // setting de heaviside = 0 para fora da bolha e heaviside = 0.5 para interface
   if( _tetmesh.tetrahedronattributelist[i] == 1 )
   {
    for( int j=0;j<4;j++ )
    {
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
-	cc.Set(vertice,0.0);
+	heaviside.Set(vertice,0.0);
 	phase.Set(i,1.0);
    }
   }
-  // setting de cc = 1 para dentro da bolha e cc = 0.5 para interface
+  // setting de heaviside = 1 para dentro da bolha e heaviside = 0.5 para interface
   else 
   {
    for( int j=0;j<4;j++ )
    {
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
-	cc.Set(vertice,1.0);
+	heaviside.Set(vertice,1.0);
 	phase.Set(i,2.0);
    }
   }
@@ -2768,7 +2769,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   Z.Set(i,_tetmesh.pointlist[3*i+2]);
   if( _tetmesh.pointmarkerlist[i] == 10 ||
 	  _tetmesh.pointmarkerlist[i] == 22 )
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
  }
 }
 
@@ -2808,7 +2809,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
    X.AddItem(numVerts,xMid);
    Y.AddItem(numVerts,yMid);
    Z.AddItem(numVerts,zMid);
-   cc.AddItem(fabs(region-1));
+   heaviside.AddItem(fabs(region-1));
    numVerts++;
 
    badtet++;
@@ -2830,13 +2831,13 @@ void Model3D::removePointByVolume()
 
   if( fabs(getVolume(i)) < 1E-06 ) 
   {
-   if( cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4) < 0.5 || 
-       cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4) > 3.5 ) 
+   if( heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4) < 0.5 || 
+       heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4) > 3.5 ) 
    {
 	X.Delete(i);
 	Y.Delete(i);
 	Z.Delete(i);
-	cc.Delete(i);
+	heaviside.Delete(i);
 	numVerts--;
 	count++;
    }
@@ -2945,17 +2946,19 @@ void Model3D::mesh3DPoints()
  computeSurfaceNormal(); // compute surface normal of all surface points
  computeKappaGeo();
 
- saveVTKSurface("./vtk/","start",0);
- insertPointsByLength();
- //insertPointsByInterfaceDistance();
- saveVTKSurface("./vtk/","inserted",0);
- saveVTKSurface("./vtk/","removed",0);
- contractEdgeByLength();
- //removePointsByLength();
- flipTriangleEdge();
- saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
- remove3dMeshPointsByDistance();
+//--------------------------------------------------
+//  saveVTKSurface("./vtk/","start",0);
+//  insertPointsByLength();
+//  //insertPointsByInterfaceDistance();
+//  saveVTKSurface("./vtk/","inserted",0);
+//  saveVTKSurface("./vtk/","removed",0);
+//  contractEdgeByLength();
+//  //removePointsByLength();
+//  flipTriangleEdge();
+//  saveVTKSurface("./vtk/","flipped",0);
+//  removePointsByInterfaceDistance();
+//  remove3dMeshPointsByDistance();
+//-------------------------------------------------- 
 
  // init tetgen mesh object
  in.initialize();
@@ -3368,8 +3371,8 @@ void Model3D::setBubbleBubbleBC()
  cout << "zCenter = " << zCenter << endl;
  cout << "bubbleRadius = " << bubbleRadius << endl;
 
- cc.Dim(numVerts);
- cc.SetAll(0.5);
+ heaviside.Dim(numVerts);
+ heaviside.SetAll(0.5);
  for( int i=0;i<numVerts;i++ )
  {
 //--------------------------------------------------
@@ -3384,13 +3387,13 @@ void Model3D::setBubbleBubbleBC()
 	   (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter)+
 	   (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter)+eps2<bubbleRadius*bubbleRadius))
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
   if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
 	   (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter)+
 	   (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) -eps2>bubbleRadius*bubbleRadius))
   {
-   cc.Set(i,0.0);
+   heaviside.Set(i,0.0);
   }
   if( (X.Get(i)-xCenter)*(X.Get(i)-xCenter) +
 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
@@ -3460,7 +3463,7 @@ void Model3D::setSphere(real _xC,real _yC,real _zC,real _r,real _eps)
  real yCenter = _yC;
  real zCenter = _zC;
 
- cc.Dim(numVerts);
+ heaviside.Dim(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
   /* bubble 1 */
@@ -3470,7 +3473,7 @@ void Model3D::setSphere(real _xC,real _yC,real _zC,real _r,real _eps)
 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
 	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) < r*r+eps2 )
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
   // na superficie da bolha
   // ( [X-xCenter]^2 + [Y-yCenter]^2 - r^2 ) < 10E-4
@@ -3479,7 +3482,7 @@ void Model3D::setSphere(real _xC,real _yC,real _zC,real _r,real _eps)
 	       (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) - r*r ) < eps2 ) 
 
   {
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
   }
  }
 }
@@ -3588,7 +3591,7 @@ void Model3D::setCube(real _lim1,real _lim2,real _eps)
  real lim1 = _lim1;
  real lim2 = _lim2;
 
- cc.Dim(numVerts);
+ heaviside.Dim(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
   // na interface
@@ -3596,14 +3599,14 @@ void Model3D::setCube(real _lim1,real _lim2,real _eps)
       (Y.Get(i)<lim2+eps2) && (Y.Get(i)>lim1-eps2) && 
       (Z.Get(i)<lim2+eps2) && (Z.Get(i)>lim1-eps2) )
   {
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
   }
   // dentro da bolha
   if( (X.Get(i)<lim2-eps2) && (X.Get(i)>lim1+eps2) && 
       (Y.Get(i)<lim2-eps2) && (Y.Get(i)>lim1+eps2) && 
       (Z.Get(i)<lim2-eps2) && (Z.Get(i)>lim1+eps2) )
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
  }
 }
@@ -3621,7 +3624,7 @@ void Model3D::setCube(real _xlimInf,real _xlimSup,
  real ylimSup = _ylimSup;
  real zlimSup = _zlimSup;
 
- cc.Dim(numVerts);
+ heaviside.Dim(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
   // na interface
@@ -3629,14 +3632,14 @@ void Model3D::setCube(real _xlimInf,real _xlimSup,
       (Y.Get(i)<ylimSup+eps2) && (Y.Get(i)>ylimInf-eps2) && 
       (Z.Get(i)<zlimSup+eps2) && (Z.Get(i)>zlimInf-eps2) )
   {
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
   }
   // dentro da bolha
   if( (X.Get(i)<xlimSup-eps2) && (X.Get(i)>xlimInf+eps2) && 
       (Y.Get(i)<ylimSup-eps2) && (Y.Get(i)>ylimInf+eps2) && 
       (Z.Get(i)<zlimSup-eps2) && (Z.Get(i)>zlimInf+eps2) )
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
  }
 }
@@ -3671,7 +3674,7 @@ void Model3D::setBubble3DBC()
 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
 	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) <bubbleRadius*bubbleRadius+eps2 )
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
   // fora da bolha
   // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
@@ -3679,7 +3682,7 @@ void Model3D::setBubble3DBC()
 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
 	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) >bubbleRadius*bubbleRadius-eps2 )
   {
-   cc.Set(i,0.0);
+   heaviside.Set(i,0.0);
   }
   // na superficie da bolha
   // ( [X-xCenter]^2 + [Y-yCenter]^2 - r^2 ) < 10E-4
@@ -3689,7 +3692,7 @@ void Model3D::setBubble3DBC()
 	        bubbleRadius*bubbleRadius ) < eps2 ) 
 
   {
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
   }
   if( X.Get(i) == 0 || X.Get(i) == X.Max() ||
       Y.Get(i) == 0 || Y.Get(i) == Y.Max() ||
@@ -3722,7 +3725,7 @@ void Model3D::setBubbleBC2()
   zz.Set(i,aux);
  }
 
- cc.SetAll(0.0);
+ heaviside.SetAll(0.0);
  for( int i=0;i<numVerts;i++ )
  {
 //--------------------------------------------------
@@ -3739,7 +3742,7 @@ void Model3D::setBubbleBC2()
 	&& (Z.Get(i) > zz.Get(5)) && (Z.Get(i) < zz.Get(13))
 	)
   {
-   cc.Set(i,0.5);
+   heaviside.Set(i,0.5);
   }
   // dentro da bolha
   // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
@@ -3748,7 +3751,7 @@ void Model3D::setBubbleBC2()
 	&& (Z.Get(i) > zz.Get(6)) && (Z.Get(i) < zz.Get(12))
 	)
   {
-   cc.Set(i,1.0);
+   heaviside.Set(i,1.0);
   }
 //--------------------------------------------------
 //   // fora da bolha
@@ -3758,7 +3761,7 @@ void Model3D::setBubbleBC2()
 // 	  (Z.Get(i) < zz.Get(7)) && (Z.Get(i) > zz.Get(12))
 //     )
 //   {
-//    cc.Set(i,0.0);
+//    heaviside.Set(i,0.0);
 //   }
 //-------------------------------------------------- 
   // na superficie da bolha
@@ -3970,8 +3973,8 @@ void Model3D::setDiskFSBC()
    idbcv.AddItem(i);
    idbcp.AddItem(i);
 
-   // cc = 0.5 -> noh da superficie
-   //cc.Set(i,0.5); // para funcionamento do ALE
+   // heaviside = 0.5 -> noh da superficie
+   //heaviside.Set(i,0.5); // para funcionamento do ALE
 
    aux = 0.0;
    uc.Set(i,aux);
@@ -4426,9 +4429,9 @@ void Model3D::setSurface()
  */
 
  // procurando vertices da bolha
- clVector surfaceAux = cc==0.5;
+ clVector surfaceAux = heaviside==0.5;
  surface = surfaceAux.Find();
- clVector nonSurfaceAux = cc!=0.5;
+ clVector nonSurfaceAux = heaviside!=0.5;
  nonSurface = nonSurfaceAux.Find();
 
  // dimensionando vetores
@@ -4446,7 +4449,7 @@ void Model3D::setSurface()
   // procura dos vertices adjacentes na interface (um de cada lado)
   for( vert=plist.begin();vert!=plist.end();++vert )
   {
-   if( cc.Get(*vert) == 0.5 )   
+   if( heaviside.Get(*vert) == 0.5 )   
    {
 	surfaceViz.at( i ).push_back(*vert);
    }
@@ -4493,13 +4496,13 @@ void Model3D::setSurfaceFace()
 
    // tetraedro possui face na superficie se uma das opcoes abaixo tiver
    // somatorio = 1.5, pois cada vertice na interface vale 0.5
-   real triface1 = cc.Get(v1)+cc.Get(v2)+cc.Get(v3);
-   real triface2 = cc.Get(v1)+cc.Get(v2)+cc.Get(v4);
-   real triface3 = cc.Get(v1)+cc.Get(v3)+cc.Get(v4);
-   real triface4 = cc.Get(v2)+cc.Get(v3)+cc.Get(v4);
+   real triface1 = heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3);
+   real triface2 = heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v4);
+   real triface3 = heaviside.Get(v1)+heaviside.Get(v3)+heaviside.Get(v4);
+   real triface4 = heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4);
 
    // pegando o elemento com 3 vertices na superfice e 1 dentro da bolha
-   if( triface1 == 1.5 && cc.Get(v4)==1.0 )
+   if( triface1 == 1.5 && heaviside.Get(v4)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 
@@ -4523,7 +4526,7 @@ void Model3D::setSurfaceFace()
 
 	count++;
    }
-   if( triface2 == 1.5 && cc.Get(v3)==1.0 )
+   if( triface2 == 1.5 && heaviside.Get(v3)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v4);
@@ -4546,7 +4549,7 @@ void Model3D::setSurfaceFace()
 
 	count++;
    }
-   if( triface3 == 1.5 && cc.Get(v2)==1.0 )
+   if( triface3 == 1.5 && heaviside.Get(v2)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v3);
@@ -4569,7 +4572,7 @@ void Model3D::setSurfaceFace()
 
 	count++;
    }
-   if( triface4 == 1.5 && cc.Get(v1)==1.0 )
+   if( triface4 == 1.5 && heaviside.Get(v1)==1.0 )
    {
 	elemSurface.at( surfaceNode ).push_back(count);
 	neighbourFaceVert.at( count ).push_back(v2);
@@ -4593,7 +4596,7 @@ void Model3D::setSurfaceFace()
 	count++;
    }
 
-   if( (cc.Get(v1)+cc.Get(v2)+cc.Get(v3)+cc.Get(v4)) == 2.0 )
+   if( (heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4)) == 2.0 )
    {
 	//cout << "------ " << surfaceNode << " ------" << endl;
 	//--------------------------------------------------
@@ -4980,7 +4983,7 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
 	 meshReturn.X.Set(count,X.Get(v1));
 	 meshReturn.Y.Set(count,Y.Get(v1));
 	 meshReturn.Z.Set(count,Z.Get(v1));
-	 meshReturn.Marker.Set(count,cc.Get(v1));
+	 meshReturn.Marker.Set(count,heaviside.Get(v1));
 	}
 	else if (v2 == i )
 	{
@@ -4988,7 +4991,7 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
 	 meshReturn.X.Set(count,X.Get(v2));
 	 meshReturn.Y.Set(count,Y.Get(v2));
 	 meshReturn.Z.Set(count,Z.Get(v2));
-	 meshReturn.Marker.Set(count,cc.Get(v2));
+	 meshReturn.Marker.Set(count,heaviside.Get(v2));
 	}
 	else 
 	{
@@ -4996,7 +4999,7 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
 	 meshReturn.X.Set(count,X.Get(v3));
 	 meshReturn.Y.Set(count,Y.Get(v3));
 	 meshReturn.Z.Set(count,Z.Get(v3));
-	 meshReturn.Marker.Set(count,cc.Get(v3));
+	 meshReturn.Marker.Set(count,heaviside.Get(v3));
 	}
    }
    count++;
@@ -5042,10 +5045,10 @@ void Model3D::setInOutVert()
 }
 
 /*
- * cc inside = 1.0  |  cc interface = 0.5 | cc outside = 0.0
- * if sum of cc (element) > 2.0, the element is inside of bubble
- * if sum of cc (element) < 2.0, the element is outside
- * if sum of cc (element) = 2.0, by convention, the element is inside
+ * heaviside inside = 1.0  |  heaviside interface = 0.5 | heaviside outside = 0.0
+ * if sum of heaviside (element) > 2.0, the element is inside of bubble
+ * if sum of heaviside (element) < 2.0, the element is outside
+ * if sum of heaviside (element) = 2.0, by convention, the element is inside
 */ 
 void Model3D::setInOutElem()
 {
@@ -5057,7 +5060,7 @@ void Model3D::setInOutElem()
   int v2 = IEN.Get(i,1);
   int v3 = IEN.Get(i,2);
   int v4 = IEN.Get(i,3);
-  if( cc.Get(v1) + cc.Get(v2) + cc.Get(v3) + cc.Get(v4) < 2.0 )
+  if( heaviside.Get(v1) + heaviside.Get(v2) + heaviside.Get(v3) + heaviside.Get(v4) < 2.0 )
    outElem.push_back(i);
   else
    inElem.push_back(i);
@@ -5167,10 +5170,10 @@ void Model3D::setOFace()
 // 	v2 = (int) IEN.Get(*mele5,1);
 // 	v3 = (int) IEN.Get(*mele5,2);
 // 	v4 = (int) IEN.Get(*mele5,3);
-// 	cout << v1 << " " << cc.Get(v1) << " " 
-// 	     << v2 << " " << cc.Get(v2) << " "
-// 	     << v3 << " " << cc.Get(v3) << " "
-// 	     << v4 << " " <<  cc.Get(v4) << " " << *mele5 << endl;
+// 	cout << v1 << " " << heaviside.Get(v1) << " " 
+// 	     << v2 << " " << heaviside.Get(v2) << " "
+// 	     << v3 << " " << heaviside.Get(v3) << " "
+// 	     << v4 << " " <<  heaviside.Get(v4) << " " << *mele5 << endl;
 //    }
 //    cout << endl;
 //   }
@@ -5716,13 +5719,12 @@ void Model3D::clearBC()
  vc.Dim(numNodes);
  wc.Dim(numNodes);
  pc.Dim(numVerts);
+ cc.Dim(numVerts);
  idbcu.Dim(0);
  idbcv.Dim(0);
  idbcw.Dim(0);
  idbcp.Dim(0);
- // nos metodos com Concentracao cc.Dim(numVerts) esta definido, nao
- // precisando defini-lo aqui.
- //cc.Dim(numVerts);
+ idbcc.Dim(0);
  outflow.Dim(numNodes,1); // usado no metodo Galerkin
 }
 
@@ -5861,6 +5863,7 @@ clVector* Model3D::getVC(){ return &vc; }
 clVector* Model3D::getWC(){ return &wc; }
 clVector* Model3D::getPC(){ return &pc; }
 clVector* Model3D::getCC(){ return &cc; }
+clVector* Model3D::getHeaviside(){ return &heaviside; }
 clVector* Model3D::getOutflow(){ return &outflow; }
 clVector* Model3D::getIdbcu(){ return &idbcu; }
 clVector* Model3D::getIdbcv(){ return &idbcv; }
@@ -5914,6 +5917,7 @@ void Model3D::operator=(Model3D &_mRight)
   numTriangles = _mRight.numTriangles;
   triEdge = _mRight.triEdge;
   averageTriEdge = _mRight.averageTriEdge;
+  initBubbleVolume = _mRight.initBubbleVolume;
   isp = _mRight.isp;
   rsp = _mRight.rsp;        
   ip = _mRight.ip;                    
@@ -5929,6 +5933,7 @@ void Model3D::operator=(Model3D &_mRight)
   wc = _mRight.wc;
   pc = _mRight.pc;
   cc = _mRight.cc;
+  heaviside = _mRight.heaviside;
   X = _mRight.X;
   Y = _mRight.Y;
   Z = _mRight.Z;
@@ -6546,3 +6551,99 @@ void Model3D::setKappaSurface(clVector &_kappa)
   mesh3d.curvature.Set( i+2*numNodes,_kappa.Get(aux) );
  }
 }
+
+void Model3D::setInitBubbleVolume()
+{
+ initBubbleVolume = computeBubbleVolume();
+}
+
+real Model3D::computeBubbleVolume()
+{
+ real sumArea = 0;
+ real sumVolume = 0;
+ for( int mele=0;mele<surfMesh.numElems;mele++ )
+ {
+  int v1 = surfMesh.IEN.Get(mele,0);
+  int v2 = surfMesh.IEN.Get(mele,1);
+  int v3 = surfMesh.IEN.Get(mele,2);
+
+  if( surfMesh.Marker.Get(v1) == 0.5 )
+  {
+   real p1x = surfMesh.X.Get(v1);
+   real p1y = surfMesh.Y.Get(v1);
+   real p1z = surfMesh.Z.Get(v1);
+   real p2x = surfMesh.X.Get(v2);
+   real p2y = surfMesh.Y.Get(v2);
+   real p2z = surfMesh.Z.Get(v2);
+   real p3x = surfMesh.X.Get(v3);
+   real p3y = surfMesh.Y.Get(v3);
+   real p3z = surfMesh.Z.Get(v3);
+
+   real xCentroid = (p1x+p2x+p3x)/3.0;
+   real yCentroid = (p1y+p2y+p3y)/3.0;
+   real zCentroid = (p1z+p2z+p3z)/3.0;
+
+   // distance do ponto 1 ate 2
+   real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+
+   // distance do ponto 1 ate 3
+   real b = distance(p1x,p1y,p1z,p3x,p3y,p3z);
+
+   // vetores unitarios
+   real x1Unit = (p2x-p1x)/a;
+   real y1Unit = (p2y-p1y)/a;
+   real z1Unit = (p2z-p1z)/a;
+
+   real x2Unit = (p3x-p1x)/b;
+   real y2Unit = (p3y-p1y)/b;
+   real z2Unit = (p3z-p1z)/b;
+
+   // calculando o produto vetorial de cada elemento triangular da superficie
+   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
+
+   // somatorio ponderado pela area dos vetores unitarios normais 
+   // aos triangulos encontrados na estrela do vertice
+   real xNormalElem = cross.Get(0);
+   real yNormalElem = cross.Get(1);
+   real zNormalElem = cross.Get(2);
+
+   real len = vectorLength(xNormalElem,yNormalElem,zNormalElem);
+
+   real xNormalElemUnit = xNormalElem/len;
+   real yNormalElemUnit = yNormalElem/len;
+   real zNormalElemUnit = zNormalElem/len;
+
+   real area = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+
+   sumArea += area;
+   sumVolume += ( xCentroid*xNormalElemUnit + 
+	              yCentroid*yNormalElemUnit +
+				  zCentroid*zNormalElemUnit ) * area;
+  }
+ }
+ return (1.0/3.0)*sumVolume;
+}
+
+void Model3D::applyBubbleVolumeCorrection()
+{
+ real aux = 0;
+ real bubbleVolume = computeBubbleVolume();
+ real ds = -(initBubbleVolume-bubbleVolume)/(4.0*3.1415*0.5*0.5);
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  int surfaceNode = surface.Get(i);
+
+  aux = surfMesh.X.Get(surfaceNode) + surfMesh.xNormal.Get(surfaceNode)*ds;
+  X.Set(surfaceNode,aux);
+  surfMesh.X.Set(surfaceNode,aux);
+
+  aux = surfMesh.Y.Get(surfaceNode) + surfMesh.yNormal.Get(surfaceNode)*ds;
+  Y.Set(surfaceNode,aux);
+  surfMesh.Y.Set(surfaceNode,aux);
+
+  aux = surfMesh.Z.Get(surfaceNode) + surfMesh.zNormal.Get(surfaceNode)*ds;
+  Z.Set(surfaceNode,aux);
+  surfMesh.Z.Set(surfaceNode,aux);
+ }
+}
+

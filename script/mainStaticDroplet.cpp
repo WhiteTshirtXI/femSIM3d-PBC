@@ -23,19 +23,27 @@ int main(int argc, char **argv)
 
  // static bubble test (Fabricio's thesis (2005))
  int iter = 0;
- real Re = 10;
+ real Re = 1000;
  real Sc = 2;
- real We = 10;
+ real We = 1;
  real Fr = 1.0;
- real sigma = 1.0;
+ real c1 = 0.0;
+ real c2 = 0.0;
+ real c3 = 0.0;
+ real c4 = 0.0;
  real alpha = 1;
  real beta = 1;
- real cfl = 0.05;
- real mu_l = 100.0;
- real mu_g = 1.0;
- real rho_l = 1.0;
- real rho_g = 1.0;
- const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
+ real cfl = 0.5;
+
+ real sigma = 1.0;
+
+ real mu_in = 1.0;
+ real mu_out = 0.01;
+
+ real rho_in = 1.0;
+ real rho_out = 0.5;
+
+ const char *mesh = "../../db/gmsh/3d/static.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -62,6 +70,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -70,12 +79,16 @@ int main(int argc, char **argv)
   s1.setSc(Sc);
   s1.setWe(We);
   s1.setFr(Fr);
+  s1.setC1(c1);
+  s1.setC2(c2);
+  s1.setC3(c3);
+  s1.setC4(c4);
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
   //s1.setDt(dt);
-  s1.setMu(mu_l,mu_g);
-  s1.setRho(rho_l,rho_g);
+  s1.setMu(mu_in,mu_out);
+  s1.setRho(rho_in,rho_out);
   s1.setCflBubble(cfl);
   s1.init();
   s1.setSolverPressure(solverP);
@@ -104,9 +117,10 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
   m1.setMiniElement();
-  m1.readVTKCC(vtkFile);
+  m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -129,7 +143,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new mesh
@@ -141,6 +155,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -163,7 +178,7 @@ int main(int argc, char **argv)
   string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
-  mOld.readVTKCC(vtkFile);
+  mOld.readVTKHeaviside(vtkFile);
   mOld.setOFace();
 
   // load surface mesh and create new one
@@ -175,6 +190,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -217,7 +233,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("Z");
+   //s1.setGravity("Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -242,6 +258,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.applyBubbleVolumeCorrection();
   m1.setWallBC();
 
   Simulator3D s2(m1,s1);

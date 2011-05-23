@@ -4464,7 +4464,7 @@ void Model3D::setSurface()
 // sentido do relogio, com isso eh possivel descobrir facilmente o vetor
 // normal a cada ponto da superficie utilizando as arestas dos elementos
 // e produto escalar dos vetores localizados na aresta. 
-void Model3D::setSurfaceFace()
+void Model3D::setSurfaceFace3DMesh()
 {
  int v1,v2,v3,v4;
  list<int> plist;
@@ -4636,7 +4636,7 @@ void Model3D::setSurfaceFace()
  neighbourFaceVert.resize (count); // trim vector para numero real de itens
 }
 
-void Model3D::setSurfaceFace2()
+void Model3D::setSurfaceFace()
 {
  int v1,v2,v3;
  list<int> plist;
@@ -5540,7 +5540,7 @@ void Model3D::setSurfaceConfig()
  setSurface(); // surface e nonSurface
  setInterfaceDistance();
  setNeighbourSurface(); 
- setSurfaceFace2(); // elemSurface e neighbourFaceVert
+ setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
@@ -6022,7 +6022,7 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  /* ---- update interfaceMesh ---- */
  //setSurface(); // surface and nonSurface 
  //setNeighbour(); // neighbourElem
- //setSurfaceFace2(); // elemSurface and neighbourFaceVert
+ //setSurfaceFace(); // elemSurface and neighbourFaceVert
  //setSurfaceTri(); // interfaceMesh
  /* ------------------------------ */
 

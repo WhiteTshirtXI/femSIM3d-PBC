@@ -62,7 +62,7 @@ class Model3D
   // surface points treatment
   void setSurface();
   void setSurfaceFace();
-  void setSurfaceFace2();
+  void setSurfaceFace3DMesh();
   void setSurfaceTri();
   void setConvexTri();
   void buildSurfMesh();

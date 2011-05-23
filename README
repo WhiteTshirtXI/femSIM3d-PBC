@@ -1,0 +1,40 @@
+
+STRANGE BEHAVIOR:
+
+// *********** SIMULATOR3D.CPP || UNCOUPLED ************* //
+
+BUBBLE MODE:
+
+ - static test
+	fint = GTilde*heaviside -> not working p=0
+  	fint = G*heaviside -> pressure is wrong
+ - oscillating
+    fint = GTilde*heaviside -> does not work
+    fint = G*heaviside -> does not work
+ - rising ( Mrho*g )
+    fint = GTilde*heaviside -> work with overshooting and bubble deform
+    fint = G*heaviside -> work with no overshooting --BEST--
+         ( Mrho-M )*g
+    fint = GTilde*heaviside -> overshooting, bubble deform and osc velocity
+    fint = G*heaviside -> no overshooting, bubble ok and osc velocity
+
+CALL: uv = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+
+
+DROPLET MODE:
+ - static test
+    fint = GTilde*heaviside -> not working p=0
+	fint = G*heaviside -> pressure correct
+ - oscillating test
+    fint = GTilde*heaviside -> don't work
+ 	fint = G*heaviside -> work (not so good at the end), vel osc --BEST--
+ - rising test: gravity = ( Mrho*g )
+    fint = GTilde*heaviside -> overshooting, bubble deform
+    fint = G*heaviside -> vel osc,
+ - rising test: gravity = ( Mrho-M )*g
+    fint = GTilde*heaviside -> osc velo, bubble deform, overshooting
+    fint = G*heaviside -> osc velo, no overshooting, bubble ok
+
+CALL uv = uTilde + invA*fint + invA*gravity;
+
+// ****************************************************** //

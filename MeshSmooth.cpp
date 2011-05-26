@@ -28,10 +28,8 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  numNodes = m->getNumNodes();
  numElems = m->getNumElems();
  neighbourVert = m->getNeighbourVert();
- surfaceViz = m->getSurfaceViz();
  inVert = m->getInVert();
  surface = m->getSurface();
- //nonSurface = m->getNonSurface();
  uSmooth.Dim(numNodes);
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
@@ -371,43 +369,6 @@ void MeshSmooth::setSurface()
   ySurface.Set(i,Y->Get(aux));
   zSurface.Set(i,Z->Get(aux));
  }
-}
-
-int MeshSmooth::search(int node,real _XI, real _YI, real _ZI)
-{
- list<int> plist;
- list<int>::iterator vert;
- real dist, dmin;
- plist = surfaceViz->at(node);
-
- // o primeiro elemento da lista eh a coordenada de trabalho
- vert=plist.begin();
- ++vert; // indo para o 2o. elemento da lista
-
- // pega o 2o. elemento da lista para comparar
- dmin = (_XI-X->Get(*vert))*(_XI-X->Get(*vert))+
-        (_YI-Y->Get(*vert))*(_YI-Y->Get(*vert))+
-        (_ZI-Z->Get(*vert))*(_ZI-Z->Get(*vert));
-
- int vmin=*vert; // atribuindo o vmin do primeiro elemento
- //cout << "vmin1: " << vmin << endl;
-
- ++vert; // indo para o 3o. elemento da lista
- //cout << "vmin2: " << *vert << endl;
-
- for( vert=vert; vert != plist.end(); ++vert )
- {
- dist = (_XI-X->Get(*vert))*(_XI-X->Get(*vert))+
-        (_YI-Y->Get(*vert))*(_YI-Y->Get(*vert))+
-        (_ZI-Z->Get(*vert))*(_ZI-Z->Get(*vert));
-
-  if (dist<dmin)
-  {
-   dmin=dist;
-   vmin=*vert; 
-  }
- }
- return vmin;
 }
 
 clVector* MeshSmooth::getUSmooth(){ return &uSmooth; }

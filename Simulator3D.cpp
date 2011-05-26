@@ -1470,7 +1470,7 @@ void Simulator3D::setGravityBoussinesq(const char* _direction)
 
 void Simulator3D::setInterfaceGeo()
 {
- m->computeKappaGeo();
+ m->computeNormalAndKappa();
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
@@ -2854,9 +2854,9 @@ void Simulator3D::getBubbleVelocity(clVector _uVel,
 // impoe velocidade ALE = 0 no contorno
 void Simulator3D::setALEVelBC()
 {
- list<int> *outVert = m->getOutVert();
+ list<int> *boundaryVert = m->getBoundaryVert();
 
- for (list<int>::iterator it=outVert->begin(); it!=outVert->end(); ++it)
+ for (list<int>::iterator it=boundaryVert->begin(); it!=boundaryVert->end(); ++it)
  {
   int vertice = *it;
 //--------------------------------------------------

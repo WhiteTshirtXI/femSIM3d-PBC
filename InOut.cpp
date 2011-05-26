@@ -1242,6 +1242,10 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  file << "Webber number:    " << We << endl;
  file << "alpha number:     " << alpha << endl;
  file << "beta number:      " << beta << endl;
+ file << "parameter c1:     " << c1 << endl;
+ file << "parameter c2:     " << c2 << endl;
+ file << "parameter c3:     " << c3 << endl;
+ file << "parameter c4:     " << c4 << endl;
  file << "liquid viscosity: " << mu_in << endl;
  file << "gas viscosity:    " << mu_out << endl;
  file << "liquid density:   " << rho_in << endl;
@@ -1298,6 +1302,14 @@ void InOut::printInfo(const char* _mesh)
  cout << "alpha number:     " << alpha << endl;
  cout << "               ";
  cout << "beta number:      " << beta << endl;
+ cout << "               ";
+ cout << "parameter c1:     " << c1 << endl;
+ cout << "               ";
+ cout << "parameter c2:     " << c2 << endl;
+ cout << "               ";
+ cout << "parameter c3:     " << c3 << endl;
+ cout << "               ";
+ cout << "parameter c4:     " << c4 << endl;
  cout << "               ";
  cout << "liquid viscosity: " << mu_in << endl;
  cout << "               ";

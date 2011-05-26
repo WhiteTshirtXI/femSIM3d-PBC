@@ -61,8 +61,6 @@ class Model3D
 
   // surface points treatment
   void setSurface();
-  void setSurfaceFace();
-  void setSurfaceFace3DMesh();
   void setSurfaceTri();
   void setConvexTri();
   void buildSurfMesh();
@@ -71,6 +69,8 @@ class Model3D
   void setInOutElem();
   void computeAverageTriangleEdge();
   void insertPointsByLength();
+  void insertPointsByCurvature();
+  void removePointsByCurvature();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
   void insertPointsByArea();
@@ -95,7 +95,6 @@ class Model3D
   clVector triangleQuality(int _v);
   void setMapEdgeTri();
   void setSurfaceConfig();
-  bool checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn);
   void saveVTK( const char* _dir,const char* _filename, int _iter );
   void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
@@ -169,6 +168,7 @@ class Model3D
   void setCloser();
   void setInterfaceDistance();
   void computeKappaGeo();
+  void computeNormalAndKappa();
 
   // get and set methods
   clVector* getX();
@@ -229,11 +229,8 @@ class Model3D
   vector< list<int> >* getNeighbourElem();
   vector< list<int> >* getNeighbourVert();
   vector< list<int> >* getNeighbourFace();
-  vector< list<int> >* getNeighbourFaceVert();
-  vector< list<int> >* getElemSurface();
-  vector< list<int> >* getSurfaceViz();
   vector< list<int> >* getFaceIEN();
-  list<int>* getOutVert();
+  list<int>* getBoundaryVert();
   list<int>* getInVert();
   list<int>* getOutElem();
   list<int>* getInElem();
@@ -275,7 +272,9 @@ class Model3D
   real triEdge,averageTriEdge;
   real initBubbleVolume;
   int isp;                        // isp: num of inserted surface points
+  int ispc;                       // ispc: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
+  int rspc;                       // ispc: num of removed surface points
   int csp;                        // csp: num of contracted surface points
   int ip;                         // ip: num of inserted 3d mesh points
   int rp;                         // rp: num of removed 3d mesh points
@@ -287,12 +286,9 @@ class Model3D
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no
   vector< list<int> > neighbourFace;  // lista de vizinhos de cada no
   vector< list<int> > faceIEN;
-  vector< list<int> > neighbourFaceVert;
-  vector< list<int> > elemSurface;
-  vector< list<int> > surfaceViz;  // lista de vizinhos na interface
   vector< list<int> > neighbourSurfaceElem; // lista de elementos triangulares
   vector< list<int> > neighbourPoint;  // lista de pontos vizinhos da superficie
-  list<int> outVert,inVert; // lista de elementos do interior 
+  list<int> boundaryVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
 };
 

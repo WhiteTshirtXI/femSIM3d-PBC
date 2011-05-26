@@ -30,7 +30,6 @@ class MeshSmooth
   void setBC();
   void setCentroid();
   void setSurface();
-  int search(int node,real _XI, real _YI,real _ZI);
 
   clVector* getUSmooth(); 
   clVector* getVSmooth(); 
@@ -48,7 +47,7 @@ class MeshSmooth
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
 
-  vector< list<int> > *neighbourVert,*surfaceViz;
+  vector< list<int> > *neighbourVert;
   list<int> *inVert;
 };
 #endif /* ifndef MESHSMOOTH_H */

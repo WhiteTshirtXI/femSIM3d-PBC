@@ -39,70 +39,60 @@ int main(int argc, char **argv)
 //  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
 //-------------------------------------------------- 
 
- // bogdan's thesis 2010
+//--------------------------------------------------
+//  // bogdan's thesis 2010 - case 1
+//  int iter = 0;
+//  real Re = 6.53;
+//  real Sc = 1;
+//  real We = 115.66;
+//  real Fr = 1.0;
+//  real c1 = 0.01; // lagrangian
+//  real c2 = 1.00; // smooth
+//  real c3 = 0.03; // smooth
+//  real c4 = 0.05; // surface
+//  real alpha = 1;
+//  real beta = 1;
+// 
+//  real sigma = 0.078;
+// 
+//  real mu_in = 0.0000178;
+//  real mu_out = 2.73;
+// 
+//  real rho_in = 1.225;
+//  real rho_out = 1350;
+// 
+//  real cfl = 0.02;
+// 
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+//-------------------------------------------------- 
+
+ // bogdan's thesis 2010 - case 2
  int iter = 0;
- real Re = 6.53;
+ real Re = 13.8487;
  real Sc = 1;
  real We = 115.66;
  real Fr = 1.0;
- real c1 = 0.0; // lagrangian
- real c2 = 0.03; // smooth
- real c3 = 0.0;
- real c4 = 0.03; // surface
+ real c1 = 0.01; // lagrangian
+ real c2 = 1.00; // smooth
+ real c3 = 0.03; // smooth
+ real c4 = 0.05; // surface
  real alpha = 1;
  real beta = 1;
 
  real sigma = 0.078;
 
  real mu_in = 0.0000178;
- real mu_out = 2.73;
+ real mu_out = 1.28;
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
  real cfl = 0.02;
+
  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
  
-//--------------------------------------------------
-//  // bogdan's thesis 2010
-//  int iter = 0;
-//  real Re = 10.800;
-//  real Sc = 1;
-//  real We = 9.602;
-//  real Fr = 0.7071;
-//  real sigma = 1;
-//  real alpha = 1;
-//  real beta = -40;
-//  real cfl = 0.01;
-//  //real dt = 0.00528;
-//  real mu_in = 0.118;
-//  real rho_in = 875.5;
-//  real mu_out = 1.7894E-05;
-//  real rho_out = 1.225;
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
-//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
-//-------------------------------------------------- 
-
-//--------------------------------------------------
-//  // static bubble test (Fabricio's thesis (2005))
-//  int iter = 0;
-//  real Re = 10;
-//  real Sc = 2;
-//  real We = 10;
-//  real Fr = 1.0;
-//  real sigma = 1.0;
-//  real alpha = 1;
-//  real beta = 1;
-//  real cfl = 0.05;
-//  real mu_in = 100.0;
-//  real mu_out = 1.0;
-//  real rho_in = 1.0;
-//  real rho_out = 1.0;
-//  const char *mesh = "../../db/gmsh/3d/3D-bubble-cube1.msh";
-//  //const char *mesh = "../../db/gmsh/3d/curvatureTest/test1.msh";
-//-------------------------------------------------- 
-
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -319,6 +309,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.applyBubbleVolumeCorrection();
+  m1.computeNormalAndKappa();
   m1.setWallBC();
 
   Simulator3D s2(m1,s1);

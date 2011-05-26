@@ -25,6 +25,8 @@ Model3D::Model3D()
  triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
+ ispc = 0;                    
+ rspc = 0;                    
  rsp = 0;                    
  ip = 0;                     
  rp = 0;                     
@@ -109,7 +111,7 @@ void Model3D::readVTKHeaviside( const char* filename )
   exit(1);
  }
 
- while( (! vtkFile.eof())&&(strcmp(auxstr,"concentration") != 0) )
+ while( (! vtkFile.eof())&&(strcmp(auxstr,"heaviside") != 0) )
   vtkFile >> auxstr;
 
  if( !vtkFile.eof() )
@@ -306,6 +308,7 @@ void Model3D::readMSH( const char* filename )
 void Model3D::setInterfaceBC()
 {
  surfMesh.Marker.Dim(surfMesh.numVerts);
+ surfMesh.Marker.SetAll(0.0);
  for( int i=0;i<surfMesh.numElems;i++ )
  {
   if( idRegion.Get(i) == 1 )
@@ -945,11 +948,59 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.5*triEdge )//&&
+	  edgeLength > 1.3*triEdge )//&&
   {
    //insertPoint(i);
    insertPointWithCurvature(i); // not working yet
    isp++;
+  }
+ }
+}
+
+void Model3D::removePointsByCurvature()
+{
+ // number of inserted surface points
+ rspc = 0;
+
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge length
+  int v1 = mapEdgeTri.Get(i,1);
+  int v2 = mapEdgeTri.Get(i,2);
+  int count = 0;
+  if( fabs(surfMesh.curvature.Get(v1)) > 30 )
+  {
+   deletePoint(v1);
+   count++;
+   rspc++;
+  }
+  if( fabs(surfMesh.curvature.Get(v2)) > 30 &&
+	   count > 0 )
+  {
+   deletePoint(v2);
+   rspc++;
+  }
+ }
+}
+
+void Model3D::insertPointsByCurvature()
+{
+ // number of inserted surface points
+ ispc = 0;
+
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge length
+  real edgeLength = mapEdgeTri.Get(i,0);
+  int v1 = mapEdgeTri.Get(i,1);
+  int v2 = mapEdgeTri.Get(i,2);
+  if( (fabs(surfMesh.curvature.Get(v1)) > 40 && 
+	   fabs(surfMesh.curvature.Get(v2)) > 40) && 
+	   ispc < 2 )
+  {
+   //insertPoint(i);
+   insertPointWithCurvature(i); 
+   ispc++;
   }
  }
 }
@@ -1321,13 +1372,11 @@ void Model3D::setPolyhedron(int _v)
    test.Set(i,0,*mele);++mele;
    test.Set(i,1,*mele);++mele;
   }
+
 //--------------------------------------------------
-//   if( ii == 309 )
-//   {
-//    cout << "-------- " << ii << endl;
-//    test.Display();
-//    cout << endl;
-//   }
+//   cout << "-------- " << _v << endl;
+//   test.Display();
+//   cout << endl;
 //-------------------------------------------------- 
 
   for( int k=0;k<test.DimI()-1;k++ )
@@ -1378,6 +1427,7 @@ void Model3D::setPolyhedron(int _v)
   // removing all but the first element from every consecutive group of
   // equal elements in the list container
   neighbourPoint.at(_v).unique();
+
   //--------------------------------------------------
   //   cout << "---------" << _v << "------------" << endl;
   //   std::ostream_iterator< int > output( cout, " " );
@@ -1408,11 +1458,23 @@ void Model3D::setNeighbourSurface()
    int v2 = (int) surfMesh.IEN.Get(*mele,1);
    int v3 = (int) surfMesh.IEN.Get(*mele,2);
 
-   neighbourPoint.at( ii ).push_back(v1);
-   neighbourPoint.at( ii ).push_back(v2);
-   neighbourPoint.at( ii ).push_back(v3);
-   neighbourPoint.at( ii ).remove(ii);
+   if( v1 == ii )
+   {
+	neighbourPoint.at( ii ).push_back(v2);
+	neighbourPoint.at( ii ).push_back(v3);
+   }
+   if( v2 == ii )
+   {
+	neighbourPoint.at( ii ).push_back(v3);
+	neighbourPoint.at( ii ).push_back(v1);
+   }
+   if( v3 == ii )
+   {
+	neighbourPoint.at( ii ).push_back(v1);
+	neighbourPoint.at( ii ).push_back(v2);
+   }
   }
+  setPolyhedron(ii);
  }
 }
 
@@ -1464,15 +1526,13 @@ void Model3D::flipTriangleEdge()
   real v2y = P2y-P3elem1y;
   real v2z = P2z-P3elem1z;
 
-//--------------------------------------------------
-//   real z1x = P1x-P3elem2x;
-//   real z1y = P1y-P3elem2y;
-//   real z1z = P1z-P3elem2z;
-// 
-//   real z2x = P2x-P3elem2x;
-//   real z2y = P2y-P3elem2y;
-//   real z2z = P2z-P3elem2z;
-//-------------------------------------------------- 
+  real z1x = P1x-P3elem2x;
+  real z1y = P1y-P3elem2y;
+  real z1z = P1z-P3elem2z;
+
+  real z2x = P2x-P3elem2x;
+  real z2y = P2y-P3elem2y;
+  real z2z = P2z-P3elem2z;
 
   real length12 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
   real length13_1 = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
@@ -2153,7 +2213,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.3*triEdge; // 20% of triEdge
+ real test = 0.6*triEdge; // 20% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2247,6 +2307,7 @@ void Model3D::removePointsByInterfaceDistance()
    rpi++;
   }
  }
+ cout << "  removed by interface Distance: " << rpi << endl;
 }
 
 void Model3D::remove3dMeshPointsByDistance()
@@ -2265,7 +2326,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<1.0*triEdge )
+	 if( d>0 && d<1.2*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2286,6 +2347,7 @@ void Model3D::remove3dMeshPointsByDistance()
    }
   }
  }
+ cout << "  removed by distance: " << rp << endl;
 }
 
 void Model3D::breakup()
@@ -2321,9 +2383,9 @@ void Model3D::insertPointsByArea()
    int v4 = surfMesh.numVerts;
 
    // coords of triangle centroid
-   real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )*0.3334;
-   real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )*0.3334;
-   real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )*0.3334;
+   real centroidX = ( X.Get(v1)+X.Get(v2)+X.Get(v3) )/3.0;
+   real centroidY = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3) )/3.0;
+   real centroidZ = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3) )/3.0;
 
    X.AddItem(v4,centroidX);
    Y.AddItem(v4,centroidY);
@@ -2434,8 +2496,10 @@ void Model3D::insertPointsBetweenBubblesByPosition()
  * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
- computeSurfaceNormal(); // compute surface normal of all surface points
- computeKappaGeo();
+ //computeSurfaceNormal(); // compute surface normal of all surface points
+ //computeKappaGeo();
+
+ computeNormalAndKappa();
 
  //insertPointsByInterfaceDistance();
  flipTriangleEdge();
@@ -2843,9 +2907,7 @@ void Model3D::removePointByVolume()
    }
   }
  }
- cout << " -----------------------------" << endl;
  cout << "  removed by volume: " << count << endl;
- cout << " -----------------------------" << endl;
 }
 
 void Model3D::printMeshReport(tetgenio &_tetmesh)
@@ -2924,9 +2986,15 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
  cout << "     number of " << color(none,yellow,black) 
       << "inserted" << resetColor() << " surface points:       " 
 	  << isp << endl;
+ cout << "     number of " << color(none,blue,black) 
+      << "inserted" << resetColor() << " curvature points:     " 
+	  << ispc << endl;
  cout << "     number of " << color(none,red,black)
       << "removed" << resetColor() << " surface points:        " 
 	  << rsp << endl;
+ cout << "     number of " << color(none,blue,black) 
+      << "removed" << resetColor() << " curvature points:      " 
+	  << rspc << endl;
  cout << "     number of inserted mesh points:          " << ip << endl;
  cout << "     number of removed mesh points:           " << rp+rpi 
       << " (" << rpi << "," << rp << ")" << endl;
@@ -2943,22 +3011,24 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
 void Model3D::mesh3DPoints()
 {
- computeSurfaceNormal(); // compute surface normal of all surface points
- computeKappaGeo();
+ //computeSurfaceNormal(); // compute surface normal of all surface points
+ //computeKappaGeo();
+ 
+ computeNormalAndKappa();
 
-//--------------------------------------------------
-//  saveVTKSurface("./vtk/","start",0);
-//  insertPointsByLength();
-//  //insertPointsByInterfaceDistance();
-//  saveVTKSurface("./vtk/","inserted",0);
-//  saveVTKSurface("./vtk/","removed",0);
-//  contractEdgeByLength();
-//  //removePointsByLength();
-//  flipTriangleEdge();
-//  saveVTKSurface("./vtk/","flipped",0);
-//  removePointsByInterfaceDistance();
-//  remove3dMeshPointsByDistance();
-//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","start",0);
+ insertPointsByLength();
+ //insertPointsByCurvature();
+ removePointsByCurvature();
+ contractEdgeByLength();
+ //insertPointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","inserted",0);
+ saveVTKSurface("./vtk/","removed",0);
+ //removePointsByLength();
+ flipTriangleEdge();
+ saveVTKSurface("./vtk/","flipped",0);
+ //removePointsByInterfaceDistance();
+ //remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();
@@ -2993,32 +3063,32 @@ void Model3D::mesh3DPoints()
  convertTetgenToModel3D(out);
  mesh3d = convertTetgenToMesh3d(out);
 
-//--------------------------------------------------
-//  cout << endl;
-//  while( checkMeshQuality(out) == true ) 
-//  //if( checkMeshQuality(out) == true ) 
-//  {
-//   in.initialize();
-//   out.initialize();
-// 
-//   removePointByVolume();
-// 
-//   in.mesh_dim = 3;
-//   in.numberofpoints = numVerts;
-//   in.pointlist = new REAL[in.numberofpoints * 3];
-//   in.pointmarkerlist = new int[in.numberofpoints];
-// 
-//   convertModel3DtoTetgen(in);
-// 
-//   cout << "----> fixing " << badtet << " shit tetrahedron elements... ";
-//   tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
-//   cout << "finished <---- " << endl;;
-// 
-//   convertTetgenToModel3D(out);
-//   mesh3d = convertTetgenToMesh3d(out);
-//  }
-//  cout << endl;
-//-------------------------------------------------- 
+ /* ---------------------- 3D MESH TREATMENT --------------------- */
+ cout << endl;
+ in.initialize();
+ out.initialize();
+
+ cout << " ---------------------------------------- " << endl;
+ removePointByVolume();
+ removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
+ cout << " ---------------------------------------- " << endl;
+
+ in.mesh_dim = 3;
+ in.numberofpoints = numVerts;
+ in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointmarkerlist = new int[in.numberofpoints];
+
+ convertModel3DtoTetgen(in);
+
+ cout << "----> removing 3D points... ";
+ tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+ cout << "finished <---- " << endl;;
+
+ convertTetgenToModel3D(out);
+ mesh3d = convertTetgenToMesh3d(out);
+ cout << endl;
+ /* ---------------------------- END ----------------------------- */
 
  printMeshReport(out);
 
@@ -3510,7 +3580,7 @@ void Model3D::setCubeBC()
 
 void Model3D::setWallBC()
 {    
- for (list<int>::iterator it=outVert.begin(); it!=outVert.end(); ++it)
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   idbcu.AddItem(*it);
   idbcv.AddItem(*it);
@@ -3525,7 +3595,7 @@ void Model3D::setWallBC()
 
 void Model3D::setWallAnnularBC()
 {    
- for (list<int>::iterator it=outVert.begin(); it!=outVert.end(); ++it)
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   if(Y.Get(*it) > Y.Min() || Y.Get(*it) < Y.Max() )
   {
@@ -4406,291 +4476,35 @@ void Model3D::setVertNeighbour()
 }
 
 // configura os vetores: 
-// surfaceViz  -> vizinhos de cada no na superficie
+// surface and nonSurface
 void Model3D::setSurface()
 {
  int surfaceNode;
  list<int> plist;
  list<int>::iterator vert;
 
- /*        - nome: surfaceViz
-           - definicao: vetor de listas de vizinhos de vertices na interface 
-		   - obs: no caso 2D n=2. no caso 3D n pode variar de vertice 
-		          para vertice.
-
-     ---   +---+----+-----+----+
-      |    | b | a1 | ... | an |   a1...an = identificacao dos vizinhos (lista)
-      |    +---+----+-----+----+
-    c |    | b | a1 | ... | an |   b = identificacao do vertice de trabalho   
-      |    +---+----+-----+----+
-      |    | b | a1 | ... | an |   c = numero de vertices na interface
-     ---   +---+----+-----+----+
-
- */
-
  // procurando vertices da bolha
  clVector surfaceAux = heaviside==0.5;
  surface = surfaceAux.Find();
  clVector nonSurfaceAux = heaviside!=0.5;
  nonSurface = nonSurfaceAux.Find();
-
- // dimensionando vetores
- surfaceViz.resize ( 0);
- surfaceViz.resize ( surface.Dim() );
-
+ 
+ // {x,y,z}Surface representam os valores de {X,Y,Z} dos nos da interface
+ xSurface.Dim( surface.Dim() );
+ ySurface.Dim( surface.Dim() );
+ zSurface.Dim( surface.Dim() );
  for( int i=0;i<surface.Dim();i++ )
  {
-  surfaceNode = surface.Get(i);
-  plist = neighbourVert.at(surfaceNode); 
-
-  // adicionando no primeiro elemento da lista o valor do vertice de
-  // trabalho
-  surfaceViz.at( i ).push_back(surfaceNode); 
-  // procura dos vertices adjacentes na interface (um de cada lado)
-  for( vert=plist.begin();vert!=plist.end();++vert )
-  {
-   if( heaviside.Get(*vert) == 0.5 )   
-   {
-	surfaceViz.at( i ).push_back(*vert);
-   }
-  }
+  int aux = surface.Get(i);
+  xSurface.Set(i,X.Get( aux ));
+  ySurface.Set(i,Y.Get( aux ));
+  zSurface.Set(i,Z.Get( aux ));
  }
+
 } // fecha metodo setSurface
 
-// as faces da superficie sao numeradas de 0..n-1 onde n eh o numero de
-// faces na superficie. Para o caso 3D as faces sao triangulos. Junto a
-// esta numeracao ha um mapeamento dos vertices da superficie vizinhos de 
-// cada vertice na superficie. Os pontos vizinhos estao ordenados no
-// sentido do relogio, com isso eh possivel descobrir facilmente o vetor
-// normal a cada ponto da superficie utilizando as arestas dos elementos
-// e produto escalar dos vetores localizados na aresta. 
-void Model3D::setSurfaceFace3DMesh()
-{
- int v1,v2,v3,v4;
- list<int> plist;
- list<int>::iterator mele;
- int surfaceNode;
- 
- // mapeamento de faces da interface com numeracao
- elemSurface.resize ( 0 ); 
- elemSurface.resize ( numVerts ); 
- // mapeamento de vertices das faces numeradas por elemSurface
- // super dimensionado!!!
- neighbourFaceVert.resize ( 0 );
- neighbourFaceVert.resize ( 5*numNodes );
- // contador de faces na superficie
- int count = 0; 
-
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-
-  // lista de elementos que contem surfaceNode
-  plist = neighbourElem.at(surfaceNode);
-  for( mele=plist.begin(); mele != plist.end();++mele )
-  {
-   v1 = (int) IEN.Get(*mele,0);
-   v2 = (int) IEN.Get(*mele,1);
-   v3 = (int) IEN.Get(*mele,2);
-   v4 = (int) IEN.Get(*mele,3);
-
-   // tetraedro possui face na superficie se uma das opcoes abaixo tiver
-   // somatorio = 1.5, pois cada vertice na interface vale 0.5
-   real triface1 = heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3);
-   real triface2 = heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v4);
-   real triface3 = heaviside.Get(v1)+heaviside.Get(v3)+heaviside.Get(v4);
-   real triface4 = heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4);
-
-   // pegando o elemento com 3 vertices na superfice e 1 dentro da bolha
-   if( triface1 == 1.5 && heaviside.Get(v4)==1.0 )
-   {
-	elemSurface.at( surfaceNode ).push_back(count);
-
-	neighbourFaceVert.at( count ).push_back(v1);
-	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v3);
-	neighbourFaceVert.at( count ).remove(surfaceNode);
-
-	// orientation checking
-	list<int> plist = neighbourFaceVert.at ( count );
-	list<int>::iterator vert=plist.begin();
-	int vSwap1 = *vert;++vert;
-	int vSwap2 = *vert;
-	vert=plist.end();
-	if( getVolume(surfaceNode,vSwap1,vSwap2,v4) > 0 )
-	{
-	 neighbourFaceVert.at( count ).clear();
-	 neighbourFaceVert.at( count ).push_back(vSwap2);
-	 neighbourFaceVert.at( count ).push_back(vSwap1);
-	}
-
-	count++;
-   }
-   if( triface2 == 1.5 && heaviside.Get(v3)==1.0 )
-   {
-	elemSurface.at( surfaceNode ).push_back(count);
-	neighbourFaceVert.at( count ).push_back(v4);
-	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v1);
-	neighbourFaceVert.at( count ).remove(surfaceNode);
-
-	// orientation checking
-	list<int> plist = neighbourFaceVert.at ( count );
-	list<int>::iterator vert=plist.begin(); 
-	int vSwap1 = *vert;++vert;
-	int vSwap2 = *vert;
-	vert=plist.end();
-	if( getVolume(surfaceNode,vSwap1,vSwap2,v3) > 0 )
-	{
-	 neighbourFaceVert.at( count ).clear();
-	 neighbourFaceVert.at( count ).push_back(vSwap2);
-	 neighbourFaceVert.at( count ).push_back(vSwap1);
-	}
-
-	count++;
-   }
-   if( triface3 == 1.5 && heaviside.Get(v2)==1.0 )
-   {
-	elemSurface.at( surfaceNode ).push_back(count);
-	neighbourFaceVert.at( count ).push_back(v3);
-	neighbourFaceVert.at( count ).push_back(v4);
-	neighbourFaceVert.at( count ).push_back(v1);
-	neighbourFaceVert.at( count ).remove(surfaceNode);
-
-	// orientation checking
-	list<int> plist = neighbourFaceVert.at ( count );
-	list<int>::iterator vert=plist.begin();
-	int vSwap1 = *vert;++vert;
-	int vSwap2 = *vert;
-	vert=plist.end();
-	if( getVolume(surfaceNode,vSwap1,vSwap2,v2) > 0 )
-	{
-	 neighbourFaceVert.at( count ).clear();
-	 neighbourFaceVert.at( count ).push_back(vSwap2);
-	 neighbourFaceVert.at( count ).push_back(vSwap1);
-	}
-
-	count++;
-   }
-   if( triface4 == 1.5 && heaviside.Get(v1)==1.0 )
-   {
-	elemSurface.at( surfaceNode ).push_back(count);
-	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v4);
-	neighbourFaceVert.at( count ).push_back(v3);
-	neighbourFaceVert.at( count ).remove(surfaceNode);
-
-	// orientation checking
-	list<int> plist = neighbourFaceVert.at ( count );
-	list<int>::iterator vert=plist.begin(); 
-	int vSwap1 = *vert;++vert;
-	int vSwap2 = *vert;
-	vert=plist.end();
-	if( getVolume(surfaceNode,vSwap1,vSwap2,v1) > 0 )
-	{
-	 neighbourFaceVert.at( count ).clear();
-	 neighbourFaceVert.at( count ).push_back(vSwap2);
-	 neighbourFaceVert.at( count ).push_back(vSwap1);
-	}
-
-	count++;
-   }
-
-   if( (heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4)) == 2.0 )
-   {
-	//cout << "------ " << surfaceNode << " ------" << endl;
-	//--------------------------------------------------
-	// elemSurface.at( surfaceNode ).push_back(count);
-	// neighbourFaceVert.at( count ).push_back(v1);
-	// neighbourFaceVert.at( count ).push_back(v2);
-	// neighbourFaceVert.at( count ).push_back(v3);
-	// neighbourFaceVert.at( count ).push_back(v4);
-	// neighbourFaceVert.at( count ).remove(surfaceNode);
-	//-------------------------------------------------- 
-
-	//--------------------------------------------------
-	// // orientation checking
-	// list<int> plist = neighbourFaceVert.at ( count );
-	// list<int>::iterator vert=plist.begin(); 
-	// int vSwap1 = *vert;++vert;
-	// int vSwap2 = *vert;++vert;
-	// int vSwap3 = *vert;
-	// vert=plist.end();
-	// cout << "eu to passando aqui, carambola!!!" << endl;
-	// cout << getVolume(surfaceNode,vSwap1,vSwap2,vSwap3) << endl;
-	// if( getVolume(surfaceNode,vSwap1,vSwap2,vSwap3) < 0 )
-	// {
-	//  neighbourFaceVert.at( count ).clear();
-	//  neighbourFaceVert.at( count ).push_back(vSwap2);
-	//  neighbourFaceVert.at( count ).push_back(vSwap1);
-	//  neighbourFaceVert.at( count ).push_back(vSwap3);
-	// }
-	//-------------------------------------------------- 
-
-	//--------------------------------------------------
-	// count++;
-	//-------------------------------------------------- 
-   }
-  }
- }
- neighbourFaceVert.resize (count); // trim vector para numero real de itens
-}
-
-void Model3D::setSurfaceFace()
-{
- int v1,v2,v3;
- list<int> plist;
- list<int>::iterator mele;
- int surfaceNode;
- 
- // mapeamento de faces da interface com numeracao
- elemSurface.resize ( 0 ); 
- elemSurface.resize ( numVerts ); 
- // mapeamento de vertices das faces numeradas por elemSurface
- // super dimensionado!!!
- neighbourFaceVert.resize ( 0 );
- neighbourFaceVert.resize ( 5*numNodes );
- int count=0;
-
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-
-  // lista de elementos que contem surfaceNode
-  plist = neighbourSurfaceElem.at(surfaceNode);
-  for( mele=plist.begin(); mele != plist.end();++mele )
-  {
-   v1 = (int) surfMesh.IEN.Get(*mele,0);
-   v2 = (int) surfMesh.IEN.Get(*mele,1);
-   v3 = (int) surfMesh.IEN.Get(*mele,2);
-
-   elemSurface.at( surfaceNode ).push_back(count);
-
-   if( v1 == surfaceNode )
-   {
-	neighbourFaceVert.at( count ).push_back(v3);
-	neighbourFaceVert.at( count ).push_back(v2);
-	count++;
-   }
-   if( v2 == surfaceNode )
-   {
-	neighbourFaceVert.at( count ).push_back(v1);
-	neighbourFaceVert.at( count ).push_back(v3);
-	count++;
-   }
-   if( v3 == surfaceNode )
-   {
-	neighbourFaceVert.at( count ).push_back(v2);
-	neighbourFaceVert.at( count ).push_back(v1);
-	count++;
-   }
-  }
- }
- neighbourFaceVert.resize (count); // trim vector para numero real de itens
-}
-
 /* cria matriz IEN para os elementos da superficie que no caso 3D sao
- * triagulos. Este metodo utiliza neighbourFaceVert e elemSurface 
+ * triagulos. Este metodo utiliza neighbourPoint 
  * como input e a funcao qsort para ordenacao de arestas.
  * Note que a triangulacao esta referenciada pelas coordenadas globais
  * X,Y e Z. Isto quer dizer que a malha da superfice tem 'buracos' em
@@ -4710,15 +4524,14 @@ void Model3D::setSurfaceTri()
  for( int i=0;i<surface.Dim();i++ )
  {
   int surfaceNode = surface.Get(i);
-  plist = elemSurface.at (surfaceNode);
 
-  for(face=plist.begin();face!=plist.end();++face)
+  int listSize = neighbourPoint.at(surfaceNode).size();
+  list<int> plist = neighbourPoint.at(surfaceNode);
+  list<int>::iterator mele=plist.begin();
+  for( int i=0;i<listSize-1;i++ )
   {
-   plist2 = neighbourFaceVert.at(*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
+   int v1 = *mele;++mele;
+   int v2 = *mele;
 
    edgeaux.Set(0,v1);
    edgeaux.Set(1,v2);
@@ -5008,37 +4821,37 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
  return meshReturn;
 }
 
-// este metodo cria duas listas com os vertices do convex hull (outVert)
+// este metodo cria duas listas com os vertices do convex hull (boundaryVert)
 // e todos os outros menos os vertices do convex hull (inVert). Este
 // metodo eh especialmente interessante para aplicacao das condicoes de
 // contorno para geometrias complexas.
 void Model3D::setInOutVert()
 {
  inVert.resize (0);
- outVert.resize (0);
+ boundaryVert.resize (0);
 
  for(int i=0;i<freeFace.DimI();i++ )
  {
   int v1 = freeFace.Get(i,2);
   int v2 = freeFace.Get(i,3);
   int v3 = freeFace.Get(i,4);
-  outVert.push_back(v1);
-  outVert.push_back(v2);
-  outVert.push_back(v3);
+  boundaryVert.push_back(v1);
+  boundaryVert.push_back(v2);
+  boundaryVert.push_back(v3);
  }
- outVert.sort();
- outVert.unique();
+ boundaryVert.sort();
+ boundaryVert.unique();
 
- // retira de inVert todos os vertices presents em outVert.
+ // retira de inVert todos os vertices presents em boundaryVert.
  list<int>::iterator it;
  for( int vert=0;vert<numVerts;vert++ )
   inVert.push_back(vert);
- for( it=outVert.begin();it!=outVert.end();++it )
+ for( it=boundaryVert.begin();it!=boundaryVert.end();++it )
   inVert.remove(*it);
 
 //--------------------------------------------------
-//  cout << "outVert contains:";
-//  for (it=outVert.begin(); it!=outVert.end(); ++it)
+//  cout << "boundaryVert contains:";
+//  for (it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
 //   cout << " " << *it;
 //  cout << endl;
 //-------------------------------------------------- 
@@ -5534,25 +5347,18 @@ void Model3D::setOFace()
 // aplica configuracoes referentes a superficie da modelagem 2 fases.
 void Model3D::setSurfaceConfig()
 {
- setVertNeighbour(); // neighbourVert
- setInOutVert(); // inVert e outVert
+ setVertNeighbour(); // neighbourVert (3D mesh)
+ setInOutVert(); // inVert e boundaryVert
  setInOutElem(); // inElem e outElem
  setSurface(); // surface e nonSurface
  setInterfaceDistance();
  setNeighbourSurface(); 
- setSurfaceFace(); // elemSurface e neighbourFaceVert
  setSurfaceTri(); // triang superficie - interfaceMesh
  setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
-
  setMapEdgeTri(); 
- //setNeighbourSurface(); 
  computeAverageTriangleEdge(); 
-
- computeSurfaceNormal(); // compute surface normal of all surface points
- 
- //saveVTKConvex("./vtk/","conv",0);
- //saveVTKSurface("./vtk/","surf",0);
+ computeNormalAndKappa();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -5747,58 +5553,6 @@ void Model3D::reAllocStruct()
  IEN.CopyFrom(0,0,IENaux);
 }
 
-// this method checks the orientation of a triangular surface
-// _surfaceNode = surface node
-// _v1 = 1st vertice of triangle
-// _v2 = 2nd vertice of triangle
-// _v3 = vertice of tetrahedra inside the bubble that contanis 
-// the triangle of surface
-bool Model3D::checkNormal(int _surfaceNode,int _v1,int _v2,int _vIn)
-{
- real xSurfaceNode = X.Get(_surfaceNode);
- real ySurfaceNode = Y.Get(_surfaceNode);
- real zSurfaceNode = Z.Get(_surfaceNode);
- real xV1 = X.Get(_v1);
- real yV1 = Y.Get(_v1);
- real zV1 = Z.Get(_v1);
- real xV2 = X.Get(_v2);
- real yV2 = Y.Get(_v2);
- real zV2 = Z.Get(_v2);
- real xIn = X.Get(_vIn);
- real yIn = Y.Get(_vIn);
- real zIn = Z.Get(_vIn);
-
- // vetor surfaceNode -> in
- real x1 = xIn - xSurfaceNode;
- real y1 = yIn - ySurfaceNode;
- real z1 = zIn - zSurfaceNode;
- 
- // vetores surfaceNode -> (v1 e v2)
- real xVec1 = xV1 - xSurfaceNode; 
- real yVec1 = yV1 - ySurfaceNode; 
- real zVec1 = zV1 - zSurfaceNode; 
- real xVec2 = xV2 - xSurfaceNode; 
- real yVec2 = yV2 - ySurfaceNode; 
- real zVec2 = zV2 - zSurfaceNode; 
-
- // normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross = crossProd(xVec1,yVec1,zVec1,xVec2,yVec2,zVec2);
- real x2 = cross.Get(0);
- real y2 = cross.Get(1);
- real z2 = cross.Get(2);
- 
- // scalar product of the normal vector and surfaceNode->in to check if
- // they have the value < 90 degrees
- // produto escalar para saber se os vetores estao no mesmo sentido
- real prodEsc = x1*x2 + y1*y2 + z1*z2;
-
- if( prodEsc < 0 )
-  return true;
- else
-  return false;
-}
-
 void Model3D::moveXPoints(clVector &_vec,real _dt)
 {
  X = X + _vec*_dt;
@@ -5888,12 +5642,9 @@ clVector* Model3D::getSurface(){ return &surface; }
 vector< list<int> >* Model3D::getNeighbourElem(){return &neighbourElem;}
 vector< list<int> >* Model3D::getNeighbourVert(){return &neighbourVert;}
 vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
-vector< list<int> >* Model3D::getElemSurface(){return &elemSurface;}
-vector< list<int> >* Model3D::getNeighbourFaceVert(){return &neighbourFaceVert;}
-vector< list<int> >* Model3D::getSurfaceViz(){return &surfaceViz;}
 vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
 list<int>* Model3D::getInVert(){return &inVert;}
-list<int>* Model3D::getOutVert(){return &outVert;}
+list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
 list<int>* Model3D::getInElem(){return &inElem;}
 list<int>* Model3D::getOutElem(){return &outElem;}
 real Model3D::getTriEdge(){return triEdge;}
@@ -5919,7 +5670,9 @@ void Model3D::operator=(Model3D &_mRight)
   averageTriEdge = _mRight.averageTriEdge;
   initBubbleVolume = _mRight.initBubbleVolume;
   isp = _mRight.isp;
+  ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
+  rspc = _mRight.rspc;
   ip = _mRight.ip;                    
   rp = _mRight.rp;              
   rpi = _mRight.rpi;                   
@@ -5958,13 +5711,10 @@ void Model3D::operator=(Model3D &_mRight)
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
-  neighbourFaceVert = _mRight.neighbourFaceVert;
-  elemSurface = _mRight.elemSurface;
   neighbourSurfaceElem = _mRight.neighbourSurfaceElem;
   neighbourPoint = _mRight.neighbourPoint;
   faceIEN = _mRight.faceIEN;
-  surfaceViz = _mRight.surfaceViz;
-  outVert = _mRight.outVert;
+  boundaryVert = _mRight.boundaryVert;
   inVert = _mRight.inVert;
   outElem = _mRight.outElem;
   inElem = _mRight.inElem;
@@ -6022,7 +5772,6 @@ void Model3D::saveVTKSurface( const char* _dir,const char* _filename, int _iter 
  /* ---- update interfaceMesh ---- */
  //setSurface(); // surface and nonSurface 
  //setNeighbour(); // neighbourElem
- //setSurfaceFace(); // elemSurface and neighbourFaceVert
  //setSurfaceTri(); // interfaceMesh
  /* ------------------------------ */
 
@@ -6124,202 +5873,44 @@ void Model3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkFile.close();
 }
 
-// this method estimates the normal of the surface 
-void Model3D::computeSurfaceNormal()
-{
- int surfaceNode;
- real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
- list<int> plist,plist2;
- list<int>::iterator face,vert;
- surfMesh.xNormal.Dim(surfMesh.numVerts);
- surfMesh.yNormal.Dim(surfMesh.numVerts);
- surfMesh.zNormal.Dim(surfMesh.numVerts);
-
- // loop sobre todos os nos da superficie 
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-  real P0x = surfMesh.X.Get(surfaceNode);
-  real P0y = surfMesh.Y.Get(surfaceNode);
-  real P0z = surfMesh.Z.Get(surfaceNode);
-
-  sumXCrossUnit = 0;
-  sumYCrossUnit = 0;
-  sumZCrossUnit = 0;
-
-  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
-  for( face=plist.begin();face!=plist.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
-
-   real P1x = surfMesh.X.Get(v1);
-   real P1y = surfMesh.Y.Get(v1);
-   real P1z = surfMesh.Z.Get(v1);
-   real P2x = surfMesh.X.Get(v2);
-   real P2y = surfMesh.Y.Get(v2);
-   real P2z = surfMesh.Z.Get(v2);
-
-   // distance do ponto 0 ate 1
-   real a = sqrt( (P0x-P1x)*(P0x-P1x)+
-	              (P0y-P1y)*(P0y-P1y)+
-				  (P0z-P1z)*(P0z-P1z) );
-
-   // distance do ponto 0 ate 2
-   real b = sqrt( (P0x-P2x)*(P0x-P2x)+
-	              (P0y-P2y)*(P0y-P2y)+
-			      (P0z-P2z)*(P0z-P2z) );
-
-   // vetores unitarios
-   real x1Unit = (P1x-P0x)/a;
-   real y1Unit = (P1y-P0y)/a;
-   real z1Unit = (P1z-P0z)/a;
-
-   real x2Unit = (P2x-P0x)/b;
-   real y2Unit = (P2y-P0y)/b;
-   real z2Unit = (P2z-P0z)/b;
-
-   // calculando o produto vetorial de cada elemento triangular da superficie
-   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
-
-   // somatorio ponderado pela area dos vetores unitarios normais 
-   // aos triangulos encontrados na estrela do vertice
-   sumXCrossUnit += cross.Get(0);
-   sumYCrossUnit += cross.Get(1);
-   sumZCrossUnit += cross.Get(2);
-
-  } // loop over each elements that shares the same vertice P0
-
-  real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
-
-  real xNormalUnit = sumXCrossUnit/len;
-  real yNormalUnit = sumYCrossUnit/len;
-  real zNormalUnit = sumZCrossUnit/len;
-
-  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
-  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
-  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
- } // loop over all surface points
-} // computeSurfaceNormal
-
-// this method estimates the normal of the surface by averaging with the
-// element area
-void Model3D::computeSurfaceAverageNormal()
-{
- int surfaceNode;
- real sumArea;
- real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
- list<int> plist,plist2;
- list<int>::iterator face,vert;
- surfMesh.xNormal.Dim(surfMesh.numVerts);
- surfMesh.yNormal.Dim(surfMesh.numVerts);
- surfMesh.zNormal.Dim(surfMesh.numVerts);
-
- // loop sobre todos os nos da superficie 
- for( int i=0;i<surface.Dim();i++ )
- {
-  surfaceNode = surface.Get(i);
-  real P0x = surfMesh.X.Get(surfaceNode);
-  real P0y = surfMesh.Y.Get(surfaceNode);
-  real P0z = surfMesh.Z.Get(surfaceNode);
-
-  sumXCrossUnit = 0;
-  sumYCrossUnit = 0;
-  sumZCrossUnit = 0;
-  sumArea = 0;
-
-  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
-  for( face=plist.begin();face!=plist.end();++face )
-  {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
-
-   real P1x = surfMesh.X.Get(v1);
-   real P1y = surfMesh.Y.Get(v1);
-   real P1z = surfMesh.Z.Get(v1);
-   real P2x = surfMesh.X.Get(v2);
-   real P2y = surfMesh.Y.Get(v2);
-   real P2z = surfMesh.Z.Get(v2);
-
-   // vetores
-   real x1 = P1x-P0x;
-   real y1 = P1y-P0y;
-   real z1 = P1z-P0z;
-
-   real x2 = P2x-P0x;
-   real y2 = P2y-P0y;
-   real z2 = P2z-P0z;
-
-   // calculando o produto vetorial de cada elemento triangular da superficie
-   clVector cross = crossProd(x1,y1,z1,x2,y2,z2);
-
-   // comprimento do vetor normal ao plano formado por (x1,y1,z1) e
-   // (x2,y2,z2)
-   real length = vectorLength(cross.Get(0),cross.Get(1),cross.Get(2));
-	
-   // area do triangulo P0-P1-P2
-   real area = 0.5*length;
-   sumArea += area;
-
-   // somatorio ponderado pela area dos vetores unitarios normais 
-   // aos triangulos encontrados na estrela do vertice
-   sumXCrossUnit += (cross.Get(0)/length)*area;
-   sumYCrossUnit += (cross.Get(1)/length)*area;
-   sumZCrossUnit += (cross.Get(2)/length)*area;
-
-  } // loop over each elements that shares the same vertice P0
-
-  // averaging the normal vector
-  sumXCrossUnit = sumXCrossUnit/sumArea;
-  sumYCrossUnit = sumYCrossUnit/sumArea;
-  sumZCrossUnit = sumZCrossUnit/sumArea;
-
-  real length2 = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
-
-  real xNormalUnit = sumXCrossUnit/length2;
-  real yNormalUnit = sumYCrossUnit/length2;
-  real zNormalUnit = sumZCrossUnit/length2;
-
-  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
-  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
-  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
-
- } // loop over all surface points
-} // computeSurfaceAverageNormal
-
-/* This method computes the curvature of a triangle surface through the
- * tangent vectors of each triangle related to the neighbourhood of a
- * single point belonging to the interface.
- * So far for all test cases studied  we have found +- 1% error for
- * non-dimensional bubble diameters changing from 0.1 to 1.3
+/* This method computes the curvature of a surface point using tangent 
+ * vectors of triangles belonging to the star of such a point and
+ * summing for all surface elements, then dividing to the sum of 1/3 the
+ * total area.
+ * Description:
+ *  1_ loop over all vertices found on the surface;
+ *  2_ using neighbourPoint we compute the unit vectors of each element
+ *  inside the star of the surface node.
+ *  3_ [normal vector] the cross product of both unit vectors 
+ *  (P1 - surfaceNode and P2 - surfaceNode) gives a unit normal vector 
+ *  of the respective triangle.
+ *  4_ [curvature calculation] the normal unit vector of the opposite
+ *  edge (lied on the surface element plane) is integrated in the
+ *  half length of the specific edge, thus it is computed the curvature
+ *  of such a plane.
+ *  5_ summing all cross vectors and all curvature vectors with respect
+ *  to the elements that contains the surface node, it is possible to
+ *  calculate with precision the normal unit vector and curvature of
+ *  each surface node.
  * */
-void Model3D::computeKappaGeo()
+void Model3D::computeNormalAndKappa()
 {
- // compute Surface Normals
- computeSurfaceNormal();
+ setSurface();
+ setNeighbourSurface();
 
  int surfaceNode;
- real force,sumForce,sumArea,sumLength,fx,fy,fz;
- list<int> plist,plist2;
- list<int>::iterator face,vert;
+ real sumForce,sumArea,sumLength,fx,fy,fz;
+ real sumXCrossUnit,sumYCrossUnit,sumZCrossUnit;
+ surfMesh.xNormal.Dim(surfMesh.numVerts);
+ surfMesh.yNormal.Dim(surfMesh.numVerts);
+ surfMesh.zNormal.Dim(surfMesh.numVerts);
  surfMesh.curvature.Dim(surfMesh.numVerts);
 
  // loop sobre todos os nos da superficie 
  for( int i=0;i<surface.Dim();i++ )
  {
   surfaceNode = surface.Get(i);
+
   real P0x = surfMesh.X.Get(surfaceNode);
   real P0y = surfMesh.Y.Get(surfaceNode);
   real P0z = surfMesh.Z.Get(surfaceNode);
@@ -6328,22 +5919,20 @@ void Model3D::computeKappaGeo()
   fx = 0;
   fy = 0;
   fz = 0;
-  force = 0;
   sumForce = 0;
   sumArea = 0;
   sumLength = 0;
+  sumXCrossUnit = 0;
+  sumYCrossUnit = 0;
+  sumZCrossUnit = 0;
 
-  // loop sobre nos triangulos da interface/superficie vizinhos do vertice i
-  plist = elemSurface.at (surfaceNode); 
-  for( face=plist.begin();face!=plist.end();++face )
+  int listSize = neighbourPoint.at(surfaceNode).size();
+  list<int> plist = neighbourPoint.at(surfaceNode);
+  list<int>::iterator mele=plist.begin();
+  for( int i=0;i<listSize-1;i++ )
   {
-   // 3D: 2 pontos pois a face em 3D pertencente a superficie contem 
-   // 3 pontos (P0 - surfaceNode, P1 e P2 que sao pontos do triangulo)
-   plist2 = neighbourFaceVert.at (*face);
-   vert=plist2.begin();
-   int v1 = *vert;++vert;
-   int v2 = *vert;
-   vert=plist2.end();
+   int v1 = *mele;++mele;
+   int v2 = *mele;
 
    real P1x = surfMesh.X.Get(v1);
    real P1y = surfMesh.Y.Get(v1);
@@ -6352,37 +5941,27 @@ void Model3D::computeKappaGeo()
    real P2y = surfMesh.Y.Get(v2);
    real P2z = surfMesh.Z.Get(v2);
 
-   // ponto medio aresta 01
-   real Pm01x = (P1x+P0x)*0.5; 
-   real Pm01y = (P1y+P0y)*0.5; 
-   real Pm01z = (P1z+P0z)*0.5; 
-
-   // ponto medio aresta 02
-   real Pm02x = (P2x+P0x)*0.5; 
-   real Pm02y = (P2y+P0y)*0.5; 
-   real Pm02z = (P2z+P0z)*0.5; 
-
    // distance do ponto 0 ate metade do segmento 01
-   real a = distance(P0x,P0y,P0z,Pm01x,Pm01y,Pm01z);
+   real a = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 
    // distance do ponto 0 ate metade do segmento 02
-   real b = distance(P0x,P0y,P0z,Pm02x,Pm02y,Pm02z);
+   real b = distance(P0x,P0y,P0z,P2x,P2y,P2z);
 
    // distance da metade do segmento 01 ate metade do segmento 02
-   real c = distance(Pm01x,Pm01y,Pm01z,Pm02x,Pm02y,Pm02z);
+   real c = distance(P1x,P1y,P1z,P2x,P2y,P2z);
 
    // vetores 
-   real x1 = Pm01x-P0x;
-   real y1 = Pm01y-P0y;
-   real z1 = Pm01z-P0z;
+   real x1 = P1x-P0x;
+   real y1 = P1y-P0y;
+   real z1 = P1z-P0z;
 
-   real x2 = Pm02x-P0x;
-   real y2 = Pm02y-P0y;
-   real z2 = Pm02z-P0z;
+   real x2 = P2x-P0x;
+   real y2 = P2y-P0y;
+   real z2 = P2z-P0z;
 
-   real xReta = Pm02x-Pm01x;
-   real yReta = Pm02y-Pm01y;
-   real zReta = Pm02z-Pm01z;
+   real xReta = P2x-P1x;
+   real yReta = P2y-P1y;
+   real zReta = P2z-P1z;
 
    // vetores unitarios deslocados para origem do sistema (0,0,0)
    real x1Unit = x1/a;
@@ -6392,6 +5971,15 @@ void Model3D::computeKappaGeo()
    real x2Unit = x2/b;
    real y2Unit = y2/b;
    real z2Unit = z2/b;
+
+   // normal to each triangular face
+   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
+
+   // somatorio NAO ponderado pela area dos vetores unitarios normais 
+   // aos triangulos encontrados na estrela do vertice
+   sumXCrossUnit += cross.Get(0);
+   sumYCrossUnit += cross.Get(1);
+   sumZCrossUnit += cross.Get(2);
 
    // soma dos vetores 1Unit + 2Unit = resultante
    real xPlaneRes = x1Unit+x2Unit;
@@ -6432,58 +6020,44 @@ void Model3D::computeKappaGeo()
    real yPlaneNormalUnit = yPlaneNormal/len;
    real zPlaneNormalUnit = zPlaneNormal/len;
 
-   // tamanho do comprimento da aresta do triangulo que tem a metade da
-   // area do elemento
-   // semelhanca de triangulos por areas: 2*a = A -> a/A = 0.5 = k^2
-   // onde k eh a razao de semelhanca.
-   // k = sqrt(0.5)
-   // c/C = k, onde c eh a base do triangulo menor e C a do maior
-   // b = B*k = sqrt(0.5)*B 
-   real base = c;
-
    // normal ao plano integrada na distancia (MOD) dos 2 vertices medianos
    // force = resultante das componentes * tamanho da aresta que sera
-   // usada como referencia no calculo da area do triangulo
+   // usada como referencia no calculo da area do triangulo 
+   real base = c/2.0;
+
    fx += xPlaneNormalUnit*base;
    fy += yPlaneNormalUnit*base;
    fz += zPlaneNormalUnit*base;
 
    // 1/3 of area P0-Pm01-Pm02
-   sumArea += 0.3334*getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+   sumArea += (1.0/3.0)*getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
   }
+  mele=plist.end();
+
+  real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
+  real xNormalUnit = sumXCrossUnit/len;
+  real yNormalUnit = sumYCrossUnit/len;
+  real zNormalUnit = sumZCrossUnit/len;
 
   // intensidade da forca resultante
-  force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+  real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
-  // aplicando o teste para saber o sentido correto de aplicacao da
+  // teste para saber o sentido correto de aplicacao da
   // pressao no noh.
-  if( (fx*surfMesh.xNormal.Get(surfaceNode)+
-	   fy*surfMesh.yNormal.Get(surfaceNode)+
-	   fz*surfMesh.zNormal.Get(surfaceNode)) < 0.0 )
-   force = -force;
+  if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
+   force = force;
 
   real pressure = force/sumArea;
 
+  surfMesh.xNormal.Set(surfaceNode,xNormalUnit);
+  surfMesh.yNormal.Set(surfaceNode,yNormalUnit);
+  surfMesh.zNormal.Set(surfaceNode,zNormalUnit);
   surfMesh.curvature.Set(surfaceNode,pressure);
  }
-} // fecha metodo computeKappaGeo
+} // fecha metodo computeNormalAndKappa
 
 void Model3D::setCloser()
 {
- int aux;
-
- // {x,y,z}Surface representam os valores de {X,Y,Z} dos nos da interface
- xSurface.Dim( surface.Dim() );
- ySurface.Dim( surface.Dim() );
- zSurface.Dim( surface.Dim() );
- for( int i=0;i<surface.Dim();i++ )
- {
-  aux = surface.Get(i);
-  xSurface.Set(i,X.Get( aux ));
-  ySurface.Set(i,Y.Get( aux ));
-  zSurface.Set(i,Z.Get( aux ));
- }
-
  // closer=surface(dsearchn(X(surface),Y(surface),X,Y));
  // esta funcao retorna o noh da interface (surface) mais 
  // proximo de cada noh da malha (vertices)
@@ -6493,7 +6067,7 @@ void Model3D::setCloser()
  zCloser.Dim( closer.Dim() );
  for( int i=0;i<closer.Dim();i++ )
  {
-  aux = closer.Get(i);
+  int aux = closer.Get(i);
   closer.Set(i,surface.Get(aux)); // alterando os valores de closer(i)
   xCloser.Set(i,X.Get( closer.Get(i) ));
   yCloser.Set(i,Y.Get( closer.Get(i) ));
@@ -6628,7 +6202,7 @@ void Model3D::applyBubbleVolumeCorrection()
 {
  real aux = 0;
  real bubbleVolume = computeBubbleVolume();
- real ds = -(initBubbleVolume-bubbleVolume)/(4.0*3.1415*0.5*0.5);
+ real ds = (initBubbleVolume-bubbleVolume)/(4.0*3.1415*0.5*0.5);
  for( int i=0;i<surface.Dim();i++ )
  {
   int surfaceNode = surface.Get(i);

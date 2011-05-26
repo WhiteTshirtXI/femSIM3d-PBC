@@ -27,7 +27,6 @@
 #include "clVector.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
-#include "Interface3D.h"
 #include "colors.h"
 
 class Simulator3D

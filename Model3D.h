@@ -279,6 +279,7 @@ class Model3D
   int ip;                         // ip: num of inserted 3d mesh points
   int rp;                         // rp: num of removed 3d mesh points
   int rpi;                        // rpi: by interface distance
+  int rpv;                        // rpi: by volume 
   int flip;
   int badtet;                     // num of shit tetrahedrons
 

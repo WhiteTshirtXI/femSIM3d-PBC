@@ -31,6 +31,7 @@ Model3D::Model3D()
  ip = 0;                     
  rp = 0;                     
  rpi = 0;                   
+ rpv = 0;                   
  flip = 0;
 }
 Model3D::~Model3D(){}
@@ -968,16 +969,16 @@ void Model3D::removePointsByCurvature()
   int v1 = mapEdgeTri.Get(i,1);
   int v2 = mapEdgeTri.Get(i,2);
   int count = 0;
-  if( fabs(surfMesh.curvature.Get(v1)) > 30 )
+  real c1 = fabs(surfMesh.curvature.Get(v1));
+  real c2 = fabs(surfMesh.curvature.Get(v2));
+  if( c1 > 30 || c2 > 30 )
   {
-   deletePoint(v1);
+   int vDel = v1;
+   if( c2 > c1 )
+	vDel = v2;
+   
+   deletePoint(vDel);
    count++;
-   rspc++;
-  }
-  if( fabs(surfMesh.curvature.Get(v2)) > 30 &&
-	   count > 0 )
-  {
-   deletePoint(v2);
    rspc++;
   }
  }
@@ -1474,6 +1475,7 @@ void Model3D::setNeighbourSurface()
 	neighbourPoint.at( ii ).push_back(v2);
    }
   }
+  // ordering the vertices of the polyhedron surrounding the vertex _v
   setPolyhedron(ii);
  }
 }
@@ -1599,7 +1601,7 @@ void Model3D::flipTriangleEdge()
 	  q1+q2 < q3+q4 && 
 	  area1+area2  > area3+area4 &&
 	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
-	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
+	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
@@ -2125,9 +2127,6 @@ void Model3D::deletePoint(int _v)
 
  // deleting elements
  deleteSurfaceElements();
-
- // ordering the vertices of the polyhedron surrounding the vertex _v
- setPolyhedron(_v);
 
  // after the deletion process it's mandatory to create new elements
  // to fill the space left by the deleting process
@@ -2885,7 +2884,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 
 void Model3D::removePointByVolume()
 {
- int count=0;
+ rpv=0;
  for( int i=0;i<numElems;i++ )
  {
   int v1 = IEN.Get(i,0);
@@ -2903,11 +2902,11 @@ void Model3D::removePointByVolume()
 	Z.Delete(i);
 	heaviside.Delete(i);
 	numVerts--;
-	count++;
+	rpv++;
    }
   }
  }
- cout << "  removed by volume: " << count << endl;
+ cout << "  removed by volume: " << rpv << endl;
 }
 
 void Model3D::printMeshReport(tetgenio &_tetmesh)
@@ -5676,6 +5675,7 @@ void Model3D::operator=(Model3D &_mRight)
   ip = _mRight.ip;                    
   rp = _mRight.rp;              
   rpi = _mRight.rpi;                   
+  rpv = _mRight.rpv;                   
   flip = _mRight.flip;
 
   // clVector and clMatrix

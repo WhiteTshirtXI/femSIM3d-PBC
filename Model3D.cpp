@@ -680,7 +680,8 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   //else dz = exp(2.0/3.0);
   //else dz=0.1;
   ////////dz = (factor*exp(z/nZ));
-  dz = 0.1;
+  //dz = 0.1;
+  dz = 1;
   //cout << z  << " " << nZ << " " << dz << endl;
   for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
   {
@@ -3015,19 +3016,21 @@ void Model3D::mesh3DPoints()
  
  computeNormalAndKappa();
 
- saveVTKSurface("./vtk/","start",0);
- insertPointsByLength();
- //insertPointsByCurvature();
- removePointsByCurvature();
- contractEdgeByLength();
- //insertPointsByInterfaceDistance();
- saveVTKSurface("./vtk/","inserted",0);
- saveVTKSurface("./vtk/","removed",0);
- //removePointsByLength();
- flipTriangleEdge();
- saveVTKSurface("./vtk/","flipped",0);
- //removePointsByInterfaceDistance();
- //remove3dMeshPointsByDistance();
+//--------------------------------------------------
+//  saveVTKSurface("./vtk/","start",0);
+//  insertPointsByLength();
+//  //insertPointsByCurvature();
+//  removePointsByCurvature();
+//  contractEdgeByLength();
+//  //insertPointsByInterfaceDistance();
+//  saveVTKSurface("./vtk/","inserted",0);
+//  saveVTKSurface("./vtk/","removed",0);
+//  //removePointsByLength();
+//  flipTriangleEdge();
+//  saveVTKSurface("./vtk/","flipped",0);
+//  //removePointsByInterfaceDistance();
+//  //remove3dMeshPointsByDistance();
+//-------------------------------------------------- 
 
  // init tetgen mesh object
  in.initialize();
@@ -3062,32 +3065,34 @@ void Model3D::mesh3DPoints()
  convertTetgenToModel3D(out);
  mesh3d = convertTetgenToMesh3d(out);
 
- /* ---------------------- 3D MESH TREATMENT --------------------- */
- cout << endl;
- in.initialize();
- out.initialize();
-
- cout << " ---------------------------------------- " << endl;
- removePointByVolume();
- removePointsByInterfaceDistance();
- remove3dMeshPointsByDistance();
- cout << " ---------------------------------------- " << endl;
-
- in.mesh_dim = 3;
- in.numberofpoints = numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
- in.pointmarkerlist = new int[in.numberofpoints];
-
- convertModel3DtoTetgen(in);
-
- cout << "----> removing 3D points... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
- cout << "finished <---- " << endl;;
-
- convertTetgenToModel3D(out);
- mesh3d = convertTetgenToMesh3d(out);
- cout << endl;
- /* ---------------------------- END ----------------------------- */
+//--------------------------------------------------
+//  /* ---------------------- 3D MESH TREATMENT --------------------- */
+//  cout << endl;
+//  in.initialize();
+//  out.initialize();
+// 
+//  cout << " ---------------------------------------- " << endl;
+//  removePointByVolume();
+//  removePointsByInterfaceDistance();
+//  remove3dMeshPointsByDistance();
+//  cout << " ---------------------------------------- " << endl;
+// 
+//  in.mesh_dim = 3;
+//  in.numberofpoints = numVerts;
+//  in.pointlist = new REAL[in.numberofpoints * 3];
+//  in.pointmarkerlist = new int[in.numberofpoints];
+// 
+//  convertModel3DtoTetgen(in);
+// 
+//  cout << "----> removing 3D points... ";
+//  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+//  cout << "finished <---- " << endl;;
+// 
+//  convertTetgenToModel3D(out);
+//  mesh3d = convertTetgenToMesh3d(out);
+//  cout << endl;
+//  /* ---------------------------- END ----------------------------- */
+//-------------------------------------------------- 
 
  printMeshReport(out);
 
@@ -4008,6 +4013,7 @@ void Model3D::setNuZDiskBC()
 void Model3D::setDiskFSBC()
 {
  real aux;
+ heaviside.Dim(numVerts);
  rMax = Y.Max();// CONFERIR! NAO SEI SE FUNCIONARA DIREITO!
 
  for( int i=0;i<numVerts;i++ )
@@ -4043,13 +4049,27 @@ void Model3D::setDiskFSBC()
    idbcp.AddItem(i);
 
    // heaviside = 0.5 -> noh da superficie
-   //heaviside.Set(i,0.5); // para funcionamento do ALE
+   heaviside.Set(i,0.5); // para funcionamento do ALE
 
    aux = 0.0;
    uc.Set(i,aux);
    vc.Set(i,aux);
    pc.Set(i,aux);
    outflow.Set(i,aux);
+  }
+ }
+}
+
+void Model3D::setDiskCFSBC()
+{
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( Z.Get(i) == Z.Min() )
+  {
+   idbcc.AddItem(i);
+
+   real aux = 1.0;
+   cc.Set(i,aux);
   }
  }
 }
@@ -4103,7 +4123,7 @@ void Model3D::setPerturbSurf()
   if( Z.Get(i) != Z.Min() &&
 	  (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) < (rMax*rMax - 0.1) ) )
   {
-   aux = Z.Get(i)*( 1.0 + (X.Get(i)/Red)*factorz*0.4 );
+   aux = Z.Get(i)*( 1.0 + (X.Get(i)/Red)*factorz*0.3 );
    Z.Set(i,aux);
   }
  }
@@ -4499,7 +4519,6 @@ void Model3D::setSurface()
   ySurface.Set(i,Y.Get( aux ));
   zSurface.Set(i,Z.Get( aux ));
  }
-
 } // fecha metodo setSurface
 
 /* cria matriz IEN para os elementos da superficie que no caso 3D sao
@@ -5556,42 +5575,48 @@ void Model3D::moveXPoints(clVector &_vec,real _dt)
 {
  X = X + _vec*_dt;
 
- // movimentando os pontos da malha de superficie (interface e convex) 
- // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
- {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.X.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.X.Set(surfaceNode,aux);
- }
+//--------------------------------------------------
+//  // movimentando os pontos da malha de superficie (interface e convex) 
+//  // com velocidade _vec e _dt
+//  for( int i=0;i<surface.Dim();i++ )
+//  {
+//   int surfaceNode = surface.Get(i);
+//   real aux = surfMesh.X.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+//   surfMesh.X.Set(surfaceNode,aux);
+//  }
+//-------------------------------------------------- 
 }
 
 void Model3D::moveYPoints(clVector &_vec,real _dt)
 {
  Y = Y + _vec*_dt;
 
- // movimentando os pontos da malha de superficie (interface e convex) 
- // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
- {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.Y.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.Y.Set(surfaceNode,aux);
- }
+//--------------------------------------------------
+//  // movimentando os pontos da malha de superficie (interface e convex) 
+//  // com velocidade _vec e _dt
+//  for( int i=0;i<surface.Dim();i++ )
+//  {
+//   int surfaceNode = surface.Get(i);
+//   real aux = surfMesh.Y.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+//   surfMesh.Y.Set(surfaceNode,aux);
+//  }
+//-------------------------------------------------- 
 }
 
 void Model3D::moveZPoints(clVector &_vec,real _dt)
 {
  Z = Z + _vec*_dt;
 
- // movimentando os pontos da malha de superficie (interface e convex) 
- // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
- {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.Z.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.Z.Set(surfaceNode,aux);
- }
+//--------------------------------------------------
+//  // movimentando os pontos da malha de superficie (interface e convex) 
+//  // com velocidade _vec e _dt
+//  for( int i=0;i<surface.Dim();i++ )
+//  {
+//   int surfaceNode = surface.Get(i);
+//   real aux = surfMesh.Z.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+//   surfMesh.Z.Set(surfaceNode,aux);
+//  }
+//-------------------------------------------------- 
 }
 
 

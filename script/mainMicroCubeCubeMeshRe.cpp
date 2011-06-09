@@ -108,8 +108,8 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl;
 
    //s1.stepLagrangian();
-   //s1.stepALE();
-   s1.stepALE2();
+   s1.stepALE();
+   s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();

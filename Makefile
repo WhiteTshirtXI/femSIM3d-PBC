@@ -87,7 +87,7 @@ erase:
 
 deepclean: 
 	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
-	@rm -f 2bubbles
+	@rm -f 2bubbles diskSurf
 	@rm -f libtest*
 	@rm -f core
 	@find $(LIBDIR) -name "*.o" -exec rm {} \;

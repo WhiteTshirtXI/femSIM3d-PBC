@@ -123,6 +123,7 @@ class Model3D
   void readAndSetPressureDiskBC(const char* _dir,const char* _filename);
   void setCDiskBC();
   void setDiskFSBC();
+  void setDiskCFSBC();
   void setDiskCouetteBC();
   void setInterfaceBC();
   void setBubbleBubbleBC();

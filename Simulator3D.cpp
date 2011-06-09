@@ -1184,6 +1184,9 @@ void Simulator3D::step()
 // puramente lagrangiana
 void Simulator3D::stepLagrangian()
 {
+ // impoe velocidade SolOld = 0 no contorno
+ setLagrangianVelBC();
+
  m->moveXPoints(uSolOld,dt);
  m->moveYPoints(vSolOld,dt);
  m->moveZPoints(wSolOld,dt);
@@ -1226,19 +1229,23 @@ void Simulator3D::stepLagrangianZ()
 
 void Simulator3D::stepALE()
 {
+ //setInterfaceVelNormal();
+ setInterfaceVel();
+
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSmoothSurface();
+ e1.stepSmoothFujiwara();
+ e1.setCentroid();
  uSmoothCoord = *e1.getUSmooth();
  vSmoothCoord = *e1.getVSmooth();
  wSmoothCoord = *e1.getWSmooth();
 
- uALE = c1*uSolOld+c2*uSmoothCoord;
- vALE = c1*vSolOld+c2*vSmoothCoord;
- wALE = c1*wSolOld+c2*wSmoothCoord;
+ uALE = c1*uSolOld+c3*uSmoothCoord;
+ vALE = c1*vSolOld+c3*vSmoothCoord;
+ wALE = c1*wSolOld+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
- setInterfaceVelNormal();
+ setInterfaceVel();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1250,17 +1257,12 @@ void Simulator3D::stepALE()
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
-
- // atualizacao de todas as matrizes do sistema
- assemble();
- //assembleSlip();
-
 } // fecha metodo stepALE
 
 void Simulator3D::stepALEVel()
 {
- // calcula velocidade elastica - dependente das velocidades dos pontos
- setInterfaceVelNormal();
+ //setInterfaceVelNormal();
+ setInterfaceVel();
 
  setALEVelBC();
  for( int i=0;i<30;i++ )
@@ -1274,7 +1276,8 @@ void Simulator3D::stepALEVel()
   wSmooth = *e2.getWSmooth();
 
   // impoe velocidade (componente normal) do fluido na interface
-  setInterfaceVelNormal();
+  //setInterfaceVelNormal();
+  setInterfaceVel();
  }
 
  // smoothing - coordenadas
@@ -1290,7 +1293,8 @@ void Simulator3D::stepALEVel()
  wALE = c1*wSolOld+c2*wSmooth+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
- setInterfaceVelNormal();
+ //setInterfaceVelNormal();
+ setInterfaceVel();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1305,11 +1309,6 @@ void Simulator3D::stepALEVel()
 
  // velocidade da bolha
  getBubbleVelocity(uALE,vALE,wALE);
- 
- // atualizacao de todas as matrizes do sistema
- assemble();
- //assembleSlip();
-
 } // fecha metodo stepALEVel
 
 void Simulator3D::setInterfaceVel()
@@ -1504,7 +1503,8 @@ void Simulator3D::setInterfaceLevelSet()
  m->setKappaSurface(kappaAux);
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * ( kappa*(GTilde*(*heaviside)) );
+ fint = (1.0/We) * ( kappa*(G*(*heaviside)) );
+ //fint = (1.0/We) * ( kappa*(GTilde*(*heaviside)) );
 
  //va = va + invA*fint;
 } // fecha metodo setInterface 
@@ -1842,7 +1842,7 @@ void Simulator3D::setCflDisk(real _cfl)
 //             (m->getMaxAbsWC()/m->getDeltaZMin() ) );
 //-------------------------------------------------- 
 
- dt = cfl*sqrt((yMax-yMin)*(xMax-xMin)/numVerts)/fabs(ucMax);
+ dt = cfl*sqrt((yMax-yMin)*(xMax-xMin)/numVerts);
 }
 
 void Simulator3D::setCflBubble(real _cfl)
@@ -2851,14 +2851,24 @@ void Simulator3D::getBubbleVelocity(clVector _uVel,
  bubbleZVel = sumZVelVolume/sumVolume;
 }
 
+// impoe velocidade Lagrangian = 0 no contorno
+void Simulator3D::setLagrangianVelBC()
+{
+ for( int i=0;i<idbcw->Dim();i++ )
+ {
+  int vertice = idbcw->Get(i);
+  uSolOld.Set(vertice,0.0);
+  vSolOld.Set(vertice,0.0);
+  wSolOld.Set(vertice,0.0);
+ }
+}
+
 // impoe velocidade ALE = 0 no contorno
 void Simulator3D::setALEVelBC()
 {
- list<int> *boundaryVert = m->getBoundaryVert();
-
- for (list<int>::iterator it=boundaryVert->begin(); it!=boundaryVert->end(); ++it)
+ for( int i=0;i<idbcw->Dim();i++ )
  {
-  int vertice = *it;
+  int vertice = idbcw->Get(i);
 //--------------------------------------------------
 //   if( (Y->Get(vertice) == Y->Max() || Y->Get(vertice) == Y->Min()) &&
 //        X->Get(vertice) < X->Max() && X->Get(vertice) > X->Min() &&

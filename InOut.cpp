@@ -543,6 +543,209 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveVtk
 
+void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeader(vtkFile,_iter);
+ vtkCoords(vtkFile);
+
+
+ // conta numero de elementos
+ real plane1 = ( X->Max()+X->Min() )/2.0;
+ real plane2 = ( Y->Max()+Y->Min() )/2.0;
+ int count = 0;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+   count++;
+ }
+ 
+ vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+  {
+   vtkFile << "4 " << IEN->Get(i,0) << " "  
+            	   << IEN->Get(i,1) << " " 
+				   << IEN->Get(i,2) << " " 
+				   << IEN->Get(i,3) << endl;
+  }
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << count << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
+      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
+      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+   vtkFile << "10 ";
+ }
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
+ vtkScalar(vtkFile,"concentration",*cSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cc->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+  vtkVector(vtkFile,"gravity",*gravity);
+  vtkVector(vtkFile,"surface_force",*fint);
+ }
+
+ vtkScalar(vtkFile,"viscosity",*mu);
+ vtkScalar(vtkFile,"density",*rho);
+
+ vtkFile.close();
+
+ cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVtk
+
+void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeader(vtkFile,_iter);
+ vtkCoords(vtkFile);
+
+
+ // conta numero de elementos
+ real plane1 = 1.0+( Y->Max()+Y->Min() )/2.0;
+ int count = 0;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
+	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+   count++;
+ }
+ 
+ vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
+	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+  {
+   vtkFile << "4 " << IEN->Get(i,0) << " "  
+            	   << IEN->Get(i,1) << " " 
+				   << IEN->Get(i,2) << " " 
+				   << IEN->Get(i,3) << endl;
+  }
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << count << endl;
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
+	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+   vtkFile << "10 ";
+ }
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkScalarHeader(vtkFile);
+ vtkScalar(vtkFile,"pressure",*pSol);
+ vtkScalar(vtkFile,"concentration",*cSol);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cc->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ if( kappa->Dim() > 0 )
+ {
+  vtkScalar(vtkFile,"kappa",*kappa);
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+  vtkVector(vtkFile,"gravity",*gravity);
+  vtkVector(vtkFile,"surface_force",*fint);
+ }
+
+ vtkScalar(vtkFile,"viscosity",*mu);
+ vtkScalar(vtkFile,"density",*rho);
+
+ vtkFile.close();
+
+ cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVtk
+
 void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename, 
                                   int _iter )
 {

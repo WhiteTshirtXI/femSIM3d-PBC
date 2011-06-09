@@ -28,8 +28,8 @@ int main(int argc, char **argv)
  real We = 10;
  real Fr = 1;
  real c1 = 0.0;
- real c2 = 0.0;
- real c3 = 0.0;
+ real c2 = 0.05;
+ real c3 = 0.05;
  real c4 = 0.0;
  real alpha = 1;
  real beta = 1;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  real rho_in = 100; 
  real rho_out = 1.0;
 
- real cfl = 0.2;
+ real cfl = 0.3;
 
  const char *mesh = "../../db/gmsh/3d/oscillating.msh";
  
@@ -233,6 +233,7 @@ int main(int argc, char **argv)
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
+   s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();

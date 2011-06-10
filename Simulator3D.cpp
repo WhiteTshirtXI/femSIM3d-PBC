@@ -6,8 +6,6 @@
 
 #include "Simulator3D.h"
 
-using namespace std;
-
 Simulator3D::Simulator3D(){}
 
 Simulator3D::Simulator3D( Model3D &_m )  
@@ -223,12 +221,6 @@ void Simulator3D::assemble()
    muValue = mu_inAdimen;
    rhoValue = rho_inAdimen;
   }
-
-//--------------------------------------------------
-//   // by elements
-//   real muValue = mu.Get(mele);
-//   real rhoValue = rho.Get(mele);
-//-------------------------------------------------- 
 
   miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
   linElem.getM(v1,v2,v3,v4); 
@@ -1261,8 +1253,8 @@ void Simulator3D::stepALE()
 
 void Simulator3D::stepALEVel()
 {
- //setInterfaceVelNormal();
- setInterfaceVel();
+ setInterfaceVelNormal();
+ //setInterfaceVel();
 
  setALEVelBC();
  for( int i=0;i<30;i++ )
@@ -1276,8 +1268,8 @@ void Simulator3D::stepALEVel()
   wSmooth = *e2.getWSmooth();
 
   // impoe velocidade (componente normal) do fluido na interface
-  //setInterfaceVelNormal();
-  setInterfaceVel();
+  setInterfaceVelNormal();
+  //setInterfaceVel();
  }
 
  // smoothing - coordenadas
@@ -1293,8 +1285,8 @@ void Simulator3D::stepALEVel()
  wALE = c1*wSolOld+c2*wSmooth+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
- //setInterfaceVelNormal();
- setInterfaceVel();
+ setInterfaceVelNormal();
+ //setInterfaceVel();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1602,12 +1594,12 @@ void Simulator3D::unCoupled()
 
  if( mu_in < mu_out ) // BUBBLE
  {
-  cout << "                                 " << "BUBBLE SIMULATION" << endl;
+  cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
  }
  else // DROPLET
  {
-  cout << "                                 " << "DROPLET SIMULATION" << endl;
+  cout << setw(70) << "DROPLET SIMULATION" << endl;
   uvw = uTilde + invA*fint + invA*gravity;
  }
  

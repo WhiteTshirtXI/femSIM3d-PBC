@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include "Model3D.h"
 #include "FEMMiniElement3D.h"
 #include "FEMLinElement3D.h"

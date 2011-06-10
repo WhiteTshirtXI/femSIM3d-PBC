@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.11;
+ triEdge = 0.07;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -993,7 +993,7 @@ void Model3D::insertPointsByCurvature()
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
-  real edgeLength = mapEdgeTri.Get(i,0);
+  //real edgeLength = mapEdgeTri.Get(i,0);
   int v1 = mapEdgeTri.Get(i,1);
   int v2 = mapEdgeTri.Get(i,2);
   if( (fabs(surfMesh.curvature.Get(v1)) > 40 && 
@@ -2636,14 +2636,14 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[1] = surfMesh.Y.Min()+0.01;
  in.regionlist[2] = surfMesh.Z.Min()+0.01;
  in.regionlist[3] = 1;
- in.regionlist[4] = 0.08;
+ in.regionlist[4] = 0.1;
 
  // dentro da bolha
  in.regionlist[5] = xMax-0.01;
  in.regionlist[6] = yMax-0.01;
  in.regionlist[7] = zMax-0.01;
  in.regionlist[8] = 2;
- in.regionlist[9] = 0.05;
+ in.regionlist[9] = 0.1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -4498,7 +4498,6 @@ void Model3D::setVertNeighbour()
 // surface and nonSurface
 void Model3D::setSurface()
 {
- int surfaceNode;
  list<int> plist;
  list<int>::iterator vert;
 
@@ -4514,10 +4513,10 @@ void Model3D::setSurface()
  zSurface.Dim( surface.Dim() );
  for( int i=0;i<surface.Dim();i++ )
  {
-  int aux = surface.Get(i);
-  xSurface.Set(i,X.Get( aux ));
-  ySurface.Set(i,Y.Get( aux ));
-  zSurface.Set(i,Z.Get( aux ));
+  int surfaceNode = surface.Get(i);
+  xSurface.Set(i,X.Get( surfaceNode ));
+  ySurface.Set(i,Y.Get( surfaceNode ));
+  zSurface.Set(i,Z.Get( surfaceNode ));
  }
 } // fecha metodo setSurface
 
@@ -4875,23 +4874,13 @@ void Model3D::setInOutVert()
 //-------------------------------------------------- 
 }
 
-/*
- * heaviside inside = 1.0  |  heaviside interface = 0.5 | heaviside outside = 0.0
- * if sum of heaviside (element) > 2.0, the element is inside of bubble
- * if sum of heaviside (element) < 2.0, the element is outside
- * if sum of heaviside (element) = 2.0, by convention, the element is inside
-*/ 
 void Model3D::setInOutElem()
 {
  inElem.resize (0);
  outElem.resize (0);
  for(int i=0;i<IEN.DimI();i++ )
  {
-  int v1 = IEN.Get(i,0);
-  int v2 = IEN.Get(i,1);
-  int v3 = IEN.Get(i,2);
-  int v4 = IEN.Get(i,3);
-  if( heaviside.Get(v1) + heaviside.Get(v2) + heaviside.Get(v3) + heaviside.Get(v4) < 2.0 )
+  if( phase.Get(i) == 1.0 ) // out
    outElem.push_back(i);
   else
    inElem.push_back(i);
@@ -5575,48 +5564,42 @@ void Model3D::moveXPoints(clVector &_vec,real _dt)
 {
  X = X + _vec*_dt;
 
-//--------------------------------------------------
-//  // movimentando os pontos da malha de superficie (interface e convex) 
-//  // com velocidade _vec e _dt
-//  for( int i=0;i<surface.Dim();i++ )
-//  {
-//   int surfaceNode = surface.Get(i);
-//   real aux = surfMesh.X.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-//   surfMesh.X.Set(surfaceNode,aux);
-//  }
-//-------------------------------------------------- 
+ // movimentando os pontos da malha de superficie (interface e convex) 
+ // com velocidade _vec e _dt
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  int surfaceNode = surface.Get(i);
+  real aux = surfMesh.X.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+  surfMesh.X.Set(surfaceNode,aux);
+ }
 }
 
 void Model3D::moveYPoints(clVector &_vec,real _dt)
 {
  Y = Y + _vec*_dt;
 
-//--------------------------------------------------
-//  // movimentando os pontos da malha de superficie (interface e convex) 
-//  // com velocidade _vec e _dt
-//  for( int i=0;i<surface.Dim();i++ )
-//  {
-//   int surfaceNode = surface.Get(i);
-//   real aux = surfMesh.Y.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-//   surfMesh.Y.Set(surfaceNode,aux);
-//  }
-//-------------------------------------------------- 
+ // movimentando os pontos da malha de superficie (interface e convex) 
+ // com velocidade _vec e _dt
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  int surfaceNode = surface.Get(i);
+  real aux = surfMesh.Y.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+  surfMesh.Y.Set(surfaceNode,aux);
+ }
 }
 
 void Model3D::moveZPoints(clVector &_vec,real _dt)
 {
  Z = Z + _vec*_dt;
 
-//--------------------------------------------------
-//  // movimentando os pontos da malha de superficie (interface e convex) 
-//  // com velocidade _vec e _dt
-//  for( int i=0;i<surface.Dim();i++ )
-//  {
-//   int surfaceNode = surface.Get(i);
-//   real aux = surfMesh.Z.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-//   surfMesh.Z.Set(surfaceNode,aux);
-//  }
-//-------------------------------------------------- 
+ // movimentando os pontos da malha de superficie (interface e convex) 
+ // com velocidade _vec e _dt
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  int surfaceNode = surface.Get(i);
+  real aux = surfMesh.Z.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
+  surfMesh.Z.Set(surfaceNode,aux);
+ }
 }
 
 
@@ -6158,8 +6141,10 @@ void Model3D::setInitBubbleVolume()
 
 real Model3D::computeBubbleVolume()
 {
- real sumArea = 0;
  real sumVolume = 0;
+ //real sumCentroidX = 0;
+ //real sumCentroidY = 0;
+ //real sumCentroidZ = 0;
  for( int mele=0;mele<surfMesh.numElems;mele++ )
  {
   int v1 = surfMesh.IEN.Get(mele,0);
@@ -6214,13 +6199,22 @@ real Model3D::computeBubbleVolume()
 
    real area = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
 
-   sumArea += area;
    sumVolume += ( xCentroid*xNormalElemUnit + 
 	              yCentroid*yNormalElemUnit +
 				  zCentroid*zNormalElemUnit ) * area;
+
+   //real xdotx = xCentroid*xCentroid+yCentroid*yCentroid+zCentroid*zCentroid;
+   //sumCentroidX += xdotx*xNormalElemUnit*area;
+   //sumCentroidY += xdotx*yNormalElemUnit*area;
+   //sumCentroidZ += xdotx*zNormalElemUnit*area;
   }
  }
- return (1.0/3.0)*sumVolume;
+ real vol = (1.0/3.0)*sumVolume;
+ //real xc = sumCentroidX/(2*vol);
+ //real yc = sumCentroidY/(2*vol);
+ //real zc = sumCentroidZ/(2*vol);
+
+ return vol;
 }
 
 void Model3D::applyBubbleVolumeCorrection()

@@ -27,10 +27,10 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 10;
  real Fr = 1;
- real c1 = 0.0;
- real c2 = 0.05;
- real c3 = 0.05;
- real c4 = 0.0;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.1; // velocity
+ real c3 = 0.00; // coordinates - fujiwara
+ real c4 = 0.00; // surface
  real alpha = 1;
  real beta = 1;
 
@@ -256,31 +256,33 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;;
    cout << resetColor();
   }
-  Model3D mOld = m1; 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-  m1.setMiniElement();
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.applyBubbleVolumeCorrection();
-  m1.setWallBC();
-
-  Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
-  s1 = s2;
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMeshInfo(datFolder);
+//--------------------------------------------------
+//   Model3D mOld = m1; 
+//   //m1.mesh2Dto3DOriginal();
+//   m1.mesh3DPoints();
+//   m1.setMiniElement();
+//   m1.setOFace();
+//   m1.setSurfaceConfig();
+//   m1.applyBubbleVolumeCorrection();
+//   m1.setWallBC();
+// 
+//   Simulator3D s2(m1,s1);
+//   s2.applyLinearInterpolation(mOld);
+//   s1 = s2;
+//   s1.setSolverPressure(solverP);
+//   s1.setSolverVelocity(solverV);
+//   s1.setSolverConcentration(solverC);
+// 
+//   InOut saveEnd(m1,s1); // cria objeto de gravacao
+//   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+//   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+//   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveMeshInfo(datFolder);
+//-------------------------------------------------- 
  }
 
  PetscFinalize();

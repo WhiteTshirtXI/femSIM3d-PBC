@@ -73,10 +73,10 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 115.66;
  real Fr = 1.0;
- real c1 = 0.01; // lagrangian
- real c2 = 1.00; // smooth
- real c3 = 0.03; // smooth
- real c4 = 0.05; // surface
+ real c1 = 0.00; // lagrangian
+ real c2 = 1.00; // smooth vel
+ real c3 = 0.05; // smooth - fujiwara
+ real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.02;
+ real cfl = 0.01;
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
@@ -309,7 +309,6 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.applyBubbleVolumeCorrection();
   m1.computeNormalAndKappa();
   m1.setWallBC();
 

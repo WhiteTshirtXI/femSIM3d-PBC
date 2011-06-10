@@ -28,14 +28,16 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  numNodes = m->getNumNodes();
  numElems = m->getNumElems();
  neighbourVert = m->getNeighbourVert();
+ neighbourPoint = m->getNeighbourPoint();
+ surfMesh = m->getSurfMesh();
  inVert = m->getInVert();
  surface = m->getSurface();
  uSmooth.Dim(numNodes);
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
- uSmoothSurface.Dim(numNodes);
- vSmoothSurface.Dim(numNodes);
- wSmoothSurface.Dim(numNodes);
+ uSmoothSurface.Dim(surfMesh->numVerts);
+ vSmoothSurface.Dim(surfMesh->numVerts);
+ wSmoothSurface.Dim(surfMesh->numVerts);
  dt = _dt;
 }
 
@@ -135,15 +137,58 @@ void MeshSmooth::stepSmoothFujiwara()
  }
 } // fecha metodo stepSmooth
 
+// calcula velocidade da malha em todos os vertices
+void MeshSmooth::stepSurfaceSmoothFujiwara()
+{
+ real aux;
+ list<int> plist;
+ list<int>::iterator vert;
+ real xSum,ySum,zSum,distSum;
+ real size; // numero de elementos da lista
+ uSmooth.Dim(surfMesh->numVerts);
+ vSmooth.Dim(surfMesh->numVerts);
+ wSmooth.Dim(surfMesh->numVerts);
+
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int surfaceNode = surface->Get(i);
+
+  xSum = 0.0;
+  ySum = 0.0;
+  zSum = 0.0;
+  distSum = 0.0;
+  list<int> plist = neighbourPoint->at(surfaceNode);
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
+	                     X->Get(surfaceNode),
+						 Y->Get(surfaceNode),
+						 Z->Get(surfaceNode) );
+   distSum += dist;   
+   xSum += ( X->Get(*vert)-X->Get(surfaceNode) )*dist;
+   ySum += ( Y->Get(*vert)-Y->Get(surfaceNode) )*dist;
+   zSum += ( Z->Get(*vert)-Z->Get(surfaceNode) )*dist;
+  }
+  aux = (xSum/distSum)/dt; // velocidade USmooth
+  uSmoothSurface.Set(surfaceNode,aux);
+
+  aux = (ySum/distSum)/dt; // velocidade VSmooth
+  vSmoothSurface.Set(surfaceNode,aux);
+
+  aux = (zSum/distSum)/dt; // velocidade WSmooth
+  wSmoothSurface.Set(surfaceNode,aux);
+ }
+} // fecha metodo stepSmooth
+
 void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
 {
  list<int> plist;
  list<int>::iterator vert;
  real uSum,vSum,wSum;
  real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmoothSurface.Dim(numNodes);
+ vSmoothSurface.Dim(numNodes);
+ wSmoothSurface.Dim(numNodes);
 
  //for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  for (int it=0;it<numVerts;it++ ) 
@@ -374,5 +419,8 @@ void MeshSmooth::setSurface()
 clVector* MeshSmooth::getUSmooth(){ return &uSmooth; }
 clVector* MeshSmooth::getVSmooth(){ return &vSmooth; }
 clVector* MeshSmooth::getWSmooth(){ return &wSmooth; }
+clVector* MeshSmooth::getUSmoothSurface(){ return &uSmoothSurface; }
+clVector* MeshSmooth::getVSmoothSurface(){ return &vSmoothSurface; }
+clVector* MeshSmooth::getWSmoothSurface(){ return &wSmoothSurface; }
 
 

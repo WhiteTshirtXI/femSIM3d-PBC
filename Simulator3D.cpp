@@ -1299,6 +1299,9 @@ void Simulator3D::stepALEVel()
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
 
+ // correcao do volume da bolha
+ m->applyBubbleVolumeCorrection();
+
  // velocidade da bolha
  getBubbleVelocity(uALE,vALE,wALE);
 } // fecha metodo stepALEVel
@@ -1317,6 +1320,13 @@ void Simulator3D::setInterfaceVel()
 
 void Simulator3D::setInterfaceVelNormal()
 {
+ // smoothing - coordenadas
+ MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ e1.stepSurfaceSmoothFujiwara();
+ uSmoothSurface = *e1.getUSmoothSurface();
+ vSmoothSurface = *e1.getVSmoothSurface();
+ wSmoothSurface = *e1.getWSmoothSurface();
+
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
@@ -1340,16 +1350,16 @@ void Simulator3D::setInterfaceVelNormal()
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod2 = uSmoothCoord.Get(surfaceNode)*xNormalUnit + 
-               vSmoothCoord.Get(surfaceNode)*yNormalUnit + 
-			   wSmoothCoord.Get(surfaceNode)*zNormalUnit;
+  real prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
+               vSmoothSurface.Get(surfaceNode)*yNormalUnit + 
+			   wSmoothSurface.Get(surfaceNode)*zNormalUnit;
   real uSmoothNormal = xNormalUnit*prod2;
   real vSmoothNormal = yNormalUnit*prod2;
   real wSmoothNormal = zNormalUnit*prod2;
 
-  real uSmoothTangent = uSmoothCoord.Get(surfaceNode) - uSmoothNormal;
-  real vSmoothTangent = vSmoothCoord.Get(surfaceNode) - vSmoothNormal;
-  real wSmoothTangent = wSmoothCoord.Get(surfaceNode) - wSmoothNormal;
+  real uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
+  real vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
+  real wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
 
   uALE.Set(surfaceNode,uSolNormal+c4*uSmoothTangent);
   vALE.Set(surfaceNode,vSolNormal+c4*vSmoothTangent);
@@ -2348,6 +2358,12 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  uSmooth = _sRight.uSmooth;
  vSmooth = _sRight.vSmooth;
  wSmooth = _sRight.wSmooth;
+ uSmoothCoord = _sRight.uSmoothCoord;
+ vSmoothCoord = _sRight.vSmoothCoord;
+ wSmoothCoord = _sRight.wSmoothCoord;
+ uSmoothSurface = _sRight.uSmoothSurface;
+ vSmoothSurface = _sRight.vSmoothSurface;
+ wSmoothSurface = _sRight.wSmoothSurface;
 
  va = _sRight.va;
  vcc = _sRight.vcc;
@@ -2992,6 +3008,9 @@ void Simulator3D::allocateMemoryToAttrib()
  uSmoothCoord.Dim( numNodes );
  vSmoothCoord.Dim( numNodes );
  wSmoothCoord.Dim( numNodes );
+ uSmoothSurface.Dim( numVerts );
+ vSmoothSurface.Dim( numVerts );
+ wSmoothSurface.Dim( numVerts );
  
  // oldSol vectors
  uSolOld.Dim( numNodes );

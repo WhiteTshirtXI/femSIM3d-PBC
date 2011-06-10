@@ -211,6 +211,7 @@ class Simulator3D
   clVector velU,velV,velW,uSol,vSol,wSol,pSol,cSol;
   clVector uSL,vSL,wSL,cSL,uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
+  clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
   clVector fint,gravity,hSmooth,mu,rho;
 
   clDMatrix kappaOld;

@@ -230,6 +230,7 @@ class Model3D
   vector< list<int> >* getNeighbourElem();
   vector< list<int> >* getNeighbourVert();
   vector< list<int> >* getNeighbourFace();
+  vector< list<int> >* getNeighbourPoint();
   vector< list<int> >* getFaceIEN();
   list<int>* getBoundaryVert();
   list<int>* getInVert();

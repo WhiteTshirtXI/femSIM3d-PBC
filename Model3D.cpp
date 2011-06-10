@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.07;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -1598,8 +1598,11 @@ void Model3D::flipTriangleEdge()
 	                        P3elem2x,P3elem2y,P3elem2z);
 
   // this works, but is not consistent!!! CHANGE IT SOON!
+  real curv1 = fabs(surfMesh.curvature.Get(v1));
+  real curv2 = fabs(surfMesh.curvature.Get(v2));
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
+	  (curv1 > 30 || curv2 > 30) &&
 	  area1+area2  > area3+area4 &&
 	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
 	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
@@ -2153,7 +2156,10 @@ void Model3D::contractEdgeByLength()
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
   // verifying the length of each surface edge
-  if( mapEdgeTri.Get(edge,0) < test ) 
+
+  real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
+  real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
+  if( mapEdgeTri.Get(edge,0) < test && (curv1 > 30 || curv2 > 30) ) 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1
@@ -2213,7 +2219,7 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.6*triEdge; // 20% of triEdge
+ real test = 0.2*triEdge; // 20% of triEdge
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge vertices
@@ -2290,7 +2296,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*1.0 ) // hiRe
+  if( d>0 && d<h*2.0 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2573,9 +2579,6 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  /* ------------ pontos da malha separados em 2 loops ------------ */
  // adiciona na estrutura tetgen as coordenadas dos pontos da 
  // superficie e do convex-hull
- real xMax = surfMesh.X.Min();
- real yMax = surfMesh.Y.Min();
- real zMax = surfMesh.Z.Min();
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
   in.pointlist[3*i+0] = surfMesh.X.Get(i); 
@@ -2584,17 +2587,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   if( surfMesh.Marker.Get(i) == 0.0 ) // convex-hull
    in.pointmarkerlist[i] = 11;
   if( surfMesh.Marker.Get(i) == 0.5 ) // interface
-  {
    in.pointmarkerlist[i] = 22; // interface
-   if( surfMesh.X.Get(i) > xMax && 
-	   surfMesh.Y.Get(i) > yMax &&
-	   surfMesh.Z.Get(i) > zMax )
-   {
-	xMax = surfMesh.X.Get(i);
-	yMax = surfMesh.Y.Get(i);
-	zMax = surfMesh.Z.Get(i);
-   }
-  }
  }
 
  // adicionando pontos que nao sao da interface e do convex-hull
@@ -2639,6 +2632,22 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[4] = 0.1;
 
  // dentro da bolha
+ real xMax = surfMesh.X.Min();
+ real yMax = surfMesh.Y.Min();
+ real zMax = surfMesh.Z.Min();
+ for( int i=0;i<surface.Dim();i++ )
+ {
+  int surfaceNode = surface.Get(i);
+  if( surfMesh.X.Get(surfaceNode) > xMax && 
+	  surfMesh.Y.Get(surfaceNode) > yMax &&
+	  surfMesh.Z.Get(surfaceNode) > zMax )
+  {
+   xMax = surfMesh.X.Get(surfaceNode);
+   yMax = surfMesh.Y.Get(surfaceNode);
+   zMax = surfMesh.Z.Get(surfaceNode);
+  }
+ }
+
  in.regionlist[5] = xMax-0.01;
  in.regionlist[6] = yMax-0.01;
  in.regionlist[7] = zMax-0.01;
@@ -2934,9 +2943,9 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
   int v2 = _tetmesh.tetrahedronlist[i*4+1];
   int v3 = _tetmesh.tetrahedronlist[i*4+2];
   int v4 = _tetmesh.tetrahedronlist[i*4+3];
-  int region = _tetmesh.tetrahedronattributelist[i];
 
-  real volume = getVolume(v1,v2,v3,v4);
+  //int region = _tetmesh.tetrahedronattributelist[i];
+  //real volume = getVolume(v1,v2,v3,v4);
 
   aux = fabs(getVolume(i));
 
@@ -2945,8 +2954,8 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
       _tetmesh.pointmarkerlist[v3] == 22 &&
       _tetmesh.pointmarkerlist[v4] == 22 )
   {
-   cout << i << "  " << v1 << " " << v2 << " " << v3 << " " << v4 
-	    << " " << region << " " << volume << endl;
+  // cout << i << "  " << v1 << " " << v2 << " " << v3 << " " << v4 
+	//    << " " << region << " " << volume << endl;
    count++;
   }
 
@@ -3016,21 +3025,19 @@ void Model3D::mesh3DPoints()
  
  computeNormalAndKappa();
 
-//--------------------------------------------------
-//  saveVTKSurface("./vtk/","start",0);
-//  insertPointsByLength();
-//  //insertPointsByCurvature();
-//  removePointsByCurvature();
-//  contractEdgeByLength();
-//  //insertPointsByInterfaceDistance();
-//  saveVTKSurface("./vtk/","inserted",0);
-//  saveVTKSurface("./vtk/","removed",0);
-//  //removePointsByLength();
-//  flipTriangleEdge();
-//  saveVTKSurface("./vtk/","flipped",0);
-//  //removePointsByInterfaceDistance();
-//  //remove3dMeshPointsByDistance();
-//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","start",0);
+ insertPointsByLength();
+ //insertPointsByCurvature();
+ //removePointsByCurvature();
+ contractEdgeByLength();
+ //insertPointsByInterfaceDistance();
+ saveVTKSurface("./vtk/","inserted",0);
+ saveVTKSurface("./vtk/","removed",0);
+ removePointsByLength();
+ flipTriangleEdge();
+ saveVTKSurface("./vtk/","flipped",0);
+ removePointsByInterfaceDistance();
+ //remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();
@@ -5649,6 +5656,7 @@ clVector* Model3D::getSurface(){ return &surface; }
 vector< list<int> >* Model3D::getNeighbourElem(){return &neighbourElem;}
 vector< list<int> >* Model3D::getNeighbourVert(){return &neighbourVert;}
 vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
+vector< list<int> >* Model3D::getNeighbourPoint(){return &neighbourPoint;}
 vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
 list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}

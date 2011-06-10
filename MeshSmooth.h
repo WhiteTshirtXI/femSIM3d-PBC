@@ -23,6 +23,7 @@ class MeshSmooth
   clVector compute();
   void stepSmooth();
   void stepSmoothFujiwara();
+  void stepSurfaceSmoothFujiwara();
   void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void stepSmoothSurface();
   void stepSmoothSurface2();
@@ -34,6 +35,9 @@ class MeshSmooth
   clVector* getUSmooth(); 
   clVector* getVSmooth(); 
   clVector* getWSmooth(); 
+  clVector* getUSmoothSurface(); 
+  clVector* getVSmoothSurface(); 
+  clVector* getWSmoothSurface(); 
   clVector uSmooth,vSmooth,wSmooth;
   clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
 
@@ -46,8 +50,9 @@ class MeshSmooth
   clVector *idbcu,*idbcv,*idbcw,*idbcp;
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
+  SurfaceMesh *surfMesh;
 
-  vector< list<int> > *neighbourVert;
+  vector< list<int> > *neighbourVert,*neighbourPoint;
   list<int> *inVert;
 };
 #endif /* ifndef MESHSMOOTH_H */

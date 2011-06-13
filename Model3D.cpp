@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.11;
+ triEdge = 0.10;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -964,22 +964,19 @@ void Model3D::removePointsByCurvature()
  // number of inserted surface points
  rspc = 0;
 
- for( int i=0;i<mapEdgeTri.DimI();i++ )
+ for( int i=0;i<surface.Dim();i++ )
  {
   // edge length
-  int v1 = mapEdgeTri.Get(i,1);
-  int v2 = mapEdgeTri.Get(i,2);
-  int count = 0;
-  real c1 = fabs(surfMesh.curvature.Get(v1));
-  real c2 = fabs(surfMesh.curvature.Get(v2));
-  if( c1 > 30 || c2 > 30 )
+  int surfaceNode = surface.Get(i);
+  real curv = fabs(surfMesh.curvature.Get(surfaceNode));
+  if( curv > 60 )
   {
-   int vDel = v1;
-   if( c2 > c1 )
-	vDel = v2;
-   
-   deletePoint(vDel);
-   count++;
+   deletePoint(surfaceNode);
+
+   setSurface();
+   setMapEdgeTri();
+   setNeighbourSurface();
+
    rspc++;
   }
  }
@@ -1002,6 +999,11 @@ void Model3D::insertPointsByCurvature()
   {
    //insertPoint(i);
    insertPointWithCurvature(i); 
+
+   setSurface();
+   setMapEdgeTri();
+   setNeighbourSurface();
+
    ispc++;
   }
  }
@@ -1602,9 +1604,9 @@ void Model3D::flipTriangleEdge()
   real curv2 = fabs(surfMesh.curvature.Get(v2));
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
-	  (curv1 > 30 || curv2 > 30) &&
+	  (curv1 < 40 && curv2 < 40) &&
 	  area1+area2  > area3+area4 &&
-	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
+	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
 	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
@@ -1683,6 +1685,7 @@ void Model3D::flipTriangleEdge()
    surfMesh.IEN.Set(elem2,1,v3elem2);
    surfMesh.IEN.Set(elem2,2,v3elem1);
 
+   setSurface();
    setMapEdgeTri();
    setNeighbourSurface();
    flip++;
@@ -1764,6 +1767,7 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem4,2,v3elem2);
  surfMesh.numElems++;
  
+ setSurface();
  setMapEdgeTri();
  setNeighbourSurface();
 }
@@ -2109,6 +2113,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem4,2,v3elem2);
  surfMesh.numElems++;
  
+ setSurface();
  setMapEdgeTri();
  setNeighbourSurface();
 }
@@ -2141,6 +2146,9 @@ void Model3D::deletePoint(int _v)
  // deleting X,Y and Z coordinate; deleting the point maker funcition
  deleteSurfacePoint(_v);
 
+ // updating surface, xSurface, ySurface and zSurface
+ setSurface();
+
  // updating edge matrix
  setMapEdgeTri();
  // updating surface neighbours
@@ -2152,14 +2160,16 @@ void Model3D::contractEdgeByLength()
  // number of removed 3d mesh points by interface distance
  csp=0;
 
- real test = 0.5*triEdge; // 30% + of triEdge
+ real test = 0.4*triEdge; // 30% + of triEdge
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
   // verifying the length of each surface edge
-
   real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
   real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
-  if( mapEdgeTri.Get(edge,0) < test && (curv1 > 30 || curv2 > 30) ) 
+  real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
+  real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  if( mapEdgeTri.Get(edge,0) < test && 
+	  curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40 ) 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1
@@ -2197,6 +2207,9 @@ void Model3D::contractEdgeByLength()
 	  surfMesh.IEN.Set(i,j,v1);
 
    deleteSurfacePoint(v2);
+
+   // updating surface, xSurface, ySurface and zSurface
+   setSurface();
 
    // updating edge matrix
    setMapEdgeTri();
@@ -2296,7 +2309,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*2.0 ) // hiRe
+  if( d>0 && d<h*0.6 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2323,8 +2336,8 @@ void Model3D::remove3dMeshPointsByDistance()
 
  if( dVerts>0 )
  {
-  //for( int i=numVerts-dVerts;i<numVerts;i++ )
-  for( int i=surfMesh.numVerts;i<numVerts;i++ )
+  for( int i=numVerts-dVerts;i<numVerts;i++ )
+  //for( int i=surfMesh.numVerts;i<numVerts;i++ )
   {
    for( int j=surfMesh.numVerts;j<numVerts;j++ )
    {
@@ -2332,7 +2345,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<1.2*triEdge )
+	 if( d>0 && d<1.5*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2648,11 +2661,11 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   }
  }
 
- in.regionlist[5] = xMax-0.01;
- in.regionlist[6] = yMax-0.01;
- in.regionlist[7] = zMax-0.01;
+ in.regionlist[5] = xMax-0.001;
+ in.regionlist[6] = yMax-0.001;
+ in.regionlist[7] = zMax-0.001;
  in.regionlist[8] = 2;
- in.regionlist[9] = 0.1;
+ in.regionlist[9] = 0.05;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -3017,7 +3030,6 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
       << endl;
 }
 
-
 void Model3D::mesh3DPoints()
 {
  //computeSurfaceNormal(); // compute surface normal of all surface points
@@ -3028,16 +3040,17 @@ void Model3D::mesh3DPoints()
  saveVTKSurface("./vtk/","start",0);
  insertPointsByLength();
  //insertPointsByCurvature();
- //removePointsByCurvature();
+ removePointsByCurvature();
  contractEdgeByLength();
  //insertPointsByInterfaceDistance();
  saveVTKSurface("./vtk/","inserted",0);
  saveVTKSurface("./vtk/","removed",0);
  removePointsByLength();
  flipTriangleEdge();
+ checkNeighbours();
  saveVTKSurface("./vtk/","flipped",0);
- removePointsByInterfaceDistance();
- //remove3dMeshPointsByDistance();
+ //removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();
@@ -6247,4 +6260,30 @@ void Model3D::applyBubbleVolumeCorrection()
   surfMesh.Z.Set(surfaceNode,aux);
  }
 }
+
+void Model3D::checkNeighbours()
+{
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  if( neighbourSurfaceElem.at( i ).size() < 3 )
+  {
+   // marking the desired elements for deletion
+   list<int> plist = neighbourSurfaceElem.at(i);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	markSurfElemForDeletion(*mele);
+
+   cout << "----------------- " << color(none,red,black) 
+	    << "removing fake triangle: " << resetColor() << i << endl;
+
+   // deleting elements
+   deleteSurfaceElements();
+   deleteSurfacePoint(i);
+
+   setSurface();
+   setMapEdgeTri();
+   setNeighbourSurface();
+  }
+ }
+}
+
 

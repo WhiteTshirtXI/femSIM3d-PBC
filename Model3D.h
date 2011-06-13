@@ -87,6 +87,7 @@ class Model3D
   void setPolyhedron(int _v);
   void flipTriangleEdge();
   void contractEdgeByLength();
+  void checkNeighbours();
   int findEdge(int _v1,int _v2);
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();

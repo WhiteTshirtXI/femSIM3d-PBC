@@ -539,6 +539,18 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
+ /* --------- copying to file last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
 } // fecha metodo saveVtk
@@ -647,9 +659,21 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
+ /* --------- copying to file last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
-} // fecha metodo saveVtk
+} // fecha metodo saveVtkQuater
 
 void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 {
@@ -742,9 +766,21 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
+ /* --------- copying to file last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
-} // fecha metodo saveVtk
+} // fecha metodo saveVtkHalf
 
 void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename, 
                                   int _iter )
@@ -1830,6 +1866,18 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  vtkFile.close();
 
+ /* --------- copying to file last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "TRI-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
  cout << "surface mesh saved in VTK" << endl;
 
 } // fecha metodo saveVTKSurface
@@ -1895,6 +1943,18 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
+
+ /* --------- copying to file last.vtk --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "TRI-last" + ".vtk";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
 
  cout << "surface mesh No. " << _iter << " saved in VTK" << endl;
 

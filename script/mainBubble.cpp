@@ -22,24 +22,6 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
 //--------------------------------------------------
-//  // J. Hua et al JCP (2008)
-//  int iter = 0;
-//  real Re = 134.6;
-//  real Sc = 1;
-//  real We = 115;
-//  real Fr = 1.0;
-//  real sigma = 1;
-//  real alpha = 1;
-//  real beta = 1;
-//  real cfl = 0.03;
-//  real mu_in = 100;
-//  real mu_out = 1;
-//  real rho_in = 1000;
-//  real rho_out = 1;
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
-//-------------------------------------------------- 
-
-//--------------------------------------------------
 //  // bogdan's thesis 2010 - case 1
 //  int iter = 0;
 //  real Re = 6.53;
@@ -90,8 +72,36 @@ int main(int argc, char **argv)
 
  real cfl = 0.01;
 
- const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
+ const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+ 
+//--------------------------------------------------
+//  // bogdan's thesis 2010 - case 3
+//  int iter = 0;
+//  real Re = 32.78;
+//  real Sc = 1;
+//  real We = 115.66;
+//  real Fr = 1.0;
+//  real c1 = 0.00; // lagrangian
+//  real c2 = 1.00; // smooth vel
+//  real c3 = 0.05; // smooth - fujiwara
+//  real c4 = 0.1; // smooth surface - fujiwara
+//  real alpha = 1;
+//  real beta = 1;
+// 
+//  real sigma = 0.078;
+// 
+//  real mu_in = 0.0000178;
+//  real mu_out = 0.54;
+// 
+//  real rho_in = 1.225;
+//  real rho_out = 1350;
+// 
+//  real cfl = 0.01;
+// 
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
+//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+//-------------------------------------------------- 
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);

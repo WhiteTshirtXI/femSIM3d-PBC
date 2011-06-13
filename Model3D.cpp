@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.10;
+ triEdge = 0.11;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -3049,7 +3049,7 @@ void Model3D::mesh3DPoints()
  flipTriangleEdge();
  checkNeighbours();
  saveVTKSurface("./vtk/","flipped",0);
- //removePointsByInterfaceDistance();
+ removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
  // init tetgen mesh object

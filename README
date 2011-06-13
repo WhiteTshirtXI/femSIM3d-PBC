@@ -1,3 +1,26 @@
+COMPILATION INSTRUCTIONS:
+
+# Petsc (http://www.mcs.anl.gov/petsc)
+./config/configure.py --with-cc=gcc --with-fc=gfortran --with-cxx=g++
+--download-f-blas-lapack=1 --download-mpich=1 --with-clanguage=cxx
+--download-parmetis=1 --download-blacs=1 --download-scalapack=1
+--download-mumps=1; make all test
+
+# Boost (http://www.boost.org)
+---- install python-dev package ----
+./bootstrap.sh --prefix=$HOME/Programs/boost/1.43.0/;./bjam install
+
+# Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
+make tetlibrary
+
+# TetGen (http://tetgen.berlios.de)
+---- uncomment #define TETLIBRARY in tetgen.h ----
+make tetlib
+
+$ petsc4py (http://code.google.com/p/petsc4py)
+python setup.py install --home=$HOME/Programs/python/
+
+
 
 STRANGE BEHAVIOR:
 

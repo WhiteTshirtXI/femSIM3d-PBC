@@ -25,11 +25,11 @@ int main(int argc, char **argv)
  real We = 10;
  real Fr = 0.4;
  real c1 = 0.0; // lagrangian
- real c2 = 0.03; // smooth
- real c3 = 0.0; 
- real c4 = 0.03; // surface
+ real c2 = 1.00; // smooth vel
+ real c3 = 0.05; // smooth - fujiwara
+ real c4 = 0.1; // surface
  real alpha = 1;
- real beta = -10;
+ real beta = 1;
 
  real sigma = 1.0;
 
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
  real rho_l = 1.0;
  real rho_g = 1.0;
 
- real cfl = 0.05;
+ real cfl = 0.1;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -66,6 +66,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.set2BubbleBC();
 
   s1(m1);
@@ -115,6 +116,7 @@ int main(int argc, char **argv)
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.set2BubbleBC();
 
   s1(m1);
@@ -149,6 +151,7 @@ int main(int argc, char **argv)
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInitBubbleVolume();
   m1.set2BubbleBC();
 
   s1(m1);

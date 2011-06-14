@@ -25,24 +25,24 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1000;
  real Sc = 1;
- real We = 10;
+ real We = 1;
  real Fr = 1;
- real c1 = 0.0;  // lagrangian
- real c2 = 0.1; // velocity
- real c3 = 0.00; // coordinates - fujiwara
- real c4 = 0.00; // surface
+ real c1 = 0.1;  // lagrangian
+ real c2 = 0.3; // velocity
+ real c3 = 0.0; // coordinates - fujiwara
+ real c4 = 0.0; // surface
  real alpha = 1;
  real beta = 1;
 
  real sigma = 1;
 
- real mu_in = 350.0;
- real mu_out = 1.0;
+ real mu_in = 1.0;
+ real mu_out = 0.01;
 
- real rho_in = 100; 
- real rho_out = 1.0;
+ real rho_in = 1.0; 
+ real rho_out = 0.001;
 
- real cfl = 0.3;
+ real cfl = 0.1;
 
  const char *mesh = "../../db/gmsh/3d/oscillating.msh";
  

@@ -23,8 +23,8 @@ int main(int argc, char **argv)
  real Re = 20;
  real Sc = 2;
  real We = 10;
- real Fr = 0.4;
- real c1 = 0.0; // lagrangian
+ real Fr = 1;
+ real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
  real c3 = 0.05; // smooth - fujiwara
  real c4 = 0.1; // surface
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
  real rho_l = 1.0;
  real rho_g = 1.0;
 
- real cfl = 0.1;
+ real cfl = 1;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/2bubbles2D.msh";
+ const char *mesh = "../../db/gmsh/3d/2bubbles.msh";
 
  Model3D m1;
  Simulator3D s1;

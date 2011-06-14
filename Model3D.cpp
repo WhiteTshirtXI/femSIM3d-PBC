@@ -969,7 +969,7 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 60 )
+  if( curv > 80 )
   {
    deletePoint(surfaceNode);
 
@@ -1607,7 +1607,7 @@ void Model3D::flipTriangleEdge()
 	  (curv1 < 40 && curv2 < 40) &&
 	  area1+area2  > area3+area4 &&
 	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
-	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
+	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
@@ -2345,7 +2345,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<1.5*triEdge )
+	 if( d>0 && d<0.5*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2648,24 +2648,21 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  real xMax = surfMesh.X.Min();
  real yMax = surfMesh.Y.Min();
  real zMax = surfMesh.Z.Min();
- for( int i=0;i<surface.Dim();i++ )
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  int surfaceNode = surface.Get(i);
-  if( surfMesh.X.Get(surfaceNode) > xMax && 
-	  surfMesh.Y.Get(surfaceNode) > yMax &&
-	  surfMesh.Z.Get(surfaceNode) > zMax )
+  if( surfMesh.Marker.Get(i) == 0.5 && surfMesh.Z.Get(i) > zMax )
   {
-   xMax = surfMesh.X.Get(surfaceNode);
-   yMax = surfMesh.Y.Get(surfaceNode);
-   zMax = surfMesh.Z.Get(surfaceNode);
+   xMax = surfMesh.X.Get(i);
+   yMax = surfMesh.Y.Get(i);
+   zMax = surfMesh.Z.Get(i);
   }
  }
 
- in.regionlist[5] = xMax-0.001;
- in.regionlist[6] = yMax-0.001;
- in.regionlist[7] = zMax-0.001;
+ in.regionlist[5] = xMax-triEdge*0.1;
+ in.regionlist[6] = yMax-triEdge*0.1;
+ in.regionlist[7] = zMax-triEdge*0.1;
  in.regionlist[8] = 2;
- in.regionlist[9] = 0.05;
+ in.regionlist[9] = 0.1;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -3041,8 +3038,8 @@ void Model3D::mesh3DPoints()
  insertPointsByLength();
  //insertPointsByCurvature();
  removePointsByCurvature();
- contractEdgeByLength();
  //insertPointsByInterfaceDistance();
+ contractEdgeByLength();
  saveVTKSurface("./vtk/","inserted",0);
  saveVTKSurface("./vtk/","removed",0);
  removePointsByLength();
@@ -6069,12 +6066,12 @@ void Model3D::computeNormalAndKappa()
   real zNormalUnit = sumZCrossUnit/len;
 
   // intensidade da forca resultante
-  real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+  real force = -sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
   // teste para saber o sentido correto de aplicacao da
   // pressao no noh.
   if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
-   force = force;
+   force = -force;
 
   real pressure = force/sumArea;
 

@@ -1602,7 +1602,7 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- if( mu_in < mu_out ) // BUBBLE
+ if( mu_in <= mu_out ) // BUBBLE
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;

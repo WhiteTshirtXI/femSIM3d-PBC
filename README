@@ -1,3 +1,21 @@
+# -------------------------------------------------------------------------- #
+#
+#                    Single and Two-Phase flow Simulator
+#  
+#  Method: Finite Element.
+#  Elements: 5 nodes mini-element and 10 nodes (not 100% implemented)
+#  Discretization: Galerkin for all terms except of the convection term 
+#                  which is Semi-Lagrangian.
+#  Lin Sys Solution: PETSc library
+#  Meshing: TetGen by Hang Si
+#
+#  authors: Gustavo R. ANJOS              gustavo.rabello@gmail.com
+#           Norberto MANGIAVACCHI         norberto.mangiavacchi@uerj.br
+#           Jose PONTES                   jopontes@metalmat.ufrj.br
+#           John R. THOME                 john.thome@epfl.ch
+#
+# -------------------------------------------------------------------------- #
+
 COMPILATION INSTRUCTIONS:
 
 # Petsc (http://www.mcs.anl.gov/petsc)
@@ -8,7 +26,7 @@ COMPILATION INSTRUCTIONS:
 
 # Boost (http://www.boost.org)
 ---- install python-dev package ----
-./bootstrap.sh --prefix=$HOME/Programs/boost/1.43.0/;./bjam install
+./bootstrap.sh --prefix=$HOME/Programs/boost/1.47.0/;./bjam install
 
 # Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
 make tetlibrary
@@ -17,14 +35,20 @@ make tetlibrary
 ---- uncomment #define TETLIBRARY in tetgen.h ----
 make tetlib
 
-$ petsc4py (http://code.google.com/p/petsc4py)
+# petsc4py (http://code.google.com/p/petsc4py)
 python setup.py install --home=$HOME/Programs/python/
 
+# Directory layout
+$HOME/projects/cpp/femSIM3d
+$HOME/projects/cpp/lib
+$HOME/Programs/petsc/petsc-dev
+$HOME/Programs/boost/1.47.0
+$HOME/Programs/tetgen/1.4.3
 
 
 STRANGE BEHAVIOR:
 
-// *********** SIMULATOR3D.CPP || UNCOUPLED ************* //
+# *********** SIMULATOR3D.CPP || UNCOUPLED ************* #
 
 BUBBLE MODE:
 
@@ -60,4 +84,4 @@ DROPLET MODE:
 
 CALL uv = uTilde + invA*fint + invA*gravity;
 
-// ****************************************************** //
+# ****************************************************** #

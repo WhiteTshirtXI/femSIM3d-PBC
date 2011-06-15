@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.11;
+ triEdge = 0.09;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -969,7 +969,7 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 80 )
+  if( curv > 60 )
   {
    deletePoint(surfaceNode);
 
@@ -1604,9 +1604,9 @@ void Model3D::flipTriangleEdge()
   real curv2 = fabs(surfMesh.curvature.Get(v2));
   if( surfMesh.Marker.Get(v1)==0.5 &&
 	  q1+q2 < q3+q4 && 
-	  (curv1 < 40 && curv2 < 40) &&
+	  (curv1 < 60 && curv2 < 60) &&
 	  area1+area2  > area3+area4 &&
-	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
+	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
 	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
@@ -2309,7 +2309,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*0.6 ) // hiRe
+  if( d>0 && d<h*0.8 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2345,7 +2345,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	{
 	 real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                    X.Get(j),Y.Get(j),Z.Get(j) );
-	 if( d>0 && d<0.5*triEdge )
+	 if( d>0 && d<2.0*triEdge )
 	 {
 	//--------------------------------------------------
 	//   cout << "- " << color(none,blue,black) 
@@ -2515,13 +2515,11 @@ void Model3D::insertPointsBetweenBubblesByPosition()
  * usually when the mesh is created from the .MSH file */
 void Model3D::mesh2Dto3DOriginal()
 {
- //computeSurfaceNormal(); // compute surface normal of all surface points
- //computeKappaGeo();
-
  computeNormalAndKappa();
 
  //insertPointsByInterfaceDistance();
  flipTriangleEdge();
+ checkNeighbours();
 
  // clean and init tetgen mesh object
  in.initialize();
@@ -3029,9 +3027,6 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
 void Model3D::mesh3DPoints()
 {
- //computeSurfaceNormal(); // compute surface normal of all surface points
- //computeKappaGeo();
- 
  computeNormalAndKappa();
 
  saveVTKSurface("./vtk/","start",0);

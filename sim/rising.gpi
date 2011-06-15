@@ -1,0 +1,28 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+set title "Bubble rise velocity" 
+set xlabel "time"
+set ylabel "velocity"
+set label
+#set xrange 
+#set yrange 
+unset grid
+
+#set terminal pdf
+#set terminal postscript enhanced
+#set output 'teste.pdf'
+
+
+set label "water-sugar solution" at 1.5,0.17
+set label "{/Symbol r_l}=1350, {/Symbol r_g}=1.225" at 1.5,0.15
+set label "{/Symbol m_l}=1.28, {/Symbol m_g}=0.0000178" at 1.5,0.13
+set label "numerical velocity = 0.2624" at 1.5,0.09
+set label "experimental velocity = 0.267" at 1.5,0.11
+
+fileObj = "../dat/volume.dat"
+plot fileObj using 1:($5/2) title 'air water-sugar' with lines
+

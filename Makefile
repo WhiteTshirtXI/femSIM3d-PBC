@@ -21,6 +21,7 @@ src += $(LIBDIR)/GMRes.cpp
 src += $(LIBDIR)/PetscSolver.cpp
 src += $(LIBDIR)/FEMLinElement3D.cpp
 src += $(LIBDIR)/FEMMiniElement3D.cpp
+#src += $(LIBDIR)/FEMQuadElement3D.cpp
 src += $(wildcard ./*.cpp)
 
 obj = $(src:%.cpp=%.o)

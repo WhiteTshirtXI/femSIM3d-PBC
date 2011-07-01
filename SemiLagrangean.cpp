@@ -92,6 +92,7 @@ void SemiLagrangean::compute(real dt)
 
  setBC();
  setCentroid();
+ setQuad();
 
 } // fim do metodo compute
 
@@ -118,6 +119,7 @@ void SemiLagrangean::computeFreeSurface(real dt)
 
  setBC();
  setCentroid();
+ setQuad();
 
 } // fim do metodo computeFreeSurface
 
@@ -154,6 +156,104 @@ void SemiLagrangean::setCentroid()
  }
 
 }// fim do metodo compute -> setCentroid
+
+void SemiLagrangean::setQuad()
+{
+ real aux;
+
+ for( int mele=0;mele<numElems;mele++ )
+ {
+  int v1  = (int) IEN->Get(mele,0);
+  int v2  = (int) IEN->Get(mele,1);
+  int v3  = (int) IEN->Get(mele,2);
+  int v4  = (int) IEN->Get(mele,3);
+  int v5  = (int) IEN->Get(mele,4);
+  int v6  = (int) IEN->Get(mele,5);
+  int v7  = (int) IEN->Get(mele,6);
+  int v8  = (int) IEN->Get(mele,7);
+  int v9  = (int) IEN->Get(mele,8);
+  int v10 = (int) IEN->Get(mele,9);
+
+  // v5 (v1-v2)
+  aux = ( uParticle.Get(v1)+
+		  uParticle.Get(v2) )*0.5;
+  uParticle.Set(v5,aux);
+
+  aux = ( vParticle.Get(v1)+
+		  vParticle.Get(v2) )*0.5;
+  vParticle.Set(v5,aux);
+
+  aux = ( wParticle.Get(v1)+
+		  wParticle.Get(v2) )*0.5;
+  wParticle.Set(v5,aux);
+
+  // v6 (v1-v3)
+  aux = ( uParticle.Get(v1)+
+		  uParticle.Get(v3) )*0.5;
+  uParticle.Set(v6,aux);
+
+  aux = ( vParticle.Get(v1)+
+		  vParticle.Get(v3) )*0.5;
+  vParticle.Set(v6,aux);
+
+  aux = ( wParticle.Get(v1)+
+		  wParticle.Get(v3) )*0.5;
+  wParticle.Set(v6,aux);
+
+  // v7 (v1-v4)
+  aux = ( uParticle.Get(v1)+
+		  uParticle.Get(v4) )*0.5;
+  uParticle.Set(v7,aux);
+
+  aux = ( vParticle.Get(v1)+
+		  vParticle.Get(v4) )*0.5;
+  vParticle.Set(v7,aux);
+
+  aux = ( wParticle.Get(v1)+
+		  wParticle.Get(v4) )*0.5;
+  wParticle.Set(v7,aux);
+
+  // v8 (v2-v3)
+  aux = ( uParticle.Get(v2)+
+		  uParticle.Get(v3) )*0.5;
+  uParticle.Set(v8,aux);
+
+  aux = ( vParticle.Get(v2)+
+		  vParticle.Get(v3) )*0.5;
+  vParticle.Set(v8,aux);
+
+  aux = ( wParticle.Get(v2)+
+		  wParticle.Get(v3) )*0.5;
+  wParticle.Set(v8,aux);
+
+  // v9 (v2-v4)
+  aux = ( uParticle.Get(v2)+
+		  uParticle.Get(v4) )*0.5;
+  uParticle.Set(v9,aux);
+
+  aux = ( vParticle.Get(v2)+
+		  vParticle.Get(v4) )*0.5;
+  vParticle.Set(v9,aux);
+
+  aux = ( wParticle.Get(v2)+
+		  wParticle.Get(v4) )*0.5;
+  wParticle.Set(v9,aux);
+
+  // v10 (v3-v4)
+  aux = ( uParticle.Get(v3)+
+		  uParticle.Get(v4) )*0.5;
+  uParticle.Set(v10,aux);
+
+  aux = ( vParticle.Get(v3)+
+		  vParticle.Get(v4) )*0.5;
+  vParticle.Set(v10,aux);
+
+  aux = ( wParticle.Get(v3)+
+		  wParticle.Get(v4) )*0.5;
+  wParticle.Set(v10,aux);
+ }
+
+}// fim do metodo compute -> setQuad
 
 void SemiLagrangean::getDepartElem(real dt)
 {

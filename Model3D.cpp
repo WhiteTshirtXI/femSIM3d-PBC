@@ -4537,13 +4537,18 @@ void Model3D::setQuadElement()
  checkTetrahedronOrientation();
 
 
- /*         v3 
-  *         o
-  *        / \
-  *    v6 o   o v5
-  *      /     \
-  *     o - o - o
-  *    v1   v4   v2
+ /*
+  *  Tetrahedron divided by 4 facets:
+  *
+  *      facet 1        facet 2        facet 3        facet 4
+  *
+  *         v3             v3             v4             v3       
+  *         o              o              o              o       
+  *        / \            / \            / \            / \
+  *    v6 o   o v8    v6 o   o v10   v7 o   o v9    v8 o   o v10   
+  *      /     \        /     \        /     \        /     \     
+  *     o - o - o      o - o - o      o - o - o      o - o - o   
+  *    v1   v5   v2   v1   v7   v4   v1   v5   v2   v2   v9   v4  
   *
   * */
 
@@ -4593,7 +4598,7 @@ void Model3D::setQuadElement()
 	IEN.Set(*elem,6,v7);
    }
 
-   // vertex v7 between v2 e v3
+   // vertex v8 between v2 e v3
    if( (vEdge1 == v2 && vEdge2 == v3) || 
 	   (vEdge2 == v2 && vEdge1 == v3) )
    {
@@ -4601,17 +4606,17 @@ void Model3D::setQuadElement()
 	IEN.Set(*elem,7,v8);
    }
 
-   // vertex v8 between v3 e v4
-   if( (vEdge1 == v3 && vEdge2 == v4) || 
-	   (vEdge2 == v3 && vEdge1 == v4) )
+   // vertex v9 between v2 e v4
+   if( (vEdge1 == v2 && vEdge2 == v4) || 
+	   (vEdge2 == v2 && vEdge1 == v4) )
    {
 	int v9 = edge;
 	IEN.Set(*elem,8,v9);
    }
 
-   // vertex v10 between v2 e v4
-   if( (vEdge1 == v2 && vEdge2 == v4) || 
-	   (vEdge2 == v2 && vEdge1 == v4) )
+   // vertex v10 between v3 e v4
+   if( (vEdge1 == v3 && vEdge2 == v4) || 
+	   (vEdge2 == v3 && vEdge1 == v4) )
    {
 	int v10 = edge;
 	IEN.Set(*elem,9,v10);

@@ -29,6 +29,7 @@ class SemiLagrangean
   void computeIntercept(int ii,real R2X,real R2Y,real R2Z,int ib1,int ib2,
 	                    int ib3,real *l1,real *l2,real *l3);
   void setCentroid();
+  void setQuad();
   void setBC();
   void meshInterp(clVector &_X,clVector &_Y,clVector &_Z);
   void jumpToElem2(int destElem,int iiVert,real R2X,real R2Y,real R2Z);

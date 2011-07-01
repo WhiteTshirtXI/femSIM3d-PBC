@@ -196,6 +196,7 @@ class Simulator3D
   real sigma,g,rho_in,rho_out,mu_in,mu_out;
   real sigma_0,g_0,rho_0,mu_0;
   real sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
+  real bubbleVel;
   int iter;
   clMatrix K,Kc,Mrho,M,Mc,G,D,A;
   clMatrix mat,matc;

@@ -23,12 +23,13 @@ int main(int argc, char **argv)
 
  // Tryggvason (Computations of Multiphase Flows by a FDM/FTM
  int iter = 0;
+ real triEdge = 0.05;
  real Re = 1000;
  real Sc = 1;
  real We = 1;
  real Fr = 1;
- real c1 = 0.1;  // lagrangian
- real c2 = 0.3; // velocity
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.0; // velocity
  real c3 = 0.0; // coordinates - fujiwara
  real c4 = 0.0; // surface
  real alpha = 1;
@@ -36,15 +37,16 @@ int main(int argc, char **argv)
 
  real sigma = 1;
 
- real mu_in = 1.0;
+ real mu_in = 1;
  real mu_out = 0.01;
 
- real rho_in = 1.0; 
+ real rho_in = 1; 
  real rho_out = 0.001;
 
- real cfl = 0.1;
+ real cfl = 0.5;
 
- const char *mesh = "../../db/gmsh/3d/oscillating.msh";
+ //const char *mesh = "../../db/gmsh/3d/oscillating.msh";
+ const char *mesh = "../../db/gmsh/3d/test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -69,6 +71,7 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
   m1.setMiniElement();
   m1.setOFace();
@@ -110,6 +113,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -154,6 +158,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -189,6 +194,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -218,7 +224,7 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
- int nIter = 3000;
+ int nIter = 13000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -256,33 +262,30 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;;
    cout << resetColor();
   }
-//--------------------------------------------------
-//   Model3D mOld = m1; 
-//   //m1.mesh2Dto3DOriginal();
-//   m1.mesh3DPoints();
-//   m1.setMiniElement();
-//   m1.setOFace();
-//   m1.setSurfaceConfig();
-//   m1.applyBubbleVolumeCorrection();
-//   m1.setWallBC();
-// 
-//   Simulator3D s2(m1,s1);
-//   s2.applyLinearInterpolation(mOld);
-//   s1 = s2;
-//   s1.setSolverPressure(solverP);
-//   s1.setSolverVelocity(solverV);
-//   s1.setSolverConcentration(solverC);
-// 
-//   InOut saveEnd(m1,s1); // cria objeto de gravacao
-//   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveMeshInfo(datFolder);
-//-------------------------------------------------- 
+  Model3D mOld = m1; 
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
+  m1.setMiniElement();
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallBC();
+
+  Simulator3D s2(m1,s1);
+  s2.applyLinearInterpolation(mOld);
+  s1 = s2;
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

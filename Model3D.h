@@ -94,6 +94,7 @@ class Model3D
   void removePointByVolume();
   void breakup();
   clVector triangleQuality(int _v);
+  void setMapEdge();
   void setMapEdgeTri();
   void setSurfaceConfig();
   void saveVTK( const char* _dir,const char* _filename, int _iter );
@@ -133,6 +134,7 @@ class Model3D
   void setCubeBC();
   void setCubeBC2();
   void setWallBC();
+  void setWallCouetteBC();
   void setWallAnnularBC();
   void set2BubbleBC();
   void setStepBC();
@@ -155,6 +157,10 @@ class Model3D
   void moveYPoints(clVector &_vec,real _dt);
   void moveZPoints(clVector &_vec,real _dt);
   void setMiniElement();            
+  void setCentroid();
+  void centroidPositionCorrection();
+  void edgeMidPointPositionCorrection();
+  void checkTetrahedronOrientation();
   void setQuadElement();             
   void setNeighbour();
   void setNeighbourSurface();
@@ -258,7 +264,7 @@ class Model3D
   clVector heaviside;
   clVector idRegion;
   clVector surface,nonSurface;
-  clMatrix mapEdgeTri;
+  clMatrix mapEdge,mapEdgeTri;
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
@@ -292,6 +298,7 @@ class Model3D
   vector< list<int> > faceIEN;
   vector< list<int> > neighbourSurfaceElem; // lista de elementos triangulares
   vector< list<int> > neighbourPoint;  // lista de pontos vizinhos da superficie
+  vector< list<int> > neighbourEdge; // elems que compart. a face do triangulo 
   list<int> boundaryVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
 };

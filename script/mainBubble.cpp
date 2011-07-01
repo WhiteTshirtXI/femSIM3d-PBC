@@ -21,63 +21,66 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
-//--------------------------------------------------
-//  // bogdan's thesis 2010 - case 1
-//  int iter = 0;
-//  real Re = 6.53;
-//  real Sc = 1;
-//  real We = 115.66;
-//  real Fr = 1.0;
-//  real c1 = 0.01; // lagrangian
-//  real c2 = 1.00; // smooth
-//  real c3 = 0.03; // smooth
-//  real c4 = 0.05; // surface
-//  real alpha = 1;
-//  real beta = 1;
-// 
-//  real sigma = 0.078;
-// 
-//  real mu_in = 0.0000178;
-//  real mu_out = 2.73;
-// 
-//  real rho_in = 1.225;
-//  real rho_out = 1350;
-// 
-//  real cfl = 0.02;
-// 
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube4.msh";
-//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
-//-------------------------------------------------- 
-
- // bogdan's thesis 2010 - case 2
+ // bogdan's thesis 2010 - case 1
  int iter = 0;
- real Re = 13.8487;
+ real triEdge = 0.11;
+ real Re = 6.53;
  real Sc = 1;
  real We = 115.66;
  real Fr = 1.0;
- real c1 = 0.00; // lagrangian
- real c2 = 1.00; // smooth vel
- real c3 = 0.05; // smooth - fujiwara
- real c4 = 0.1; // smooth surface - fujiwara
+ real c1 = 0.01; // lagrangian
+ real c2 = 1.00; // smooth
+ real c3 = 0.03; // smooth
+ real c4 = 0.05; // surface
  real alpha = 1;
  real beta = 1;
 
  real sigma = 0.078;
 
  real mu_in = 0.0000178;
- real mu_out = 1.28;
+ real mu_out = 2.73;
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.01;
+ real cfl = 0.02;
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+
+//--------------------------------------------------
+//  // bogdan's thesis 2010 - case 2
+//  int iter = 0;
+//  real triEdge = 0.09;
+//  real Re = 13.8487;
+//  real Sc = 1;
+//  real We = 115.66;
+//  real Fr = 1.0;
+//  real c1 = 0.00; // lagrangian
+//  real c2 = 1.00; // smooth vel
+//  real c3 = 0.05; // smooth - fujiwara
+//  real c4 = 0.1; // smooth surface - fujiwara
+//  real alpha = 1;
+//  real beta = 1;
+// 
+//  real sigma = 0.078;
+// 
+//  real mu_in = 0.0000178;
+//  real mu_out = 1.28;
+// 
+//  real rho_in = 1.225;
+//  real rho_out = 1350;
+// 
+//  real cfl = 0.01;
+// 
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube6.msh";
+//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+//-------------------------------------------------- 
  
 //--------------------------------------------------
 //  // bogdan's thesis 2010 - case 3
 //  int iter = 0;
+//  real triEdge = 0.09;
 //  real Re = 32.78;
 //  real Sc = 1;
 //  real We = 115.66;
@@ -85,6 +88,35 @@ int main(int argc, char **argv)
 //  real c1 = 0.00; // lagrangian
 //  real c2 = 1.00; // smooth vel
 //  real c3 = 0.05; // smooth - fujiwara
+//  real c4 = 0.1; // smooth surface - fujiwara
+//  real alpha = 1;
+//  real beta = 1;
+// 
+//  real sigma = 0.078;
+// 
+//  real mu_in = 0.0000178;
+//  real mu_out = 0.54;
+// 
+//  real rho_in = 1.225;
+//  real rho_out = 1350;
+// 
+//  real cfl = 0.01;
+// 
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube6.msh";
+//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
+//-------------------------------------------------- 
+
+//--------------------------------------------------
+//  // 
+//  int iter = 0;
+//  real triEdge = 0.11;
+//  real Re = 30.83;
+//  real Sc = 1;
+//  real We = 339;
+//  real Fr = 1.0;
+//  real c1 = 0.00; // lagrangian
+//  real c2 = 1.00; // smooth vel
+//  real c3 = 0.08; // smooth - fujiwara
 //  real c4 = 0.1; // smooth surface - fujiwara
 //  real alpha = 1;
 //  real beta = 1;
@@ -126,6 +158,7 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
   m1.setMiniElement();
   m1.setOFace();
@@ -167,6 +200,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -211,6 +245,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -246,6 +281,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -315,6 +351,7 @@ int main(int argc, char **argv)
   }
   Model3D mOld = m1; 
   //m1.mesh2Dto3DOriginal();
+  m1.setTriEdge(triEdge);
   m1.mesh3DPoints();
   m1.setMiniElement();
   m1.setOFace();

@@ -1182,6 +1182,7 @@ void Simulator3D::stepLagrangian()
  m->moveXPoints(uSolOld,dt);
  m->moveYPoints(vSolOld,dt);
  m->moveZPoints(wSolOld,dt);
+ m->centroidPositionCorrection();
 
  //assemble();
  assembleSlip();
@@ -1200,6 +1201,7 @@ void Simulator3D::stepLagrangian()
 void Simulator3D::stepLagrangianZ()
 {
  m->moveZPoints(wSol,dt);
+ m->centroidPositionCorrection();
 
  SemiLagrangean sl(*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
 
@@ -1249,6 +1251,7 @@ void Simulator3D::stepALE()
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
+ m->centroidPositionCorrection();
 } // fecha metodo stepALE
 
 void Simulator3D::stepALEVel()
@@ -1294,10 +1297,11 @@ void Simulator3D::stepALEVel()
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
 
- // movimentando os pontos da malha com velocidade ALE
+ // movimentando os vertices pontos da malha com velocidade ALE
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
+ m->centroidPositionCorrection();
 
  // correcao do volume da bolha
  m->applyBubbleVolumeCorrection();
@@ -1433,7 +1437,7 @@ void Simulator3D::setGravity(const char* _direction)
  gUnit.Append(gz);
 
  gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
- //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - rho_inAdimen*M)*gUnit );
+ //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - M)*gUnit );
 
  // update RHS
  //va = va + gravity;

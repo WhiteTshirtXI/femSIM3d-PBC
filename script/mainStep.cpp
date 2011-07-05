@@ -77,7 +77,6 @@ int main(int argc, char **argv)
   cout << endl;
 
   string file = (string) "sim-" + *(argv+2);
-  const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
   s1.setCfl(cfl);
  }

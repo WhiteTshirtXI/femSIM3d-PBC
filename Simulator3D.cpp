@@ -1152,7 +1152,6 @@ void Simulator3D::assembleK()
 //convUVW vai para setRHS.
 void Simulator3D::stepSL()
 {
-
  clVector velU = uSolOld-uALE;
  clVector velV = vSolOld-vALE;
  clVector velW = wSolOld-wALE;
@@ -1176,6 +1175,14 @@ void Simulator3D::stepSL()
 //  convSurface.CopyTo(2*numNodes,wSLSurface);
 //-------------------------------------------------- 
  
+} // fecha metodo stepSL 
+
+void Simulator3D::stepNoConvection()
+{
+ convUVW.CopyFrom(0,uSolOld);
+ convUVW.CopyFrom(numNodes,vSolOld);
+ convUVW.CopyFrom(2*numNodes,wSolOld);
+ convC = cSolOld;
 } // fecha metodo stepSL 
 
 void Simulator3D::step()

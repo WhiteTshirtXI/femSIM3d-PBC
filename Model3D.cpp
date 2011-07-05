@@ -22,7 +22,7 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
- triEdge = 0.1;
+ triEdge = 0.10;
  averageTriEdge = 0;
  isp = 0;                    
  ispc = 0;                    
@@ -215,7 +215,7 @@ void Model3D::readMSH( const char* filename )
 // 
 //  mshFile >> numberOfPhyNames;
 // 
-//  idRegion.resize(numberOfPhyNames);
+//  surfMesh.idRegion.resize(numberOfPhyNames);
 //  if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
 //  {
 //   for (i=0; i < numberOfPhyNames; i++)
@@ -223,7 +223,7 @@ void Model3D::readMSH( const char* filename )
 //    mshFile >> auxstr;
 //    mshFile >> auxstr;
 //    mshFile >> auxstr;
-//    idRegion.at(i)=auxstr;
+//    surfMesh.idRegion.at(i)=auxstr;
 //   }
 //  }
 //-------------------------------------------------- 
@@ -259,7 +259,7 @@ void Model3D::readMSH( const char* filename )
   mshFile >> surfMesh.numElems;
 
   surfMesh.IEN.Dim(surfMesh.numElems,3);
-  idRegion.Dim(surfMesh.numElems);
+  surfMesh.idRegion.Dim(surfMesh.numElems);
 
   for( i=0; i < surfMesh.numElems; i++ )
   {
@@ -268,18 +268,18 @@ void Model3D::readMSH( const char* filename )
    mshFile >> numberOfTags;  
    if( numberOfTags == 3 ) // msh file version 2.1
    {
-	// idRegion 1 = surface
-	// idRegion 2 = wall
-	// idRegion 3 = bubble
+	// surfMesh.idRegion 1 = surface
+	// surfMesh.idRegion 2 = wall
+	// surfMesh.idRegion 3 = bubble
 	mshFile >> id;
-	idRegion.Set(i,id);
+	surfMesh.idRegion.Set(i,id);
 	mshFile >> auxstr;
 	mshFile >> auxstr;
    }
    else // msh file vertion 2.2
    {
 	mshFile >> id;
-	idRegion.Set(i,id);
+	surfMesh.idRegion.Set(i,id);
 	mshFile >> auxstr;
    }
 
@@ -312,7 +312,7 @@ void Model3D::setInterfaceBC()
  surfMesh.Marker.SetAll(0.0);
  for( int i=0;i<surfMesh.numElems;i++ )
  {
-  if( idRegion.Get(i) == 1 )
+  if( surfMesh.idRegion.Get(i) > 1 )
   {
    int v1 = surfMesh.IEN.Get(i,0);
    int v2 = surfMesh.IEN.Get(i,1);
@@ -1100,6 +1100,13 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
   surfMesh.IEN.Set(elem,0,vert1);
   surfMesh.IEN.Set(elem,1,vert2);
   surfMesh.IEN.Set(elem,2,vert3);
+
+  // add new idRegion
+  list<int> plist2 = neighbourSurfaceElem.at(_v);
+  list<int>::iterator mele=plist2.begin();
+  surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
+  mele = plist2.end();
+
   surfMesh.numElems++;
 
  }
@@ -1115,6 +1122,13 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
  surfMesh.IEN.Set(elem,0,vert1);
  surfMesh.IEN.Set(elem,1,vert2);
  surfMesh.IEN.Set(elem,2,vert3);
+
+  // add new idRegion
+ list<int> plist2 = neighbourSurfaceElem.at(_v);
+ list<int>::iterator mele=plist2.begin();
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
+ mele = plist2.end();
+
  surfMesh.numElems++;
 }
 
@@ -1333,13 +1347,14 @@ void Model3D::markSurfElemForDeletion(int _elem)
 
 void Model3D::deleteSurfaceElements()
 {
- // deleting elements
+ // deleting elements and idRegion
  for( int i=0;i<surfMesh.IEN.DimI();i++ )
   if( surfMesh.IEN.Get(i,0) == -1 && 
 	  surfMesh.IEN.Get(i,1) == -1 && 
 	  surfMesh.IEN.Get(i,2) == -1 )
   {
    surfMesh.IEN.DelLine(i);
+   surfMesh.idRegion.Delete(i);
    surfMesh.numElems--;
    i--; // should go back to verify the next element as well
   }
@@ -1698,7 +1713,7 @@ void Model3D::flipTriangleEdge()
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
- cout << "----------------- " << color(none,yellow,black) 
+ cout << "-------------------- " << color(none,yellow,black) 
       << "inserting vertex: " << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
@@ -1746,12 +1761,16 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem1,0,v1);
  surfMesh.IEN.Set(elem1,1,vAdd);
  surfMesh.IEN.Set(elem1,2,v3elem1);
+ // add new idRegion
+ surfMesh.idRegion.Set(elem1,surfMesh.idRegion.Get(elem1));
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
  surfMesh.IEN.Set(elem2,0,v1);
  surfMesh.IEN.Set(elem2,1,vAdd);
  surfMesh.IEN.Set(elem2,2,v3elem2);
+ // add new idRegion
+ surfMesh.idRegion.Set(elem2,surfMesh.idRegion.Get(elem1));
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
  surfMesh.IEN.AddRow();
@@ -1759,6 +1778,8 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem3,0,v2);
  surfMesh.IEN.Set(elem3,1,vAdd);
  surfMesh.IEN.Set(elem3,2,v3elem1);
+ // add new idRegion
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
@@ -1767,6 +1788,8 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem4,0,v2);
  surfMesh.IEN.Set(elem4,1,vAdd);
  surfMesh.IEN.Set(elem4,2,v3elem2);
+ // add new idRegion
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
  
  setSurface();
@@ -2090,6 +2113,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem1,0,v1);
  surfMesh.IEN.Set(elem1,1,vAdd);
  surfMesh.IEN.Set(elem1,2,v3elem1);
+ // add new idRegion
+ surfMesh.idRegion.Set(elem1,surfMesh.idRegion.Get(elem1));
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
@@ -2097,6 +2122,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem2,0,v1);
  surfMesh.IEN.Set(elem2,1,v3elem2);
  surfMesh.IEN.Set(elem2,2,vAdd);
+ // add new idRegion
+ surfMesh.idRegion.Set(elem2,surfMesh.idRegion.Get(elem1));
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
  // OLD ELEM1 //
@@ -2105,6 +2132,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem3,0,v2);
  surfMesh.IEN.Set(elem3,1,v3elem1);
  surfMesh.IEN.Set(elem3,2,vAdd);
+ // add new idRegion
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
@@ -2114,6 +2143,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem4,0,v2);
  surfMesh.IEN.Set(elem4,1,vAdd);
  surfMesh.IEN.Set(elem4,2,v3elem2);
+ // add new idRegion
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
  
  setSurface();
@@ -2355,7 +2386,8 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge )
 	//-------------------------------------------------- 
-	if( d>0 && d<2.0*triEdge )
+	if( d>0 && d<0.6*triEdge )
+	//if( d>0 && d<2.0*triEdge )
 	{
 	 //--------------------------------------------------
 	 //   cout << "- " << color(none,blue,black) 
@@ -2641,7 +2673,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   * SENDO 1.0 DENTRO DA BOLHA, 0.5 NA SUPERFICIE E 0.0 FORA 
   * E NECESSARIO DEFINIR 1 PONTO EM CADA REGIAO */
  // fluido interior + fluido exterior + superficie
- in.numberofregions = 2; 
+ in.numberofregions = surfMesh.idRegion.Max(); 
  in.regionlist = new REAL[in.numberofregions*5];
 
  // fora da bolha
@@ -2651,25 +2683,39 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[3] = 1;
  in.regionlist[4] = 0.1;
 
- // dentro da bolha
- real xMax = surfMesh.X.Min();
- real yMax = surfMesh.Y.Min();
- real zMax = surfMesh.Z.Min();
- for( int i=0;i<surfMesh.numVerts;i++ )
+ // dentro das bolhas
+ // surfMesh.idRegion == 1 --> wall
+ // surfMesh.idRegion == 2 --> bubble 1
+ // surfMesh.idRegion == 3 --> bubble 2 , etc
+ for( int nb=2;nb<=surfMesh.idRegion.Max();nb++ )
  {
-  if( surfMesh.Marker.Get(i) == 0.5 && surfMesh.Z.Get(i) > zMax )
+  real xMax = surfMesh.X.Min();
+  real yMax = surfMesh.Y.Min();
+  real zMax = surfMesh.Z.Min();
+  for( int i=0;i<surfMesh.numElems;i++ )
   {
-   xMax = surfMesh.X.Get(i);
-   yMax = surfMesh.Y.Get(i);
-   zMax = surfMesh.Z.Get(i);
+   int v1 = surfMesh.IEN.Get(i,0);
+   if( surfMesh.idRegion.Get(i) == nb && surfMesh.Z.Get(v1) > zMax )
+   {
+	xMax = surfMesh.X.Get(v1);
+	yMax = surfMesh.Y.Get(v1);
+	zMax = surfMesh.Z.Get(v1);
+   }
   }
+  in.regionlist[5*(nb-1)+0] = xMax;
+  in.regionlist[5*(nb-1)+1] = yMax;
+  in.regionlist[5*(nb-1)+2] = zMax-triEdge*1.0;
+  in.regionlist[5*(nb-1)+3] = nb;
+  in.regionlist[5*(nb-1)+4] = triEdge*triEdge*triEdge*1.4142/12.0;
+  //in.regionlist[5*(nb-1)+0] = 0.0001;
+//--------------------------------------------------
+//   cout << in.regionlist[5*(nb-1)+0] << " " 
+//        << in.regionlist[5*(nb-1)+1] << " "
+//        << in.regionlist[5*(nb-1)+2] << " "
+//        << in.regionlist[5*(nb-1)+3] << " "
+//        << in.regionlist[5*(nb-1)+4] << endl;
+//-------------------------------------------------- 
  }
-
- in.regionlist[5] = xMax-triEdge*0.1;
- in.regionlist[6] = yMax-triEdge*0.1;
- in.regionlist[7] = zMax-triEdge*0.1;
- in.regionlist[8] = 2;
- in.regionlist[9] = 0.0001;
 
  tetgenio::facet *f;   // Define a pointer of facet. 
  tetgenio::polygon *p; // Define a pointer of polygon.
@@ -3038,19 +3084,17 @@ void Model3D::mesh3DPoints()
 {
  computeNormalAndKappa();
 
-//--------------------------------------------------
-//  saveVTKSurface("./vtk/","start",0);
-//  insertPointsByLength();
-//  //insertPointsByCurvature();
-//  removePointsByCurvature();
-//  //insertPointsByInterfaceDistance();
-//  contractEdgeByLength();
-//  //removePointsByLength();
-//  flipTriangleEdge();
-//  checkNeighbours();
-//  removePointsByInterfaceDistance();
-//  remove3dMeshPointsByDistance();
-//-------------------------------------------------- 
+ saveVTKSurface("./vtk/","start",0);
+ insertPointsByLength();
+ //insertPointsByCurvature();
+ removePointsByCurvature();
+ //insertPointsByInterfaceDistance();
+ contractEdgeByLength();
+ //removePointsByLength();
+ flipTriangleEdge();
+ checkNeighbours();
+ removePointsByInterfaceDistance();
+ remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();

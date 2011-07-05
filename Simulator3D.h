@@ -57,6 +57,7 @@ class Simulator3D
 
   void step();
   void stepSL();
+  void stepNoConvection();
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();

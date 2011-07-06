@@ -468,20 +468,19 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
 
 void Model3D::setStepBC()
 {
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
   {
    idbcu.AddItem(i);
    idbcv.AddItem(i);
+   idbcw.AddItem(i);
 
    uc.Set(i,0.0);
    vc.Set(i,0.0);
+   wc.Set(i,0.0);
    if( (X.Get(i)==X.Min()) && (Y.Get(i)>(Y.Max()/2.0)) && (Y.Get(i)<Y.Max()) )
-   {
-
 	uc.Set(i,1.0);
-   }
   }
   if( (Z.Get(i)==Z.Min()) || (Z.Get(i) == Z.Max()) ||
 	  (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
@@ -490,10 +489,15 @@ void Model3D::setStepBC()
    wc.Set(i,0.0);
   }
   if( X.Get(i)==X.Max())
+   outflow.Set(i,0);
+ }
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( X.Get(i)==X.Max())
   {
    idbcp.AddItem(i);
+
    pc.Set(i,0.0);
-   outflow.Set(i,0);
   }
  }
 }
@@ -4522,7 +4526,7 @@ void Model3D::setMapEdge()
  int edge=0;
  neighbourEdge.clear();
  neighbourEdge.resize (listSize);
- mapEdge(listSize,6);
+ mapEdge.Dim(listSize,6);
 
  // numeracao de arestas a partir de numVerts e associacao das arestas
  // aos elementos para inclusao na IEN

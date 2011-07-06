@@ -186,9 +186,8 @@ void Simulator3D::assemble()
  //FEMQuadElement3D miniElem(*X,*Y,*Z);
  FEMLinElement3D linElem(*X,*Y,*Z);
 
- //setHSmooth();
- //setMuSmooth( mu_in,mu_out );
- //setRhoSmooth( rho_in,rho_out );
+ //setMu( mu_in );
+ //setRho( rho_in );
  setMu( mu_in,mu_out );
  setRho( rho_in,rho_out );
 

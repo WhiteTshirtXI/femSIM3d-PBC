@@ -11,11 +11,15 @@
 #include "GMRes.h"
 #include "Simulator3D.h"
 #include "InOut.h"
+#include "PetscSolver.h"
+#include "petscksp.h"
 
 #define NUMPHASES 1
 
 int main(int argc, char **argv)
 {
+ PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+
  int iter = 0;
  real Re = 10000;
  real Sc = 2000;
@@ -26,6 +30,7 @@ int main(int argc, char **argv)
  real mu_l = 1.0;
  real rho_l = 1.0;
  Solver *solverP = new PCGSolver();
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
@@ -109,6 +114,7 @@ int main(int argc, char **argv)
   }
  }
 
+ PetscFinalize();
  return 0;
 }
 

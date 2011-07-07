@@ -162,8 +162,7 @@ void Simulator3D::init2Bubbles()
 void Simulator3D::assemble()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
@@ -193,17 +192,8 @@ void Simulator3D::assemble()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
 
   real muValue=0;
   real rhoValue=0;
@@ -218,9 +208,8 @@ void Simulator3D::assemble()
    rhoValue = rho_inAdimen;
   }
 
-  miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
-  //miniElem.getM(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
-  linElem.getM(v1,v2,v3,v4); 
+  miniElem.getM(*v);  // para problemas SEM deslizamento
+  linElem.getM(*v); 
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -334,7 +323,7 @@ void Simulator3D::assemble()
 void Simulator3D::assembleC()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v[4];
+ int v[NUMGLEC];
  real aux;
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
@@ -343,15 +332,12 @@ void Simulator3D::assembleC()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1 = (int) IEN->Get(mele,0);
-  v[1]= v2 = (int) IEN->Get(mele,1);
-  v[2]= v3 = (int) IEN->Get(mele,2);
-  v[3]= v4 = (int) IEN->Get(mele,3);
-  //cout << (float) mele/numElems << endl;
-  //
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
+
   real dif = 1.0;
 
-  linElem.getM(v1,v2,v3,v4); 
+  linElem.getM(*v); 
 
   for( i=0;i<NUMGLEC;i++ )
   {
@@ -378,8 +364,7 @@ void Simulator3D::assembleC()
 void Simulator3D::assembleNuCte()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Mx_rho( numNodes,numNodes );
@@ -398,31 +383,13 @@ void Simulator3D::assembleNuCte()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
 
-  real muValue = ( mu.Get(v1)+
-	               mu.Get(v2)+
-	               mu.Get(v3)+
-	               mu.Get(v4) )/4.0;
-  real rhoValue = ( rho.Get(v1)+
-	                rho.Get(v2)+
-	                rho.Get(v3)+
-	                rho.Get(v4) )/4.0;
+  real muValue = mu_inAdimen;
+  real rhoValue = rho_inAdimen;
 
-  //miniElem.getM(v1,v2,v3,v4,v5);  // para problemas SEM deslizamento
-  //miniElem.getM(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
-  miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
-  //miniElem.getMSlip(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
+  miniElem.getMSlip(*v);  // para problemas SEM deslizamento
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -504,8 +471,7 @@ void Simulator3D::assembleNuCte()
 void Simulator3D::assembleNuC()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
@@ -531,21 +497,13 @@ void Simulator3D::assembleNuC()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
-  real c = ( cSol.Get(v1)+
-	         cSol.Get(v2)+
-	         cSol.Get(v3)+
-	         cSol.Get(v4) )/4.0;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
+
+  real c = 0;
+  for( int n=0;n<NUMGLE;n++ )
+   c += cSolOld.Get(v[n]);
+  c = c/NUMGLE;
 
   real eme = 0.81315;
   real muC = exp(eme*c);
@@ -553,14 +511,11 @@ void Simulator3D::assembleNuC()
   real rhoValue = 1.0;
 
   // updating mu
-  mu.Set(v1,muC);
-  mu.Set(v2,muC);
-  mu.Set(v3,muC);
-  mu.Set(v4,muC);
+  for( int n=0;n<NUMGLE;n++ )
+   mu.Set(v[n],muC);
 
-  miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
-  //miniElem.getMSlip(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
-  linElem.getM(v1,v2,v3,v4); 
+  miniElem.getMSlip(*v);  // free-slip
+  linElem.getM(*v); 
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -691,8 +646,7 @@ void Simulator3D::assembleNuC()
 void Simulator3D::assembleSlip()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
@@ -717,31 +671,23 @@ void Simulator3D::assembleSlip()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
 
-  real muValue = ( mu.Get(v1)+
-	               mu.Get(v2)+
-	               mu.Get(v3)+
-	               mu.Get(v4) )/4.0;
+  // muValue and rhoValue = mean value of element vertices
+  real muValue = 0;
+  real rhoValue = 0;
+  for( int n=0;n<NUMGLE;n++ )
+  {
+   muValue += mu.Get(v[n]);
+   rhoValue += rho.Get(v[n]);
+  }
+  muValue = muValue/NUMGLE;
+  rhoValue = rhoValue/NUMGLE;
 
-  real rhoValue = ( rho.Get(v1)+
-	                rho.Get(v2)+
-	                rho.Get(v3)+
-	                rho.Get(v4) )/4.0;
-
-  miniElem.getMSlip(v1,v2,v3,v4,v5);  // para problemas COM deslizamento
-  //miniElem.getMSlip(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
-  linElem.getM(v1,v2,v3,v4); 
+  //miniElem.getM(*v);  // no-slip
+  miniElem.getMSlip(*v);  // free-slip
+  linElem.getM(*v); 
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -877,8 +823,7 @@ void Simulator3D::assembleSlip()
 void Simulator3D::assembleNuZ()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
@@ -902,30 +847,22 @@ void Simulator3D::assembleNuZ()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
   
-  real muValue = ( mu.Get(v1)+
-	               mu.Get(v2)+
-				   mu.Get(v3)+
-				   mu.Get(v4) )/4.0;
+  // muValue and rhoValue = mean value of element vertices
+  real muValue = 0;
+  real rhoValue = 0;
+  for( int n=0;n<NUMGLE;n++ )
+  {
+   muValue += mu.Get(v[n]);
+   rhoValue += rho.Get(v[n]);
+  }
+  muValue = muValue/NUMGLE;
+  rhoValue = rhoValue/NUMGLE;
 
-  real rhoValue = ( rho.Get(v1)+
-	                rho.Get(v2)+
-				    rho.Get(v3)+
-				    rho.Get(v4) )/4.0;
-
-  miniElem.getMSlip(v1,v2,v3,v4,v5); 
-  //miniElem.getM(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
+  //miniElem.getM(*v);      // no-slip
+  miniElem.getMSlip(*v);  // free-slip
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -1035,8 +972,7 @@ void Simulator3D::assembleNuZ()
 void Simulator3D::assembleK()
 {
  int i,j,ii,jj;
- int v1,v2,v3,v4,v5,v[5];
- //int v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v[10];
+ int v[NUMGLEU];
  real aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
@@ -1052,29 +988,21 @@ void Simulator3D::assembleK()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  v[0]= v1  = (int) IEN->Get(mele,0);
-  v[1]= v2  = (int) IEN->Get(mele,1);
-  v[2]= v3  = (int) IEN->Get(mele,2);
-  v[3]= v4  = (int) IEN->Get(mele,3);
-  v[4]= v5  = (int) IEN->Get(mele,4);
-  //v[5]= v6  = (int) IEN->Get(mele,5);
-  //v[6]= v7  = (int) IEN->Get(mele,6);
-  //v[7]= v8  = (int) IEN->Get(mele,7);
-  //v[8]= v9  = (int) IEN->Get(mele,8);
-  //v[9]= v10 = (int) IEN->Get(mele,9);
-  //cout << (float) mele/numElems << endl;
-  real c = ( cSol.Get(v1)+
-	         cSol.Get(v2)+
-	         cSol.Get(v3)+
-	         cSol.Get(v4) )/4.0;
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
+
+  // muValue and rhoValue = mean value of element vertices
+  real c = 0;
+  for( int n=0;n<NUMGLE;n++ )
+   c += cSolOld.Get(v[n]);
+  c = c/NUMGLE;
 
   real eme = 0.81315;
   real muC = exp(eme*c);
   real dif = 1.0/muC;
 
-  miniElem.getK(v1,v2,v3,v4,v5);
-  //miniElem.getK(v1,v2,v3,v4,v5,v6,v7,v8,v9,v10);  
-  linElem.getK(v1,v2,v3,v4); 
+  miniElem.getK(*v);  
+  linElem.getK(*v); 
 
   for( i=0;i<NUMGLEU;i++ )
   {
@@ -1589,10 +1517,8 @@ void Simulator3D::matMountC()
   invMcLumped.Set( i,1.0/sumMc );
  }
 
- //matc = ((1.0/dt) * Mc) + (alpha * (1.0/(Sc)) * Kc);
  //matc = ((1.0/dt) * Mc) + (alpha * (1.0/(Sc*Re)) * Kc);
- matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc)) * Kc);
- //matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc*Re)) * Kc);
+ matc = ((1.0/dt) * McLumped) + (alpha * (1.0/(Sc*Re)) * Kc);
 
  for( int i=0;i<numVerts;i++ )
  {

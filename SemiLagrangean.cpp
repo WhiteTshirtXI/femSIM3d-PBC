@@ -118,8 +118,8 @@ void SemiLagrangean::computeFreeSurface(real dt)
  wParticle.Append(zerosConv);
 
  setBC();
- //setCentroid();
- setQuad();
+ setCentroid();
+ //setQuad();
 
 } // fim do metodo computeFreeSurface
 

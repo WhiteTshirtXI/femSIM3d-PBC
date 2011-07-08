@@ -210,7 +210,7 @@ class Model3D
   clMatrix* getIEN();
   clVector* getInterfaceDistance();
   clDMatrix* getCurvature();
-  clVector* getPhase();
+  clVector* getIdRegion();
   SurfaceMesh* getSurfMesh();
   SurfaceMesh* getInterfaceMesh();
   SurfaceMesh* getConvexMesh();
@@ -262,13 +262,12 @@ class Model3D
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
   clVector heaviside;
-  clVector idRegion;
   clVector surface,nonSurface;
   clMatrix mapEdge,mapEdgeTri;
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
-  clVector phase;
+  clVector idRegion;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha

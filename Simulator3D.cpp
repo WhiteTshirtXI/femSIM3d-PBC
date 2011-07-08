@@ -197,7 +197,7 @@ void Simulator3D::assemble()
 
   real muValue=0;
   real rhoValue=0;
-  if( phase->Get(mele) == 1.0 ) // out
+  if( idRegion->Get(mele) == 1.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
@@ -2249,7 +2249,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  surface = _sRight.surface;
  IEN = _sRight.IEN;
  interfaceDistance = _sRight.interfaceDistance;
- phase = _sRight.phase;
+ idRegion = _sRight.idRegion;
  triEdge = _sRight.triEdge;
 
  Re = _sRight.Re;
@@ -2897,7 +2897,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  surfMesh = m->getSurfMesh();
  mesh3d = m->getMesh3d();
  interfaceDistance = m->getInterfaceDistance();
- phase = m->getPhase();
+ idRegion = m->getIdRegion();
  triEdge = m->getTriEdge();
 }
 

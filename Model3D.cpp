@@ -2390,7 +2390,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge )
 	//-------------------------------------------------- 
-	if( d>0 && d<0.6*triEdge )
+	if( d>0 && d<1.0*triEdge )
 	//if( d>0 && d<2.0*triEdge )
 	{
 	 //--------------------------------------------------
@@ -2870,8 +2870,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  IEN.Dim(numElems,4);
  heaviside.Dim(numVerts);
  heaviside.SetAll(0.0);
- phase.Dim(numElems);
- phase.SetAll(1.0);
+ idRegion.Dim(numElems);
+ idRegion.SetAll(1.0);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // setting de heaviside = 0 para fora da bolha e heaviside = 0.5 para interface
@@ -2882,7 +2882,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,0.0);
-	phase.Set(i,1.0);
+	idRegion.Set(i,1.0);
    }
   }
   // setting de heaviside = 1 para dentro da bolha e heaviside = 0.5 para interface
@@ -2893,7 +2893,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,1.0);
-	phase.Set(i,2.0);
+	idRegion.Set(i,2.0);
    }
   }
  }
@@ -5125,7 +5125,7 @@ void Model3D::setInOutElem()
  outElem.resize (0);
  for(int i=0;i<IEN.DimI();i++ )
  {
-  if( phase.Get(i) == 1.0 ) // out
+  if( idRegion.Get(i) == 1.0 ) // out
    outElem.push_back(i);
   else
    inElem.push_back(i);
@@ -5893,7 +5893,7 @@ clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
 clVector* Model3D::getInterfaceDistance(){ return &interfaceDistance; }
-clVector* Model3D::getPhase(){ return &phase; }
+clVector* Model3D::getIdRegion(){ return &idRegion; }
 clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
@@ -5974,7 +5974,7 @@ void Model3D::operator=(Model3D &_mRight)
   surfMesh = _mRight.surfMesh;
   interfaceMesh = _mRight.interfaceMesh;
   convexMesh = _mRight.convexMesh;
-  phase = _mRight.phase;
+  idRegion = _mRight.idRegion;
 
   // STL: list and vectors
   neighbourElem = _mRight.neighbourElem; 

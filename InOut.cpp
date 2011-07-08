@@ -2655,31 +2655,15 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
   int v2 = surfMesh->IEN.Get(i,1);
   int v3 = surfMesh->IEN.Get(i,2);
 
-  if( surfMesh->Marker.Get(v1) == 0.5 && 
-	  surfMesh->Marker.Get(v2) == 0.5 && 
-	  surfMesh->Marker.Get(v3) == 0.5 )
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "1" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else if( surfMesh->Marker.Get(v1) + 
-	       surfMesh->Marker.Get(v2) + 
-		   surfMesh->Marker.Get(v3) > 1.5 )
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "3" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "2" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+  mshFile << i+1 
+          << " 2" 
+		  << " 2" 
+		  << " " << surfMesh->idRegion.Get(i) 
+		  << " 14" 
+		  << " " << v1+1 
+		  << " " << v2+1 
+		  << " " << v3+1 
+		  << endl; 
 
  }
  mshFile << "$EndElements" << endl;
@@ -2733,31 +2717,15 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
   int v2 = surfMesh->IEN.Get(i,1);
   int v3 = surfMesh->IEN.Get(i,2);
 
-  if( surfMesh->Marker.Get(v1) == 0.5 && 
-	  surfMesh->Marker.Get(v2) == 0.5 && 
-	  surfMesh->Marker.Get(v3) == 0.5 )
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "1" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else if( surfMesh->Marker.Get(v1) + 
-	       surfMesh->Marker.Get(v2) + 
-		   surfMesh->Marker.Get(v3) > 1.5 )
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "3" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
-  else
-   mshFile << i+1 << " " << "2" << " " 
-	                     << "3" << " " 
-						 << "2" << " " 
-						 << "14" << " " 
-						 << "0" << " " 
-						 << v1+1 << " " << v2+1 << " " << v3+1 << endl; 
+  mshFile << i+1 
+          << " 2" 
+		  << " 2" 
+		  << " " << surfMesh->idRegion.Get(i) 
+		  << " 14" 
+		  << " " << v1+1 
+		  << " " << v2+1 
+		  << " " << v3+1 
+		  << endl; 
 
  }
  mshFile << "$EndElements" << endl;

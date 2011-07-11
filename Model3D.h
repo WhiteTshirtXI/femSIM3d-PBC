@@ -245,6 +245,10 @@ class Model3D
   list<int>* getInElem();
   real getTriEdge();
   void setTriEdge(real _triEdge);
+  void setSingleElement();
+  void setTwoElements();
+  void setThreeElements();
+  void setFourElements();
 
   void operator=(Model3D &_mRight);
 

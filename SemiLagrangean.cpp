@@ -187,43 +187,43 @@ void SemiLagrangean::setQuad()
 		  wParticle.Get(v2) )*0.5;
   wParticle.Set(v5,aux);
 
-  // v6 (v1-v3)
-  aux = ( uParticle.Get(v1)+
+  // v6 (v2-v3)
+  aux = ( uParticle.Get(v2)+
 		  uParticle.Get(v3) )*0.5;
   uParticle.Set(v6,aux);
 
-  aux = ( vParticle.Get(v1)+
+  aux = ( vParticle.Get(v2)+
 		  vParticle.Get(v3) )*0.5;
   vParticle.Set(v6,aux);
 
-  aux = ( wParticle.Get(v1)+
+  aux = ( wParticle.Get(v2)+
 		  wParticle.Get(v3) )*0.5;
   wParticle.Set(v6,aux);
 
-  // v7 (v1-v4)
+  // v7 (v1-v3)
   aux = ( uParticle.Get(v1)+
-		  uParticle.Get(v4) )*0.5;
+		  uParticle.Get(v3) )*0.5;
   uParticle.Set(v7,aux);
 
   aux = ( vParticle.Get(v1)+
-		  vParticle.Get(v4) )*0.5;
+		  vParticle.Get(v3) )*0.5;
   vParticle.Set(v7,aux);
 
   aux = ( wParticle.Get(v1)+
-		  wParticle.Get(v4) )*0.5;
+		  wParticle.Get(v3) )*0.5;
   wParticle.Set(v7,aux);
 
-  // v8 (v2-v3)
-  aux = ( uParticle.Get(v2)+
-		  uParticle.Get(v3) )*0.5;
+  // v8 (v1-v4)
+  aux = ( uParticle.Get(v1)+
+		  uParticle.Get(v4) )*0.5;
   uParticle.Set(v8,aux);
 
-  aux = ( vParticle.Get(v2)+
-		  vParticle.Get(v3) )*0.5;
+  aux = ( vParticle.Get(v1)+
+		  vParticle.Get(v4) )*0.5;
   vParticle.Set(v8,aux);
 
-  aux = ( wParticle.Get(v2)+
-		  wParticle.Get(v3) )*0.5;
+  aux = ( wParticle.Get(v1)+
+		  wParticle.Get(v4) )*0.5;
   wParticle.Set(v8,aux);
 
   // v9 (v2-v4)

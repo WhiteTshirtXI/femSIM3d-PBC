@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
  int iter = 0;
  real Re = 1;
- real cfl = 1;
+ real cfl = 0.1;
  real mu_l = 1.0;
  real rho_l = 1.0;
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,6,10);
+ m1.setMeshDisk(6,6,40);
  m1.setAdimenDisk();
  m1.setMiniElement();
  m1.setNuCteDiskBC();

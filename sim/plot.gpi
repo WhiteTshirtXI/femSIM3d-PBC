@@ -9,7 +9,7 @@ set xlabel "Z"
 set ylabel "r"
 set label
 set xrange [0.0:10.0]
-set yrange [-0.1:2.1]
+set yrange [-0.1:1.1]
 unset grid
 
 #set terminal pdf

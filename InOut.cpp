@@ -2523,8 +2523,10 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
 void InOut::vtkCoords(ofstream& _file)
 {
  _file << "POINTS " << numVerts << " double" << endl;
+ //_file << "POINTS " << numNodes << " double" << endl;
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
+ //for( int i=0;i<numNodes;i++ )
   _file << X->Get(i) << " " << Y->Get(i) << " " << Z->Get(i) << endl;
 
  _file << endl;
@@ -2545,6 +2547,7 @@ void InOut::vtkSurfCoords(ofstream& _file)
 void InOut::vtkCellArray(ofstream& _file)
 {
  _file << "CELLS " << numElems << " " << 5*numElems << endl;
+ //_file << "CELLS " << numElems << " " << 11*numElems << endl;
  _file << setprecision(0) << fixed;
  for( int i=0;i<numElems;i++ )
  {

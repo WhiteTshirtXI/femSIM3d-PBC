@@ -482,18 +482,18 @@ void Model3D::setStepBC()
    if( (X.Get(i)==X.Min()) && (Y.Get(i)>(Y.Max()/2.0)) && (Y.Get(i)<Y.Max()) )
 	uc.Set(i,1.0);
   }
-  if( (Z.Get(i)==Z.Min()) || (Z.Get(i) == Z.Max()) ||
-	  (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
+  if( (Z.Get(i)==Z.Min()) || (Z.Get(i) == Z.Max()) )
   {
    idbcw.AddItem(i);
+
    wc.Set(i,0.0);
   }
-  if( X.Get(i)==X.Max())
+  if( X.Get(i)==X.Max() && Y.Get(i)<Y.Max() && Y.Get(i)>Y.Min() )
    outflow.Set(i,0);
  }
  for( int i=0;i<numVerts;i++ )
  {
-  if( X.Get(i)==X.Max())
+  if( X.Get(i)==X.Max() && Y.Get(i)<Y.Max() && Y.Get(i)>Y.Min() )
   {
    idbcp.AddItem(i);
 
@@ -674,7 +674,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  rMax = r - dr;
  j=0;
  z=0;
- ///////real factor = 1.1 + 1.0/nZ;
+ //real factor = 1.1 + 1.0/nZ;
  //real factor = 1.02 + 1.0/nZ;
  for( int jz=1;jz<=nZ;jz++ )
  {
@@ -3259,8 +3259,8 @@ void Model3D::setNuCteDiskBC()
   {
    idbcu.AddItem(i);
    idbcv.AddItem(i);
-   idbcp.AddItem(i); // caso com c.c. livre em w
-   //idbcw.AddItem(i);
+   //idbcp.AddItem(i); // caso com c.c. livre em w
+   idbcw.AddItem(i);
 
    //uc.Set(i,radius*2.5666593e-02); // Z=4
    //vc.Set(i,radius*3.4943977e-02); // Z=4
@@ -3270,13 +3270,13 @@ void Model3D::setNuCteDiskBC()
    //vc.Set(i,radius*5.9598499e-03); // Z=6
    //wc.Set(i,-8.7414071e-01); // Z=6
 
-   //uc.Set(i,radius*1.3326987e-04); // Z=10
-   //vc.Set(i,radius*1.7327920e-04); // Z=10
-   //wc.Set(i,-8.8416563E-01); // Z=10
+   uc.Set(i,radius*1.3326987e-04); // Z=10
+   vc.Set(i,radius*1.7327920e-04); // Z=10
+   wc.Set(i,-8.8416563E-01); // Z=10
    
-   uc.Set(i,0.0); // Z=12
-   vc.Set(i,0.0); // Z=12
-   pc.Set(i,-0.391141); // caso com c.c. livre em w
+   //uc.Set(i,0.0); // Z=12
+   //vc.Set(i,0.0); // Z=12
+   //pc.Set(i,-0.391141); // caso com c.c. livre em w
   }
 
   if( Z.Get(i) == Z.Min() )
@@ -3298,10 +3298,10 @@ void Model3D::setNuCteDiskBC()
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
   {
-   //idbcp.AddItem(i);
-   //aux = 0.0;
-   //pc.Set(i,aux);
-   //outflow.Set(i,aux);
+   idbcp.AddItem(i);
+   aux = 0.0;
+   pc.Set(i,aux);
+   outflow.Set(i,aux);
   }
  }
 }
@@ -4184,8 +4184,7 @@ void Model3D::setDiskCFSBC()
 void Model3D::setAdimenDisk()
 {
  real aux;
- real Red = 50;
- //real Red = 100;
+ real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
  rMax = Y.Max();
 
@@ -4630,25 +4629,25 @@ void Model3D::setQuadElement()
 	IEN.Set(*elem,4,v5);
    }
 
-   // vertex v6 between v1 e v3
-   if( (vEdge1 == v1 && vEdge2 == v3) || 
-	   (vEdge2 == v1 && vEdge1 == v3) )
+   // vertex v6 between v2 e v3
+   if( (vEdge1 == v2 && vEdge2 == v3) || 
+	   (vEdge2 == v2 && vEdge1 == v3) )
    {
 	int v6 = edge;
 	IEN.Set(*elem,5,v6);
    }
 
-   // vertex v7 between v1 e v4
-   if( (vEdge1 == v1 && vEdge2 == v4) || 
-	   (vEdge2 == v1 && vEdge1 == v4) )
+   // vertex v7 between v3 e v1
+   if( (vEdge1 == v3 && vEdge2 == v1) || 
+	   (vEdge2 == v3 && vEdge1 == v1) )
    {
 	int v7 = edge;
 	IEN.Set(*elem,6,v7);
    }
 
-   // vertex v8 between v2 e v3
-   if( (vEdge1 == v2 && vEdge2 == v3) || 
-	   (vEdge2 == v2 && vEdge1 == v3) )
+   // vertex v8 between v1 e v4
+   if( (vEdge1 == v1 && vEdge2 == v4) || 
+	   (vEdge2 == v1 && vEdge1 == v4) )
    {
 	int v8 = edge;
 	IEN.Set(*elem,7,v8);
@@ -6526,4 +6525,215 @@ void Model3D::checkNeighbours()
  }
 }
 
+void Model3D::setSingleElement()
+{
+ numVerts = 4;
+ numElems = 1;
+ numNodes = 4;
 
+ X.Dim(numVerts);
+ Y.Dim(numVerts);
+ Z.Dim(numVerts);
+ IEN.Dim(numElems);
+
+ // point 0
+ X.Set(0,0.0);
+ Y.Set(0,0.0);
+ Z.Set(0,0.0);
+
+ // point 1
+ X.Set(1,1.0);
+ Y.Set(1,0.0);
+ Z.Set(1,0.0);
+
+ // point 2
+ X.Set(2,0.0);
+ Y.Set(2,1.0);
+ Z.Set(2,0.0);
+
+ // point 3
+ X.Set(3,0.0);
+ Y.Set(3,0.0);
+ Z.Set(3,1.0);
+
+ // elem 1
+ IEN.Set(0,0,0);
+ IEN.Set(0,1,1);
+ IEN.Set(0,2,2);
+ IEN.Set(0,3,3);
+}
+
+void Model3D::setTwoElements()
+{
+ numVerts = 5;
+ numElems = 2;
+ numNodes = 5;
+
+ X.Dim(numVerts);
+ Y.Dim(numVerts);
+ Z.Dim(numVerts);
+ IEN.Dim(numElems);
+
+ // point 0
+ X.Set(0,0.0);
+ Y.Set(0,0.0);
+ Z.Set(0,0.0);
+
+ // point 1
+ X.Set(1,1.0);
+ Y.Set(1,0.0);
+ Z.Set(1,0.0);
+
+ // point 2
+ X.Set(2,0.0);
+ Y.Set(2,1.0);
+ Z.Set(2,0.0);
+
+ // point 3
+ X.Set(3,0.0);
+ Y.Set(3,0.0);
+ Z.Set(3,1.0);
+
+ // point 4
+ X.Set(4,0.0);
+ Y.Set(4,-1.0);
+ Z.Set(4,0.0);
+
+ // elem 1
+ IEN.Set(0,0,0);
+ IEN.Set(0,1,1);
+ IEN.Set(0,2,2);
+ IEN.Set(0,3,3);
+
+ // elem 2
+ IEN.Set(1,0,0);
+ IEN.Set(1,1,1);
+ IEN.Set(1,2,3);
+ IEN.Set(1,3,4);
+}
+
+void Model3D::setThreeElements()
+{
+ numVerts = 6;
+ numElems = 3;
+ numNodes = 6;
+
+ X.Dim(numVerts);
+ Y.Dim(numVerts);
+ Z.Dim(numVerts);
+ IEN.Dim(numElems);
+
+ // point 0
+ X.Set(0,0.0);
+ Y.Set(0,0.0);
+ Z.Set(0,0.0);
+
+ // point 1
+ X.Set(1,1.0);
+ Y.Set(1,0.0);
+ Z.Set(1,0.0);
+
+ // point 2
+ X.Set(2,0.0);
+ Y.Set(2,1.0);
+ Z.Set(2,0.0);
+
+ // point 3
+ X.Set(3,0.0);
+ Y.Set(3,0.0);
+ Z.Set(3,1.0);
+
+ // point 4
+ X.Set(4,0.0);
+ Y.Set(4,-1.0);
+ Z.Set(4,0.0);
+
+ // point 5
+ X.Set(4,-1.0);
+ Y.Set(4,0.0);
+ Z.Set(4,0.0);
+
+ // elem 0
+ IEN.Set(0,0,0);
+ IEN.Set(0,1,1);
+ IEN.Set(0,2,2);
+ IEN.Set(0,3,3);
+
+ // elem 1
+ IEN.Set(1,0,0);
+ IEN.Set(1,1,1);
+ IEN.Set(1,2,3);
+ IEN.Set(1,3,4);
+
+ // elem 2
+ IEN.Set(2,0,0);
+ IEN.Set(2,1,2);
+ IEN.Set(2,2,3);
+ IEN.Set(2,3,5);
+}
+
+void Model3D::setFourElements()
+{
+ numVerts = 6;
+ numElems = 4;
+ numNodes = 6;
+
+ X.Dim(numVerts);
+ Y.Dim(numVerts);
+ Z.Dim(numVerts);
+ IEN.Dim(numElems);
+
+ // point 0
+ X.Set(0,0.0);
+ Y.Set(0,0.0);
+ Z.Set(0,0.0);
+
+ // point 1
+ X.Set(1,1.0);
+ Y.Set(1,0.0);
+ Z.Set(1,0.0);
+
+ // point 2
+ X.Set(2,0.0);
+ Y.Set(2,1.0);
+ Z.Set(2,0.0);
+
+ // point 3
+ X.Set(3,0.0);
+ Y.Set(3,0.0);
+ Z.Set(3,1.0);
+
+ // point 4
+ X.Set(4,0.0);
+ Y.Set(4,-1.0);
+ Z.Set(4,0.0);
+
+ // point 5
+ X.Set(4,-1.0);
+ Y.Set(4,0.0);
+ Z.Set(4,0.0);
+
+ // elem 0
+ IEN.Set(0,0,0);
+ IEN.Set(0,1,1);
+ IEN.Set(0,2,2);
+ IEN.Set(0,3,3);
+
+ // elem 1
+ IEN.Set(1,0,0);
+ IEN.Set(1,1,1);
+ IEN.Set(1,2,3);
+ IEN.Set(1,3,4);
+
+ // elem 2
+ IEN.Set(2,0,0);
+ IEN.Set(2,1,2);
+ IEN.Set(2,2,3);
+ IEN.Set(2,3,5);
+
+ // elem 3
+ IEN.Set(3,0,0);
+ IEN.Set(3,1,3);
+ IEN.Set(3,2,4);
+ IEN.Set(3,3,5);
+}

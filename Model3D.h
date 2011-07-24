@@ -210,7 +210,7 @@ class Model3D
   clMatrix* getIEN();
   clVector* getInterfaceDistance();
   clDMatrix* getCurvature();
-  clVector* getIdRegion();
+  clVector* getElemIdRegion();
   SurfaceMesh* getSurfMesh();
   SurfaceMesh* getInterfaceMesh();
   SurfaceMesh* getConvexMesh();
@@ -243,6 +243,8 @@ class Model3D
   list<int>* getInVert();
   list<int>* getOutElem();
   list<int>* getInElem();
+  real getMinEdge();
+  real getMinEdgeTri();
   real getTriEdge();
   void setTriEdge(real _triEdge);
   void setSingleElement();
@@ -271,7 +273,7 @@ class Model3D
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
-  clVector idRegion;
+  clVector elemIdRegion;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
@@ -281,7 +283,8 @@ class Model3D
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
-  real triEdge,averageTriEdge;
+  real minEdge;
+  real triEdge,minEdgeTri,averageTriEdge;
   real initBubbleVolume;
   int isp;                        // isp: num of inserted surface points
   int ispc;                       // ispc: num of inserted surface points

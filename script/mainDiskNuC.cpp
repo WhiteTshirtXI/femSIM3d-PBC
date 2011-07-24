@@ -34,9 +34,10 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(5,6,10);
+ m1.setMeshDisk(6,10,40);
  m1.setAdimenDisk();
- m1.setMiniElement();
+ //m1.setMiniElement();
+ m1.setQuadElement();
  m1.setNuCDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuC/Sc2000/","p");
  m1.setCDiskBC();
@@ -46,7 +47,7 @@ int main(int argc, char **argv)
 
  s1.setRe(Re); // Reynolds do disco (~1)
  s1.setSc(Sc); // Schmidt da concentracao (~2000)
- s1.setCflDisk(cfl);
+ s1.setCfl(cfl);
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
@@ -67,7 +68,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflDisk(cfl);
+  s1.setCfl(cfl);
   s1.assembleK();
  }
 

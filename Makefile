@@ -5,13 +5,13 @@
 ## =================================================================== ##
 
 LIBDIR = ../lib
-CXX = g++
+CXX = clang
 CXXFLAGS = -O1 -g -fPIC
 LIBS += -lgsl -lgslcblas -lm
-LIBS += -L. -L$(HOME)/Programs/tetgen/1.4.3 -ltet
+LIBS += -L. -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I$(LIBDIR) 
 INCLUDES += -I${PETSC_DIR}/include
-INCLUDES += -I$(HOME)/Programs/tetgen/1.4.3
+INCLUDES += -I${TETGEN_DIR}
 
 src += $(LIBDIR)/clVector.cpp
 src += $(LIBDIR)/clMatrix.cpp

@@ -23,10 +23,10 @@ int main(int argc, char **argv)
 
  int iter = 0;
  real Re = 1;
- real cfl = 0.1;
+ real cfl = 5;
  real mu_l = 1.0;
  real rho_l = 1.0;
- //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
+ //Solver *solverP = new PetscSolver(KSPPREONLY,PCNONE);
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
@@ -37,19 +37,20 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,6,40);
+ m1.setMeshDisk(6,12,30);
  m1.setAdimenDisk();
- m1.setMiniElement();
+ //m1.setMiniElement();
+ m1.setQuadElement();
+ m1.setOFace();
  m1.setNuCteDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");
  //m1.setCDiskBC();
- m1.setOFace();
  //m1.readBaseStateNu("NuCte");
 
  Simulator3D s1(m1);
 
  s1.setRe(Re);
- s1.setCflDisk(cfl);
+ s1.setCfl(cfl);
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
@@ -75,7 +76,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflDisk(cfl);
+  s1.setCfl(cfl);
  }
  
  InOut save(m1,s1); // cria objeto de gravacao

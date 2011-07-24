@@ -197,7 +197,7 @@ void Simulator3D::assemble()
 
   real muValue=0;
   real rhoValue=0;
-  if( idRegion->Get(mele) == 1.0 ) // out
+  if( elemIdRegion->Get(mele) == 1.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
@@ -491,6 +491,7 @@ void Simulator3D::assembleNuC()
 
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  //FEMQuadElement3D miniElem(*X,*Y,*Z);
+
  FEMLinElement3D linElem(*X,*Y,*Z);
 
  setRho(rho_in);
@@ -667,6 +668,7 @@ void Simulator3D::assembleSlip()
 
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  //FEMQuadElement3D miniElem(*X,*Y,*Z);
+
  FEMLinElement3D linElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
@@ -984,6 +986,7 @@ void Simulator3D::assembleK()
 
  FEMMiniElement3D miniElem(*X,*Y,*Z);
  //FEMQuadElement3D miniElem(*X,*Y,*Z);
+
  FEMLinElement3D linElem(*X,*Y,*Z);
 
  for( int mele=0;mele<numElems;mele++ )
@@ -1790,36 +1793,14 @@ void Simulator3D::setUnCoupledCBC()
 
 void Simulator3D::setCfl(real _cfl)
 {
- cfl = _cfl;
- real xMax = X->Max();
- real xMin = X->Min();
- real yMax = Y->Max();
- real yMin = Y->Min();
- real zMax = Z->Max();
- real zMin = Z->Min();
+ m->setMapEdge();
 
- dt = cfl*sqrt( (zMax-zMin)*(yMax-yMin)*(xMax-xMin)/numVerts);
-}
-
-void Simulator3D::setCflDisk(real _cfl)
-{
  cfl = _cfl;
 
- real xMax = X->Max();
- real xMin = X->Min();
- real yMax = Y->Max();
- real yMin = Y->Min();
- //real zMax = Z->Max();
- //real zMin = Z->Min();
+ real minEdge = m->getMinEdge();
  real ucMax = uc->Max();
 
-//--------------------------------------------------
-//  dt = cfl/( (m->getMaxAbsUC()/m->getDeltaXMin() ) +
-//             (m->getMaxAbsVC()/m->getDeltaYMin() ) +
-//             (m->getMaxAbsWC()/m->getDeltaZMin() ) );
-//-------------------------------------------------- 
-
- dt = cfl*sqrt((yMax-yMin)*(xMax-xMin)/numVerts);
+ dt = cfl*minEdge/ucMax;
 }
 
 void Simulator3D::setCflBubble(real _cfl)
@@ -2249,7 +2230,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  surface = _sRight.surface;
  IEN = _sRight.IEN;
  interfaceDistance = _sRight.interfaceDistance;
- idRegion = _sRight.idRegion;
+ elemIdRegion = _sRight.elemIdRegion;
  triEdge = _sRight.triEdge;
 
  Re = _sRight.Re;
@@ -2897,7 +2878,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  surfMesh = m->getSurfMesh();
  mesh3d = m->getMesh3d();
  interfaceDistance = m->getInterfaceDistance();
- idRegion = m->getIdRegion();
+ elemIdRegion = m->getElemIdRegion();
  triEdge = m->getTriEdge();
 }
 

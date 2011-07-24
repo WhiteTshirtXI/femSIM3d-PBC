@@ -22,6 +22,8 @@ Model3D::Model3D()
  zCenter = 0;
  bubbleRadius = 0;
  initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
+ minEdge = 0.10;
+ minEdgeTri = 0.10;
  triEdge = 0.10;
  averageTriEdge = 0;
  isp = 0;                    
@@ -215,7 +217,7 @@ void Model3D::readMSH( const char* filename )
 // 
 //  mshFile >> numberOfPhyNames;
 // 
-//  surfMesh.idRegion.resize(numberOfPhyNames);
+//  surfMesh.elemIdRegion.resize(numberOfPhyNames);
 //  if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
 //  {
 //   for (i=0; i < numberOfPhyNames; i++)
@@ -223,7 +225,7 @@ void Model3D::readMSH( const char* filename )
 //    mshFile >> auxstr;
 //    mshFile >> auxstr;
 //    mshFile >> auxstr;
-//    surfMesh.idRegion.at(i)=auxstr;
+//    surfMesh.elemIdRegion.at(i)=auxstr;
 //   }
 //  }
 //-------------------------------------------------- 
@@ -259,7 +261,7 @@ void Model3D::readMSH( const char* filename )
   mshFile >> surfMesh.numElems;
 
   surfMesh.IEN.Dim(surfMesh.numElems,3);
-  surfMesh.idRegion.Dim(surfMesh.numElems);
+  surfMesh.elemIdRegion.Dim(surfMesh.numElems);
 
   for( i=0; i < surfMesh.numElems; i++ )
   {
@@ -268,18 +270,18 @@ void Model3D::readMSH( const char* filename )
    mshFile >> numberOfTags;  
    if( numberOfTags == 3 ) // msh file version 2.1
    {
-	// surfMesh.idRegion 1 = surface
-	// surfMesh.idRegion 2 = wall
-	// surfMesh.idRegion 3 = bubble
+	// surfMesh.elemIdRegion 1 = surface
+	// surfMesh.elemIdRegion 2 = wall
+	// surfMesh.elemIdRegion 3 = bubble
 	mshFile >> id;
-	surfMesh.idRegion.Set(i,id);
+	surfMesh.elemIdRegion.Set(i,id);
 	mshFile >> auxstr;
 	mshFile >> auxstr;
    }
    else // msh file vertion 2.2
    {
 	mshFile >> id;
-	surfMesh.idRegion.Set(i,id);
+	surfMesh.elemIdRegion.Set(i,id);
 	mshFile >> auxstr;
    }
 
@@ -312,7 +314,7 @@ void Model3D::setInterfaceBC()
  surfMesh.Marker.SetAll(0.0);
  for( int i=0;i<surfMesh.numElems;i++ )
  {
-  if( surfMesh.idRegion.Get(i) > 1 )
+  if( surfMesh.elemIdRegion.Get(i) > 1 )
   {
    int v1 = surfMesh.IEN.Get(i,0);
    int v2 = surfMesh.IEN.Get(i,1);
@@ -632,94 +634,65 @@ void Model3D::setAdimenStep()
 
 void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
 {
- real dr = 1;
- real  r = dr;
- int j = 0;
- real z = 0;
- real dl = ( (2*3.141592)/nLados1Poli)*dr;
- real theta,dTheta,dz;
  real aux;
- //clVector xCirc(1+nLados1Poli*nCircMax!-fatorial);
- //clVector yCirc(1+nLados1Poli*nCircMax!-fatorial);
- clVector xCirc;
- clVector yCirc;
- clVector xAux,yAux,zAux;
- X.Dim(1000);
- Y.Dim(1000);
- Z.Dim(1000);
 
- xCirc.AddItem(j,0);
- yCirc.AddItem(j,0);
- j++;
+ clVector xCirc(1);
+ clVector yCirc(1);
+ xCirc.Set(0,0.0);
+ yCirc.Set(0,0.0);
 
+ real dr = 1;
+ real r = dr;
+ real dl = ( (2*3.141592)/nLados1Poli)*dr;
+ real theta = 0;
+ real dTheta = 0;
+ real points2d = 1;
  for( int nCirc=1;nCirc<=nCircMax;nCirc++ )
  {
   theta = 0.0;
   dTheta = (dl/nCirc)*dr;
-  for( int jj=1;jj<=(nLados1Poli*nCirc);jj++ )
+  for( int k=0;k<(nLados1Poli*nCirc);k++ )
   {
    aux = r*cos(theta);
-   xCirc.AddItem(j,aux);
-   //xCirc.Set(j,aux);
+   xCirc.AddItem(aux);
    aux = r*sin(theta);
-   yCirc.AddItem(j,aux);
-   //yCirc.Set(j,aux);
+   yCirc.AddItem(aux);
+
    theta = theta + dTheta;
-   j++;
+   points2d++;
+
    if( theta >= 2*3.141592 ) break;
   }
   r=r+dr;
  }
 
- rMax = r - dr;
- j=0;
- z=0;
- //real factor = 1.1 + 1.0/nZ;
- //real factor = 1.02 + 1.0/nZ;
- for( int jz=1;jz<=nZ;jz++ )
- {
-  //if( jz<=nZ/2 ) dz=0.1;
-  //else 
-  //if( exp(z/nZ) <= exp(2.0/3.0) ) dz=exp(z/nZ);
-  //else dz = exp(2.0/3.0);
-  //else dz=0.1;
-  ////////dz = (factor*exp(z/nZ));
-  //dz = 0.1;
-  dz = 1;
-  //cout << z  << " " << nZ << " " << dz << endl;
-  for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
-  {
-   if( j == X.Dim() ) 
-   {
-	xAux = X;
-	yAux = Y;
-	zAux = Z;
-	X.Dim(j+X.Dim());
-	Y.Dim(j+Y.Dim());
-	Z.Dim(j+Z.Dim());
-	X.CopyFrom(0,xAux);
-	Y.CopyFrom(0,yAux);
-	Z.CopyFrom(0,zAux);
-   }
-   aux = xCirc.Get(jCirc-1);
-   X.Set(j,aux);
-   aux = yCirc.Get(jCirc-1);
-   Y.Set(j,aux);
-   Z.Set(j,z);
-   j++;
-  }
-  z=z+dz;
- }
- xAux = X;
- yAux = Y;
- zAux = Z;
- numVerts = j; 
+ numVerts = points2d*nZ;
+
  X.Dim(numVerts);
  Y.Dim(numVerts);
  Z.Dim(numVerts);
- xAux.CopyTo(0,X);
- yAux.CopyTo(0,Y);
- zAux.CopyTo(0,Z);
+
+ real points3d = 0;
+ for( int jz=0;jz<nZ;jz++ )
+ {
+  real jzNorm = (real) jz/(nZ-1);
+  for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
+  {
+   aux = xCirc.Get(jCirc-1);
+   X.Set(points3d,aux);
+   aux = yCirc.Get(jCirc-1);
+   Y.Set(points3d,aux);
+
+   //aux = jzNorm;       // linear
+   aux = jzNorm*jzNorm;    // quadratic
+   //aux = jzNorm*jzNorm*jzNorm; // cubic
+   //aux = exp(jzNorm);  // exponential
+
+   Z.Set(points3d,aux);
+
+   points3d++;
+  }
+ }
 
  // clean and init tetgen mesh object
  in.initialize();
@@ -884,6 +857,7 @@ void Model3D::setMapEdgeTri()
  */
 
  int j=0;
+ minEdgeTri = 1000000;
  mapEdgeTri.Dim(listSize/2,7);
 
  // numeracao de arestas a partir de numVerts e associacao das arestas
@@ -898,6 +872,10 @@ void Model3D::setMapEdgeTri()
   real z2=surfMesh.Z.Get(faces[j].p2);
   real length = vectorLength(x1-x2,y1-y2,z1-z2);
 
+  // checking the minimum surface edge length
+  if( length < minEdgeTri )
+   minEdgeTri = length;
+
   mapEdgeTri.Set(i,0,length); // tamanho da aresta
   mapEdgeTri.Set(i,1,faces[j].p1 ); // numero do 1o. vertice da aresta
   mapEdgeTri.Set(i,2,faces[j].p2 ); // numero do 2o. vertice da areata
@@ -905,6 +883,7 @@ void Model3D::setMapEdgeTri()
   mapEdgeTri.Set(i,4,faces[j+1].p3 ); // numero do 3o. vertice do 2o. elemento
   mapEdgeTri.Set(i,5,faces[j].p4 ); // 1o. elemento
   mapEdgeTri.Set(i,6,faces[j+1].p4 ); // 2o. elemento 
+
   j=j+2; // pois cada aresta eh dividida com apenas 2 elementos
  }
 }
@@ -1105,10 +1084,10 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
   surfMesh.IEN.Set(elem,1,vert2);
   surfMesh.IEN.Set(elem,2,vert3);
 
-  // add new idRegion
+  // add new elemIdRegion
   list<int> plist2 = neighbourSurfaceElem.at(_v);
   list<int>::iterator mele=plist2.begin();
-  surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
+  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
   mele = plist2.end();
 
   surfMesh.numElems++;
@@ -1127,10 +1106,10 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
  surfMesh.IEN.Set(elem,1,vert2);
  surfMesh.IEN.Set(elem,2,vert3);
 
-  // add new idRegion
+  // add new elemIdRegion
  list<int> plist2 = neighbourSurfaceElem.at(_v);
  list<int>::iterator mele=plist2.begin();
- surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
  mele = plist2.end();
 
  surfMesh.numElems++;
@@ -1351,14 +1330,14 @@ void Model3D::markSurfElemForDeletion(int _elem)
 
 void Model3D::deleteSurfaceElements()
 {
- // deleting elements and idRegion
+ // deleting elements and elemIdRegion
  for( int i=0;i<surfMesh.IEN.DimI();i++ )
   if( surfMesh.IEN.Get(i,0) == -1 && 
 	  surfMesh.IEN.Get(i,1) == -1 && 
 	  surfMesh.IEN.Get(i,2) == -1 )
   {
    surfMesh.IEN.DelLine(i);
-   surfMesh.idRegion.Delete(i);
+   surfMesh.elemIdRegion.Delete(i);
    surfMesh.numElems--;
    i--; // should go back to verify the next element as well
   }
@@ -1765,16 +1744,16 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem1,0,v1);
  surfMesh.IEN.Set(elem1,1,vAdd);
  surfMesh.IEN.Set(elem1,2,v3elem1);
- // add new idRegion
- surfMesh.idRegion.Set(elem1,surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.Set(elem1,surfMesh.elemIdRegion.Get(elem1));
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
  surfMesh.IEN.Set(elem2,0,v1);
  surfMesh.IEN.Set(elem2,1,vAdd);
  surfMesh.IEN.Set(elem2,2,v3elem2);
- // add new idRegion
- surfMesh.idRegion.Set(elem2,surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.Set(elem2,surfMesh.elemIdRegion.Get(elem1));
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
  surfMesh.IEN.AddRow();
@@ -1782,8 +1761,8 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem3,0,v2);
  surfMesh.IEN.Set(elem3,1,vAdd);
  surfMesh.IEN.Set(elem3,2,v3elem1);
- // add new idRegion
- surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
@@ -1792,8 +1771,8 @@ void Model3D::insertPoint(int _edge)
  surfMesh.IEN.Set(elem4,0,v2);
  surfMesh.IEN.Set(elem4,1,vAdd);
  surfMesh.IEN.Set(elem4,2,v3elem2);
- // add new idRegion
- surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
  surfMesh.numElems++;
  
  setSurface();
@@ -2117,8 +2096,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem1,0,v1);
  surfMesh.IEN.Set(elem1,1,vAdd);
  surfMesh.IEN.Set(elem1,2,v3elem1);
- // add new idRegion
- surfMesh.idRegion.Set(elem1,surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.Set(elem1,surfMesh.elemIdRegion.Get(elem1));
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
@@ -2126,8 +2105,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem2,0,v1);
  surfMesh.IEN.Set(elem2,1,v3elem2);
  surfMesh.IEN.Set(elem2,2,vAdd);
- // add new idRegion
- surfMesh.idRegion.Set(elem2,surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.Set(elem2,surfMesh.elemIdRegion.Get(elem1));
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
  // OLD ELEM1 //
@@ -2136,8 +2115,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem3,0,v2);
  surfMesh.IEN.Set(elem3,1,v3elem1);
  surfMesh.IEN.Set(elem3,2,vAdd);
- // add new idRegion
- surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
@@ -2147,8 +2126,8 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.IEN.Set(elem4,0,v2);
  surfMesh.IEN.Set(elem4,1,vAdd);
  surfMesh.IEN.Set(elem4,2,v3elem2);
- // add new idRegion
- surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
+ // add new elemIdRegion
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
  surfMesh.numElems++;
  
  setSurface();
@@ -2677,7 +2656,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   * SENDO 1.0 DENTRO DA BOLHA, 0.5 NA SUPERFICIE E 0.0 FORA 
   * E NECESSARIO DEFINIR 1 PONTO EM CADA REGIAO */
  // fluido interior + fluido exterior + superficie
- in.numberofregions = surfMesh.idRegion.Max(); 
+ in.numberofregions = surfMesh.elemIdRegion.Max(); 
  in.regionlist = new REAL[in.numberofregions*5];
 
  // fora da bolha
@@ -2688,10 +2667,10 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.regionlist[4] = 0.1;
 
  // dentro das bolhas
- // surfMesh.idRegion == 1 --> wall
- // surfMesh.idRegion == 2 --> bubble 1
- // surfMesh.idRegion == 3 --> bubble 2 , etc
- for( int nb=2;nb<=surfMesh.idRegion.Max();nb++ )
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=2;nb<=surfMesh.elemIdRegion.Max();nb++ )
  {
   real xMax = surfMesh.X.Min();
   real yMax = surfMesh.Y.Min();
@@ -2699,7 +2678,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   for( int i=0;i<surfMesh.numElems;i++ )
   {
    int v1 = surfMesh.IEN.Get(i,0);
-   if( surfMesh.idRegion.Get(i) == nb && surfMesh.Z.Get(v1) > zMax )
+   if( surfMesh.elemIdRegion.Get(i) == nb && surfMesh.Z.Get(v1) > zMax )
    {
 	xMax = surfMesh.X.Get(v1);
 	yMax = surfMesh.Y.Get(v1);
@@ -2870,8 +2849,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  IEN.Dim(numElems,4);
  heaviside.Dim(numVerts);
  heaviside.SetAll(0.0);
- idRegion.Dim(numElems);
- idRegion.SetAll(1.0);
+ elemIdRegion.Dim(numElems);
+ elemIdRegion.SetAll(1.0);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // setting de heaviside = 0 para fora da bolha e heaviside = 0.5 para interface
@@ -2882,7 +2861,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,0.0);
-	idRegion.Set(i,1.0);
+	elemIdRegion.Set(i,1.0);
    }
   }
   // setting de heaviside = 1 para dentro da bolha e heaviside = 0.5 para interface
@@ -2893,7 +2872,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,1.0);
-	idRegion.Set(i,2.0);
+	elemIdRegion.Set(i,2.0);
    }
   }
  }
@@ -3251,7 +3230,7 @@ void Model3D::setNuCteDiskBC()
  real radius;
  rMax = Y.Max();
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
 
@@ -3295,6 +3274,10 @@ void Model3D::setNuCteDiskBC()
    wc.Set(i,aux);
   }
 
+ }
+
+ for( int i=0;i<numVerts;i++ )
+ {
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
   {
@@ -3311,7 +3294,7 @@ void Model3D::setNuCDiskBC()
  real omega,aux,radius;
  rMax = Y.Max();
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   if( Z.Get(i) == Z.Max() )
   {
@@ -3355,11 +3338,17 @@ void Model3D::setNuCDiskBC()
 
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+   outflow.Set(i,aux);
+
+ }
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
+	( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
   {
    idbcp.AddItem(i);
    aux = 0.0;
    pc.Set(i,aux);
-   outflow.Set(i,aux);
   }
  }
 }
@@ -4064,7 +4053,7 @@ void Model3D::setNuZDiskBC()
  real omega,aux,radius;
  rMax = Y.Max();
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
 
@@ -4108,10 +4097,14 @@ void Model3D::setNuZDiskBC()
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)> (rMax*rMax - 0.001) ) )
   {
-   idbcp.AddItem(i);
-   aux = 0.0;
-   pc.Set(i,aux);
    outflow.Set(i,aux);
+
+   if( i < numVerts )
+   {
+	idbcp.AddItem(i);
+	aux = 0.0;
+	pc.Set(i,aux);
+   }
   }
  }
 }
@@ -4409,7 +4402,8 @@ void Model3D::checkTetrahedronOrientation()
   V.Set(i,volume);
 
   if( fabs(volume)<1.0E-14)
-   cerr << "tetraedro singular, verificar a qualidade da malha!" << endl;
+   cerr << " -------- " << "tetrahedon singular (" << i << ")" 
+        << " -------- " << endl;
 
   if( volume<0.0 )
   {
@@ -4523,6 +4517,7 @@ void Model3D::setMapEdge()
  */
 
  int edge=0;
+ minEdge = 1000000;
  neighbourEdge.clear();
  neighbourEdge.resize (listSize);
  mapEdge.Dim(listSize,6);
@@ -4531,13 +4526,26 @@ void Model3D::setMapEdge()
  // aos elementos para inclusao na IEN
  for( int i=0;i<listSize;i++ )
  {
-  real x=( X.Get(faces[i].p1)+X.Get(faces[i].p2) )*0.5;
-  real y=( Y.Get(faces[i].p1)+Y.Get(faces[i].p2) )*0.5;
-  real z=( Z.Get(faces[i].p1)+Z.Get(faces[i].p2) )*0.5;
+  real x1=X.Get(faces[i].p1);
+  real y1=Y.Get(faces[i].p1);
+  real z1=Z.Get(faces[i].p1);
+  real x2=X.Get(faces[i].p2);
+  real y2=Y.Get(faces[i].p2);
+  real z2=Z.Get(faces[i].p2);
+
+  real xMid = (x1+x2)*0.5;
+  real yMid = (y1+y2)*0.5;
+  real zMid = (z1+z2)*0.5;
+  real length = vectorLength(x1-x2,y1-y2,z1-z2);
+
+  // checking the minimum edge length
+  if( length < minEdge )
+   minEdge = length;
+
   mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
-  mapEdge.Set(edge,1,x ); // coordenada X da aresta
-  mapEdge.Set(edge,2,y ); // coordenada Y da aresta
-  mapEdge.Set(edge,3,z ); // coordenada Y da aresta
+  mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
+  mapEdge.Set(edge,2,yMid ); // coordenada Y do centro da aresta
+  mapEdge.Set(edge,3,zMid ); // coordenada Y do centro da aresta
   mapEdge.Set(edge,4,faces[i].p1 ); // 1o noh
   mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
 
@@ -4675,9 +4683,11 @@ void Model3D::setQuadElement()
 void Model3D::setNeighbour()
 {
  neighbourElem.resize (0);
- neighbourElem.resize (numVerts);
+ //neighbourElem.resize (numVerts);
+ neighbourElem.resize (numNodes);
  for( int i=0;i<numElems;i++ )
-  for( int j= 0;j<NUMGLE;j++ )
+  //for( int j= 0;j<NUMGLE;j++ )
+  for( int j= 0;j<NUMGLEU;j++ )
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
 }
 
@@ -5124,7 +5134,7 @@ void Model3D::setInOutElem()
  outElem.resize (0);
  for(int i=0;i<IEN.DimI();i++ )
  {
-  if( idRegion.Get(i) == 1.0 ) // out
+  if( elemIdRegion.Get(i) == 1.0 ) // out
    outElem.push_back(i);
   else
    inElem.push_back(i);
@@ -5191,10 +5201,12 @@ void Model3D::setOFace()
 
  int k = 0;
  neighbourElem.resize (0);
- neighbourElem.resize (numVerts);
+ //neighbourElem.resize (numVerts);
+ neighbourElem.resize (numNodes);
  for( int i=0;i<numElems;i++ )
  {
-  for( int j=0;j<NUMGLE;j++ )
+  //for( int j=0;j<NUMGLE;j++ )
+  for( int j=0;j<NUMGLEU;j++ )
   {
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
   }
@@ -5892,7 +5904,7 @@ clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
 clVector* Model3D::getInterfaceDistance(){ return &interfaceDistance; }
-clVector* Model3D::getIdRegion(){ return &idRegion; }
+clVector* Model3D::getElemIdRegion(){ return &elemIdRegion; }
 clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
@@ -5914,6 +5926,8 @@ list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
 list<int>* Model3D::getInElem(){return &inElem;}
 list<int>* Model3D::getOutElem(){return &outElem;}
+real Model3D::getMinEdge(){return minEdge;}
+real Model3D::getMinEdgeTri(){return minEdgeTri;}
 real Model3D::getTriEdge(){return triEdge;}
 void Model3D::setTriEdge(real _triEdge){triEdge = _triEdge;}
 
@@ -5933,6 +5947,8 @@ void Model3D::operator=(Model3D &_mRight)
   bubbleRadius = _mRight.bubbleRadius;
   dVerts = _mRight.dVerts;                  
   numTriangles = _mRight.numTriangles;
+  minEdge = _mRight.minEdge;
+  minEdgeTri = _mRight.minEdgeTri;
   triEdge = _mRight.triEdge;
   averageTriEdge = _mRight.averageTriEdge;
   initBubbleVolume = _mRight.initBubbleVolume;
@@ -5973,7 +5989,7 @@ void Model3D::operator=(Model3D &_mRight)
   surfMesh = _mRight.surfMesh;
   interfaceMesh = _mRight.interfaceMesh;
   convexMesh = _mRight.convexMesh;
-  idRegion = _mRight.idRegion;
+  elemIdRegion = _mRight.elemIdRegion;
 
   // STL: list and vectors
   neighbourElem = _mRight.neighbourElem; 

@@ -36,7 +36,8 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(5,5,20);
  m1.setAdimenDisk();
- m1.setMiniElement();
+ //m1.setMiniElement();
+ m1.setQuadElement();
  m1.setNuZDiskBC();;
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
  Simulator3D s1(m1);
 
  s1.setRe(Re);
- s1.setCflDisk(cfl);
+ s1.setCfl(cfl);
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
@@ -67,7 +68,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflDisk(cfl);
+  s1.setCfl(cfl);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao

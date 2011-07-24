@@ -2661,7 +2661,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
   mshFile << i+1 
           << " 2" 
 		  << " 2" 
-		  << " " << surfMesh->idRegion.Get(i) 
+		  << " " << surfMesh->elemIdRegion.Get(i) 
 		  << " 14" 
 		  << " " << v1+1 
 		  << " " << v2+1 
@@ -2723,7 +2723,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
   mshFile << i+1 
           << " 2" 
 		  << " 2" 
-		  << " " << surfMesh->idRegion.Get(i) 
+		  << " " << surfMesh->elemIdRegion.Get(i) 
 		  << " 14" 
 		  << " " << v1+1 
 		  << " " << v2+1 

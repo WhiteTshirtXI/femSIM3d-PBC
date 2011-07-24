@@ -17,9 +17,9 @@
 #include <fstream>
 #include <iomanip>
 #include "Model3D.h"
+#include "FEMLinElement3D.h"
 #include "FEMMiniElement3D.h"
 #include "FEMQuadElement3D.h"
-#include "FEMLinElement3D.h"
 #include "Galerkin.h"
 #include "SemiLagrangean.h"
 #include "MeshSmooth.h"
@@ -104,7 +104,6 @@ class Simulator3D
   real getTime2();
   real* getTime();
   void setCfl(real _cfl);
-  void setCflDisk(real _cfl);
   void setCflBubble(real _cfl);
   real getCfl();
   void setIter(real _Iter);
@@ -189,7 +188,7 @@ class Simulator3D
   clDMatrix *curvature;
   SurfaceMesh *surfMesh;
   Mesh3D *mesh3d;
-  clVector *heaviside,*interfaceDistance,*idRegion;
+  clVector *heaviside,*interfaceDistance,*elemIdRegion;
 
 
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;

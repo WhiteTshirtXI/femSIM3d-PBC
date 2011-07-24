@@ -31,8 +31,8 @@ int main(int argc, char **argv)
  real rho_l = 1.0;
  //Solver *solverP = new PCGSolver();
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
  //Solver *solverP = new PetscSolver(KSPLSQR,PCILU);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
  //const char *datFolder  = "./dat/";
 
  Model3D m1;
- m1.setMeshStep(20,10,2);
+ m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
  //m1.setSingleElement();
  m1.setMiniElement();

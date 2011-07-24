@@ -161,6 +161,7 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
   m1.setMiniElement();
+  //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitBubbleVolume();
@@ -211,6 +212,7 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
   m1.setMiniElement();
+  //m1.setQuadElement();
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -248,6 +250,7 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
+  //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitBubbleVolume();
@@ -284,6 +287,7 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
+  //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitBubbleVolume();
@@ -354,6 +358,7 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh3DPoints();
   m1.setMiniElement();
+  //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.computeNormalAndKappa();

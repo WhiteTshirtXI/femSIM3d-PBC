@@ -3,14 +3,14 @@
 #                    Single and Two-Phase flow Simulator
 #  
 #  Method: Finite Element.
-#  Elements: 5 nodes mini-element and 10 nodes (not 100% implemented)
+#  Elements: 5 nodes mini-element and 10 nodes quadratic element
 #  Discretization: Galerkin for all terms except of the convection term 
 #                  which is Semi-Lagrangian.
-#  Lin Sys Solution: PETSc library
+#  Lin Sys Solution: in-house solvers and PETSc library
 #  Meshing: TetGen by Hang Si
 #
 #  authors: Gustavo R. ANJOS              gustavo.rabello@gmail.com
-#           Norberto MANGIAVACCHI         norberto.mangiavacchi@uerj.br
+#           Norberto MANGIAVACCHI         norberto@uerj.br
 #           Jose PONTES                   jopontes@metalmat.ufrj.br
 #           John R. THOME                 john.thome@epfl.ch
 #
@@ -18,32 +18,39 @@
 
 COMPILATION INSTRUCTIONS:
 
-# Petsc (http://www.mcs.anl.gov/petsc)
+# download and install Petsc (http://www.mcs.anl.gov/petsc)
 ./config/configure.py --with-cc=gcc --with-fc=gfortran --with-cxx=g++
 --download-f-blas-lapack=1 --download-mpich=1 --with-clanguage=cxx
 --download-parmetis=1 --download-blacs=1 --download-scalapack=1
 --download-mumps=1; make all test
 
-# Boost (http://www.boost.org)
----- install python-dev package ----
-./bootstrap.sh --prefix=$HOME/Programs/boost/1.47.0/;./bjam install
-
-# Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
-make tetlibrary
-
-# TetGen (http://tetgen.berlios.de)
----- uncomment #define TETLIBRARY in tetgen.h ----
+# download and install TetGen (http://tetgen.berlios.de)
+uncomment #define TETLIBRARY in tetgen.h 
 make tetlib
 
-# petsc4py (http://code.google.com/p/petsc4py)
-python setup.py install --home=$HOME/Programs/python/
+---------- OPTIONAL INSTALL ------------
+# download and install Boost (http://www.boost.org)
+check if python-dev package is installed
+./bootstrap.sh --prefix=$HOME/Programs/boost/1.47.0/;./bjam install
 
-# Directory layout
+# download and install Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
+make tetlibrary
+
+# download and install Petsc4py (http://code.google.com/p/petsc4py)
+python setup.py install --home=$HOME/Programs/python/
+-------- END OPTIONAL INSTALL ----------
+
+# proposed directory layout
 $HOME/projects/cpp/femSIM3d
 $HOME/projects/cpp/lib
 $HOME/Programs/petsc/petsc-dev
 $HOME/Programs/boost/1.47.0
 $HOME/Programs/tetgen/1.4.3
+
+VISUALIZATION REQUIREMENTS
+
+# download and install Paraview (http://www.paraview.org/)
+-- install depending on your O.S. --
 
 
 STRANGE BEHAVIOR:

@@ -22,8 +22,11 @@ class SemiLagrangean
   void compute(real dt);
   void computeFreeSurface(real dt);
   void getDepartElem(real dt);
+  void getDepartElemQuad(real dt);
   void getDepartElem2(real dt);
   void jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
+  void jumpToElemQuad(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
+  void jumpToElem2(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
   bool testElement(int mele,int ii,real xP,real yP,real zP, 
 	               real *l1,real *l2,real *l3,real *l4);
   void computeIntercept(int ii,real R2X,real R2Y,real R2Z,int ib1,int ib2,
@@ -31,8 +34,6 @@ class SemiLagrangean
   void setCentroid();
   void setQuad();
   void setBC();
-  void meshInterp(clVector &_X,clVector &_Y,clVector &_Z);
-  void jumpToElem2(int destElem,int iiVert,real R2X,real R2Y,real R2Z);
   clMatrix* getInterpLin();
   clVector* getUSL();
   clVector* getVSL();
@@ -51,9 +52,8 @@ class SemiLagrangean
   clMatrix *IEN;
   clVector uSol,vSol,wSol,cSol;
   clVector velU,velV,velW;
-  clMatrix convLin;
+  clMatrix convLin,convQuad;
   clMatrix *oFace;
-  clMatrix interpLin;
 };
 #endif /* ifndef SEMILAGRANGEAN_H */
 

@@ -1606,7 +1606,7 @@ void Model3D::flipTriangleEdge()
 	  q1+q2 < q3+q4 && 
 	  (curv1 < 40 && curv2 < 40) &&
 	  area1+area2  > area3+area4 &&
-	  //dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
+	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
 	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
@@ -2003,6 +2003,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  X.AddItem(vAdd,XvAdd);
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
+ heaviside.AddItem(vAdd,0.5);
 
  // update surface, xSurface, ySurface, zSurface
  surface.AddItem(vAdd);

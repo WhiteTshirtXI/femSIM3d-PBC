@@ -31,7 +31,7 @@ int main(int argc, char **argv)
  real c1 = 0.01; // lagrangian
  real c2 = 1.00; // smooth
  real c3 = 0.03; // smooth
- real c4 = 0.05; // surface
+ real c4 = 0.03; // surface
  real alpha = 1;
  real beta = 1;
 

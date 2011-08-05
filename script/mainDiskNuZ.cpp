@@ -88,13 +88,7 @@ int main(int argc, char **argv)
    s1.stepSL();
    s1.setRHS();
    s1.unCoupled();
-   save.saveVonKarman(simFolder,"vk1",i*nR+j+iter,4);
-   save.saveVonKarman(simFolder,"vk2",i*nR+j+iter,5);
-   save.saveVonKarman(simFolder,"vk3",i*nR+j+iter,6);
-   save.saveVonKarman(simFolder,"vk4",i*nR+j+iter,7);
-   save.saveVonKarman(simFolder,"vk5",i*nR+j+iter,8);
-   save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
-   save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
+   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");

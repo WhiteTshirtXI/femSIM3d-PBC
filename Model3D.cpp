@@ -1607,7 +1607,7 @@ void Model3D::flipTriangleEdge()
 	  (curv1 < 40 && curv2 < 40) &&
 	  area1+area2  > area3+area4 &&
 	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
-	  dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
+	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
 	  c1+c2 > c3+c4 ) //&&
   {
    //cout << area1+area2 << " " << area3+area4 << endl;
@@ -2332,7 +2332,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*0.6 ) // hiRe
+  if( d>0 && d<h*1.2 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2370,7 +2370,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge )
 	//-------------------------------------------------- 
-	if( d>0 && d<1.0*triEdge )
+	if( d>0 && d<0.8*triEdge )
 	//if( d>0 && d<2.0*triEdge )
 	{
 	 //--------------------------------------------------
@@ -2941,7 +2941,10 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 
 void Model3D::removePointByVolume()
 {
+ real v1Sum,v2Sum,v3Sum,v4Sum;
+ list<int> plist;
  rpv=0;
+
  for( int i=0;i<numElems;i++ )
  {
   int v1 = IEN.Get(i,0);
@@ -2949,15 +2952,41 @@ void Model3D::removePointByVolume()
   int v3 = IEN.Get(i,2);
   int v4 = IEN.Get(i,3);
 
+  real h = heaviside.Get(v1)+heaviside.Get(v2)+
+           heaviside.Get(v3)+heaviside.Get(v4);
+
   if( fabs(getVolume(i)) < 1E-06 ) 
   {
-   if( heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4) < 0.5 || 
-       heaviside.Get(v1)+heaviside.Get(v2)+heaviside.Get(v3)+heaviside.Get(v4) > 3.5 ) 
+   v1Sum = 0;
+   v2Sum = 0;
+   v3Sum = 0;
+   v4Sum = 0;
+
+   if( h < 0.5 || h > 3.5 ) 
    {
-	X.Delete(i);
-	Y.Delete(i);
-	Z.Delete(i);
-	heaviside.Delete(i);
+	plist = neighbourElem.at(v1);
+	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	 v1Sum += fabs(getVolume(*mele));
+
+	plist = neighbourElem.at(v2);
+	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	 v2Sum += fabs(getVolume(*mele));
+
+	plist = neighbourElem.at(v3);
+	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	 v3Sum += fabs(getVolume(*mele));
+
+	plist = neighbourElem.at(v4);
+	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	 v4Sum += fabs(getVolume(*mele));
+
+
+	// FALTA ESCOLHER QUAL DOS VERTICES TEM A MENOR SOMA!!!
+	X.Delete(v1);
+	Y.Delete(v1);
+	Z.Delete(v1);
+	heaviside.Delete(v1);
+    interfaceDistance.Delete(v1);
 	numVerts--;
 	rpv++;
    }
@@ -3052,6 +3081,7 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
       << "removed" << resetColor() << " curvature points:      " 
 	  << rspc << endl;
  cout << "     number of inserted mesh points:          " << ip << endl;
+ cout << "     number of removed mesh points by volume: " << rpv << endl;
  cout << "     number of removed mesh points:           " << rp+rpi 
       << " (" << rpi << "," << rp << ")" << endl;
  cout << "     number of " << color(none,green,black) << "flipped" 
@@ -3077,6 +3107,7 @@ void Model3D::mesh3DPoints()
  //removePointsByLength();
  flipTriangleEdge();
  checkNeighbours();
+ removePointByVolume();
  removePointsByInterfaceDistance();
  remove3dMeshPointsByDistance();
 
@@ -4180,13 +4211,14 @@ void Model3D::setAdimenDisk()
  real aux;
  real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
- rMax = Y.Max();
+ real xrMax = X.Max();
+ real yrMax = Y.Max();
 
  for( int i=0;i<numVerts;i++ )
  {
-  aux = (X.Get(i)/rMax)*Red;
+  aux = (X.Get(i)/xrMax)*Red;
   X.Set(i,aux);
-  aux = (Y.Get(i)/rMax)*Red;
+  aux = (Y.Get(i)/yrMax)*Red;
   Y.Set(i,aux);
   //aux = Z.Get(i)*factorz*4;
   //aux = Z.Get(i)*factorz*6;

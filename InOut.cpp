@@ -981,65 +981,76 @@ void InOut::matrixPrint( clDMatrix &_m,const char* _filename )
  matrixFile.close();
 } // fecha metodo matrixPrint para matrizes diagonais
 
-void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter,
-                          int vertice )
+void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
 {
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- string file = _dir;
- string aux = _filename;
- file += aux + "." + str;
- const char* filename = file.c_str();
-
- ofstream vonKarmanFile;
- vonKarmanFile.open( filename );
-
- clVector Xaux(0);
- clVector Yaux = *Y==0.0;
- clVector Y0 = Yaux.Find();
- real x1 = X->Get( (int) Y0.Get(vertice) );
-
- for( int i=0;i<X->Dim();i++ )
+ int count = 0;
+ for( int i=0;i<numVerts;i++ )
  {
-  if( Y->Get(i) == 0.0 && X->Get(i) == x1 )
-   Xaux.AddItem(i);
+  if( Z->Get(i) == Z->Min() && Y->Get(i) == 0 )
+  {
+   stringstream ss1,ss2;  //convertendo int --> string
+   string str1,str2;
+   ss1 << _iter;
+   ss1 >> str1;
+   ss2 << count;
+   ss2 >> str2;
+
+   string file = _dir;
+   string aux = _filename;
+   file += aux + str2 + "." + str1;
+   const char* filename = file.c_str();
+
+   ofstream vonKarmanFile;
+   vonKarmanFile.open( filename );
+
+   vonKarmanFile << setprecision(10) << scientific; 
+   vonKarmanFile << "#z" << setw(17) 
+	             << "F"  << setw(18)
+	             << "G"  << setw(18)
+	             << "H"  << setw(18)
+	             << "c"  << setw(18)
+	             << "p"  << setw(19)
+	             << "mu"  << endl;
+
+   for( int j=0;j<numVerts;j++ )
+   {
+	if( X->Get(j) == X->Get(i) && Y->Get(j) == Y->Get(j) )
+	{
+	 int radius = X->Get(i);
+	 int vert = j;
+
+
+     vonKarmanFile << setw(16) <<  Z->Get(vert)  
+	               << setw(18) <<  uSol->Get(vert)/radius  
+				   << setw(18) <<  vSol->Get(vert)/radius  
+				   << setw(18) <<  (-1)*wSol->Get(vert)  
+				   << setw(18) <<  cSol->Get(vert)  
+				   << setw(18) <<  pSol->Get(vert) 
+				   << setw(18) <<  mu->Get(vert) << endl;
+	}
+   }
+
+   vonKarmanFile << endl;
+   vonKarmanFile << fixed; 
+   vonKarmanFile << "Radius = " << X->Get(i) << endl;
+
+   vonKarmanFile.close();
+
+   /* ----------- copying to file vk?.last ----------- */
+   ifstream inFile( filename,ios::binary ); 
+
+   string fileCopy = (string) _dir + (string) _filename + str2 + "." + "last";
+   const char* filenameCopy = fileCopy.c_str();
+   ofstream outFile( filenameCopy,ios::binary ); 
+
+   outFile << inFile.rdbuf();
+   inFile.close();
+   outFile.close();
+   /* ------------------------------------------------ */
+
+   count++;
+  }
  }
-
- int v1 = (int) Xaux.Get(0);
- int v2;
- vonKarmanFile << setprecision(10) << scientific; 
- vonKarmanFile << "#z     F      G      H      c      p     mu" << endl; 
- for( int i=0;i<Xaux.Dim();i++ )
- {
-  v2 = (int) Xaux.Get(i);
-  vonKarmanFile << setw(9) <<  Z->Get( v2 ) << " " 
-	            << setw(9) <<  uSol->Get( v2 )/X->Get( v1 ) << " " 
-	            << setw(9) <<  vSol->Get( v2 )/X->Get( v1 ) << " " 
-		        << setw(9) <<  (-1)*wSol->Get( v2 ) << " " 
-				<< setw(9) <<  cSol->Get(v2) << " " 
-				<< setw(9) <<  pSol->Get(v2) << " "
-				<< setw(9) <<  mu->Get(v2) << endl;
- }
- vonKarmanFile << endl;
- vonKarmanFile << "X = " << X->Get( (int) Xaux.Get(0) ) << endl;
-
- vonKarmanFile.close();
-
- /* ----------- copying to file vk?.last ----------- */
- ifstream inFile( filename,ios::binary ); 
-
- string fileCopy = (string) _dir + (string) _filename + "." + "last";
- const char* filenameCopy = fileCopy.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */
-
  cout << "von Karman num. " << _iter << " saved in ASCII" << endl;
 }
 

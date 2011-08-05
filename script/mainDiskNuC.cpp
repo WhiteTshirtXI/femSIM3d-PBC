@@ -21,7 +21,7 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real Sc = 2000;
- real cfl = 1;
+ real cfl = 50;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PCGSolver();
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,10,40);
+ m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
  //m1.setQuadElement();
@@ -96,13 +96,7 @@ int main(int argc, char **argv)
    s1.unCoupled();
    s1.unCoupledC();
    s1.assembleK();
-   save.saveVonKarman(simFolder,"vk1",i*nR+j+iter,4);
-   save.saveVonKarman(simFolder,"vk2",i*nR+j+iter,5);
-   save.saveVonKarman(simFolder,"vk3",i*nR+j+iter,6);
-   save.saveVonKarman(simFolder,"vk4",i*nR+j+iter,7);
-   save.saveVonKarman(simFolder,"vk5",i*nR+j+iter,8);
-   save.saveVonKarman(simFolder,"vk6",i*nR+j+iter,9);
-   save.saveVonKarman(simFolder,"vk7",i*nR+j+iter,10);
+   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");

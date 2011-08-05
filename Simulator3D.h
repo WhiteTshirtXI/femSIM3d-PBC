@@ -98,6 +98,7 @@ class Simulator3D
   real getBeta();
   void setSigma(real _sigma);
   real getSigma();
+  void setDt();
   void setDt(real _dt);
   void setTime(real _time);
   real getDt();
@@ -105,6 +106,9 @@ class Simulator3D
   real* getTime();
   void setCfl(real _cfl);
   void setCflBubble(real _cfl);
+  real getDtLagrangian();
+  real getDtSurfaceTension();
+  real getDtGravity();
   real getCfl();
   void setIter(real _Iter);
   int getIter();

@@ -1805,16 +1805,170 @@ void Simulator3D::setCfl(real _cfl)
 
 void Simulator3D::setCflBubble(real _cfl)
 {
+ /* cfl based on the booklet:
+  * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
+  * G. Tryggvason, R. Scardovelli and S. Zaleski
+  *
+  * - cfl of advection term:
+  *
+  *  Umax*dt
+  * --------- <= 1
+  *  triEdge
+  *  
+  *
+  * - smallest resolved wave:
+  *         pi
+  * k = ---------
+  *      triEdge
+  *
+  * - phase velocity of a capillary wave:
+  * 
+  *            sigma*kappa
+  * c = sqrt( ------------- )
+  *             rho1+rho2
+  *
+  *          (rho1+rho2)*triEdge*triEdge*triEdge
+  * dt <= ( ------------------------------------- )
+  *                       pi*sigma
+  *
+  * */
+
  /* cfl based on the paper:
   * A Continuum Method for Modeling Surface Tension
   * J.U. Brackbill, D.B. Kothe and C. Zemach
+  *
+  * - cfl of advection term:
+  *
+  *  Umax*dt      1
+  * --------- <= ---
+  *  triEdge      2
+  *
+  *          0.5*(rho1+rho2)*triEdge*triEdge*triEdge
+  * dt <= ( ----------------------------------------- )
+  *                        2*pi*sigma
+  *
   * */
 
  cfl = _cfl;
 
- real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
-                  /(2*3.141592*sigma) );
+//--------------------------------------------------
+//  real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
+//                   /(2*3.141592*sigma) );
+//-------------------------------------------------- 
+
+ real capillary = sqrt( ( (rho_in+rho_out)*triEdge*triEdge*triEdge)
+                  /(3.141592*sigma) );
  dt = cfl*capillary;
+}
+
+real Simulator3D::getDtSurfaceTension()
+{
+ /* cfl based on the booklet:
+  * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
+  * G. Tryggvason, R. Scardovelli and S. Zaleski
+  *
+  * - cfl of advection term:
+  *
+  *  Umax*dt
+  * --------- <= 1
+  *  triEdge
+  *  
+  *
+  * - smallest resolved wave:
+  *         pi
+  * k = ---------
+  *      triEdge
+  *
+  * - phase velocity of a capillary wave:
+  * 
+  *            sigma*kappa
+  * c = sqrt( ------------- )
+  *             rho1+rho2
+  *
+  *          (rho1+rho2)*triEdge*triEdge*triEdge
+  * dt <= ( ------------------------------------- )
+  *                       pi*sigma
+  *
+  * */
+
+ /* cfl based on the paper:
+  * A Continuum Method for Modeling Surface Tension
+  * J.U. Brackbill, D.B. Kothe and C. Zemach
+  *
+  * - cfl of advection term:
+  *
+  *  Umax*dt      1
+  * --------- <= ---
+  *  triEdge      2
+  *
+  *          0.5*(rho1+rho2)*triEdge*triEdge*triEdge
+  * dt <= ( ----------------------------------------- )
+  *                        2*pi*sigma
+  *
+  * */
+
+//--------------------------------------------------
+//  real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
+//                   /(2*3.141592*sigma) );
+//-------------------------------------------------- 
+
+ real capillary = sqrt( ( (rho_in+rho_out)*triEdge*triEdge*triEdge)
+                  /(3.141592*sigma) );
+ return capillary;
+}
+
+real Simulator3D::getDtLagrangian()
+{
+ m->setMapEdge();
+
+ real minEdge = m->getMinEdge();
+
+ real velMax = max(1.0,uSol.Max());
+ velMax = max(velMax,vSol.Max());
+ velMax = max(velMax,wSol.Max());
+ velMax = max(velMax,c3*uSmoothCoord.Max());
+ velMax = max(velMax,c3*vSmoothCoord.Max());
+ velMax = max(velMax,c3*wSmoothCoord.Max());
+ velMax = max(velMax,uALE.Max());
+ velMax = max(velMax,vALE.Max());
+ velMax = max(velMax,wALE.Max());
+
+ return minEdge/velMax;
+}
+
+real Simulator3D::getDtGravity()
+{
+ m->setMapEdge();
+
+ real minEdge = m->getMinEdge();
+ real velMax = 1.0;
+ if( uSol.Max() > 1.0 )
+  velMax = uSol.Max();
+
+ return minEdge/velMax;
+}
+
+/*
+ * Set Dt of the current simulation.
+ * Explicity terms:
+ *  - Semi-Lagrangian;
+ *  - Surface Tension;
+ *  - Gravity.
+ *  */
+void Simulator3D::setDt()
+{
+ real minDt = min(getDtLagrangian(),getDtSurfaceTension());
+ minDt = min(dt,getDtGravity());
+
+ dt = cfl*minDt;
+ cout << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|------------------------|" << endl;
+ cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
+ cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|------------------------|" << endl;
+ cout << resetColor() << endl;
 }
 
 void Simulator3D::setCSol(clVector &_cSol)

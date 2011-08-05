@@ -2332,7 +2332,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*1.2 ) // hiRe
+  if( d>0 && d<h*0.8 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2370,7 +2370,7 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge )
 	//-------------------------------------------------- 
-	if( d>0 && d<0.8*triEdge )
+	if( d>0 && d<0.6*triEdge )
 	//if( d>0 && d<2.0*triEdge )
 	{
 	 //--------------------------------------------------
@@ -2955,7 +2955,7 @@ void Model3D::removePointByVolume()
   real h = heaviside.Get(v1)+heaviside.Get(v2)+
            heaviside.Get(v3)+heaviside.Get(v4);
 
-  if( fabs(getVolume(i)) < 1E-06 ) 
+  if( fabs(getVolume(i)) < 1E-05 ) 
   {
    v1Sum = 0;
    v2Sum = 0;

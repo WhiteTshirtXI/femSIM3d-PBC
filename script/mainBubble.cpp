@@ -72,7 +72,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.02;
+ real cfl = 1;
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
@@ -180,10 +180,10 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
-  //s1.setDt(dt);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.init();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -226,7 +226,8 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -262,7 +263,8 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -296,7 +298,8 @@ int main(int argc, char **argv)
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
@@ -327,6 +330,7 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;
    cout << resetColor();
 
+   s1.setDt();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();

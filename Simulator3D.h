@@ -107,6 +107,7 @@ class Simulator3D
   void setCfl(real _cfl);
   void setCflBubble(real _cfl);
   real getDtLagrangian();
+  real getDtSemiLagrangian();
   real getDtSurfaceTension();
   real getDtGravity();
   real getCfl();

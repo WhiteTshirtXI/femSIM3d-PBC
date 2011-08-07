@@ -2332,7 +2332,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*0.8 ) // hiRe
+  if( d>0 && d<h*1.6 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "

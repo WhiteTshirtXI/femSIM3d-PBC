@@ -1923,15 +1923,33 @@ real Simulator3D::getDtLagrangian()
 
  real minEdge = m->getMinEdge();
 
- real velMax = max(1.0,uSol.Max());
- velMax = max(velMax,vSol.Max());
- velMax = max(velMax,wSol.Max());
- velMax = max(velMax,c3*uSmoothCoord.Max());
- velMax = max(velMax,c3*vSmoothCoord.Max());
- velMax = max(velMax,c3*wSmoothCoord.Max());
- velMax = max(velMax,uALE.Max());
- velMax = max(velMax,vALE.Max());
- velMax = max(velMax,wALE.Max());
+ real velMax = max( 1.0,fabs(uSolOld.Max()) );
+ velMax = max( velMax,fabs(vSolOld.Max()) );
+ velMax = max( velMax,fabs(wSolOld.Max()) );
+ velMax = max( velMax,fabs(c2*uSmooth.Max()) );
+ velMax = max( velMax,fabs(c2*vSmooth.Max()) );
+ velMax = max( velMax,fabs(c2*wSmooth.Max()) );
+ velMax = max( velMax,fabs(c3*uSmoothCoord.Max()) );
+ velMax = max( velMax,fabs(c3*vSmoothCoord.Max()) );
+ velMax = max( velMax,fabs(c3*wSmoothCoord.Max()) );
+//--------------------------------------------------
+//  velMax = max( velMax,fabs(uALE.Max()) );
+//  velMax = max( velMax,fabs(vALE.Max()) );
+//  velMax = max( velMax,fabs(wALE.Max()) );
+//-------------------------------------------------- 
+
+ return 0.5*minEdge/velMax;
+}
+
+real Simulator3D::getDtSemiLagrangian()
+{
+ m->setMapEdge();
+
+ real minEdge = m->getMinEdge();
+
+ real velMax = max( 1.0,fabs(uSL.Max()) );
+ velMax = max( velMax,fabs(vSL.Max()) );
+ velMax = max( velMax,fabs(wSL.Max()) );
 
  return minEdge/velMax;
 }
@@ -1957,17 +1975,24 @@ real Simulator3D::getDtGravity()
  *  */
 void Simulator3D::setDt()
 {
- real minDt = min(getDtLagrangian(),getDtSurfaceTension());
- minDt = min(dt,getDtGravity());
+ real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
+ minDt = min(minDt,getDtSurfaceTension());
+ //minDt = min(minDt,getDtGravity());
 
  dt = cfl*minDt;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|------------------------|" << endl;
+                  << "|-------------------------------------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "lagrangian: " << getDtLagrangian() << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Surface tension: " << getDtSurfaceTension() << endl;
  cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|------------------------|" << endl;
+                  << "|-------------------------------------|" << endl;
  cout << resetColor() << endl;
 }
 

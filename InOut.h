@@ -202,7 +202,7 @@ private:
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;
-  real mu_in,mu_out,rho_in,rho_out;
+  real mu_in,mu_out,rho_in,rho_out,sigma;
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;

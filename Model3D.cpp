@@ -953,12 +953,17 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 80 )
+  if( curv > 60 )
   {
    deletePoint(surfaceNode);
 
+   // updating surface, xSurface, ySurface and zSurface
    setSurface();
+
+   // updating edge matrix
    setMapEdgeTri();
+
+   // updating surface neighbours
    setNeighbourSurface();
 
    saveVTKSurface("./vtk/","remCurv",rspc);
@@ -985,8 +990,13 @@ void Model3D::insertPointsByCurvature()
    //insertPoint(i);
    insertPointWithCurvature(i); 
 
+   // updating surface, xSurface, ySurface and zSurface
    setSurface();
+
+   // updating edge matrix
    setMapEdgeTri();
+
+   // updating surface neighbours
    setNeighbourSurface();
 
    ispc++;
@@ -1093,9 +1103,9 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
   surfMesh.numElems++;
 
  }
+ // adding last remaning element
  list<int> plist = neighbourPoint.at(_v);
  list<int>::iterator point=plist.begin();
- // adding last remaning element
  vert1 = *point;++point;
  vert2 = *point;++point;
  vert3 = *point;
@@ -1499,7 +1509,6 @@ void Model3D::flipTriangleEdge()
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   real edge = i;
-  mapEdgeTri.Get(edge,0); // length
   int v1 = mapEdgeTri.Get(edge,1); // v1
   int v2 = mapEdgeTri.Get(edge,2); // v2
   int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
@@ -1523,27 +1532,25 @@ void Model3D::flipTriangleEdge()
   real P3elem2y = surfMesh.Y.Get(v3elem2);
   real P3elem2z = surfMesh.Z.Get(v3elem2);
 
-  real v1x = P1x-P3elem1x;
-  real v1y = P1y-P3elem1y;
-  real v1z = P1z-P3elem1z;
+  real v1x = P3elem1x-P1x;
+  real v1y = P3elem1y-P1y;
+  real v1z = P3elem1z-P1z;
 
-  real v2x = P2x-P3elem1x;
-  real v2y = P2y-P3elem1y;
-  real v2z = P2z-P3elem1z;
+  real v2x = P3elem2x-P1x;
+  real v2y = P3elem2y-P1y;
+  real v2z = P3elem2z-P1z;
 
-  real z1x = P1x-P3elem2x;
-  real z1y = P1y-P3elem2y;
-  real z1z = P1z-P3elem2z;
-
-  real z2x = P2x-P3elem2x;
-  real z2y = P2y-P3elem2y;
-  real z2z = P2z-P3elem2z;
-
-  real length12 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
+  // v1 ---- v2
+  real length12 = mapEdgeTri.Get(edge,0);
+  // v1 ---- v3_1
   real length13_1 = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
+  // v1 ---- v3_2
   real length13_2 = distance(P1x,P1y,P1z,P3elem2x,P3elem2y,P3elem2z);
+  // v2 ---- v3_1
   real length23_1 = distance(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z);
+  // v2 ---- v3_2
   real length23_2 = distance(P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
+  // v3_1 ---- v3_2
   real length3_1_3_2 = distance(P3elem1x,P3elem1y,P3elem1z,
 	                            P3elem2x,P3elem2y,P3elem2z);
 
@@ -1602,16 +1609,25 @@ void Model3D::flipTriangleEdge()
   // this works, but is not consistent!!! CHANGE IT SOON!
   real curv1 = fabs(surfMesh.curvature.Get(v1));
   real curv2 = fabs(surfMesh.curvature.Get(v2));
+  real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
+  real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
+
+  /* FLIPPING requirements:
+   * - sum of quality of old triangles < sum of quality of new triangles
+   * - curvature of all the 4 vertices < 40
+   * - sum of area of old triangles > sum of area of new triangles
+   * - angle between plane of old triangles > 90 degrees
+   * - sum of circumcenters of old triangles > sum of circumcenters of
+   *   new triangles
+   * */
   if( surfMesh.Marker.Get(v1)==0.5 &&
-	  q1+q2 < q3+q4 && 
-	  (curv1 < 40 && curv2 < 40) &&
-	  area1+area2  > area3+area4 &&
-	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 &&
-	  //dotProd(z1x,z1y,z1z,z2x,z2y,z2z) < 0.0 &&
-	  c1+c2 > c3+c4 ) //&&
+	  q1+q2 < q3+q4 && // quality sum
+	  (curv1 < 40 && curv2 < 40) && // curvature
+	  (curv3_1 < 40 && curv3_2 < 40) && // curvature
+	  area1+area2  > area3+area4 && // area sum
+	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+	  c1+c2 > c3+c4 ) // circum radius
   {
-   //cout << area1+area2 << " " << area3+area4 << endl;
-   //cout << q1 << " " << q2 << " " << q3 << " " << q4 << endl;
    cout << "----------------- " << color(none,green,black) 
 	    << "flipping edge: " << resetColor() 
 		<< v1 << " " << v2 
@@ -1619,62 +1635,65 @@ void Model3D::flipTriangleEdge()
 		<< " --> " << resetColor()
 		<< v3elem1 << " " << v3elem2 << endl;
 
- // checking the orientation
- // vo1 - vo2 - vo3 (elem1 old)
- // reference vertices
- int v1r = surfMesh.IEN.Get(elem1,0);
- int v2r = surfMesh.IEN.Get(elem1,1);
- int v3r = surfMesh.IEN.Get(elem1,2);
+   /* checking the orientation Define a oriented vector from one of the
+	* old elements (before adding point), then compare to the new 1st
+	* element (with the added point) and check the orientation between
+	* both vectors. If the orientation is ok, proceed normaly, otherwise
+	* swap v1 and v2 and proceed until the end.
+	* */
+   int v1elemOld1 = surfMesh.IEN.Get(elem1,0);
+   int v2elemOld1 = surfMesh.IEN.Get(elem1,1);
+   int v3elemOld1 = surfMesh.IEN.Get(elem1,2);
 
- real b1x = surfMesh.X.Get(v1r);
- real b1y = surfMesh.Y.Get(v1r);
- real b1z = surfMesh.Z.Get(v1r);
+   real x1Elem1 = surfMesh.X.Get(v1elemOld1);
+   real y1Elem1 = surfMesh.Y.Get(v1elemOld1);
+   real z1Elem1 = surfMesh.Z.Get(v1elemOld1);
 
- real b2x = surfMesh.X.Get(v2r);
- real b2y = surfMesh.Y.Get(v2r);
- real b2z = surfMesh.Z.Get(v2r);
+   real x2Elem1 = surfMesh.X.Get(v2elemOld1);
+   real y2Elem1 = surfMesh.Y.Get(v2elemOld1);
+   real z2Elem1 = surfMesh.Z.Get(v2elemOld1);
 
- real b3x = surfMesh.X.Get(v3r);
- real b3y = surfMesh.Y.Get(v3r);
- real b3z = surfMesh.Z.Get(v3r);
+   real x3Elem1 = surfMesh.X.Get(v3elemOld1);
+   real y3Elem1 = surfMesh.Y.Get(v3elemOld1);
+   real z3Elem1 = surfMesh.Z.Get(v3elemOld1);
 
- real t1x = b2x-b1x;
- real t1y = b2y-b1y;
- real t1z = b2z-b1z;
+   real vec1x = x2Elem1-x1Elem1;
+   real vec1y = y2Elem1-y1Elem1;
+   real vec1z = z2Elem1-z1Elem1;
 
- real t2x = b3x-b2x;
- real t2y = b3y-b2y;
- real t2z = b3z-b2z;
+   real vec2x = x3Elem1-x2Elem1;
+   real vec2y = y3Elem1-y2Elem1;
+   real vec2z = z3Elem1-z2Elem1;
 
- // normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross1 = crossProd(t1x,t1y,t1z,t2x,t2y,t2z);
- real tx = cross1.Get(0);
- real ty = cross1.Get(1);
- real tz = cross1.Get(2);
+   // standard normal vector
+   // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+   clVector cross1 = crossProd(vec1x,vec1y,vec1z,vec2x,vec2y,vec2z);
+   real vecX = cross1.Get(0);
+   real vecY = cross1.Get(1);
+   real vecZ = cross1.Get(2);
 
- real p3elem1x = surfMesh.X.Get(v3elem1);
- real p3elem1y = surfMesh.Y.Get(v3elem1);
- real p3elem1z = surfMesh.Z.Get(v3elem1);
- real v2x = p3elem1x-P2x;
- real v2y = p3elem1y-P2y;
- real v2z = p3elem1z-P2z;
- 
- // normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross2 = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
- real x2t = cross2.Get(0);
- real y2t = cross2.Get(1);
- real z2t = cross2.Get(2);
+   // orienation of NEW elements
+   real va1x = P3elem1x-P1x;
+   real va1y = P3elem1y-P1y;
+   real va1z = P3elem1z-P1z;
 
- real prodEsc = tx*x2t + ty*y2t + tz*z2t;
+   real va2x = P3elem2x-P3elem1x;
+   real va2y = P3elem2y-P3elem1y;
+   real va2z = P3elem2z-P3elem1z;
 
- if( prodEsc < 0 )
- {
-  int aux = v1;
-  v1 = v2;
-  v2 = aux;
- }
+   // normal vector
+   // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+   clVector cross2 = crossProd(va1x,va1y,va1z,va2x,va2y,va2z);
+   real x2t = cross2.Get(0);
+   real y2t = cross2.Get(1);
+   real z2t = cross2.Get(2);
+
+   real prodEsc = vecX*x2t + vecY*y2t + vecZ*z2t;
+
+   // swap if wrong orientation
+   if( prodEsc < 0 )
+	swap(v1,v2);
+   /* -------------------- END of CHECKING --------------------- */
 
    surfMesh.IEN.Set(elem1,0,v1);
    surfMesh.IEN.Set(elem1,1,v3elem1);
@@ -1684,9 +1703,15 @@ void Model3D::flipTriangleEdge()
    surfMesh.IEN.Set(elem2,1,v3elem2);
    surfMesh.IEN.Set(elem2,2,v3elem1);
 
+   // updating surface, xSurface, ySurface and zSurface
    setSurface();
+
+   // updating edge matrix
    setMapEdgeTri();
+
+   // updating surface neighbours
    setNeighbourSurface();
+
    saveVTKSurface("./vtk/","flipped",flip);
    flip++;
   }
@@ -1696,7 +1721,7 @@ void Model3D::flipTriangleEdge()
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
- cout << "-------------------- " << color(none,yellow,black) 
+ cout << "----------------------- " << color(none,yellow,black) 
       << "inserting vertex: " << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
@@ -1784,7 +1809,8 @@ void Model3D::insertPointWithCurvature(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
 
- cout << "-------------- " << color(none,yellow,black) << "inserting vertex: "
+ cout << "----------------- " << color(none,yellow,black) 
+      << "inserting vertex: "
       << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
@@ -2025,71 +2051,97 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.numVerts++;
  numVerts++;
 
- /* by adding 1 point on the edge it is necessary to divide the
-  * original element and also the oposite element by 2, becoming 4
-  * elements in total. */
-
-
- // checking the orientation
- // vo1 - vo2 - vo3 (elem1 old)
+ /* checking the orientation Define a oriented vector from one of the
+  * old elements (before adding point), then compare to the new 1st
+  * element (with the added point) and check the orientation between
+  * both vectors. If the orientation is ok, proceed normaly, otherwise
+  * swap v1 and v2 and proceed until the end.
+  * */
  // reference vertices
- int v1r = surfMesh.IEN.Get(elem1,0);
- int v2r = surfMesh.IEN.Get(elem1,1);
- int v3r = surfMesh.IEN.Get(elem1,2);
+ int v1elemOld1 = surfMesh.IEN.Get(elem1,0);
+ int v2elemOld1 = surfMesh.IEN.Get(elem1,1);
+ int v3elemOld1 = surfMesh.IEN.Get(elem1,2);
 
- real b1x = surfMesh.X.Get(v1r);
- real b1y = surfMesh.Y.Get(v1r);
- real b1z = surfMesh.Z.Get(v1r);
+ real x1Elem1 = surfMesh.X.Get(v1elemOld1);
+ real y1Elem1 = surfMesh.Y.Get(v1elemOld1);
+ real z1Elem1 = surfMesh.Z.Get(v1elemOld1);
 
- real b2x = surfMesh.X.Get(v2r);
- real b2y = surfMesh.Y.Get(v2r);
- real b2z = surfMesh.Z.Get(v2r);
+ real x2Elem1 = surfMesh.X.Get(v2elemOld1);
+ real y2Elem1 = surfMesh.Y.Get(v2elemOld1);
+ real z2Elem1 = surfMesh.Z.Get(v2elemOld1);
 
- real b3x = surfMesh.X.Get(v3r);
- real b3y = surfMesh.Y.Get(v3r);
- real b3z = surfMesh.Z.Get(v3r);
+ real x3Elem1 = surfMesh.X.Get(v3elemOld1);
+ real y3Elem1 = surfMesh.Y.Get(v3elemOld1);
+ real z3Elem1 = surfMesh.Z.Get(v3elemOld1);
 
- real t1x = b2x-b1x;
- real t1y = b2y-b1y;
- real t1z = b2z-b1z;
+ real vec1x = x2Elem1-x1Elem1;
+ real vec1y = y2Elem1-y1Elem1;
+ real vec1z = z2Elem1-z1Elem1;
 
- real t2x = b3x-b2x;
- real t2y = b3y-b2y;
- real t2z = b3z-b2z;
+ real vec2x = x3Elem1-x2Elem1;
+ real vec2y = y3Elem1-y2Elem1;
+ real vec2z = z3Elem1-z2Elem1;
+
+ // standard normal vector
+ // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
+ clVector cross1 = crossProd(vec1x,vec1y,vec1z,vec2x,vec2y,vec2z);
+ real vecX = cross1.Get(0);
+ real vecY = cross1.Get(1);
+ real vecZ = cross1.Get(2);
+
+ real va1x = XvAdd-P1x;
+ real va1y = YvAdd-P1y;
+ real va1z = ZvAdd-P1z;
+
+ // points
+ real P3elem1x = surfMesh.X.Get(v3elem1);
+ real P3elem1y = surfMesh.Y.Get(v3elem1);
+ real P3elem1z = surfMesh.Z.Get(v3elem1);
+
+ real va2x = P3elem1x-XvAdd;
+ real va2y = P3elem1y-YvAdd;
+ real va2z = P3elem1z-ZvAdd;
 
  // normal vector
  // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross1 = crossProd(t1x,t1y,t1z,t2x,t2y,t2z);
- real tx = cross1.Get(0);
- real ty = cross1.Get(1);
- real tz = cross1.Get(2);
-
- real p3elem1x = surfMesh.X.Get(v3elem1);
- real p3elem1y = surfMesh.Y.Get(v3elem1);
- real p3elem1z = surfMesh.Z.Get(v3elem1);
- real v2x = p3elem1x-P2x;
- real v2y = p3elem1y-P2y;
- real v2z = p3elem1z-P2z;
- 
- // normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross2 = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ clVector cross2 = crossProd(va1x,va1y,va1z,va2x,va2y,va2z);
  real x2t = cross2.Get(0);
  real y2t = cross2.Get(1);
  real z2t = cross2.Get(2);
 
- real prodEsc = tx*x2t + ty*y2t + tz*z2t;
+ real prodEsc = vecX*x2t + vecY*y2t + vecZ*z2t;
 
- //if( prodEsc < 0 )
+ // swap if wrong orientation
  if( prodEsc < 0 )
- {
-  int aux = v1;
-  v1 = v2;
-  v2 = aux;
- }
+  swap(v1,v2);
+ /* -------------------- END of CHECKING --------------------- */
 
- // v1 - v2 - v3elem1
- // v1 - v3elem2 - v2
+
+ /* by adding 1 point on the edge it is necessary to divide the
+  * original element and also the oposite element by 2, becoming 4
+  * elements in total. */
+ /* 
+  *           v3elem1                          v3elem1          
+  *              o                                o                   
+  *             / \                              /|\
+  *            /   \                            / | \
+  *           /     \        Add vertex        /  |  \
+  *          /       \       --------->       /   |   \
+  *         /    1    \                      /    |    \
+  *        /           \                    /  1  |  3  \
+  *       /             \                  /      | vAdd \
+  *   v1 o ------------- o v2          v1 o ----- o ----- o v2               
+  *       \             /                  \      |      /              
+  *        \           /                    \  2  |  4  /              
+  *         \    2    /                      \    |    /                 
+  *          \       /                        \   |   /                 
+  *           \     /                          \  |  /                 
+  *            \   /                            \ | /                   
+  *             \ /                              \|/                   
+  *              o                                o                     
+  *           v3elem2                          v3elem2                    
+  *
+  * */
  
  // 1st. new element (v1 - vAdd - v3elem1) 
  // on the same position of the OLD 1st. element (v1 - v2 - v3elem1)
@@ -2131,8 +2183,13 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
  surfMesh.numElems++;
  
+ // updating surface, xSurface, ySurface and zSurface
  setSurface();
+
+ // updating edge matrix
  setMapEdgeTri();
+
+ // updating surface neighbours
  setNeighbourSurface();
 }
 
@@ -2169,6 +2226,7 @@ void Model3D::deletePoint(int _v)
 
  // updating edge matrix
  setMapEdgeTri();
+
  // updating surface neighbours
  setNeighbourSurface();
 }
@@ -2332,7 +2390,7 @@ void Model3D::removePointsByInterfaceDistance()
  {
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
-  if( d>0 && d<h*1.6 ) // hiRe
+  if( d>0 && d<h*1.2 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -2373,11 +2431,9 @@ void Model3D::remove3dMeshPointsByDistance()
 	if( d>0 && d<0.6*triEdge )
 	//if( d>0 && d<2.0*triEdge )
 	{
-	 //--------------------------------------------------
-	 //   cout << "- " << color(none,blue,black) 
-	 //    << "removing dense vertex cluster: "
-	 //    << resetColor() << i << endl;
-	 //-------------------------------------------------- 
+	    cout << "- " << color(none,blue,black) 
+	     << "removing dense vertex cluster: "
+	     << resetColor() << i << " " << heaviside.Get(i) << endl;
 	 X.Delete(i);
 	 Y.Delete(i);
 	 Z.Delete(i);
@@ -2941,55 +2997,59 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 
 void Model3D::removePointByVolume()
 {
- real v1Sum,v2Sum,v3Sum,v4Sum;
- list<int> plist;
+ real vSum;
+ real vertSum;
+ int v[NUMGLE];
+ int vert=0;
  rpv=0;
+
+ // standard tetrahedron volume
+ real vol = averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2.0)/12.0;
 
  for( int i=0;i<numElems;i++ )
  {
-  int v1 = IEN.Get(i,0);
-  int v2 = IEN.Get(i,1);
-  int v3 = IEN.Get(i,2);
-  int v4 = IEN.Get(i,3);
+  v[0] = IEN.Get(i,0);
+  v[1] = IEN.Get(i,1);
+  v[2] = IEN.Get(i,2);
+  v[3] = IEN.Get(i,3);
 
-  real h = heaviside.Get(v1)+heaviside.Get(v2)+
-           heaviside.Get(v3)+heaviside.Get(v4);
+  real h = heaviside.Get(v[0])+heaviside.Get(v[1])+
+           heaviside.Get(v[2])+heaviside.Get(v[3]);
 
-  if( fabs(getVolume(i)) < 1E-05 ) 
+  if( h != 2.0 && fabs(getVolume(i)) < vol*0.1 ) 
   {
-   v1Sum = 0;
-   v2Sum = 0;
-   v3Sum = 0;
-   v4Sum = 0;
+   // add to checkVert only non surface vertex
+   list<int> checkVert;
+   for( int j=0;j<NUMGLE;j++ )
+	if( heaviside.Get(v[j]) != 0.5 )
+	  checkVert.push_back( v[j] );
 
-   if( h < 0.5 || h > 3.5 ) 
+   vertSum = 1.0E+17; // initial value
+
+   // check sum of volumes of each non surface vertex neighbours
+   list<int> plist = checkVert;
+   list<int>::iterator mvert=plist.begin();
+   for(list<int>::iterator mvert=plist.begin(); mvert!= plist.end();++mvert )
    {
-	plist = neighbourElem.at(v1);
-	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	 v1Sum += fabs(getVolume(*mele));
+	vSum = 0;
+	list<int> plist2 = neighbourElem.at(*mvert);
+	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
+	 vSum += fabs(getVolume(*mele));
 
-	plist = neighbourElem.at(v2);
-	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	 v2Sum += fabs(getVolume(*mele));
-
-	plist = neighbourElem.at(v3);
-	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	 v3Sum += fabs(getVolume(*mele));
-
-	plist = neighbourElem.at(v4);
-	for(list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	 v4Sum += fabs(getVolume(*mele));
-
-
-	// FALTA ESCOLHER QUAL DOS VERTICES TEM A MENOR SOMA!!!
-	X.Delete(v1);
-	Y.Delete(v1);
-	Z.Delete(v1);
-	heaviside.Delete(v1);
-    interfaceDistance.Delete(v1);
-	numVerts--;
-	rpv++;
+	if( vSum < vertSum )
+	{
+	 vertSum = vSum;
+	 vert = *mvert;
+	}
    }
+
+   X.Delete(vert);
+   Y.Delete(vert);
+   Z.Delete(vert);
+   heaviside.Delete(vert);
+   interfaceDistance.Delete(vert);
+   numVerts--;
+   rpv++;
   }
  }
  cout << "  removed by volume: " << rpv << endl;
@@ -2997,14 +3057,13 @@ void Model3D::removePointByVolume()
 
 void Model3D::printMeshReport(tetgenio &_tetmesh)
 {
- /* **************************************
-  *
-  * regular  a^3 sqrt(2)
-  *   tet  = -----------
-  * volume       12
-  *
-  *
-  * ************************************** */
+ /* ******************************************** *
+  *                                              *
+  * regular    a^3 sqrt(2)    triEdge^3 sqrt(2)  *
+  *   tet    = ----------- = ------------------  *
+  * volume         12                12          *
+  *                                              *
+  * ******************************************** */
 
  real aux;
  real minVol = 1.0E+20; // initial value
@@ -3049,46 +3108,63 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 
  cout << "   |------------------------ Mesh Report --------------------------|" 
       << endl;
- cout << "     number of 3D points          (numVerts): " 
+ cout << "     number of 3D points          (numVerts):   " 
       << _tetmesh.numberofpoints << endl;
- cout << "     number of 3D nodes           (numNodes): " 
+ cout << "     number of 3D nodes           (numNodes):   " 
       << _tetmesh.numberoftetrahedra+_tetmesh.numberofpoints << endl;
- cout << "     number of tetrahedrons        (numEles): " 
+ cout << "     number of tetrahedrons        (numEles):   " 
       << _tetmesh.numberoftetrahedra << endl;
- cout << "     number of surface points     (surfMesh): " 
+ cout << "     number of surface points     (surfMesh):   " 
       << surfMesh.numVerts << endl;
- cout << "     number of surface triangles    (numTri): " 
+ cout << "     number of surface triangles    (numTri):   " 
       << _tetmesh.numberoftrifaces << endl;
- cout << "     interface average element edge length:   " 
+ cout << "     interface average element edge length:     " 
       << averageTriEdge << endl;
- cout << "     desired tetrahedron volume:              " 
+ cout << "     desired tetrahedron volume:                " 
       << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
- cout << "     triangle edge size:                      " << triEdge << endl;
- cout << "     min tetrahedron volume:                  " 
+ cout << "     triangle edge size:                        " << triEdge << endl;
+ cout << "     min tetrahedron volume:                    " 
       << minVol << " (" << minElem << ")" << endl;
- cout << "     max tetrahedron volume:                  " 
+ cout << "     max tetrahedron volume:                    " 
       << maxVol <<  " (" << maxElem << ")" << endl;
- cout << "     number of " << color(none,yellow,black) 
-      << "inserted" << resetColor() << " surface points:       " 
+
+ cout << color(none,yellow,black) 
+      << "     inserted" << resetColor() 
+	  << " surface points by length:         " 
 	  << isp << endl;
- cout << "     number of " << color(none,blue,black) 
-      << "inserted" << resetColor() << " curvature points:     " 
+ cout << color(none,yellow,black) 
+      << "     inserted" << resetColor() 
+	  << " surface points by curvature:      " 
 	  << ispc << endl;
- cout << "     number of " << color(none,red,black)
-      << "removed" << resetColor() << " surface points:        " 
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+	  << " surface points by lenght:          " 
 	  << rsp << endl;
- cout << "     number of " << color(none,blue,black) 
-      << "removed" << resetColor() << " curvature points:      " 
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+	  << " surface points by curvature:       " 
 	  << rspc << endl;
- cout << "     number of inserted mesh points:          " << ip << endl;
- cout << "     number of removed mesh points by volume: " << rpv << endl;
- cout << "     number of removed mesh points:           " << rp+rpi 
-      << " (" << rpi << "," << rp << ")" << endl;
- cout << "     number of " << color(none,green,black) << "flipped" 
-      << resetColor() << " operations:            " << flip << endl; 
- cout << "     number of " << color(none,blue,black) << "contracted" 
-      << resetColor() << " surface points:     " << csp << endl; 
- cout << "     number of tets with 4 verts on surface:  " 
+ cout << color(none,green,black)
+      << "     flipped" << resetColor() 
+	  << " operations at surface:             " 
+	  << flip << endl; 
+ cout << color(none,cyan,black)
+      << "     contracted" << resetColor() 
+	  << " surface points by lenght:       " 
+	  << csp << endl; 
+ cout << color(none,yellow,black) 
+      << "     inserted" << resetColor()
+	  << " mesh points:                      " << ip << endl;
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+      << " mesh points by volume:             " << rpv << endl;
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+      << " mesh points by distance:           " << rp << endl;
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+      << " mesh points by interface distance: " << rpi << endl;
+ cout << "     number of tets with 4 verts on surface:    " 
       << count << endl;
  cout << "   |---------------------------------------------------------------|" 
       << endl;
@@ -3108,8 +3184,8 @@ void Model3D::mesh3DPoints()
  flipTriangleEdge();
  checkNeighbours();
  removePointByVolume();
- removePointsByInterfaceDistance();
- remove3dMeshPointsByDistance();
+ //removePointsByInterfaceDistance();
+ //remove3dMeshPointsByDistance();
 
  // init tetgen mesh object
  in.initialize();
@@ -3130,7 +3206,8 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+ tetrahedralize( (char*) "QYYRCApa",&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -3143,35 +3220,6 @@ void Model3D::mesh3DPoints()
 
  convertTetgenToModel3D(out);
  mesh3d = convertTetgenToMesh3d(out);
-
-//--------------------------------------------------
-//  /* ---------------------- 3D MESH TREATMENT --------------------- */
-//  cout << endl;
-//  in.initialize();
-//  out.initialize();
-// 
-//  cout << " ---------------------------------------- " << endl;
-//  removePointByVolume();
-//  removePointsByInterfaceDistance();
-//  remove3dMeshPointsByDistance();
-//  cout << " ---------------------------------------- " << endl;
-// 
-//  in.mesh_dim = 3;
-//  in.numberofpoints = numVerts;
-//  in.pointlist = new REAL[in.numberofpoints * 3];
-//  in.pointmarkerlist = new int[in.numberofpoints];
-// 
-//  convertModel3DtoTetgen(in);
-// 
-//  cout << "----> removing 3D points... ";
-//  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
-//  cout << "finished <---- " << endl;;
-// 
-//  convertTetgenToModel3D(out);
-//  mesh3d = convertTetgenToMesh3d(out);
-//  cout << endl;
-//  /* ---------------------------- END ----------------------------- */
-//-------------------------------------------------- 
 
  printMeshReport(out);
 
@@ -6209,6 +6257,8 @@ void Model3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  *  to the elements that contains the surface node, it is possible to
  *  calculate with precision the normal unit vector and curvature of
  *  each surface node.
+ *
+ *  NORMAL: OUTWARD direction
  * */
 void Model3D::computeNormalAndKappa()
 {
@@ -6567,8 +6617,13 @@ void Model3D::checkNeighbours()
    deleteSurfaceElements();
    deleteSurfacePoint(i);
 
+   // updating surface, xSurface, ySurface and zSurface
    setSurface();
+
+   // updating edge matrix
    setMapEdgeTri();
+
+   // updating surface neighbours
    setNeighbourSurface();
   }
  }

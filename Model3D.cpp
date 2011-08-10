@@ -943,6 +943,20 @@ void Model3D::insertPointsByLength()
  }
 }
 
+/* Method to surface points when the curvature of the points is higher
+ * then a specific value. This method should not be used often due to
+ * the excessive deletion of points. The example below shows an 
+ * initial surface mesh that contains angles of 90 degrees 
+ * (points 1 and 2), this method will delete such necessery points.
+ *
+ *      ------------------------------------------------
+ *            1 o ----------o 
+ *              |            \     flow
+ *              |             )    ---->
+ *              |            /
+ *            2 o ----------o 
+ *      ------------------------------------------------
+ * */
 void Model3D::removePointsByCurvature()
 {
  // number of removed surface points by Curvature
@@ -1805,6 +1819,41 @@ void Model3D::insertPoint(int _edge)
  setNeighbourSurface();
 }
 
+ /* Method to insert a new point (vAdd) between 2 vertices (v1 and v2).
+  *
+  *           v3elem1                          v3elem1          
+  *              o                                o                   
+  *             / \                              /|\
+  *            /   \                            / | \
+  *           /     \        Add vertex        /  |  \
+  *          /       \       --------->       /   |   \
+  *         /    1    \                      /    |    \
+  *        /           \                    /  1  |  3  \
+  *       /             \                  /      | vAdd \
+  *   v1 o ------------- o v2          v1 o ----- o ----- o v2               
+  *       \             /                  \      |      /              
+  *        \           /                    \  2  |  4  /              
+  *         \    2    /                      \    |    /                 
+  *          \       /                        \   |   /                 
+  *           \     /                          \  |  /                 
+  *            \   /                            \ | /                   
+  *             \ /                              \|/                   
+  *              o                                o                     
+  *           v3elem2                          v3elem2                    
+  *
+  * This method also considers the curvature of v1 and v2 to pull up or
+  * down (h value) the vAdd.    
+  *
+  *                                            vAdd
+  *    N1                         N2             - x -           <-
+  *     ^                         ^            -       -           |
+  *      \                       /           -           -         | h
+  *       \                     /           /             \        |
+  *        \                   /           /               \       |
+  *         o ------ x ------ o           o --------------- o    <-
+  *        v1       vAdd      v2         v1                 v2
+  *       
+  * */
 void Model3D::insertPointWithCurvature(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
@@ -2193,6 +2242,15 @@ void Model3D::insertPointWithCurvature(int _edge)
  setNeighbourSurface();
 }
 
+/*  Method to delete a surface point.
+ *  It is mandatory to update the vector and matrix structures of:
+ *  - surfMesh.X,surfMesh.Y and surfMesh.Z
+ *  - surfMesh.IEN
+ *  - surfMesh.elemIdRegion
+ *  - surfMesh.numVerts
+ *  - surfMesh.numNodes
+ *  - surfMesh.numElems
+ * */
 void Model3D::deletePoint(int _v)
 {
  cout << "----------------- " << color(none,red,black) << "removing vertex: "

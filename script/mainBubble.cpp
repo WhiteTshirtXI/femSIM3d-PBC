@@ -59,7 +59,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.05; // smooth - fujiwara
+ real c3 = 0.1; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 1;
+ real cfl = 0.7;
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 //  real c1 = 0.00; // lagrangian
 //  real c2 = 1.00; // smooth vel
 //  real c3 = 0.05; // smooth - fujiwara
-//  real c4 = 0.1; // smooth surface - fujiwara
+//  real c4 = 0.2; // smooth surface - fujiwara
 //  real alpha = 1;
 //  real beta = 1;
 // 
@@ -100,9 +100,9 @@ int main(int argc, char **argv)
 //  real rho_in = 1.225;
 //  real rho_out = 1350;
 // 
-//  real cfl = 0.01;
+//  real cfl = 1;
 // 
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube6.msh";
+//  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
 //  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
 //-------------------------------------------------- 
 

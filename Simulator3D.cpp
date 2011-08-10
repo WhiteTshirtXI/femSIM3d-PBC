@@ -47,7 +47,7 @@ Simulator3D::Simulator3D( Model3D &_m )
  c4    = 0.01;
 
  g     = 9.81;
- sigma = 0.1;
+ sigma = 1.0;
  mu_in  = 1.0;
  mu_out  = 1.0;
  rho_in = 1.0;
@@ -76,7 +76,6 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  time  = _s.getTime2();
  cfl   = _s.getCfl();
  g     = _s.getGrav();
- sigma = _s.getSigma();
  mu_in  = _s.getMu_in();
  mu_out  = _s.getMu_out();
  rho_in = _s.getRho_in();
@@ -1919,8 +1918,6 @@ real Simulator3D::getDtSurfaceTension()
 
 real Simulator3D::getDtLagrangian()
 {
- m->setMapEdge();
-
  real minEdge = m->getMinEdge();
 
  real velMax = max( 1.0,fabs(uSolOld.Max()) );
@@ -1943,8 +1940,6 @@ real Simulator3D::getDtLagrangian()
 
 real Simulator3D::getDtSemiLagrangian()
 {
- m->setMapEdge();
-
  real minEdge = m->getMinEdge();
 
  real velMax = max( 1.0,fabs(uSL.Max()) );
@@ -1956,12 +1951,8 @@ real Simulator3D::getDtSemiLagrangian()
 
 real Simulator3D::getDtGravity()
 {
- m->setMapEdge();
-
  real minEdge = m->getMinEdge();
- real velMax = 1.0;
- if( uSol.Max() > 1.0 )
-  velMax = uSol.Max();
+ real velMax = max( 1.0,fabs(gravity.Max()) );
 
  return minEdge/velMax;
 }
@@ -1975,9 +1966,11 @@ real Simulator3D::getDtGravity()
  *  */
 void Simulator3D::setDt()
 {
+ m->setMapEdge();
+
  real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
  minDt = min(minDt,getDtSurfaceTension());
- //minDt = min(minDt,getDtGravity());
+ minDt = min(minDt,getDtGravity());
 
  dt = cfl*minDt;
  cout << endl;
@@ -1990,7 +1983,10 @@ void Simulator3D::setDt()
                   << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
  cout << setw(27) << color(none,white,black) 
                   << "Surface tension: " << getDtSurfaceTension() << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Gravity: " << getDtGravity() << endl;
  cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
  cout << setw(20) << color(none,red,black) 
                   << "|-------------------------------------|" << endl;
  cout << resetColor() << endl;
@@ -2569,7 +2565,6 @@ void Simulator3D::operator()(Model3D &_m)
  c3    = 0.0;
  c4    = 0.01;
  g     = 9.81;
- sigma = 0.1;
  mu_in  = 1.0;
  mu_out  = 1.0;
  rho_in = 1.0;
@@ -2603,7 +2598,6 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  c3    = _s.getC3();
  c4    = _s.getC4();
  g     = _s.getGrav();
- sigma = _s.getSigma();
  mu_in  = _s.getMu_in();
  mu_out  = _s.getMu_out();
  rho_in = _s.getRho_in();
@@ -2706,6 +2700,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> mu_out;
  fileP >> rho_in;
  fileP >> rho_out;
+ fileP >> sigma;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
   fileP >> auxstr;

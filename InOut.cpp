@@ -81,6 +81,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  mu_out = s->getMu_out();
  rho_in = s->getRho_in();
  rho_out = s->getRho_out();
+ sigma = s->getSigma();
  iter = s->getIter();
  c1 = s->getC1();
  c2 = s->getC2();
@@ -2521,8 +2522,10 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << numVerts << " " << numNodes << " " << numElems << endl;
  _file << "PARAMETERS 1 4 float" << endl;
  _file << Re << " " << Sc << " " << Fr << " " << We << endl;
- _file << "PROPERTIES 1 4 float" << endl;
- _file << mu_in << " " << mu_out << " " << rho_in << " " << rho_out << endl;
+ _file << "PROPERTIES 1 5 float" << endl;
+ _file << mu_in << " " << mu_out << " " 
+       << rho_in << " " << rho_out << " " 
+	   << sigma << endl;
  _file << "COEFFICIENTS 1 6 float" << endl;
  _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
        << alpha << " " << beta << endl;

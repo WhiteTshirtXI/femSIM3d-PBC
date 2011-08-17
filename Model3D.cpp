@@ -21,7 +21,7 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- initBubbleVolume = (4.0/3.0)*3.14*0.5*0.5*0.5;
+ initBubbleVolume = (4.0/3.0)*3.1415*0.5*0.5*0.5;
  minEdge = 0.10;
  minEdgeTri = 0.10;
  triEdge = 0.10;
@@ -967,7 +967,7 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 60 )
+  if( curv > 50 )
   {
    deletePoint(surfaceNode);
 
@@ -1370,26 +1370,26 @@ void Model3D::deleteSurfaceElements()
 void Model3D::setPolyhedron(int _v)
 {
  /* esta rotina nao esta otimizada; criamos uma matriz clMatrix para
- // organizar e ordenar os vertices do poliedro resultante da retirada
- // de um ponto da malha de superficie. Para isso configuramos a tal
- // matriz com as linhas representando cada aresta do poliedro sendo que
- // as 2 colunas representam o 1o. vertice e o 2o. vertice da aresta.
- // Esta aresta por sinal nao esta ordenada em algum sentido (horario ou
- // anti-horario) e para isso eh preciso organiza-la e ordenar as linhas
- // da matriz. Isto eh feito buscando o 2 vertice da 1a linha e
- // verificando nas linhas remanescentes da matriz qual delas contem o
- // mesmo vertices. Se for a 1a coluna basta substituir a 2a. linha da
- // matriz pela linha em que o elemento se encontra. Caso esteja na 2a.
- // coluna fazemos o mesmo passo acima porem invertemos tambem o vertice
- // da 1a. coluna com o da 2o coluna. Fazemos este loop ate a ultima
- // linha e suprimimos os elementos repetidos. No final temos uma matriz
- // organizada por arestas e nos.
- // Exemplo:
- //
- // test = [ 0  1 ]   -->   [ 0  1 ]
- //        [ 3  1 ]   -->   [ 1  3 ]
- //        [ 2  0 ]   -->   [ 3  2 ]
- //        [ 3  2 ]   -->   [ 2  0 ]                               
+  * organizar e ordenar os vertices do poliedro resultante da retirada
+  * de um ponto da malha de superficie. Para isso configuramos a tal
+  * matriz com as linhas representando cada aresta do poliedro sendo que
+  * as 2 colunas representam o 1o. vertice e o 2o. vertice da aresta.
+  * Esta aresta por sinal nao esta ordenada em algum sentido (horario ou
+  * anti-horario) e para isso eh preciso organiza-la e ordenar as linhas
+  * da matriz. Isto eh feito buscando o 2 vertice da 1a linha e
+  * verificando nas linhas remanescentes da matriz qual delas contem o
+  * mesmo vertices. Se for a 1a coluna basta substituir a 2a. linha da
+  * matriz pela linha em que o elemento se encontra. Caso esteja na 2a.
+  * coluna fazemos o mesmo passo acima porem invertemos tambem o vertice
+  * da 1a. coluna com o da 2o coluna. Fazemos este loop ate a ultima
+  * linha e suprimimos os elementos repetidos. No final temos uma matriz
+  * organizada por arestas e nos.
+  * Exemplo:
+  *
+  * test = [ 0  1 ]   -->   [ 0  1 ]
+  *        [ 3  1 ]   -->   [ 1  3 ]
+  *        [ 2  0 ]   -->   [ 3  2 ]
+  *        [ 3  2 ]   -->   [ 2  0 ]                               
  */
   int listSize = neighbourPoint.at(_v).size();
   clMatrix test(listSize/2,2);
@@ -1447,6 +1447,11 @@ void Model3D::setPolyhedron(int _v)
 	}
    }
   }
+
+  /* 
+   * old neighbourPoint = [ 0 1 3 1 2 0 3 2 ] 
+   * new neighbourPoint = [ 0  1  3  2  0 ]
+   */
   neighbourPoint.at(_v).clear();
   for( int i=0;i<test.DimI();i++ )
    for( int j=0;j<test.DimJ();j++ )
@@ -1502,7 +1507,6 @@ void Model3D::setNeighbourSurface()
 	neighbourPoint.at( ii ).push_back(v2);
    }
   }
-  // ordering the vertices of the polyhedron surrounding the vertex _v
   setPolyhedron(ii);
  }
 }
@@ -2968,7 +2972,9 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  elemIdRegion.SetAll(1.0);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
-  // setting de heaviside = 0 para fora da bolha e heaviside = 0.5 para interface
+  // set:
+  // heaviside = 0 outside bubble
+  // elemIdRegion = 1 outside bubble
   if( _tetmesh.tetrahedronattributelist[i] == 1 )
   {
    for( int j=0;j<4;j++ )
@@ -2979,7 +2985,9 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	elemIdRegion.Set(i,1.0);
    }
   }
-  // setting de heaviside = 1 para dentro da bolha e heaviside = 0.5 para interface
+  // set:
+  // heaviside = 1 inside bubble
+  // elemIdRegion = 2 inside bubble
   else 
   {
    for( int j=0;j<4;j++ )
@@ -5271,12 +5279,27 @@ void Model3D::setInOutElem()
 {
  inElem.resize (0);
  outElem.resize (0);
+ elemIdRegion.Dim(numElems); 
  for(int i=0;i<IEN.DimI();i++ )
  {
-  if( elemIdRegion.Get(i) == 1.0 ) // out
-   outElem.push_back(i);
-  else
+  int v1 = IEN.Get(i,0);
+  int v2 = IEN.Get(i,1);
+  int v3 = IEN.Get(i,2);
+  int v4 = IEN.Get(i,3);
+
+  real hsum = heaviside.Get(v1)+heaviside.Get(v2)+
+              heaviside.Get(v3)+heaviside.Get(v4);
+
+  if( hsum > 1.5 )
+  {
+   elemIdRegion.Set(i,2.0);
    inElem.push_back(i);
+  }
+  else
+  {
+   elemIdRegion.Set(i,1.0);
+   outElem.push_back(i);
+  }
  }
 }
 	   
@@ -6634,27 +6657,58 @@ real Model3D::computeBubbleVolume()
  return vol;
 }
 
+real Model3D::computeBubbleVolume2()
+{
+ real sumVolume=0;
+ for(int i=0;i<IEN.DimI();i++ )
+ {
+  int v1 = IEN.Get(i,0);
+  int v2 = IEN.Get(i,1);
+  int v3 = IEN.Get(i,2);
+  int v4 = IEN.Get(i,3);
+
+  real hsum = heaviside.Get(v1)+heaviside.Get(v2)+
+              heaviside.Get(v3)+heaviside.Get(v4);
+
+  if( hsum > 1.5 )
+   sumVolume += getVolume(i);
+ }
+
+ return sumVolume;
+}
+
 void Model3D::applyBubbleVolumeCorrection()
 {
  real aux = 0;
- real bubbleVolume = computeBubbleVolume();
- real ds = (initBubbleVolume-bubbleVolume)/(4.0*3.1415*0.5*0.5);
- for( int i=0;i<surface.Dim();i++ )
+ real bubbleVolume = computeBubbleVolume2();
+ real ds = (initBubbleVolume - bubbleVolume)/surface.Dim();
+
+ while( fabs(initBubbleVolume - bubbleVolume) > 0.0001)
  {
-  int surfaceNode = surface.Get(i);
+  for( int i=0;i<surface.Dim();i++ )
+  {
+   int surfaceNode = surface.Get(i);
 
-  aux = surfMesh.X.Get(surfaceNode) + surfMesh.xNormal.Get(surfaceNode)*ds;
-  X.Set(surfaceNode,aux);
-  surfMesh.X.Set(surfaceNode,aux);
+   aux = surfMesh.X.Get(surfaceNode) + surfMesh.xNormal.Get(surfaceNode)*ds;
+   X.Set(surfaceNode,aux);
+   surfMesh.X.Set(surfaceNode,aux);
 
-  aux = surfMesh.Y.Get(surfaceNode) + surfMesh.yNormal.Get(surfaceNode)*ds;
-  Y.Set(surfaceNode,aux);
-  surfMesh.Y.Set(surfaceNode,aux);
+   aux = surfMesh.Y.Get(surfaceNode) + surfMesh.yNormal.Get(surfaceNode)*ds;
+   Y.Set(surfaceNode,aux);
+   surfMesh.Y.Set(surfaceNode,aux);
 
-  aux = surfMesh.Z.Get(surfaceNode) + surfMesh.zNormal.Get(surfaceNode)*ds;
-  Z.Set(surfaceNode,aux);
-  surfMesh.Z.Set(surfaceNode,aux);
+   aux = surfMesh.Z.Get(surfaceNode) + surfMesh.zNormal.Get(surfaceNode)*ds;
+   Z.Set(surfaceNode,aux);
+   surfMesh.Z.Set(surfaceNode,aux);
+  }
+ bubbleVolume = computeBubbleVolume2();
+ ds = (initBubbleVolume - bubbleVolume)/surface.Dim();
  }
+ //cout << "init volume = " << initBubbleVolume << endl;
+ //cout << "volume1 = " << computeBubbleVolume() << endl;
+ //cout << "volume2 = " << computeBubbleVolume2() << endl;
+ //cout << "ds = " << ds << endl;
+ //cout << "diff = " << fabs(initBubbleVolume - bubbleVolume) << endl;
 }
 
 void Model3D::checkNeighbours()

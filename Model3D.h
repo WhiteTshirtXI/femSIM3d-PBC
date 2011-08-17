@@ -103,6 +103,7 @@ class Model3D
   bool testFace(int v1, int v2, int v3, int v4);
   void setInitBubbleVolume();
   real computeBubbleVolume();
+  real computeBubbleVolume2();
   void applyBubbleVolumeCorrection();
 
   // meshing with TETGEN

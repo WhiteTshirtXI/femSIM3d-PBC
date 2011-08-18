@@ -3800,6 +3800,44 @@ void Model3D::setWallBC()
  }
 }
 
+void Model3D::setMicroWallBC()
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  if( X.Get(*it) == X.Min() &&
+	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+	  Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  if( (Y.Get(*it) == Y.Min()) || (Y.Get(*it) == Y.Max()) || 
+	  (Z.Get(*it) == Z.Min()) || (Z.Get(*it) == Z.Max()) )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  if( X.Get(*it) == X.Max() &&
+	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+	  Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+  {
+   idbcp.AddItem(*it);
+
+   pc.Set(*it,0.0);
+  }
+ }
+}
+
 void Model3D::setWallCouetteBC()
 {    
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
@@ -6579,6 +6617,9 @@ void Model3D::setInitBubbleVolume()
  initBubbleVolume = computeBubbleVolume();
 }
 
+/* 
+ * OBS: The mesh needs to be oriented, otherwise the method doesn't work!
+ * */
 real Model3D::computeBubbleVolume()
 {
  real sumVolume = 0;
@@ -6593,34 +6634,40 @@ real Model3D::computeBubbleVolume()
 
   if( surfMesh.Marker.Get(v1) == 0.5 )
   {
+   // P1
    real p1x = surfMesh.X.Get(v1);
    real p1y = surfMesh.Y.Get(v1);
    real p1z = surfMesh.Z.Get(v1);
+
+   // P2
    real p2x = surfMesh.X.Get(v2);
    real p2y = surfMesh.Y.Get(v2);
    real p2z = surfMesh.Z.Get(v2);
+
+   // P3
    real p3x = surfMesh.X.Get(v3);
    real p3y = surfMesh.Y.Get(v3);
    real p3z = surfMesh.Z.Get(v3);
 
+   // element centroid
    real xCentroid = (p1x+p2x+p3x)/3.0;
    real yCentroid = (p1y+p2y+p3y)/3.0;
    real zCentroid = (p1z+p2z+p3z)/3.0;
 
-   // distance do ponto 1 ate 2
+   // distance from point 1 to 2
    real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
 
-   // distance do ponto 1 ate 3
-   real b = distance(p1x,p1y,p1z,p3x,p3y,p3z);
+   // distance from point 2 to 3
+   real b = distance(p2x,p2y,p2z,p3x,p3y,p3z);
 
-   // vetores unitarios
+   // unit vectors
    real x1Unit = (p2x-p1x)/a;
    real y1Unit = (p2y-p1y)/a;
    real z1Unit = (p2z-p1z)/a;
 
-   real x2Unit = (p3x-p1x)/b;
-   real y2Unit = (p3y-p1y)/b;
-   real z2Unit = (p3z-p1z)/b;
+   real x2Unit = (p3x-p2x)/b;
+   real y2Unit = (p3y-p2y)/b;
+   real z2Unit = (p3z-p2z)/b;
 
    // calculando o produto vetorial de cada elemento triangular da superficie
    clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
@@ -6643,10 +6690,9 @@ real Model3D::computeBubbleVolume()
 	              yCentroid*yNormalElemUnit +
 				  zCentroid*zNormalElemUnit ) * area;
 
-   //real xdotx = xCentroid*xCentroid+yCentroid*yCentroid+zCentroid*zCentroid;
-   //sumCentroidX += xdotx*xNormalElemUnit*area;
-   //sumCentroidY += xdotx*yNormalElemUnit*area;
-   //sumCentroidZ += xdotx*zNormalElemUnit*area;
+   //sumCentroidX += (xCentroid*xCentroid)*xNormalElemUnit*area;
+   //sumCentroidY += (yCentroid*yCentroid)*yNormalElemUnit*area;
+   //sumCentroidZ += (zCentroid*zCentroid)*zNormalElemUnit*area;
   }
  }
  real vol = (1.0/3.0)*sumVolume;
@@ -6953,3 +6999,349 @@ void Model3D::setFourElements()
  IEN.Set(3,2,4);
  IEN.Set(3,3,5);
 }
+
+void Model3D::checkTriangleOrientationPerfect()
+{
+ setMapEdgeTri();
+
+
+ vector< list<int> > elemEdge;  // lista de elementos de cada no
+ elemEdge.resize (0);
+ elemEdge.resize (surfMesh.numElems);
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+  for( int j=0;j<2;j++ )
+   elemEdge.at( mapEdgeTri.Get(i,5+j) ).push_back(i);
+
+
+//--------------------------------------------------
+//  for( int i=0;i<surfMesh.numElems;i++ )
+//  {
+//   list<int> plist = elemEdge.at(i);
+// 
+//   list<int>::iterator edge=plist.begin();
+//   int e1 = *edge;++edge;
+//   int e2 = *edge;++edge;
+//   int e3 = *edge;
+// 
+//   cout << i << " " << e1 << " " << e2 << " " << e3 << endl;
+//  }
+//-------------------------------------------------- 
+
+ clVector flag(surfMesh.numElems);
+ flag.SetAll(0.0);
+ clVector elemCheckList(surfMesh.numElems);
+ elemCheckList.SetAll(0.0);
+ elemCheckList.Set(0,1.0);
+
+ clVector test((int)mapEdgeTri.DimI());
+ test.SetAll(0.0);
+
+  saveVTKSurface("./vtk/","antes",0);
+//--------------------------------------------------
+//  for( int i=0;i<surfMesh.numElems;i++ )
+//  {
+//   int v1 = surfMesh.IEN.Get(i,0);
+//   int v2 = surfMesh.IEN.Get(i,1);
+//   int v3 = surfMesh.IEN.Get(i,2);
+// 
+//   if( i == 200 || i == 229 || i == 201 || i == 177 )
+//    cout << i << " " << v1 << " " << v2 << " " << v3 << endl; 
+//  }
+//-------------------------------------------------- 
+
+ int tes = 0;
+ int count = 0;
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  cout << "tes: " << tes << endl;
+  list<int> plist = elemEdge.at(tes);
+  int c=0;
+  for( list<int>::iterator edge=plist.begin();edge != plist.end();++edge )
+  {
+//--------------------------------------------------
+//    cout << *edge << " ";++edge;
+//    cout << *edge << " ";++edge;
+//    cout << *edge << endl;
+//    cout << test.Get(*edge) << endl;
+//-------------------------------------------------- 
+
+   int v1 = mapEdgeTri.Get(*edge,1);
+   int v2 = mapEdgeTri.Get(*edge,2);
+   int v3elem1 = mapEdgeTri.Get(*edge,3);
+   int v3elem2 = mapEdgeTri.Get(*edge,4);
+   int elem1 = mapEdgeTri.Get(*edge,5);
+   int elem2 = mapEdgeTri.Get(*edge,6);
+
+   int mel = 0;
+   if( elem1 == tes )
+	mel = elem2;
+   else
+	mel = elem1;
+
+   cout << "loop: " << i << " elem1: " << elem1 << " elem2: " << elem2 << endl;
+
+   if( elem1 == tes && 
+	   elemCheckList.Get(mel) != 1.0 )
+   {
+	surfMesh.IEN.Set(elem2,0,v1);
+	surfMesh.IEN.Set(elem2,1,v3elem2);
+	surfMesh.IEN.Set(elem2,2,v2);
+	elemCheckList.Set(elem2,1.0);
+	tes = elem2;
+	count++;
+	break;
+   }
+   if( elem2 == tes && 
+       elemCheckList.Get(mel) != 1.0 )
+   {
+	surfMesh.IEN.Set(elem1,0,v1);
+	surfMesh.IEN.Set(elem1,1,v2);
+	surfMesh.IEN.Set(elem1,2,v3elem1);
+	elemCheckList.Set(elem1,1.0);
+	test.Set(*edge,1.0);
+	tes = elem1;
+	count++;
+	break;
+   }
+   c++;
+  }
+  c++;
+  if( c==4 )
+  {
+   i--;
+   for( int z=0;z<elemCheckList.Dim();z++ )
+	if( elemCheckList.Get(z) == 0.0 && flag.Get(z) == 0.0 )
+	{
+	 flag.Set(z,1.0);
+	 tes = z;
+	 break;
+	}
+  }
+ }
+ elemCheckList.Display();
+  saveVTKSurface("./vtk/","depois",0);
+
+
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+
+  if( i == 200 || i == 229 || i == 201 || i == 177 )
+   cout << i << " " << v1 << " " << v2 << " " << v3 << endl; 
+ }
+
+//--------------------------------------------------
+//  clVector faceaux(2);
+//  IFACE3DSurface *faces = NULL;
+//  int listSize = mapEdgeTri.DimI();
+//  faces = new IFACE3DSurface[listSize];
+//  for( int edge=0;edge<listSize;edge++ )
+//  {
+//   int e1 = mapEdgeTri.Get(edge,5);
+//   int e2 = mapEdgeTri.Get(edge,6);
+// 
+//   faceaux.Set(0,e1);
+//   faceaux.Set(1,e2);
+//   faceaux.Sort(); // para ordenar os vertices de uma aresta
+//   faces[edge].p1 = (int) faceaux.Get(0);
+//   faces[edge].p2 = (int) faceaux.Get(1);
+//   faces[edge].p3 = edge;
+//  }
+// 
+//  // ordena uma estrutura (faces) em ordem crescente na linha e coluna
+//  // as faces continuam repetidas neste ponto, porem ordenadas e prontas
+//  // para serem excluidas.
+//  qsort(faces,listSize,sizeof(IFACE3DSurface),IFACE2DCompare);
+// 
+// 
+// //--------------------------------------------------
+// //  clVector elemCheckList(surfMesh.numElems);
+// //  elemCheckList.SetAll(0.0);
+// // 
+// //  // edge 0 = orientacao padrao
+// //  // e1
+// //  
+// //  int v1 = mapEdgeTri.Get(0,1);
+// //  int v2 = mapEdgeTri.Get(0,2);
+// //  int v3elem1 = mapEdgeTri.Get(0,3);
+// //  int v3elem2 = mapEdgeTri.Get(0,4);
+// //  int e1 = mapEdgeTri.Get(0,5);
+// //  int e2 = mapEdgeTri.Get(0,6);
+// //  
+// //  int v1ele = surfMesh.IEN.Get(e1,0);
+// //  int v2ele = surfMesh.IEN.Get(e1,1);
+// //  int v3ele = surfMesh.IEN.Get(e1,2);
+// //  
+// //  for( int edge=1;edge<mapEdgeTri.Dim();edge++ )
+// //  {
+// //   v1 = mapEdgeTri.Get(edge,1);
+// //   v2 = mapEdgeTri.Get(edge,2);
+// //   v3elem1 = mapEdgeTri.Get(edge,3);
+// //   v3elem2 = mapEdgeTri.Get(edge,4);
+// //   e1 = mapEdgeTri.Get(edge,5);
+// //   e2 = mapEdgeTri.Get(edge,6);
+// // 
+// //   
+// //  }
+// //-------------------------------------------------- 
+// 
+//  clVector elemCheckList(surfMesh.numElems);
+//  elemCheckList.SetAll(0.0);
+// 
+//  // edge 0 = orientacao padrao
+//  int e1 = faces[0].p1;
+//  int e2 = faces[0].p2
+//  int edge = faces[0].p3;
+// 
+//  int v1 = mapEdgeTri.Get(edge,1);
+//  int v2 = mapEdgeTri.Get(edge,2);
+//  int v3elem1 = mapEdgeTri.Get(edge,3);
+//  int v3elem2 = mapEdgeTri.Get(edge,4);
+//  
+//  surfMesh.IEN.Set(e1,v1);
+//  surfMesh.IEN.Set(e1,v2);
+//  surfMesh.IEN.Set(e1,v3elem1);
+// 
+//  surfMesh.IEN.Set(e2,v1);
+//  surfMesh.IEN.Set(e2,v3elem2);
+//  surfMesh.IEN.Set(e2,v2);
+// 
+//  elemCheckList.Set(e1,1.0);
+//  elemCheckList.Set(e2,1.0);
+//  
+//  int edge1 = findEdge(v1,v3elem2);
+// 
+//  for( int i=1;i<mapEdgeTri.Dim();i++ )
+//  {
+//   v1 = mapEdgeTri.Get(edge,1);
+//   v2 = mapEdgeTri.Get(edge,2);
+//   v3elem1 = mapEdgeTri.Get(edge,3);
+//   v3elem2 = mapEdgeTri.Get(edge,4);
+//   e1 = mapEdgeTri.Get(edge,5);
+//   e2 = mapEdgeTri.Get(edge,6);
+// 
+//  }
+//-------------------------------------------------- 
+
+}
+
+
+
+/*
+ * Check the orientation of each surface triagle (bubble + convex-hull)
+ * by comparing (dot product) the orientation of the element's normal vector 
+ * and the direction of the element to the centroid.
+ *
+ *       o ------------- o
+ *       |               |
+ *       |       -       |   x centroid
+ *       |     /   \     |
+ *       |    |  x  |    |
+ *       |     \   /     |
+ *       |       -       |
+ *       |               |
+ *       o ------------- o
+ *
+ *
+ * OBS: works only for convex shapes
+ * */
+void Model3D::checkTriangleOrientation()
+{
+ saveVTKSurface("./vtk/","antes",0);
+ clVector centroid = computeBubbleCentroid();
+ real xc = centroid.Get(0);
+ real yc = centroid.Get(1);
+ real zc = centroid.Get(2);
+
+ for( int elem=0;elem<surfMesh.numElems;elem++ )
+ {
+  int v1 = surfMesh.IEN.Get(elem,0);
+  real p1x = surfMesh.X.Get(v1);
+  real p1y = surfMesh.Y.Get(v1);
+  real p1z = surfMesh.Z.Get(v1);
+
+  int v2 = surfMesh.IEN.Get(elem,1);
+  real p2x = surfMesh.X.Get(v2);
+  real p2y = surfMesh.Y.Get(v2);
+  real p2z = surfMesh.Z.Get(v2);
+
+  int v3 = surfMesh.IEN.Get(elem,2);
+  real p3x = surfMesh.X.Get(v3);
+  real p3y = surfMesh.Y.Get(v3);
+  real p3z = surfMesh.Z.Get(v3);
+
+  /*               
+   *               v3
+   *               o 
+   *              / \
+   *             /   \
+   *            /     \
+   *           o ----- o 
+   *         v1         v2
+   *
+   * */
+
+  //real vx = xc-p1x;
+  //real vy = yc-p1y;
+  //real vz = zc-p1z;
+
+  real vx = p1x-xc;
+  real vy = p1y-yc;
+  real vz = p1z-zc;
+
+  real v1x = p2x-p1x;
+  real v1y = p2y-p1y;
+  real v1z = p2z-p1z;
+
+  real v2x = p3x-p2x;
+  real v2y = p3y-p2y;
+  real v2z = p3z-p2z;
+  
+  // normal to each triangular face
+  clVector cross = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+
+  if( dotProd(vx,vy,vz,cross.Get(0),cross.Get(1),cross.Get(2)) < 0.0 )
+  {
+   surfMesh.IEN.Set(elem,0,v2);
+   surfMesh.IEN.Set(elem,1,v1);
+  }
+ }
+ saveVTKSurface("./vtk/","depois",0);
+}
+
+clVector Model3D::computeBubbleCentroid()
+{
+ real sumX = 0;
+ real sumY = 0;
+ real sumZ = 0;
+ int count = 0;
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+
+  if( surfMesh.Marker.Get(v1) == 0.5 )
+  {
+   sumX += ( surfMesh.X.Get(v1)+surfMesh.X.Get(v2)+surfMesh.X.Get(v3) )/3.0;
+   sumY += ( surfMesh.Y.Get(v1)+surfMesh.Y.Get(v2)+surfMesh.Y.Get(v3) )/3.0;
+   sumZ += ( surfMesh.Z.Get(v1)+surfMesh.Z.Get(v2)+surfMesh.Z.Get(v3) )/3.0;
+   count++;
+  }
+ }
+ real xc = sumX/count;
+ real yc = sumY/count;
+ real zc = sumZ/count;
+
+ clVector centroid(3);
+ centroid.Set(0,xc);
+ centroid.Set(1,yc);
+ centroid.Set(2,zc);
+
+ return centroid;
+}
+
+
+

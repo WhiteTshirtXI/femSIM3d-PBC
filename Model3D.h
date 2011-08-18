@@ -105,6 +105,7 @@ class Model3D
   real computeBubbleVolume();
   real computeBubbleVolume2();
   void applyBubbleVolumeCorrection();
+  clVector computeBubbleCentroid();
 
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
@@ -135,6 +136,7 @@ class Model3D
   void setCubeBC();
   void setCubeBC2();
   void setWallBC();
+  void setMicroWallBC();
   void setWallCouetteBC();
   void setWallAnnularBC();
   void set2BubbleBC();
@@ -162,6 +164,8 @@ class Model3D
   void centroidPositionCorrection();
   void edgeMidPointPositionCorrection();
   void checkTetrahedronOrientation();
+  void checkTriangleOrientation();
+  void checkTriangleOrientationPerfect();
   void setQuadElement();             
   void setNeighbour();
   void setNeighbourSurface();

@@ -52,6 +52,9 @@ oscillating: ./script/mainOscillating.o $(obj)
 bubble: ./script/mainBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+micro: ./script/mainMicro.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 #--------------------------------------------------
 # step: ./script/mainStep.o libtest.so
 # 	$(CXX) -L. -ltest -o $@ $<

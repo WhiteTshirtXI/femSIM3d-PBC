@@ -45,7 +45,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.1;
 
- const char *mesh = "../../db/gmsh/3d/micro.msh";
+ //const char *mesh = "../../db/gmsh/3d/micro.msh";
+ const char *mesh = "../../db/gmsh/3d/2micros.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);

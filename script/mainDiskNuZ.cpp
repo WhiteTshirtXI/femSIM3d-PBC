@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 
  s1.setRe(Re);
  s1.setCfl(cfl);
+ s1.setDtDisk();
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
   s1.setCfl(cfl);
+  s1.setDtDisk();
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -85,6 +87,7 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << i*nR+j+iter << endl;
 
+   s1.setDtDisk();
    s1.stepSL();
    s1.setRHS();
    s1.unCoupled();

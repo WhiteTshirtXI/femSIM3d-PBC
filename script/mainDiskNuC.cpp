@@ -48,6 +48,7 @@ int main(int argc, char **argv)
  s1.setRe(Re); // Reynolds do disco (~1)
  s1.setSc(Sc); // Schmidt da concentracao (~2000)
  s1.setCfl(cfl);
+ s1.setDtDisk();
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
@@ -69,6 +70,7 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
   s1.setCfl(cfl);
+  s1.setDtDisk();
   s1.assembleK();
  }
 
@@ -86,6 +88,7 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << i*nR+j+iter << endl;
 
+   s1.setDtDisk();
    s1.matMount();
    s1.matMountC();
    s1.setUnCoupledBC();

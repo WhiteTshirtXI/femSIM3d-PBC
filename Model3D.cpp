@@ -270,9 +270,10 @@ void Model3D::readMSH( const char* filename )
    mshFile >> numberOfTags;  
    if( numberOfTags == 3 ) // msh file version 2.1
    {
-	// surfMesh.elemIdRegion 1 = surface
-	// surfMesh.elemIdRegion 2 = wall
-	// surfMesh.elemIdRegion 3 = bubble
+	// surfMesh.elemIdRegion 1 = wall
+	// surfMesh.elemIdRegion 2 = surface 1
+	// surfMesh.elemIdRegion 3 = surface 2 (if it has more than 1 bubble)
+	// surfMesh.elemIdRegion 4 = surface 3 (if it has more than 2 bubbles)
 	mshFile >> id;
 	surfMesh.elemIdRegion.Set(i,id);
 	mshFile >> auxstr;
@@ -292,17 +293,6 @@ void Model3D::readMSH( const char* filename )
 	surfMesh.IEN.Set(i,j,k);
 	auxvtx[j] = k;
    }
-//--------------------------------------------------
-//    if( region == 1 ) // 1 = interface 
-//    {
-// 	int v1 = IEN.Get(i,0);
-// 	int v2 = IEN.Get(i,1);
-// 	int v3 = IEN.Get(i,2);
-// 	heaviside.Set(v1,0.5);
-// 	heaviside.Set(v2,0.5);
-// 	heaviside.Set(v3,0.5);
-//    }
-//-------------------------------------------------- 
   }
  }
  mshFile.close();
@@ -470,7 +460,14 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
 
 void Model3D::setStepBC()
 {
- for( int i=0;i<numNodes;i++ )
+ real numBCPoints;
+
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
   {
@@ -506,8 +503,6 @@ void Model3D::setStepBC()
 
 void Model3D::setCStepBC()
 {
- cc.Dim(numVerts);
- idbcc.Dim(0);
  for( int i=0;i<numVerts;i++ )
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
@@ -524,7 +519,14 @@ void Model3D::setCStepBC()
 
 void Model3D::setStepReservBC()
 {
- for( int i=0;i<numVerts;i++ )
+ real numBCPoints;
+
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) 
 	  || Z.Get(i)==Z.Min() )
@@ -556,7 +558,14 @@ void Model3D::setStepReservBC()
 
 void Model3D::setStepReservInvBC()
 {
- for( int i=0;i<numVerts;i++ )
+ real numBCPoints;
+
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( (X.Get(i)==X.Max()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) 
 	  || Z.Get(i)==Z.Min() )
@@ -588,7 +597,14 @@ void Model3D::setStepReservInvBC()
 
 void Model3D::setCouetteBC()
 {
- for( int i=0;i<numVerts;i++ )
+ real numBCPoints;
+
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
   {
@@ -3297,17 +3313,16 @@ void Model3D::mesh3DPoints()
 
 void Model3D::setDiskCouetteBC()
 {
+ real numBCPoints;
  real aux;
- rMax = Y.Max(); // CONFERIR! NAO SEI SE FUNCIONARA DIREITO!
+ rMax = Y.Max(); 
 
- //for( int i=0;i<numNodes;i++ )
- //{
- // factor = 0.03;
- // aux = X.Get(i)*Z.Get(i)*factor;
- // wc.Set(i,aux);
- //}
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( Z.Get(i) == Z.Max() &&
 	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<rMax*rMax - 0.001) )
@@ -3372,11 +3387,17 @@ void Model3D::setDiskCouetteBC()
 
 void Model3D::setNuCteDiskBC()
 {
+ real numBCPoints;
  real omega,aux;
  real radius;
  rMax = Y.Max();
 
- for( int i=0;i<numNodes;i++ )
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
 
@@ -3437,10 +3458,16 @@ void Model3D::setNuCteDiskBC()
 
 void Model3D::setNuCDiskBC()
 {
+ real numBCPoints;
  real omega,aux,radius;
  rMax = Y.Max();
 
- for( int i=0;i<numNodes;i++ )
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( Z.Get(i) == Z.Max() )
   {
@@ -3633,137 +3660,6 @@ void Model3D::setCDiskBC()
  }
 }
 
-void Model3D::setBubbleBubbleBC()
-{
- //real eps2 = 1E-2;
- real eps2 = 10E-3;
- //real eps2 = 60E-02;
- xCenter = 1.5;
- yCenter = 1.5;
- zCenter = 1.5;
- bubbleRadius = 0.5;
- cout << "xMax = " << X.Max() << endl;
- cout << "xCenter = " << xCenter << endl;
- cout << "yCenter = " << yCenter << endl;
- cout << "zCenter = " << zCenter << endl;
- cout << "bubbleRadius = " << bubbleRadius << endl;
-
- heaviside.Dim(numVerts);
- heaviside.SetAll(0.5);
- for( int i=0;i<numVerts;i++ )
- {
-//--------------------------------------------------
-//   cout << i << " " << ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
-// 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter)+
-// 	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter)) << " " << bubbleRadius*bubbleRadius << endl;
-//-------------------------------------------------- 
-
-  // dentro da bolha
-  // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
-  if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
-	   (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter)+
-	   (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter)+eps2<bubbleRadius*bubbleRadius))
-  {
-   heaviside.Set(i,1.0);
-  }
-  if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
-	   (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter)+
-	   (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) -eps2>bubbleRadius*bubbleRadius))
-  {
-   heaviside.Set(i,0.0);
-  }
-  if( (X.Get(i)-xCenter)*(X.Get(i)-xCenter) +
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
-	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) >
-	  (X.Max()-xCenter)*(X.Max()-xCenter)-eps2 )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
-  }
-//--------------------------------------------------
-//   if( X.Get(i) == X.Max() )
-//   {
-//    idbcp.AddItem(i);
-//    pc.Set(i,0.0);
-//   }
-//-------------------------------------------------- 
- }
-} // fecham metodo setBubbleBubbleBC
-
-void Model3D::set2BubbleBC()
-{
- real aux;
-
- for( int i=0;i<numVerts;i++ )
- {
-  // condicao de velocidade
-  if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   aux = X.Get(i);
-   uc.Set(i,aux);
-   aux = (-1.0)*Y.Get(i);
-   vc.Set(i,aux);
-   aux = 0.0;
-   wc.Set(i,aux);
-  }
-  // condicao de outflow
-  if( (X.Get(i)==X.Min()) || X.Get(i)==X.Max() )  
-  {
-   idbcp.AddItem(i);
-
-   aux = 0.0;
-   pc.Set(i,aux);
-  }
-  if( (Z.Get(i)==Z.Min()) || Z.Get(i)==Z.Max() )  
-  {
-   idbcw.AddItem(i);
-
-   aux = 0.0;
-   wc.Set(i,aux);
-  }
- }
-}
-
-void Model3D::setSphere(real _xC,real _yC,real _zC,real _r,real _eps)
-{
- real eps2 = _eps;
- real r = _r;
- real xCenter = _xC;
- real yCenter = _yC;
- real zCenter = _zC;
-
- heaviside.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  /* bubble 1 */
-  // dentro da bolha
-  // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
-  if( (X.Get(i)-xCenter)*(X.Get(i)-xCenter) + 
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
-	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) < r*r+eps2 )
-  {
-   heaviside.Set(i,1.0);
-  }
-  // na superficie da bolha
-  // ( [X-xCenter]^2 + [Y-yCenter]^2 - r^2 ) < 10E-4
-  if( fabs((X.Get(i)-xCenter)*(X.Get(i)-xCenter) +
-	       (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) + 
-	       (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) - r*r ) < eps2 ) 
-
-  {
-   heaviside.Set(i,0.5);
-  }
- }
-}
-
 void Model3D::setCubeBC()
 {
  for( int i=0;i<numVerts;i++ )
@@ -3902,43 +3798,6 @@ void Model3D::setWallAnnularBC()
  }
 }
 
-void Model3D::setCubeBC2()
-{
- for( int i=0;i<numVerts;i++ )
- {
-  if( (X.Get(i)==X.Min()) || (X.Get(i)==X.Max()) || 
-	  (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
-  }
-  if( (Z.Get(i)==Z.Max()) &&
-      (X.Get(i)>X.Min()) && (X.Get(i)<X.Max()) && 
-	  (Y.Get(i)>Y.Min()) && (Y.Get(i)<Y.Max()) )
-  {
-   idbcw.AddItem(i);
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,1.0);
-  }
-  if( (Z.Get(i)==Z.Min()) &&
-      (X.Get(i)>X.Min()) && (X.Get(i)<X.Max()) && 
-	  (Y.Get(i)>Y.Min()) && (Y.Get(i)<Y.Max()) )
-  {
-   idbcp.AddItem(i);
-   pc.Set(i,0.0);
-  }
- }
-}
-
 void Model3D::setCube(real _lim1,real _lim2,real _eps)
 {
  real eps2 = _eps;
@@ -3994,151 +3853,6 @@ void Model3D::setCube(real _xlimInf,real _xlimSup,
       (Z.Get(i)<zlimSup-eps2) && (Z.Get(i)>zlimInf+eps2) )
   {
    heaviside.Set(i,1.0);
-  }
- }
-}
-
-void Model3D::setBubble3DBC()
-{
- real eps2 = 10E-3;
- //real eps2 = 60E-02;
- xCenter = 1.5;
- yCenter = 1.5;
- zCenter = 1.5;
- bubbleRadius = 0.5;
- cout << "xCenter = " << xCenter << endl;
- cout << "yCenter = " << yCenter << endl;
- cout << "zCenter = " << yCenter << endl;
- cout << "bubbleRadius = " << bubbleRadius << endl;
-
- for( int i=0;i<numVerts;i++ )
- {
-  //if( (X.Get(i)==X.Max()) && (Y.Get(i)==Y.Min()) )
-  if( (X.Get(i)==X.Max()) && (Y.Get(i)==0) )
-  {
-//--------------------------------------------------
-//    idbcp.AddItem(i);
-//    pc.Set(i,0.0);
-//    outflow.Set(i,0);
-//-------------------------------------------------- 
-  }
-  // dentro da bolha
-  // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
-  if( (X.Get(i)-xCenter)*(X.Get(i)-xCenter) + 
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
-	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) <bubbleRadius*bubbleRadius+eps2 )
-  {
-   heaviside.Set(i,1.0);
-  }
-  // fora da bolha
-  // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
-  if( (X.Get(i)-xCenter)*(X.Get(i)-xCenter) + 
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) +
-	  (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) >bubbleRadius*bubbleRadius-eps2 )
-  {
-   heaviside.Set(i,0.0);
-  }
-  // na superficie da bolha
-  // ( [X-xCenter]^2 + [Y-yCenter]^2 - r^2 ) < 10E-4
-  if( fabs((X.Get(i)-xCenter)*(X.Get(i)-xCenter) +
-	       (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) + 
-	       (Z.Get(i)-zCenter)*(Z.Get(i)-zCenter) - 
-	        bubbleRadius*bubbleRadius ) < eps2 ) 
-
-  {
-   heaviside.Set(i,0.5);
-  }
-  if( X.Get(i) == 0 || X.Get(i) == X.Max() ||
-      Y.Get(i) == 0 || Y.Get(i) == Y.Max() ||
-      Z.Get(i) == 0 || Z.Get(i) == Z.Max() )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
-  }
- }
-}
-
-void Model3D::setBubbleBC2()
-{
- //real eps2 = 10E-02;
- real eps2 = 1E-00;
- xCenter = (X.Max()+X.Min())/2.0;
- yCenter = (Y.Max()+Y.Min())/2.0;
- zCenter = (Z.Max()+Z.Min())/2.0;
- bubbleRadius = (X.Max()-xCenter)/6.0;
- int n = 20;
- clVector zz(n);
- real aux;
- for( int i=0;i<n;i++ )
- {
-  aux = Z.Get(180*i+30);
-  zz.Set(i,aux);
- }
-
- heaviside.SetAll(0.0);
- for( int i=0;i<numVerts;i++ )
- {
-//--------------------------------------------------
-//   //if( (X.Get(i)==X.Max()) && (Y.Get(i)==Y.Min()) )
-//   if( (X.Get(i)==X.Max()) && (Y.Get(i)==0) )
-//   {
-//    idbcp.AddItem(i);
-//    pc.Set(i,0.0);
-//    outflow.Set(i,0);
-//   }
-//-------------------------------------------------- 
-  if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) - 3E-00<bubbleRadius*bubbleRadius)
-	&& (Z.Get(i) > zz.Get(5)) && (Z.Get(i) < zz.Get(13))
-	)
-  {
-   heaviside.Set(i,0.5);
-  }
-  // dentro da bolha
-  // [X-xCenter]^2 + [Y-yCenter]^2 < r^2
-  if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+ 
-	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) - eps2<bubbleRadius*bubbleRadius)
-	&& (Z.Get(i) > zz.Get(6)) && (Z.Get(i) < zz.Get(12))
-	)
-  {
-   heaviside.Set(i,1.0);
-  }
-//--------------------------------------------------
-//   // fora da bolha
-//   // [X-xCenter]^2 + [Y-yCenter]^2 > r^2
-//   if( ((X.Get(i)-xCenter)*(X.Get(i)-xCenter)+
-// 	  (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) + eps2>bubbleRadius*bubbleRadius)&&
-// 	  (Z.Get(i) < zz.Get(7)) && (Z.Get(i) > zz.Get(12))
-//     )
-//   {
-//    heaviside.Set(i,0.0);
-//   }
-//-------------------------------------------------- 
-  // na superficie da bolha
-  // ( [X-xCenter]^2 + [Y-yCenter]^2 - r^2 ) < 10E-4
-  if( (Z.Get(i)==Z.Min()) || (Z.Get(i) == Z.Max()) )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
-  }
-  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() &&
-	 (X.Get(i)-xCenter)*(X.Get(i)-xCenter) +
-	 (Y.Get(i)-yCenter)*(Y.Get(i)-yCenter) + eps2>X.Max()*X.Max() )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
   }
  }
 }
@@ -4234,10 +3948,16 @@ void Model3D::readBaseStateNu( const char* _filename )
 
 void Model3D::setNuZDiskBC()
 {
+ real numBCPoints;
  real omega,aux,radius;
  rMax = Y.Max();
 
- for( int i=0;i<numNodes;i++ )
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
 
@@ -4296,11 +4016,17 @@ void Model3D::setNuZDiskBC()
 // FSBC - Free Surface Boundary Condition
 void Model3D::setDiskFSBC()
 {
+ real numBCPoints;
  real aux;
  heaviside.Dim(numVerts);
- rMax = Y.Max();// CONFERIR! NAO SEI SE FUNCIONARA DIREITO!
+ rMax = Y.Max();
 
- for( int i=0;i<numVerts;i++ )
+ if( NUMGLEU == 10 )
+  numBCPoints = numNodes;
+ else
+  numBCPoints = numVerts;
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   if( Z.Get(i) == Z.Min() )
   {
@@ -4868,10 +4594,9 @@ void Model3D::setQuadElement()
 void Model3D::setNeighbour()
 {
  neighbourElem.resize (0);
- //neighbourElem.resize (numVerts);
  neighbourElem.resize (numNodes);
+
  for( int i=0;i<numElems;i++ )
-  //for( int j= 0;j<NUMGLE;j++ )
   for( int j= 0;j<NUMGLEU;j++ )
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
 }
@@ -5399,18 +5124,12 @@ void Model3D::setOFace()
  comb.Set(3,1,2);
  comb.Set(3,2,3);
 
+ setNeighbour();
+
  int k = 0;
- neighbourElem.resize (0);
- //neighbourElem.resize (numVerts);
- neighbourElem.resize (numNodes);
+
  for( int i=0;i<numElems;i++ )
  {
-  //for( int j=0;j<NUMGLE;j++ )
-  for( int j=0;j<NUMGLEU;j++ )
-  {
-   neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
-  }
-
   verts.CopyRow(i,IEN);
   for( int j=0;j<NUMGLE;j++ )
   {
@@ -7228,103 +6947,111 @@ void Model3D::checkTriangleOrientationPerfect()
 }
 
 
-
 /*
- * Check the orientation of each surface triagle (bubble + convex-hull)
+ * Check the orientation of each surface triagle (convex-hull + bubbles)
  * by comparing (dot product) the orientation of the element's normal vector 
- * and the direction of the element to the centroid.
+ * and the direction of the element to the centroid relative to the
+ * geometrical shape. For example, if the simulation has 1 bubble, then
+ * this method calculates the centroid of the convex-hull and then
+ * change the orientation of each wrong oriented triangle, finally it
+ * computes the centroid of the bubble and change the orientation of
+ * each wrong oriented triangle that is part of the bubble.
  *
- *       o ------------- o
- *       |               |
- *       |       -       |   x centroid
- *       |     /   \     |
- *       |    |  x  |    |
- *       |     \   /     |
- *       |       -       |
- *       |               |
- *       o ------------- o
+ *       o ------------- o         
+ *       |               |         
+ *       |               |            -      
+ *       |               |          /   \                   
+ *       |       x       |    +    |  x  |   
+ *       |               |          \   /             
+ *       |               |            -               
+ *       |               |         
+ *       o ------------- o                      x centroid
  *
  *
  * OBS: works only for convex shapes
  * */
 void Model3D::checkTriangleOrientation()
 {
- saveVTKSurface("./vtk/","antes",0);
- clVector centroid = computeBubbleCentroid();
- real xc = centroid.Get(0);
- real yc = centroid.Get(1);
- real zc = centroid.Get(2);
-
- for( int elem=0;elem<surfMesh.numElems;elem++ )
+ // dentro das bolhas
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
  {
-  int v1 = surfMesh.IEN.Get(elem,0);
-  real p1x = surfMesh.X.Get(v1);
-  real p1y = surfMesh.Y.Get(v1);
-  real p1z = surfMesh.Z.Get(v1);
+  clVector centroid = computeConvexRegionCentroid(nb);
+  real xc = centroid.Get(0);
+  real yc = centroid.Get(1);
+  real zc = centroid.Get(2);
 
-  int v2 = surfMesh.IEN.Get(elem,1);
-  real p2x = surfMesh.X.Get(v2);
-  real p2y = surfMesh.Y.Get(v2);
-  real p2z = surfMesh.Z.Get(v2);
-
-  int v3 = surfMesh.IEN.Get(elem,2);
-  real p3x = surfMesh.X.Get(v3);
-  real p3y = surfMesh.Y.Get(v3);
-  real p3z = surfMesh.Z.Get(v3);
-
-  /*               
-   *               v3
-   *               o 
-   *              / \
-   *             /   \
-   *            /     \
-   *           o ----- o 
-   *         v1         v2
-   *
-   * */
-
-  //real vx = xc-p1x;
-  //real vy = yc-p1y;
-  //real vz = zc-p1z;
-
-  real vx = p1x-xc;
-  real vy = p1y-yc;
-  real vz = p1z-zc;
-
-  real v1x = p2x-p1x;
-  real v1y = p2y-p1y;
-  real v1z = p2z-p1z;
-
-  real v2x = p3x-p2x;
-  real v2y = p3y-p2y;
-  real v2z = p3z-p2z;
-  
-  // normal to each triangular face
-  clVector cross = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
-
-  if( dotProd(vx,vy,vz,cross.Get(0),cross.Get(1),cross.Get(2)) < 0.0 )
+  for( int elem=0;elem<surfMesh.numElems;elem++ )
   {
-   surfMesh.IEN.Set(elem,0,v2);
-   surfMesh.IEN.Set(elem,1,v1);
+   if( surfMesh.elemIdRegion.Get(elem) == nb )
+   {
+	int v1 = surfMesh.IEN.Get(elem,0);
+	real p1x = surfMesh.X.Get(v1);
+	real p1y = surfMesh.Y.Get(v1);
+	real p1z = surfMesh.Z.Get(v1);
+
+	int v2 = surfMesh.IEN.Get(elem,1);
+	real p2x = surfMesh.X.Get(v2);
+	real p2y = surfMesh.Y.Get(v2);
+	real p2z = surfMesh.Z.Get(v2);
+
+	int v3 = surfMesh.IEN.Get(elem,2);
+	real p3x = surfMesh.X.Get(v3);
+	real p3y = surfMesh.Y.Get(v3);
+	real p3z = surfMesh.Z.Get(v3);
+
+	/*               
+	 *               v3
+	 *               o 
+	 *              / \
+	 *             /   \
+	 *            /     \
+	 *           o ----- o 
+	 *         v1         v2
+	 *
+	 * */
+
+	real vx = p1x-xc;
+	real vy = p1y-yc;
+	real vz = p1z-zc;
+
+	real v1x = p2x-p1x;
+	real v1y = p2y-p1y;
+	real v1z = p2z-p1z;
+
+	real v2x = p3x-p2x;
+	real v2y = p3y-p2y;
+	real v2z = p3z-p2z;
+
+	// normal to each triangular face
+	clVector cross = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+
+	if( dotProd(vx,vy,vz,cross.Get(0),cross.Get(1),cross.Get(2)) < 0.0 )
+	{
+	 surfMesh.IEN.Set(elem,0,v2);
+	 surfMesh.IEN.Set(elem,1,v1);
+	}
+   }
   }
  }
- saveVTKSurface("./vtk/","depois",0);
 }
 
-clVector Model3D::computeBubbleCentroid()
+clVector Model3D::computeConvexRegionCentroid(int _region)
 {
  real sumX = 0;
  real sumY = 0;
  real sumZ = 0;
  int count = 0;
- for( int i=0;i<surfMesh.numElems;i++ )
+ for( int elem=0;elem<surfMesh.numElems;elem++ )
  {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-
-  if( surfMesh.Marker.Get(v1) == 0.5 )
+  if( _region == surfMesh.elemIdRegion.Get(elem) )
   {
+   int v1 = surfMesh.IEN.Get(elem,0);
+   int v2 = surfMesh.IEN.Get(elem,1);
+   int v3 = surfMesh.IEN.Get(elem,2);
+
    sumX += ( surfMesh.X.Get(v1)+surfMesh.X.Get(v2)+surfMesh.X.Get(v3) )/3.0;
    sumY += ( surfMesh.Y.Get(v1)+surfMesh.Y.Get(v2)+surfMesh.Y.Get(v3) )/3.0;
    sumZ += ( surfMesh.Z.Get(v1)+surfMesh.Z.Get(v2)+surfMesh.Z.Get(v3) )/3.0;

@@ -144,7 +144,6 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
  list<int> plist;
  list<int>::iterator vert;
  real xSum,ySum,zSum,distSum;
- real size; // numero de elementos da lista
  uSmooth.Dim(surfMesh->numVerts);
  vSmooth.Dim(surfMesh->numVerts);
  wSmooth.Dim(surfMesh->numVerts);

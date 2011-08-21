@@ -105,7 +105,7 @@ class Model3D
   real computeBubbleVolume();
   real computeBubbleVolume2();
   void applyBubbleVolumeCorrection();
-  clVector computeBubbleCentroid();
+  clVector computeConvexRegionCentroid(int _region);
 
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
@@ -130,16 +130,11 @@ class Model3D
   void setDiskCFSBC();
   void setDiskCouetteBC();
   void setInterfaceBC();
-  void setBubbleBubbleBC();
-  void setBubbleBC2();
-  void setBubble3DBC();
   void setCubeBC();
-  void setCubeBC2();
   void setWallBC();
   void setMicroWallBC();
   void setWallCouetteBC();
   void setWallAnnularBC();
-  void set2BubbleBC();
   void setStepBC();
   void setCStepBC();
   void setStepReservBC();

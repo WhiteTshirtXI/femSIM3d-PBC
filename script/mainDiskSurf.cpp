@@ -65,7 +65,8 @@ int main(int argc, char **argv)
 
  s1.setRe(Re);
  s1.setSc(Sc);
- s1.setCflDisk(cfl);
+ s1.setCfl(cfl);
+ s1.setDt();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setFr(Fr);
@@ -97,6 +98,7 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;
    cout << resetColor();
 
+   s1.setDtDisk();
    //s1.stepLagrangian();
    s1.stepALEVel();
    //s1.stepALE();

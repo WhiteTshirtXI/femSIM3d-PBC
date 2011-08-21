@@ -1790,76 +1790,6 @@ void Simulator3D::setUnCoupledCBC()
 
 } // fecha metodo setUnCoupledCBC 
 
-void Simulator3D::setCfl(real _cfl)
-{
- m->setMapEdge();
-
- cfl = _cfl;
-
- real minEdge = m->getMinEdge();
- real ucMax = uc->Max();
-
- dt = cfl*minEdge/ucMax;
-}
-
-void Simulator3D::setCflBubble(real _cfl)
-{
- /* cfl based on the booklet:
-  * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
-  * G. Tryggvason, R. Scardovelli and S. Zaleski
-  *
-  * - cfl of advection term:
-  *
-  *  Umax*dt
-  * --------- <= 1
-  *  triEdge
-  *  
-  *
-  * - smallest resolved wave:
-  *         pi
-  * k = ---------
-  *      triEdge
-  *
-  * - phase velocity of a capillary wave:
-  * 
-  *            sigma*kappa
-  * c = sqrt( ------------- )
-  *             rho1+rho2
-  *
-  *          (rho1+rho2)*triEdge*triEdge*triEdge
-  * dt <= ( ------------------------------------- )
-  *                       pi*sigma
-  *
-  * */
-
- /* cfl based on the paper:
-  * A Continuum Method for Modeling Surface Tension
-  * J.U. Brackbill, D.B. Kothe and C. Zemach
-  *
-  * - cfl of advection term:
-  *
-  *  Umax*dt      1
-  * --------- <= ---
-  *  triEdge      2
-  *
-  *          0.5*(rho1+rho2)*triEdge*triEdge*triEdge
-  * dt <= ( ----------------------------------------- )
-  *                        2*pi*sigma
-  *
-  * */
-
- cfl = _cfl;
-
-//--------------------------------------------------
-//  real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
-//                   /(2*3.141592*sigma) );
-//-------------------------------------------------- 
-
- real capillary = sqrt( ( (rho_in+rho_out)*triEdge*triEdge*triEdge)
-                  /(3.141592*sigma) );
- dt = cfl*capillary;
-}
-
 real Simulator3D::getDtSurfaceTension()
 {
  /* cfl based on the booklet:
@@ -1929,11 +1859,6 @@ real Simulator3D::getDtLagrangian()
  velMax = max( velMax,fabs(c3*uSmoothCoord.Max()) );
  velMax = max( velMax,fabs(c3*vSmoothCoord.Max()) );
  velMax = max( velMax,fabs(c3*wSmoothCoord.Max()) );
-//--------------------------------------------------
-//  velMax = max( velMax,fabs(uALE.Max()) );
-//  velMax = max( velMax,fabs(vALE.Max()) );
-//  velMax = max( velMax,fabs(wALE.Max()) );
-//-------------------------------------------------- 
 
  return 0.5*minEdge/velMax;
 }
@@ -1942,9 +1867,9 @@ real Simulator3D::getDtSemiLagrangian()
 {
  real minEdge = m->getMinEdge();
 
- real velMax = max( 1.0,fabs(uSL.Max()) );
- velMax = max( velMax,fabs(vSL.Max()) );
- velMax = max( velMax,fabs(wSL.Max()) );
+ real velMax = max( 1.0,fabs(uSolOld.Max()) );
+ velMax = max( velMax,fabs(vSolOld.Max()) );
+ velMax = max( velMax,fabs(wSolOld.Max()) );
 
  return minEdge/velMax;
 }
@@ -1955,6 +1880,31 @@ real Simulator3D::getDtGravity()
  real velMax = max( 1.0,fabs(gravity.Max()) );
 
  return minEdge/velMax;
+}
+
+/*
+ * Set Dt of the current simulation.
+ * Explicity terms:
+ *  - Semi-Lagrangian;
+ *  */
+void Simulator3D::setDtDisk()
+{
+ m->setMapEdge();
+
+ real minDt = min(1.0,getDtSemiLagrangian());
+
+ dt = cfl*minDt;
+ cout << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
+ cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << resetColor() << endl;
 }
 
 /*
@@ -2357,6 +2307,8 @@ clVector* Simulator3D::getMu(){return &mu;}
 clVector* Simulator3D::getRho(){return &rho;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
+void Simulator3D::setCfl(real _cfl){cfl = _cfl;}
+
 
 // set do centroide para o elemento mini apos a interpolacao linear
 // (applyLinearInterpolation)

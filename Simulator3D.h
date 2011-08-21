@@ -98,6 +98,7 @@ class Simulator3D
   real getBeta();
   void setSigma(real _sigma);
   real getSigma();
+  void setDtDisk();
   void setDt();
   void setDt(real _dt);
   void setTime(real _time);

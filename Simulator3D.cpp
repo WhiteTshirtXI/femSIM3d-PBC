@@ -1841,6 +1841,9 @@ real Simulator3D::getDtSurfaceTension()
 //                   /(2*3.141592*sigma) );
 //-------------------------------------------------- 
 
+ triEdgeVec = m->getTriEdgeVec();
+ triEdge = *(min_element(triEdgeVec.begin(),triEdgeVec.end()));
+
  real capillary = sqrt( ( (rho_in+rho_out)*triEdge*triEdge*triEdge)
                   /(3.141592*sigma) );
  return capillary;
@@ -2206,7 +2209,8 @@ void Simulator3D::setHSmooth()
  hSmooth.Dim(numVerts);
  clVector half(numVerts);half.SetAll(0.5);
  clVector zeroLevel = ((*heaviside)-half)*2;
- real triEdge = m->getTriEdge();
+ triEdgeVec = m->getTriEdgeVec();
+ triEdge = *(min_element(triEdgeVec.begin(),triEdgeVec.end()));
  for( int i=0;i<numVerts;i++ )
  {
   real len = 1.3*triEdge;
@@ -2359,6 +2363,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  interfaceDistance = _sRight.interfaceDistance;
  elemIdRegion = _sRight.elemIdRegion;
  triEdge = _sRight.triEdge;
+ triEdgeVec = _sRight.triEdgeVec;
 
  Re = _sRight.Re;
  Sc = _sRight.Sc;
@@ -3006,6 +3011,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  interfaceDistance = m->getInterfaceDistance();
  elemIdRegion = m->getElemIdRegion();
  triEdge = m->getTriEdge();
+ triEdgeVec = m->getTriEdgeVec();
 }
 
 

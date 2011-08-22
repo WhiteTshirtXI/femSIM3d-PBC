@@ -30,6 +30,7 @@
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "colors.h"
+#include <algorithm>
 
 class Simulator3D
 {
@@ -186,6 +187,7 @@ class Simulator3D
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
   real triEdge;
+  vector< real > triEdgeVec;
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;

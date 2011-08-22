@@ -21,7 +21,6 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  bubbleRadius = 0;
- initBubbleVolume = (4.0/3.0)*3.1415*0.5*0.5*0.5;
  minEdge = 0.10;
  minEdgeTri = 0.10;
  triEdge = 0.10;
@@ -36,6 +35,7 @@ Model3D::Model3D()
  rpv = 0;                   
  flip = 0;
 }
+
 Model3D::~Model3D(){}
 
 void Model3D::readVTK( const char* filename )
@@ -300,16 +300,21 @@ void Model3D::readMSH( const char* filename )
 
 void Model3D::setInterfaceBC()
 {
+ surfMesh.vertIdRegion.Dim(surfMesh.numVerts);
  surfMesh.Marker.Dim(surfMesh.numVerts);
- surfMesh.Marker.SetAll(0.0);
+
  for( int i=0;i<surfMesh.numElems;i++ )
  {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+
+  surfMesh.vertIdRegion.Set(v1,surfMesh.elemIdRegion.Get(i));
+  surfMesh.vertIdRegion.Set(v2,surfMesh.elemIdRegion.Get(i));
+  surfMesh.vertIdRegion.Set(v3,surfMesh.elemIdRegion.Get(i));
+
   if( surfMesh.elemIdRegion.Get(i) > 1 )
   {
-   int v1 = surfMesh.IEN.Get(i,0);
-   int v2 = surfMesh.IEN.Get(i,1);
-   int v3 = surfMesh.IEN.Get(i,2);
-
    real aux = 0.5;
    surfMesh.Marker.Set(v1,aux);
    surfMesh.Marker.Set(v2,aux);
@@ -944,12 +949,16 @@ void Model3D::insertPointsByLength()
  // number of inserted surface points
  isp = 0;
 
+ // surfMesh.elemIdRegion == 0 --> none
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
-  if( surfMesh.Marker.Get(mapEdgeTri.Get(i,1)) == 0.5 && 
-	  edgeLength > 1.4*triEdge )//&&
+  real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(i,5)); 
+  if( edgeLength > 1.4*triEdgeVec[elemID] )//&&
   {
    //insertPoint(i);
    insertPointWithCurvature(i); // not working yet
@@ -1586,7 +1595,7 @@ void Model3D::flipTriangleEdge()
   real length23_2 = distance(P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
   // v3_1 ---- v3_2
   real length3_1_3_2 = distance(P3elem1x,P3elem1y,P3elem1z,
-	                            P3elem2x,P3elem2y,P3elem2z);
+	P3elem2x,P3elem2y,P3elem2z);
 
   // elem1
   real semiPerimeter1 = 0.5*(length12+length13_1+length23_1);
@@ -1654,20 +1663,19 @@ void Model3D::flipTriangleEdge()
    * - sum of circumcenters of old triangles > sum of circumcenters of
    *   new triangles
    * */
-  if( surfMesh.Marker.Get(v1)==0.5 &&
-	  q1+q2 < q3+q4 && // quality sum
-	  (curv1 < 40 && curv2 < 40) && // curvature
-	  (curv3_1 < 40 && curv3_2 < 40) && // curvature
-	  area1+area2  > area3+area4 && // area sum
-	  dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
-	  c1+c2 > c3+c4 ) // circum radius
+  if( q1+q2 < q3+q4 && // quality sum
+	(curv1 < 40 && curv2 < 40) && // curvature
+	(curv3_1 < 40 && curv3_2 < 40) && // curvature
+	area1+area2  > area3+area4 && // area sum
+	dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
-	    << "flipping edge: " << resetColor() 
-		<< v1 << " " << v2 
-		<< color(none,green,black) 
-		<< " --> " << resetColor()
-		<< v3elem1 << " " << v3elem2 << endl;
+	<< "flipping edge: " << resetColor() 
+	<< v1 << " " << v2 
+	<< color(none,green,black) 
+	<< " --> " << resetColor()
+	<< v3elem1 << " " << v3elem2 << endl;
 
    /* checking the orientation Define a oriented vector from one of the
 	* old elements (before adding point), then compare to the new 1st
@@ -2314,7 +2322,9 @@ void Model3D::contractEdgeByLength()
  // number of removed 3d mesh points by interface distance
  csp=0;
 
- real test = 0.6*triEdge; // 30% + of triEdge
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
   real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
@@ -2323,8 +2333,8 @@ void Model3D::contractEdgeByLength()
   real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
 
   // verifying the length of each surface edge
-  if( surfMesh.Marker.Get(mapEdgeTri.Get(edge,1)) == 0.5 && 
-	  mapEdgeTri.Get(edge,0) < test && 
+  int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
+  if( mapEdgeTri.Get(edge,0) < 0.6*triEdgeVec[elemID] && 
 	  curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40 ) 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
@@ -2389,65 +2399,59 @@ void Model3D::removePointsByLength()
  // number of removed surface points
  rsp=0;
 
- real test = 0.2*triEdge; // 20% of triEdge
- for( int i=0;i<mapEdgeTri.DimI();i++ )
- {
-  // edge vertices
-  int v1 = mapEdgeTri.Get(i,1);
-  int v2 = mapEdgeTri.Get(i,2);
-
-  // verifying the length of each surface edge
-  if( surfMesh.Marker.Get(v1) == 0.5 && mapEdgeTri.Get(i,0) < test ) //&&
-	//--------------------------------------------------
-	//   ( Y.Get(mapEdgeTri.Get(i,1) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,1) != Y.Min()) || 
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Max()) ||
-	//     Y.Get(mapEdgeTri.Get(i,2) != Y.Min())  ) ) 
-	//-------------------------------------------------- 
+  for( int i=0;i<mapEdgeTri.DimI();i++ )
   {
-   // sum of all neighbour edge length of the 1st. point
-   real sumLength1=0;
-   list<int> plist = neighbourPoint.at(v1);
-   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-   {
-	// node to be removed
-	int vert1 = v1;
-	// oposite node
-	int vert2 = *mele;
-	sumLength1 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
-	                            (Y.Get(vert1)-Y.Get(vert2)),
-								(Z.Get(vert1)-Z.Get(vert2)) );
-   }
+   // edge vertices
+   int v1 = mapEdgeTri.Get(i,1);
+   int v2 = mapEdgeTri.Get(i,2);
+   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(i,5));
 
-   // sum of all neighbour edge length of the 1st. point
-   real sumLength2=0;
-   plist = neighbourPoint.at(v2);
-   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   // verifying the length of each surface edge
+   if( mapEdgeTri.Get(i,0) < 0.2*triEdgeVec[elemID] ) //&&
    {
-	// node to be removed
-	int vert1 = v1;
-	// oposite node
-	int vert2 = *mele;
-	sumLength2 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
-	                            (Y.Get(vert1)-Y.Get(vert2)),
-								(Z.Get(vert1)-Z.Get(vert2)) );
-   }
+	// sum of all neighbour edge length of the 1st. point
+	real sumLength1=0;
+	list<int> plist = neighbourPoint.at(v1);
+	for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	{
+	 // node to be removed
+	 int vert1 = v1;
+	 // oposite node
+	 int vert2 = *mele;
+	 sumLength1 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
+	                             (Y.Get(vert1)-Y.Get(vert2)),
+								 (Z.Get(vert1)-Z.Get(vert2)) );
+	}
 
-   // check which node has the smallest length sum and proceed
-   if( sumLength1 < sumLength2 )
-   {
-	deletePoint(v1);
-    saveVTKSurface("./vtk/","removed",rsp);
-	rsp++;
-   }
-   else // if the 2nd. node has the smallest edge length sum
-   {
-	deletePoint(v2);
-    saveVTKSurface("./vtk/","removed",rsp);
-	rsp++;
+	// sum of all neighbour edge length of the 1st. point
+	real sumLength2=0;
+	plist = neighbourPoint.at(v2);
+	for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	{
+	 // node to be removed
+	 int vert1 = v1;
+	 // oposite node
+	 int vert2 = *mele;
+	 sumLength2 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
+	                             (Y.Get(vert1)-Y.Get(vert2)),
+								 (Z.Get(vert1)-Z.Get(vert2)) );
+	}
+
+	// check which node has the smallest length sum and proceed
+	if( sumLength1 < sumLength2 )
+	{
+	 deletePoint(v1);
+	 saveVTKSurface("./vtk/","removed",rsp);
+	 rsp++;
+	}
+	else // if the 2nd. node has the smallest edge length sum
+	{
+	 deletePoint(v2);
+	 saveVTKSurface("./vtk/","removed",rsp);
+	 rsp++;
+	}
    }
   }
- }
 }
 
 void Model3D::removePointsByInterfaceDistance()
@@ -2463,11 +2467,11 @@ void Model3D::removePointsByInterfaceDistance()
   *   height = h = --------- = l*0.86602
   *                    2
   * */
- real h = triEdge*0.86602; 
+ real h = triEdgeVec[2]*0.86602; 
  for( int i=0;i<numVerts;i++ )
  {
   real d = interfaceDistance.Get(i);
-  //if( d>0 && d<0.4*triEdge ) // mainBubble.cpp
+  //if( d>0 && d<0.4*triEdgeVec[2] ) // mainBubble.cpp
   if( d>0 && d<h*1.2 ) // hiRe
   {
 //--------------------------------------------------
@@ -2504,10 +2508,10 @@ void Model3D::remove3dMeshPointsByDistance()
 	//--------------------------------------------------
 	// if( interfaceDistance.Get(i) > 3.0 &&
 	//     interfaceDistance.Get(j) > 3.0 &&
-	// 	d>0 && d<3.0*triEdge )
+	// 	d>0 && d<3.0*triEdgeVec[2] )
 	//-------------------------------------------------- 
-	if( d>0 && d<0.6*triEdge )
-	//if( d>0 && d<2.0*triEdge )
+	if( d>0 && d<0.6*triEdgeVec[2] )
+	//if( d>0 && d<2.0*triEdgeVec[2] )
 	{
 	    cout << "- " << color(none,blue,black) 
 	     << "removing dense vertex cluster: "
@@ -2822,9 +2826,9 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   }
   in.regionlist[5*(nb-1)+0] = xMax;
   in.regionlist[5*(nb-1)+1] = yMax;
-  in.regionlist[5*(nb-1)+2] = zMax-triEdge*1.0;
+  in.regionlist[5*(nb-1)+2] = zMax-triEdgeVec[nb]*1.0;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = triEdge*triEdge*triEdge*1.4142/12.0;
+  in.regionlist[5*(nb-1)+4] = triEdgeVec[nb]*triEdgeVec[nb]*triEdgeVec[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+0] = 0.0001;
 //--------------------------------------------------
 //   cout << in.regionlist[5*(nb-1)+0] << " " 
@@ -5849,6 +5853,8 @@ real Model3D::getMinEdge(){return minEdge;}
 real Model3D::getMinEdgeTri(){return minEdgeTri;}
 real Model3D::getTriEdge(){return triEdge;}
 void Model3D::setTriEdge(real _triEdge){triEdge = _triEdge;}
+void Model3D::setTriEdgeVec(vector< real > _triEdgeVec){triEdgeVec = _triEdgeVec;}
+vector< real > Model3D::getTriEdgeVec(){return triEdgeVec;}
 
 //-------------------------------------------------- 
 // Atribui o Model3D do argumento no corrente
@@ -5870,7 +5876,6 @@ void Model3D::operator=(Model3D &_mRight)
   minEdgeTri = _mRight.minEdgeTri;
   triEdge = _mRight.triEdge;
   averageTriEdge = _mRight.averageTriEdge;
-  initBubbleVolume = _mRight.initBubbleVolume;
   isp = _mRight.isp;
   ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
@@ -5911,6 +5916,7 @@ void Model3D::operator=(Model3D &_mRight)
   elemIdRegion = _mRight.elemIdRegion;
 
   // STL: list and vectors
+  initSurfaceVolume = _mRight.initSurfaceVolume;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -6331,9 +6337,16 @@ void Model3D::setKappaSurface(clVector &_kappa)
  }
 }
 
-void Model3D::setInitBubbleVolume()
+void Model3D::setInitSurfaceVolume()
 {
- initBubbleVolume = computeBubbleVolume();
+ initSurfaceVolume.clear();
+ initSurfaceVolume.resize((int) surfMesh.elemIdRegion.Max()+1);
+
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+  initSurfaceVolume[nb] = computeSurfaceVolume(nb);
 }
 
 /* 
@@ -6422,6 +6435,91 @@ real Model3D::computeBubbleVolume()
  return vol;
 }
 
+/* 
+ * OBS: The mesh needs to be oriented, otherwise the method doesn't work!
+ * */
+real Model3D::computeSurfaceVolume(int _region)
+{
+ real sumVolume = 0;
+ //real sumCentroidX = 0;
+ //real sumCentroidY = 0;
+ //real sumCentroidZ = 0;
+ for( int mele=0;mele<surfMesh.numElems;mele++ )
+ {
+  if( _region == surfMesh.elemIdRegion.Get(mele) )
+  {
+   // P1
+   int v1 = surfMesh.IEN.Get(mele,0);
+   real p1x = surfMesh.X.Get(v1);
+   real p1y = surfMesh.Y.Get(v1);
+   real p1z = surfMesh.Z.Get(v1);
+
+   // P2
+   int v2 = surfMesh.IEN.Get(mele,1);
+   real p2x = surfMesh.X.Get(v2);
+   real p2y = surfMesh.Y.Get(v2);
+   real p2z = surfMesh.Z.Get(v2);
+
+   // P3
+   int v3 = surfMesh.IEN.Get(mele,2);
+   real p3x = surfMesh.X.Get(v3);
+   real p3y = surfMesh.Y.Get(v3);
+   real p3z = surfMesh.Z.Get(v3);
+
+   // element centroid
+   real xCentroid = (p1x+p2x+p3x)/3.0;
+   real yCentroid = (p1y+p2y+p3y)/3.0;
+   real zCentroid = (p1z+p2z+p3z)/3.0;
+
+   // distance from point 1 to 2
+   real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+
+   // distance from point 2 to 3
+   real b = distance(p2x,p2y,p2z,p3x,p3y,p3z);
+
+   // unit vectors
+   real x1Unit = (p2x-p1x)/a;
+   real y1Unit = (p2y-p1y)/a;
+   real z1Unit = (p2z-p1z)/a;
+
+   real x2Unit = (p3x-p2x)/b;
+   real y2Unit = (p3y-p2y)/b;
+   real z2Unit = (p3z-p2z)/b;
+
+   // calculando o produto vetorial de cada elemento triangular da superficie
+   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
+
+   // somatorio ponderado pela area dos vetores unitarios normais 
+   // aos triangulos encontrados na estrela do vertice
+   real xNormalElem = cross.Get(0);
+   real yNormalElem = cross.Get(1);
+   real zNormalElem = cross.Get(2);
+
+   real len = vectorLength(xNormalElem,yNormalElem,zNormalElem);
+
+   real xNormalElemUnit = xNormalElem/len;
+   real yNormalElemUnit = yNormalElem/len;
+   real zNormalElemUnit = zNormalElem/len;
+
+   real area = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+
+   sumVolume += ( xCentroid*xNormalElemUnit + 
+	              yCentroid*yNormalElemUnit +
+	              zCentroid*zNormalElemUnit ) * area;
+
+   //sumCentroidX += (xCentroid*xCentroid)*xNormalElemUnit*area;
+   //sumCentroidY += (yCentroid*yCentroid)*yNormalElemUnit*area;
+   //sumCentroidZ += (zCentroid*zCentroid)*zNormalElemUnit*area;
+  }
+ }
+ real vol = (1.0/3.0)*sumVolume;
+ //real xc = sumCentroidX/(2*vol);
+ //real yc = sumCentroidY/(2*vol);
+ //real zc = sumCentroidZ/(2*vol);
+
+ return vol;
+}
+
 real Model3D::computeBubbleVolume2()
 {
  real sumVolume=0;
@@ -6444,11 +6542,17 @@ real Model3D::computeBubbleVolume2()
 
 void Model3D::applyBubbleVolumeCorrection()
 {
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=2;nb<=surfMesh.elemIdRegion.Max();nb++ )
+ {
  real aux = 0;
- real bubbleVolume = computeBubbleVolume2();
- real ds = (initBubbleVolume - bubbleVolume)/surface.Dim();
+ real bubbleVolume = computeSurfaceVolume(nb);
+ real ds = (initSurfaceVolume[nb] - bubbleVolume)/surface.Dim();
 
- while( fabs(initBubbleVolume - bubbleVolume) > 0.0001)
+ while( fabs(initSurfaceVolume[nb] - bubbleVolume) > 
+        0.001*initSurfaceVolume[nb])
  {
   for( int i=0;i<surface.Dim();i++ )
   {
@@ -6466,14 +6570,16 @@ void Model3D::applyBubbleVolumeCorrection()
    Z.Set(surfaceNode,aux);
    surfMesh.Z.Set(surfaceNode,aux);
   }
- bubbleVolume = computeBubbleVolume2();
- ds = (initBubbleVolume - bubbleVolume)/surface.Dim();
+ bubbleVolume = computeSurfaceVolume(nb);
+ ds = (initSurfaceVolume[nb] - bubbleVolume)/surface.Dim();
  }
- //cout << "init volume = " << initBubbleVolume << endl;
- //cout << "volume1 = " << computeBubbleVolume() << endl;
- //cout << "volume2 = " << computeBubbleVolume2() << endl;
- //cout << "ds = " << ds << endl;
- //cout << "diff = " << fabs(initBubbleVolume - bubbleVolume) << endl;
+//--------------------------------------------------
+//  cout << "init volume = " << initSurfaceVolume[nb]<< endl;
+//  cout << "volume2 = " << computeSurfaceVolume(nb) << endl;
+//  cout << "ds = " << ds << endl;
+//  cout << "diff = " << fabs(initSurfaceVolume[nb] - bubbleVolume) << endl;
+//-------------------------------------------------- 
+ }
 }
 
 void Model3D::checkNeighbours()
@@ -6972,7 +7078,6 @@ void Model3D::checkTriangleOrientationPerfect()
  * */
 void Model3D::checkTriangleOrientation()
 {
- // dentro das bolhas
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc

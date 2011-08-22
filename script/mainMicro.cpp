@@ -21,9 +21,18 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
+ // set each bubble length
+ vector< real > triEdgeVec;
+ triEdgeVec.resize(6);
+ triEdgeVec[0] = 0.1; // none
+ triEdgeVec[1] = 0.1; // wall
+ triEdgeVec[2] = 0.1; // bubble 1 
+ triEdgeVec[3] = 0.1; // bubble 2 
+ triEdgeVec[4] = 0.05; // bubble 3
+ triEdgeVec[5] = 0.05; // bubble 4
+
  // bogdan's thesis 2010 - case 2
  int iter = 0;
- real triEdge = 0.12;
  real Re = 10;
  real Sc = 1;
  real We = 2;
@@ -46,7 +55,8 @@ int main(int argc, char **argv)
  real cfl = 0.1;
 
  //const char *mesh = "../../db/gmsh/3d/micro.msh";
- const char *mesh = "../../db/gmsh/3d/2micros.msh";
+ //const char *mesh = "../../db/gmsh/3d/2micros.msh";
+ const char *mesh = "../../db/gmsh/3d/4micros.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -69,14 +79,14 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
   //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -113,7 +123,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -128,7 +138,7 @@ int main(int argc, char **argv)
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -160,13 +170,13 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -198,13 +208,13 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -271,7 +281,7 @@ int main(int argc, char **argv)
   }
   Model3D mOld = m1; 
   //m1.mesh2Dto3DOriginal();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh3DPoints();
   m1.setMiniElement();
   //m1.setQuadElement();

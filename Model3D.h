@@ -101,9 +101,10 @@ class Model3D
   void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
-  void setInitBubbleVolume();
+  void setInitSurfaceVolume();
   real computeBubbleVolume();
   real computeBubbleVolume2();
+  real computeSurfaceVolume(int _region);
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
 
@@ -247,6 +248,8 @@ class Model3D
   real getMinEdgeTri();
   real getTriEdge();
   void setTriEdge(real _triEdge);
+  void setTriEdgeVec(vector< real > _triEdgeVec);
+  vector< real > getTriEdgeVec();
   void setSingleElement();
   void setTwoElements();
   void setThreeElements();
@@ -285,7 +288,6 @@ class Model3D
   real bubbleRadius;
   real minEdge;
   real triEdge,minEdgeTri,averageTriEdge;
-  real initBubbleVolume;
   int isp;                        // isp: num of inserted surface points
   int ispc;                       // ispc: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
@@ -295,9 +297,11 @@ class Model3D
   int rp;                         // rp: num of removed 3d mesh points
   int rpi;                        // rpi: by interface distance
   int rpv;                        // rpi: by volume 
-  int flip;
+  int flip;                       // flip: flipping operations
   int badtet;                     // num of shit tetrahedrons
 
+  vector<real> initSurfaceVolume;     // vector de volumes iniciais
+  vector<real> triEdgeVec;            // vector de tamanho de aresta 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no
   vector< list<int> > neighbourFace;  // lista de vizinhos de cada no

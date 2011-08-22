@@ -136,6 +136,7 @@ class Model3D
   void setMicroWallBC();
   void setWallCouetteBC();
   void setWallAnnularBC();
+  void set2BubbleBC();
   void setStepBC();
   void setCStepBC();
   void setStepReservBC();

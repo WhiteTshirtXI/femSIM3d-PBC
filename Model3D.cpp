@@ -1671,7 +1671,10 @@ void Model3D::flipTriangleEdge()
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
-	<< "flipping edge: " << resetColor() 
+	<< "flipping edge at (" << resetColor()
+	<< surfMesh.elemIdRegion.Get(elem1)
+	<< color(none,green,black) 
+	<< "): " << resetColor() 
 	<< v1 << " " << v2 
 	<< color(none,green,black) 
 	<< " --> " << resetColor()
@@ -1763,8 +1766,13 @@ void Model3D::flipTriangleEdge()
 void Model3D::insertPoint(int _edge)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
- cout << "----------------------- " << color(none,yellow,black) 
-      << "inserting vertex: " << resetColor() << vAdd << endl;
+
+ cout << "----------------- " << color(none,yellow,black) 
+      << "inserting vertex at (" << resetColor()
+	  << surfMesh.elemIdRegion.Get(mapEdgeTri.Get(_edge,5)) 
+	  << color(none,yellow,black) 
+	  << "): "
+      << resetColor() << vAdd << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
  // edge vertices
@@ -1887,8 +1895,12 @@ void Model3D::insertPointWithCurvature(int _edge)
  int vAdd = surfMesh.numVerts; // aditional vertice
 
  cout << "----------------- " << color(none,yellow,black) 
-      << "inserting vertex: "
+      << "inserting vertex at (" << resetColor()
+	  << surfMesh.elemIdRegion.Get(mapEdgeTri.Get(_edge,5)) 
+	  << color(none,yellow,black) 
+	  << "): "
       << resetColor() << vAdd << endl;
+ //cout << mapEdgeTri.Get(_edge,0) << endl;
  //saveVTKSurface("./vtk/","insertBefore",vAdd);
 
  // edge vertices
@@ -2281,7 +2293,12 @@ void Model3D::insertPointWithCurvature(int _edge)
  * */
 void Model3D::deletePoint(int _v)
 {
- cout << "----------------- " << color(none,red,black) << "removing vertex: "
+ cout << "----------------- " << color(none,red,black) 
+      << "removing vertex at(" 
+	  << resetColor()
+	  << surfMesh.vertIdRegion.Get(_v)
+	  << color(none,red,black) 
+	  <<"): "
       << resetColor() << _v << endl;
  //saveVTKSurface("./vtk/","deleteBefore",_v);
  
@@ -2384,7 +2401,10 @@ void Model3D::contractEdgeByLength()
    setNeighbourSurface();
 
    cout << "----------------- " << color(none,blue,black) 
-	    << "contracting edge: " << resetColor() 
+	    << "contracting edge at (" << resetColor()
+		<< surfMesh.elemIdRegion.Get(elem1)
+		<< color(none,blue,black) 
+		<< "): " << resetColor() 
 		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
@@ -3798,6 +3818,44 @@ void Model3D::setWallAnnularBC()
    uc.Set(*it,aux);
    vc.Set(*it,aux);
    wc.Set(*it,aux);
+  }
+ }
+}
+
+void Model3D::set2BubbleBC()
+{
+ real aux;
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  // condicao de velocidade
+  if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
+  {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
+
+   aux = X.Get(i);
+   uc.Set(i,aux);
+   aux = (-1.0)*Y.Get(i);
+   vc.Set(i,aux);
+   aux = 0.0;
+   wc.Set(i,aux);
+  }
+  // condicao de outflow
+  if( (X.Get(i)==X.Min()) || X.Get(i)==X.Max() )  
+  {
+   idbcp.AddItem(i);
+
+   aux = 0.0;
+   pc.Set(i,aux);
+  }
+  if( (Z.Get(i)==Z.Min()) || Z.Get(i)==Z.Max() )  
+  {
+   idbcw.AddItem(i);
+
+   aux = 0.0;
+   wc.Set(i,aux);
   }
  }
 }

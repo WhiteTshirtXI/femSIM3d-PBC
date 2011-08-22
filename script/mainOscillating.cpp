@@ -20,10 +20,16 @@
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ 
+ // set each bubble length
+ vector< real > triEdgeVec;
+ triEdgeVec.resize(3);
+ triEdgeVec[0] = 0.1; // none
+ triEdgeVec[1] = 0.77; // wall
+ triEdgeVec[2] = 0.1; // bubble 1 
 
  // Tryggvason (Computations of Multiphase Flows by a FDM/FTM
  int iter = 0;
- real triEdge = 0.05;
  real Re = 1000;
  real Sc = 1;
  real We = 1;
@@ -45,8 +51,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.5;
 
- //const char *mesh = "../../db/gmsh/3d/oscillating.msh";
- const char *mesh = "../../db/gmsh/3d/test.msh";
+ const char *mesh = "../../db/gmsh/3d/oscillating.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -71,12 +76,13 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
+  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -95,7 +101,8 @@ int main(int argc, char **argv)
   //s1.setDt(dt);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.init();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -113,7 +120,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -127,7 +134,7 @@ int main(int argc, char **argv)
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -137,7 +144,8 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -158,12 +166,12 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.setWallBC();
 
   s1(m1);
@@ -172,7 +180,8 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -194,18 +203,19 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
@@ -236,6 +246,7 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;
    cout << resetColor();
 
+   s1.setDt();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
@@ -263,6 +274,7 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
+  m1.setTriEdgeVec(triEdgeVec);
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();

@@ -280,14 +280,13 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
-  //m1.mesh2Dto3DOriginal();
   m1.setTriEdgeVec(triEdgeVec);
+  //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();
   //m1.setQuadElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.computeNormalAndKappa();
   m1.setMicroWallBC();
 
   Simulator3D s2(m1,s1);

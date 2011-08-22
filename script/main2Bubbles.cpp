@@ -15,9 +15,19 @@
 #include "petscksp.h"
 #include "colors.h"
 
+#define NUMPHASES 2
+
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //
+ // set each bubble length
+ vector< real > triEdgeVec;
+ triEdgeVec.resize(4);
+ triEdgeVec[0] = 0.2; // none
+ triEdgeVec[1] = 0.8; // wall
+ triEdgeVec[2] = 0.12; // bubble 1 
+ triEdgeVec[3] = 0.12; // bubble 2 
 
  int iter = 0;
  real Re = 20;
@@ -27,18 +37,19 @@ int main(int argc, char **argv)
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
  real c3 = 0.05; // smooth - fujiwara
- real c4 = 0.1; // surface
+ real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
  real sigma = 1.0;
 
- real mu_l = 1.0;
- real mu_g = 1.0;
- real rho_l = 1.0;
- real rho_g = 1.0;
+ real mu_in = 1.0;
+ real mu_out = 1.0;
 
- real cfl = 1;
+ real rho_in = 1.0;
+ real rho_out = 1.0;
+
+ real cfl = 0.5;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -62,11 +73,13 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
+  m1.setTriEdgeVec(triEdgeVec);
+  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.set2BubbleBC();
 
   s1(m1);
@@ -82,10 +95,10 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
-  //s1.setDt(dt);
-  s1.setMu(mu_l,mu_g);
-  s1.setRho(rho_l,rho_g);
-  s1.setCflBubble(cfl);
+  s1.setMu(mu_in,mu_out);
+  s1.setRho(rho_in,rho_out);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.init2Bubbles();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -103,6 +116,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -116,7 +130,7 @@ int main(int argc, char **argv)
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.set2BubbleBC();
 
   s1(m1);
@@ -126,7 +140,8 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -147,11 +162,12 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setInitBubbleVolume();
+  m1.setInitSurfaceVolume();
   m1.set2BubbleBC();
 
   s1(m1);
@@ -160,7 +176,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -182,16 +198,19 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
+  m1.setTriEdgeVec(triEdgeVec);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
   m1.set2BubbleBC();
+  m1.setInitSurfaceVolume();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
+  s1.setDt();
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
@@ -212,7 +231,7 @@ int main(int argc, char **argv)
 
  int nIter = 3000;
  int nReMesh = 1;
- for( int i=0;i<nIter;i++ )
+ for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
   {
@@ -222,6 +241,7 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;
    cout << resetColor();
 
+   s1.setDt();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
@@ -234,8 +254,8 @@ int main(int argc, char **argv)
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
+   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
@@ -249,6 +269,7 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
+  m1.setTriEdgeVec(triEdgeVec);
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();
@@ -264,12 +285,12 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveVTKPlane2Bubbles(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder);

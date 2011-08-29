@@ -36,8 +36,8 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(5,5,20);
  m1.setAdimenDisk();
- //m1.setMiniElement();
- m1.setQuadElement();
+ m1.setMiniElement();
+ //m1.setQuadElement();
  m1.setNuZDiskBC();;
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");
@@ -46,12 +46,12 @@ int main(int argc, char **argv)
 
  s1.setRe(Re);
  s1.setCfl(cfl);
- s1.setDtDisk();
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
 
  s1.init();
+ s1.setDtDisk();
  s1.assembleNuZ();
  s1.matMount();
  s1.setUnCoupledBC(); 
@@ -69,8 +69,6 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDtDisk();
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -100,6 +98,8 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
+
+   s1.saveOldData();
 
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;

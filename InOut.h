@@ -211,7 +211,7 @@ private:
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
-  clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
+  clVector *uSolOld,*vSolOld,*wSolOld,*pSolOld,*cSolOld;
   clVector *uALE,*vALE,*wALE;
   clVector *fint;
   clDMatrix *kappa;

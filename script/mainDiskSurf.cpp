@@ -66,7 +66,6 @@ int main(int argc, char **argv)
  s1.setRe(Re);
  s1.setSc(Sc);
  s1.setCfl(cfl);
- s1.setDt();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setFr(Fr);
@@ -80,6 +79,7 @@ int main(int argc, char **argv)
  s1.setSolverConcentration(solverC);
 
  s1.init();
+ s1.setDtDisk();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -123,6 +123,8 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+
+   s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 

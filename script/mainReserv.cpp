@@ -62,6 +62,8 @@ int main(int argc, char **argv)
    s1.unCoupled();
    //s1.unCoupledC();
    save.saveVTK(dir,vtk,i*10+j);
+
+   s1.saveOldData();
   }
   //save.saveVTK(dir,vtk,i*10+j);
   //save.saveSol(dir,bin,i*10+j);

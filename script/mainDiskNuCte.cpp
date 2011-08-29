@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
  int iter = 0;
  real Re = 1;
- real cfl = 50;
+ real cfl = 10;
  real mu_l = 1.0;
  real rho_l = 1.0;
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCNONE);
@@ -77,8 +77,6 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDtDisk();
  }
  
  InOut save(m1,s1); // cria objeto de gravacao
@@ -104,7 +102,7 @@ int main(int argc, char **argv)
    //s1.matMount();
    ////s1.matMountC();
    //s1.setUnCoupledBC(); 
-   ////s1.setUnCoupledCBC(); 
+   //s1.setUnCoupledCBC(); 
 
    s1.stepSL();
    s1.setRHS();
@@ -115,6 +113,8 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
+
+   s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of "

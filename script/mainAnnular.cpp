@@ -244,6 +244,8 @@ int main(int argc, char **argv)
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
+   s1.saveOldData();
+
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << resetColor() << i*nReMesh+j+iter << endl;

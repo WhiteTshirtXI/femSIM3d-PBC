@@ -80,6 +80,8 @@ class Simulator3D
   void unCoupled();
   void unCoupledC();
 
+  void saveOldData();
+
   void setCoupledBC();
   void setUnCoupledBC();
   void setUnCoupledCBC();
@@ -100,6 +102,7 @@ class Simulator3D
   real getBeta();
   void setSigma(real _sigma);
   real getSigma();
+  void setDtStep();
   void setDtDisk();
   void setDt();
   void setDt(real _dt);
@@ -151,14 +154,22 @@ class Simulator3D
   void setSolverConcentration(Solver *s);
 
   clVector* getUSol();
+  clVector* getUSolOld();
   clVector* getVSol();
+  clVector* getVSolOld();
   clVector* getWSol();
+  clVector* getWSolOld();
   clVector* getPSol();
+  clVector* getPSolOld();
   clVector* getCSol();
+  clVector* getCSolOld();
   clVector* getUALE();
   clVector* getVALE();
+  clVector* getUALEOld();
   clVector* getWALE();
+  clVector* getVALEOld();
   clVector* getUAnt();
+  clVector* getWALEOld();
   clVector* getCAnt();
   clVector* getFint();
   clVector* getGravity();

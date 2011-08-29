@@ -1609,11 +1609,6 @@ void Simulator3D::unCoupled()
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao
 
- uSolOld = uSol;
- vSolOld = vSol;
- wSolOld = wSol;
- pSolOld = pSol;
-
  time = time + dt;
  iter++;
 } // fecha metodo unCoupled 
@@ -1635,6 +1630,14 @@ void Simulator3D::unCoupledC()
  // comentar em caso de utilizacao de setInterface()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
+}
+
+void Simulator3D::saveOldData()
+{
+ uSolOld = uSol;
+ vSolOld = vSol;
+ wSolOld = wSol;
+ pSolOld = pSol;
  cSolOld = cSol;
 }
 
@@ -2010,6 +2013,31 @@ real Simulator3D::getDtGravity()
  real velMax = max( 1.0,fabs(gravity.Max()) );
 
  return minEdge/velMax;
+}
+
+/*
+ * Set Dt of the current simulation.
+ * Explicity terms:
+ *  - Semi-Lagrangian;
+ *  */
+void Simulator3D::setDtStep()
+{
+ m->setMapEdge();
+
+ real minDt = min(1.0,getDtSemiLagrangian());
+
+ dt = cfl*minDt;
+ cout << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
+ cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << resetColor() << endl;
 }
 
 /*
@@ -2414,16 +2442,24 @@ real Simulator3D::getRho_in(){return rho_in;}
 real Simulator3D::getRho_out(){return rho_out;}
 real* Simulator3D::getTime(){return &time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
+clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
 void Simulator3D::setUSol(clVector &_uSol){uSol = _uSol;}
 clVector* Simulator3D::getVSol(){return &vSol;} 
+clVector* Simulator3D::getVSolOld(){return &vSolOld;} 
 void Simulator3D::setVSol(clVector &_vSol){vSol = _vSol;}
 clVector* Simulator3D::getWSol(){return &wSol;}
+clVector* Simulator3D::getWSolOld(){return &wSolOld;}
 void Simulator3D::setWSol(clVector &_wSol){wSol = _wSol;}
 clVector* Simulator3D::getPSol(){return &pSol;}
+clVector* Simulator3D::getPSolOld(){return &pSolOld;}
 clVector* Simulator3D::getCSol(){return &cSol;}
+clVector* Simulator3D::getCSolOld(){return &cSolOld;}
 clVector* Simulator3D::getUALE(){return &uALE;} 
+clVector* Simulator3D::getUALEOld(){return &uALEOld;} 
 clVector* Simulator3D::getVALE(){return &vALE;} 
+clVector* Simulator3D::getVALEOld(){return &vALEOld;} 
 clVector* Simulator3D::getWALE(){return &wALE;} 
+clVector* Simulator3D::getWALEOld(){return &wALEOld;} 
 clVector* Simulator3D::getFint(){return &fint;}
 clVector* Simulator3D::getGravity(){return &gravity;}
 real Simulator3D::getGrav(){return g;}
@@ -2868,7 +2904,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  cout << "Solution No. " << iter << " read" << endl;
 
- return iter;
+ return iter+1;
 } // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na

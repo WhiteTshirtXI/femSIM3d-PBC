@@ -87,7 +87,12 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << i*nR+j+iter << endl;
 
-   s1.setDtDisk();
+   /* dt variable */
+   //s1.setDtDisk();
+   //s1.assembleNuZ();
+   //s1.matMount();
+   //s1.setUnCoupledBC(); 
+
    s1.stepSL();
    s1.setRHS();
    s1.unCoupled();

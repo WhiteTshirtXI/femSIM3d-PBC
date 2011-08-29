@@ -98,7 +98,9 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;
    cout << resetColor();
 
-   s1.setDtDisk();
+   /* dt variable */
+   //s1.setDtDisk();
+
    //s1.stepLagrangian();
    s1.stepALEVel();
    //s1.stepALE();

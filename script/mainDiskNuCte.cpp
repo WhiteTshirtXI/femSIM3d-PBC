@@ -97,7 +97,15 @@ int main(int argc, char **argv)
 	    << i*nR+j+iter << endl << endl;
    cout << resetColor();
 
-   s1.setDtDisk();
+   /* dt variable */
+   //s1.setDtDisk();
+   //s1.assembleNuCte();
+   ////s1.assembleC();
+   //s1.matMount();
+   ////s1.matMountC();
+   //s1.setUnCoupledBC(); 
+   ////s1.setUnCoupledCBC(); 
+
    s1.stepSL();
    s1.setRHS();
    //s1.setCRHS();

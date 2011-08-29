@@ -1840,18 +1840,21 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  ofstream vtkFile( filename ); 
 
  vtkHeader(vtkFile);
- vtkCoords(vtkFile);
+ vtkSurfaceCoords(vtkFile);
 
- SurfaceMesh *mesh = m->getInterfaceMesh();
+ int numTri = 0;
+ for( int i=0;i<surfMesh->numElems;i++ )
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   numTri++;
 
- int numTri = mesh->IEN.DimI();
  vtkFile << setprecision(0) << fixed; 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
- for( int i=0;i<numTri;i++ )
+ for( int i=0;i<surfMesh->numElems;i++ )
  {
-  vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
-                  << mesh->IEN.Get(i,1) << " " 
-                  << mesh->IEN.Get(i,2) << endl;
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   vtkFile << "3 " << surfMesh->IEN.Get(i,0) << " "  
+                   << surfMesh->IEN.Get(i,1) << " " 
+                   << surfMesh->IEN.Get(i,2) << endl;
  };
  vtkFile << endl;
 
@@ -1862,19 +1865,19 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  vtkFile << endl;
  vtkFile << endl;
 
- vtkScalarHeader(vtkFile);
- vtkScalar(vtkFile,"pressure",*pc);
- vtkScalar(vtkFile,"concentration",*cc);
- vtkVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
+ vtkSurfaceScalarHeader(vtkFile);
+ vtkSurfaceScalar(vtkFile,"pressure",*pc);
+ vtkSurfaceScalar(vtkFile,"concentration",*cc);
+ vtkSurfaceVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
-  vtkScalar(vtkFile,"concentration",*cc);
+  vtkSurfaceScalar(vtkFile,"concentration",*cc);
 
  if( heaviside->Dim() > 0 )
-  vtkScalar(vtkFile,"heaviside",*heaviside);
+  vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
- vtkScalar(vtkFile,"distance",*interfaceDistance);
+ vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
 
  vtkFile.close();
 
@@ -1908,19 +1911,22 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  ofstream vtkFile( filename ); 
 
  vtkHeader(vtkFile,_iter);
- vtkCoords(vtkFile);
+ vtkSurfaceCoords(vtkFile);
 
- SurfaceMesh *mesh = m->getInterfaceMesh();
+ int numTri = 0;
+ for( int i=0;i<surfMesh->numElems;i++ )
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   numTri++;
 
- int numTri = mesh->IEN.DimI();
  vtkFile << setprecision(0) << fixed; 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
- for( int i=0;i<numTri;i++ )
+ for( int i=0;i<surfMesh->numElems;i++ )
  {
-  vtkFile << "3 " << mesh->IEN.Get(i,0) << " "  
-                  << mesh->IEN.Get(i,1) << " " 
-                  << mesh->IEN.Get(i,2) << endl;
- };
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   vtkFile << "3 " << surfMesh->IEN.Get(i,0) << " "  
+                   << surfMesh->IEN.Get(i,1) << " " 
+                   << surfMesh->IEN.Get(i,2) << endl;
+ }
  vtkFile << endl;
 
  vtkFile <<  "CELL_TYPES " << numTri << endl;
@@ -1930,29 +1936,29 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkFile << endl;
  vtkFile << endl;
 
- vtkScalarHeader(vtkFile);
- vtkScalar(vtkFile,"pressure",*pSol);
- vtkScalar(vtkFile,"concentration",*cSol);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+ vtkSurfaceScalarHeader(vtkFile);
+ vtkSurfaceScalar(vtkFile,"pressure",*pSol);
+ vtkSurfaceScalar(vtkFile,"concentration",*cSol);
+ vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
-  vtkScalar(vtkFile,"concentration",*cSol);
+  vtkSurfaceScalar(vtkFile,"concentration",*cSol);
 
  if( heaviside->Dim() > 0 )
-  vtkScalar(vtkFile,"heaviside",*heaviside);
+  vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
  {
-  vtkScalar(vtkFile,"kappa",*kappa);
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkVector(vtkFile,"gravity",*gravity);
-  vtkVector(vtkFile,"surface_force",*fint);
+  vtkSurfaceScalar(vtkFile,"kappa",*kappa);
+  vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
+  vtkSurfaceVector(vtkFile,"gravity",*gravity);
+  vtkSurfaceVector(vtkFile,"surface_force",*fint);
  }
 
- vtkScalar(vtkFile,"viscosity",*mu);
- vtkScalar(vtkFile,"density",*rho);
+ vtkSurfaceScalar(vtkFile,"viscosity",*mu);
+ vtkSurfaceScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
 
@@ -2529,8 +2535,20 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "COEFFICIENTS 1 6 float" << endl;
  _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
        << alpha << " " << beta << endl;
- _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
- _file << triEdge << endl;
+
+ if( surfMesh->numElems > 0 )
+ {
+  _file << "CHARACTERISTICLENGTH 1 " << surfMesh->elemIdRegion.Max()+1
+        << " float" << endl;
+  for( int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
+   _file << triEdge[nb] << " ";
+  _file << endl;
+ }
+ else
+ {
+  _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
+  _file << triEdge[0] << _file << endl;
+ }
  _file << endl;
 }
 
@@ -2546,7 +2564,7 @@ void InOut::vtkCoords(ofstream& _file)
  _file << endl;
 }
 
-void InOut::vtkSurfCoords(ofstream& _file)
+void InOut::vtkSurfaceCoords(ofstream& _file)
 {
  _file << "POINTS " << surfMesh->numVerts << " double" << endl;
  _file << setprecision(10) << scientific;
@@ -2589,6 +2607,11 @@ void InOut::vtkScalarHeader(ofstream& _file)
  _file << "POINT_DATA " << numVerts << endl;
 }
 
+void InOut::vtkSurfaceScalarHeader(ofstream& _file)
+{
+ _file << "POINT_DATA " << surfMesh->numVerts << endl;
+}
+
 void InOut::vtkScalar(ofstream& _file,string _name,clVector &_scalar)
 {
  _file << "SCALARS " << _name << " double" << endl;
@@ -2608,6 +2631,30 @@ void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkSurfaceScalar(ofstream& _file,string _name,clVector &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkSurfaceScalar(ofstream& _file,string _name,clDMatrix &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
   _file << _scalar.Get(i) << endl;
 
  _file << endl;
@@ -2635,6 +2682,30 @@ void InOut::vtkVector(ofstream& _file,string _name,
 		<< _vz.Get(i) << endl;
  _file << endl;
 }
+
+void InOut::vtkSurfaceVector(ofstream& _file,string _name,clVector &_v)
+{
+ _file << "VECTORS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _v.Get(i) << " " 
+        << _v.Get(i+numNodes) << " " 
+		<< _v.Get(i+numNodes*2) << endl;
+ _file << endl;
+}
+
+void InOut::vtkSurfaceVector(ofstream& _file,string _name,
+                             clVector &_vx,clVector &_vy,clVector &_vz)
+{
+ _file << "VECTORS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _vx.Get(i) << " " 
+        << _vy.Get(i) << " " 
+		<< _vz.Get(i) << endl;
+ _file << endl;
+}
+
 
 void InOut::saveMSH( const char* _dir,const char* _filename )
 {

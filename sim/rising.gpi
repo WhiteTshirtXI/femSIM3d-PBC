@@ -20,7 +20,7 @@ unset grid
 set label "water-sugar solution" at 1.5,0.17
 set label "{/Symbol r_l}=1350, {/Symbol r_g}=1.225" at 1.5,0.15
 set label "{/Symbol m_l}=1.28, {/Symbol m_g}=0.0000178" at 1.5,0.13
-set label "numerical velocity = 0.2624" at 1.5,0.09
+set label "numerical velocity = 0.2727" at 1.5,0.09
 set label "experimental velocity = 0.267" at 1.5,0.11
 
 fileObj = "../dat/volume.dat"

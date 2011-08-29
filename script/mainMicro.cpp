@@ -22,14 +22,14 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  // set each bubble length
- vector< real > triEdgeVec;
- triEdgeVec.resize(6);
- triEdgeVec[0] = 0.1; // none
- triEdgeVec[1] = 0.1; // wall
- triEdgeVec[2] = 0.1; // bubble 1 
- triEdgeVec[3] = 0.1; // bubble 2 
- triEdgeVec[4] = 0.05; // bubble 3
- triEdgeVec[5] = 0.05; // bubble 4
+ vector< real > triEdge;
+ triEdge.resize(6);
+ triEdge[0] = 0.1;   // none
+ triEdge[1] = 0.095;   // wall
+ triEdge[2] = 0.1;   // bubble 1 
+ triEdge[3] = 0.1;   // bubble 2 
+ triEdge[4] = 0.023; // bubble 3
+ triEdge[5] = 0.023; // bubble 4
 
  // bogdan's thesis 2010 - case 2
  int iter = 0;
@@ -52,13 +52,13 @@ int main(int argc, char **argv)
  real rho_in = 1;
  real rho_out = 100;
 
- real cfl = 0.1;
+ real cfl = 0.8;
 
  //const char *mesh = "../../db/gmsh/3d/micro.msh";
  //const char *mesh = "../../db/gmsh/3d/2micros.msh";
  const char *mesh = "../../db/gmsh/3d/4micros.msh";
  
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();

@@ -22,12 +22,12 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //
  // set each bubble length
- vector< real > triEdgeVec;
- triEdgeVec.resize(4);
- triEdgeVec[0] = 0.2; // none
- triEdgeVec[1] = 0.8; // wall
- triEdgeVec[2] = 0.12; // bubble 1 
- triEdgeVec[3] = 0.12; // bubble 2 
+ vector< real > triEdge;
+ triEdge.resize(4);
+ triEdge[0] = 0.2; // none
+ triEdge[1] = 0.8; // wall
+ triEdge[2] = 0.12; // bubble 1 
+ triEdge[3] = 0.12; // bubble 2 
 
  int iter = 0;
  real Re = 20;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   m1.setOFace();
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();

@@ -49,7 +49,7 @@ int main(int argc, char **argv)
  real rho_in = 1.0;
  real rho_out = 0.001;
 
- real cfl = 0.3;
+ real cfl = 0.8;
 
  const char *mesh = "../../db/gmsh/3d/static.msh";
 
@@ -100,8 +100,8 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.setDt();
   s1.init();
+  s1.setDt();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -142,8 +142,6 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDt();
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -178,8 +176,6 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDt();
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -212,8 +208,6 @@ int main(int argc, char **argv)
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDt();
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
@@ -265,6 +259,8 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+
+   s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 

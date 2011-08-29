@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
- int iter = 0;
+ int iter = 1;
  real Re = 1;
  real Sc = 2000;
  real cfl = 10;
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,10,20);
+ m1.setMeshDisk(6,6,10);
  m1.setAdimenDisk();
  m1.setMiniElement();
  //m1.setQuadElement();
@@ -48,12 +48,12 @@ int main(int argc, char **argv)
  s1.setRe(Re); // Reynolds do disco (~1)
  s1.setSc(Sc); // Schmidt da concentracao (~2000)
  s1.setCfl(cfl);
- s1.setDtDisk();
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
  s1.setSolverConcentration(solverC);
  s1.init();
+ s1.setDtDisk();
  s1.assembleNuC();
 
  if( (*(argv+1)) == NULL )
@@ -69,8 +69,6 @@ int main(int argc, char **argv)
   cout << endl;
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
-  s1.setDtDisk();
   s1.assembleK();
  }
 
@@ -80,7 +78,7 @@ int main(int argc, char **argv)
  save.printInfo(mesh);
 
  int nIter = 1000;
- int nR = 10;
+ int nR = 5;
  for( int i=0;i<nIter;i++ )
  {
   for( int j=0;j<nR;j++ )
@@ -107,6 +105,7 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
 
+   s1.saveOldData();
    cout << "__________________________________________ End: " 
 	    << i*nR+j+iter << endl;
   }

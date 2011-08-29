@@ -126,6 +126,8 @@ int main(int argc, char **argv)
    save.saveBubbleInfo(datFolder);
    save.crossSectionalVoidFraction(datFolder,"void",i*nReMesh+j+iter);
 
+   s1.saveOldData();
+
    cout << "________________________________________ END of "
 	    << i*nReMesh+j+iter << endl;
   }

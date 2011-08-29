@@ -109,11 +109,11 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  rho = s->getRho();
  hSmooth = s->getHSmooth();
  gravity = s->getGravity();
- uSolOld.Dim(numNodes);
- vSolOld.Dim(numNodes);
- wSolOld.Dim(numNodes);
- pSolOld.Dim(numVerts);
- cSolOld.Dim(numVerts);
+ uSolOld = s->getUSolOld();
+ vSolOld = s->getVSolOld();
+ wSolOld = s->getWSolOld();
+ pSolOld = s->getPSolOld();
+ cSolOld = s->getCSolOld();
 }
 
 InOut::~InOut(){}
@@ -2261,26 +2261,27 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 				  << setw(17) << "uvwError" 
 				  << setw(17) << "uvwpError" 
 				  << setw(17) << "uvwpcError" 
+				  << setw(17) << "iter" 
 				  << endl;
  }
 
- real uDiff = ( (*uSol - uSolOld).Abs() ).Sum();
+ real uDiff = ( (*uSol - *uSolOld).Abs() ).Sum();
  real uSum = ( uSol->Abs() ).Sum();
  real uError = (uDiff/uSum)/dt;
 
- real vDiff = ( (*vSol - vSolOld).Abs() ).Sum();
+ real vDiff = ( (*vSol - *vSolOld).Abs() ).Sum();
  real vSum = ( vSol->Abs() ).Sum();
  real vError = (vDiff/vSum)/dt;
 
- real wDiff = ( (*wSol - wSolOld).Abs() ).Sum();
+ real wDiff = ( (*wSol - *wSolOld).Abs() ).Sum();
  real wSum = ( wSol->Abs() ).Sum();
  real wError = (wDiff/wSum)/dt;
 
- real pDiff = ( (*pSol - pSolOld).Abs() ).Sum();
+ real pDiff = ( (*pSol - *pSolOld).Abs() ).Sum();
  real pSum = ( pSol->Abs() ).Sum();
  real pError = (pDiff/pSum)/dt;
 
- real cDiff = ( (*cSol - cSolOld).Abs() ).Sum();
+ real cDiff = ( (*cSol - *cSolOld).Abs() ).Sum();
  real cSum = ( cSol->Abs() ).Sum();
  real cError = (cDiff/cSum)/dt;
  
@@ -2299,15 +2300,10 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
                   << uvwError << " " 
                   << uvwpError << " " 
                   << uvwpcError << " " 
+                  << iter << " " 
 				  << endl;
 
  file.close();
-
- uSolOld = *uSol;
- vSolOld = *vSol;
- wSolOld = *wSol;
- pSolOld = *pSol;
- cSolOld = *cSol;
 
  cout << endl;
  cout << "relative error: " << uvwpcError << endl;
@@ -2547,7 +2543,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  else
  {
   _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
-  _file << triEdge[0] << _file << endl;
+  _file << triEdge[0] << endl;
  }
  _file << endl;
 }

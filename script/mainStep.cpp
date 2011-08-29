@@ -58,8 +58,8 @@ int main(int argc, char **argv)
  s1.setRe(Re);
  s1.setSc(Sc);
  s1.setFr(Fr);
- //s1.setDt(dt);
  s1.setCfl(cfl);
+ s1.setDtStep();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setSolverPressure(solverP);
@@ -87,7 +87,6 @@ int main(int argc, char **argv)
 
   string file = (string) "sim-" + *(argv+2);
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.setCfl(cfl);
  }
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -112,6 +111,8 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
    save.saveVTU(vtkFolder,"sim",i*nRe+j+iter);
    save.saveSol(binFolder,"sim",i*nRe+j+iter);
+
+   s1.saveOldData();
 
    cout << "________________________________________ END of "
 	    << i*nRe+j+iter << endl;

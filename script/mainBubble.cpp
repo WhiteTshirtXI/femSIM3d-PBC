@@ -24,11 +24,11 @@ int main(int argc, char **argv)
 //--------------------------------------------------
 //  // bogdan's thesis 2010 - case 1
 //  // set each bubble length
-//  vector< real > triEdgeVec;
-//  triEdgeVec.resize(3);
-//  triEdgeVec[0] = 0.1; // none
-//  triEdgeVec[1] = 0.11; // wall
-//  triEdgeVec[2] = 0.11; // bubble
+//  vector< real > triEdge;
+//  triEdge.resize(3);
+//  triEdge[0] = 0.1; // none
+//  triEdge[1] = 0.11; // wall
+//  triEdge[2] = 0.11; // bubble
 //
 //  int iter = 0;
 //  real Re = 6.53;
@@ -58,11 +58,11 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 - case 2
  // set each bubble length
- vector< real > triEdgeVec;
- triEdgeVec.resize(3);
- triEdgeVec[0] = 0.1; // none
- triEdgeVec[1] = 1.1; // wall
- triEdgeVec[2] = 0.10; // bubble
+ vector< real > triEdge;
+ triEdge.resize(3);
+ triEdge[0] = 0.1; // none
+ triEdge[1] = 1.1; // wall
+ triEdge[2] = 0.10; // bubble
 
  int iter = 0;
  real Re = 13.8487;
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
  real c3 = 0.1; // smooth - fujiwara
- real c4 = 0.1; // smooth surface - fujiwara
+ real c4 = 0.2; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.7;
+ real cfl = 0.8;
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
@@ -92,11 +92,11 @@ int main(int argc, char **argv)
 //--------------------------------------------------
 //  // bogdan's thesis 2010 - case 3
 //  // set each bubble length
-//  vector< real > triEdgeVec;
-//  triEdgeVec.resize(3);
-//  triEdgeVec[0] = 0.1; // none
-//  triEdgeVec[1] = 0.11; // wall
-//  triEdgeVec[2] = 0.09; // bubble
+//  vector< real > triEdge;
+//  triEdge.resize(3);
+//  triEdge[0] = 0.1; // none
+//  triEdge[1] = 0.11; // wall
+//  triEdge[2] = 0.09; // bubble
 //
 //  int iter = 0;
 //  real Re = 32.78;
@@ -127,11 +127,11 @@ int main(int argc, char **argv)
 //--------------------------------------------------
 //  // 
 //  // set each bubble length
-//  vector< real > triEdgeVec;
-//  triEdgeVec.resize(3);
-//  triEdgeVec[0] = 0.1; // none
-//  triEdgeVec[1] = 0.11; // wall
-//  triEdgeVec[2] = 0.11; // bubble
+//  vector< real > triEdge;
+//  triEdge.resize(3);
+//  triEdge[0] = 0.1; // none
+//  triEdge[1] = 0.11; // wall
+//  triEdge[2] = 0.11; // bubble
 //
 //  int iter = 0;
 //  real Re = 30.83;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
   const char *mesh1 = mesh;
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
   s1(m1);
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
   m1.setMiniElement();
   //m1.setQuadElement();
@@ -383,7 +383,7 @@ int main(int argc, char **argv)
    cout << resetColor();
   }
   Model3D mOld = m1; 
-  m1.setTriEdgeVec(triEdgeVec);
+  m1.setTriEdge(triEdge);
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();

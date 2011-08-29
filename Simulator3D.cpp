@@ -497,12 +497,12 @@ void Simulator3D::assembleNuC()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  for( int n=0;n<NUMGLEU;n++ )
-   v[n] = (int) IEN->Get(mele,n);
-
   real c = 0;
-  for( int n=0;n<NUMGLE;n++ )
+  for( int n=0;n<NUMGLEU;n++ )
+  {
+   v[n] = (int) IEN->Get(mele,n);
    c += cSolOld.Get(v[n]);
+  }
   c = c/NUMGLE;
 
   real eme = 0.81315;
@@ -1841,17 +1841,144 @@ real Simulator3D::getDtSurfaceTension()
 //                   /(2*3.141592*sigma) );
 //-------------------------------------------------- 
 
- triEdgeVec = m->getTriEdgeVec();
- triEdge = *(min_element(triEdgeVec.begin(),triEdgeVec.end()));
+ triEdge = m->getTriEdge();
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
 
- real capillary = sqrt( ( (rho_in+rho_out)*triEdge*triEdge*triEdge)
+ real capillary = sqrt( ( (rho_in+rho_out)*triEdgeMin*triEdgeMin*triEdgeMin)
                   /(3.141592*sigma) );
  return capillary;
 }
 
+/*
+ *
+ *                                 v1              
+ *                                  o              ---
+ *                                 / \                |
+ *                                /   \               | y1
+ *                               /     \              |
+ *                   -------    /   x   \     --------
+ *               y2 |          /         \            |
+ *                  |         /           \           | y3
+ *                   -----   o ----------- o       ---
+ *                          v2             v3
+ *                
+ *                           |      |
+ *                            ------
+ *                              x2
+ *                                  |      |
+ *                                   ------
+ *                                     x3
+ *                
+ *                
+ *                   o vertices
+ *                   x centroid
+ *                
+ * */
+real Simulator3D::getDtLagrangianExtream()
+{
+ int idMinVolume = m->getIdMinVolume();
+ real minEdge = m->getMinEdge();
+
+ //cout << idMinVolume << " " << minEdge << endl;
+
+ int v1 = IEN->Get(idMinVolume,0);
+ int v2 = IEN->Get(idMinVolume,1);
+ int v3 = IEN->Get(idMinVolume,2);
+ int v4 = IEN->Get(idMinVolume,3);
+
+ // X-component
+ real p1x = X->Get(v1);
+ real p2x = X->Get(v2);
+ real p3x = X->Get(v3);
+ real p4x = X->Get(v4);
+
+ real xCentroid = ( p1x+p2x+p3x+p4x )*0.25;
+
+ real d1x = dist(p1x,xCentroid);
+ real d2x = dist(p2x,xCentroid);
+ real d3x = dist(p3x,xCentroid);
+ real d4x = dist(p4x,xCentroid);
+ 
+ real minXdist = min(d1x,d2x);
+ minXdist = min(minXdist,d3x);
+ minXdist = min(minXdist,d4x);
+
+ real xVelMax = max( 1.0,fabs(uSolOld.Max()) );
+ xVelMax = max( xVelMax,fabs(c2*uSmooth.Max()) );
+ xVelMax = max( xVelMax,fabs(c3*uSmoothCoord.Max()) );
+ real minDtx = minXdist/xVelMax;
+
+ // Y-component
+ real p1y = Y->Get(v1);
+ real p2y = Y->Get(v2);
+ real p3y = Y->Get(v3);
+ real p4y = Y->Get(v4);
+
+ real yCentroid = ( p1y+p2y+p3y+p4y )*0.25;
+
+ real d1y = dist(p1y,yCentroid);
+ real d2y = dist(p2y,yCentroid);
+ real d3y = dist(p3y,yCentroid);
+ real d4y = dist(p4y,yCentroid);
+
+ real minYdist = min(d1y,d2y);
+ minYdist = min(minYdist,d3y);
+ minYdist = min(minYdist,d4y);
+
+ real yVelMax = max( 1.0,fabs(vSolOld.Max()) );
+ yVelMax = max( yVelMax,fabs(c2*vSmooth.Max()) );
+ yVelMax = max( yVelMax,fabs(c3*vSmoothCoord.Max()) );
+ real minDty = minYdist/yVelMax;
+
+ // Z-component
+ real p1z = Z->Get(v1);
+ real p2z = Z->Get(v2);
+ real p3z = Z->Get(v3);
+ real p4z = Z->Get(v4);
+
+ real zCentroid = ( p1z+p2z+p3z+p4z )*0.25;
+
+ real d1z = dist(p1z,zCentroid);
+ real d2z = dist(p2z,zCentroid);
+ real d3z = dist(p3z,zCentroid);
+ real d4z = dist(p4z,zCentroid);
+
+ real minZdist = min(d1z,d2z);
+ minZdist = min(minZdist,d3z);
+ minZdist = min(minZdist,d4z);
+
+ real zVelMax = max( 1.0,fabs(wSolOld.Max()) );
+ zVelMax = max( zVelMax,fabs(c2*wSmooth.Max()) );
+ zVelMax = max( zVelMax,fabs(c3*wSmoothCoord.Max()) );
+ real minDtz = minZdist/zVelMax;
+
+ real minDt1 = min(minDtx,minDty);
+ minDt1 = min(minDt1,minDtz);
+
+ real velMax = max(xVelMax,yVelMax);
+ velMax = max(velMax,zVelMax);
+ real minDt2 = 0.5*minEdge/velMax;
+
+ real minDt = min(minDt1,minDt2);
+
+ //cout << "minDt: " <<  minDt1 << " " << minDt2 << endl;
+ //cout << minXdist << " " << minYdist << " " << minZdist << endl;
+ //cout << xVelMax << " " << yVelMax << " " << zVelMax << endl;
+ //cout << minDtx << " " << minDty << " " << minDtz << endl;
+
+ return minDt;
+}
+
+/*     
+ *                l*3^(1/3)
+ *   height = h = --------- = l*0.86602
+ *                    2
+ * */
 real Simulator3D::getDtLagrangian()
 {
  real minEdge = m->getMinEdge();
+
+ real length = minEdge*0.86602;
 
  real velMax = max( 1.0,fabs(uSolOld.Max()) );
  velMax = max( velMax,fabs(vSolOld.Max()) );
@@ -1863,7 +1990,7 @@ real Simulator3D::getDtLagrangian()
  velMax = max( velMax,fabs(c3*vSmoothCoord.Max()) );
  velMax = max( velMax,fabs(c3*wSmoothCoord.Max()) );
 
- return 0.5*minEdge/velMax;
+ return 0.5*length/velMax;
 }
 
 real Simulator3D::getDtSemiLagrangian()
@@ -1921,6 +2048,7 @@ void Simulator3D::setDt()
 {
  m->setMapEdge();
 
+ //real minDt = min(getDtLagrangianExtream(),getDtSemiLagrangian());
  real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
  minDt = min(minDt,getDtSurfaceTension());
  minDt = min(minDt,getDtGravity());
@@ -2209,11 +2337,11 @@ void Simulator3D::setHSmooth()
  hSmooth.Dim(numVerts);
  clVector half(numVerts);half.SetAll(0.5);
  clVector zeroLevel = ((*heaviside)-half)*2;
- triEdgeVec = m->getTriEdgeVec();
- triEdge = *(min_element(triEdgeVec.begin(),triEdgeVec.end()));
+ triEdge = m->getTriEdge();
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
  for( int i=0;i<numVerts;i++ )
  {
-  real len = 1.3*triEdge;
+  real len = 1.3*triEdgeMin;
   real d = interfaceDistance->Get(i);
   real aux = zeroLevel.Get(i)*d;
 
@@ -2363,7 +2491,6 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  interfaceDistance = _sRight.interfaceDistance;
  elemIdRegion = _sRight.elemIdRegion;
  triEdge = _sRight.triEdge;
- triEdgeVec = _sRight.triEdgeVec;
 
  Re = _sRight.Re;
  Sc = _sRight.Sc;
@@ -2672,13 +2799,15 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> alpha;
  fileP >> beta;
 
- while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISCTICLENGTH") != 0) )
+ while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISTICLENGTH") != 0) )
   fileP >> auxstr;
 
- fileP >> auxstr;
- fileP >> auxstr;
- fileP >> auxstr;
- fileP >> triEdge;
+ int nRegions = 0;
+ fileP >> auxstr; // 1
+ fileP >> nRegions;
+ fileP >> auxstr; // float
+ for( int nb=0;nb<nRegions;nb++ )
+  fileP >> triEdge[nb];
 
 //--------------------------------------------------
 //  cout << dt << " " << cfl << " " << time << endl;
@@ -3011,7 +3140,6 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  interfaceDistance = m->getInterfaceDistance();
  elemIdRegion = m->getElemIdRegion();
  triEdge = m->getTriEdge();
- triEdgeVec = m->getTriEdgeVec();
 }
 
 

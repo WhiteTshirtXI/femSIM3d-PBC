@@ -30,6 +30,7 @@
 #include "clMatrix.h"
 #include "clDMatrix.h"
 #include "colors.h"
+#include "geometry.h"
 #include <algorithm>
 
 class Simulator3D
@@ -109,6 +110,7 @@ class Simulator3D
   void setCfl(real _cfl);
   void setCflBubble(real _cfl);
   real getDtLagrangian();
+  real getDtLagrangianExtream();
   real getDtSemiLagrangian();
   real getDtSurfaceTension();
   real getDtGravity();
@@ -186,8 +188,7 @@ class Simulator3D
   Model3D *m;
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
-  real triEdge;
-  vector< real > triEdgeVec;
+  vector<real> triEdge;
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;

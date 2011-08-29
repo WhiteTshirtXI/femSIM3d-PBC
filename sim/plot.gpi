@@ -8,7 +8,7 @@ set title "Velocities and Concentration profiles of rotating disk"
 set xlabel "Z"
 set ylabel "r"
 set label
-set xrange [0.0:0.3]
+set xrange [0.0:10.3]
 set yrange [-0.1:1.1]
 unset grid
 

@@ -6,7 +6,7 @@
 
 LIBDIR = ../lib
 CXX = clang
-CXXFLAGS = -O1 -g -fPIC
+CXXFLAGS = -g -fPIC
 LIBS += -lgsl -lgslcblas -lm
 LIBS += -L. -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I$(LIBDIR) 

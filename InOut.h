@@ -177,14 +177,19 @@ class InOut
   void vtkHeader(ofstream& _file);
   void vtkHeader(ofstream& _file,int _iter);
   void vtkCoords(ofstream& _file);
-  void vtkSurfCoords(ofstream& _file);
+  void vtkSurfaceCoords(ofstream& _file);
   void vtkCellArray(ofstream& _file);
   void vtkCellType(ofstream& _file);
   void vtkScalarHeader(ofstream& _file);
+  void vtkSurfaceScalarHeader(ofstream& _file);
   void vtkScalar(ofstream& _file,string _name,clVector &_scalar);
   void vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar);
+  void vtkSurfaceScalar(ofstream& _file,string _name,clVector &_scalar);
+  void vtkSurfaceScalar(ofstream& _file,string _name,clDMatrix &_scalar);
   void vtkVector(ofstream& _file,string _name,clVector &_v);
   void vtkVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
+  void vtkSurfaceVector(ofstream& _file,string _name,clVector &_v);
+  void vtkSurfaceVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
 
 private:
   Model3D *m;
@@ -196,7 +201,7 @@ private:
   clMatrix *IEN;
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
-  real triEdge;
+  vector<real> triEdge;
   clVector *heaviside;
   list<int> *inElem,*outElem;
 

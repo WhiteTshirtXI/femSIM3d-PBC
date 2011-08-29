@@ -21,11 +21,11 @@ int main(int argc, char **argv)
  int iter = 0;
  real Re = 1;
  real Sc = 2000;
- real cfl = 50;
+ real cfl = 10;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
- Solver *solverV = new PCGSolver();
- Solver *solverC = new PCGSolver();
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk5-15-60.vtk";
  const char *binFolder  = "./bin/";

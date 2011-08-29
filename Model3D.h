@@ -213,6 +213,7 @@ class Model3D
   clVector* getInterfaceDistance();
   clDMatrix* getCurvature();
   clVector* getElemIdRegion();
+  clVector* getVertIdRegion();
   SurfaceMesh* getSurfMesh();
   SurfaceMesh* getInterfaceMesh();
   SurfaceMesh* getConvexMesh();
@@ -247,10 +248,14 @@ class Model3D
   list<int>* getInElem();
   real getMinEdge();
   real getMinEdgeTri();
-  real getTriEdge();
-  void setTriEdge(real _triEdge);
-  void setTriEdgeVec(vector< real > _triEdgeVec);
-  vector< real > getTriEdgeVec();
+  void setTriEdge(vector< real > _triEdge);
+  vector<real> getTriEdge();
+  void setTetVol(vector< real > _tetVol);
+  vector<real> getTetVol();
+  real getMinVolume();
+  real getMaxVolume();
+  int getIdMinVolume();
+  int getIdMaxVolume();
   void setSingleElement();
   void setTwoElements();
   void setThreeElements();
@@ -277,7 +282,7 @@ class Model3D
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
-  clVector elemIdRegion;
+  clVector vertIdRegion,elemIdRegion;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha
@@ -288,7 +293,7 @@ class Model3D
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
   real minEdge;
-  real triEdge,minEdgeTri,averageTriEdge;
+  real minEdgeTri,averageTriEdge;
   int isp;                        // isp: num of inserted surface points
   int ispc;                       // ispc: num of inserted surface points
   int rsp;                        // rsp: num of removed surface points
@@ -300,9 +305,14 @@ class Model3D
   int rpv;                        // rpi: by volume 
   int flip;                       // flip: flipping operations
   int badtet;                     // num of shit tetrahedrons
+  int idMinVolume;                // ID of min tet volume
+  int idMaxVolume;                // ID of max tet volume
+  real minVolume;                 // min tet volume
+  real maxVolume;                 // max tet volume
 
   vector<real> initSurfaceVolume;     // vector de volumes iniciais
-  vector<real> triEdgeVec;            // vector de tamanho de aresta 
+  vector<real> triEdge;               // vector de tamanho de aresta 
+  vector<real> tetVol;                // vector de volumes 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no
   vector< list<int> > neighbourFace;  // lista de vizinhos de cada no

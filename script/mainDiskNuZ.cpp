@@ -24,7 +24,7 @@ int main(int argc, char **argv)
  real Re = 1;
  real cfl = 10;
  real rho_l = 1.0;
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";

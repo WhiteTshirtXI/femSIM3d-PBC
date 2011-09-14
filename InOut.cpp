@@ -2290,6 +2290,8 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
  real uvwpcError = ( (uDiff+vDiff+wDiff+pDiff+cDiff) /
                      (uSum+vSum+wSum+pSum+cSum) ) / dt;
 
+ iter = s->getIter();
+
  file << setprecision(10) << scientific; 
  file << setw(10) << *simTime << " " 
                   << uError << " " 

@@ -2261,7 +2261,7 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 				  << setw(17) << "uvwError" 
 				  << setw(17) << "uvwpError" 
 				  << setw(17) << "uvwpcError" 
-				  << setw(17) << "iter" 
+				  << setw(10) << "iter" 
 				  << endl;
  }
 
@@ -2534,7 +2534,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
        << alpha << " " << beta << endl;
 
- if( surfMesh->numElems > 0 )
+ if( surfMesh->elemIdRegion.Dim() > 0 )
  {
   _file << "CHARACTERISTICLENGTH 1 " << surfMesh->elemIdRegion.Max()+1
         << " float" << endl;

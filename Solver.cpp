@@ -90,15 +90,13 @@ void Solver::printAndSaveInfo()
       << iteration << setw(24) 
 	  << reason << setw(7);
 
- sos << elapsed;
- file << sos.str();
+ ostringstream so;
+ so.precision(2);
+ so << fixed;
+ so << elapsed;
+ file << so.str() << setw(12);
 
- file.precision(2);
- file << fixed 
-      << elapsed << setw(10);
- file.precision(2);
- file << scientific
-	  << residual << endl;;
+ file << residual << endl;
 
  file.close();
 

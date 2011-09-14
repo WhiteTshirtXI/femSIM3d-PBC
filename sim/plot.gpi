@@ -16,7 +16,7 @@ unset grid
 #set output 'teste.pdf'
 
 N = "last"
-fileObj = "vk5."
+fileObj = "vk2."
 #fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"

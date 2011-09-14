@@ -88,6 +88,7 @@ erase:
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat
+	@rm -f ./dat/vk*
 
 deepclean: 
 	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
@@ -103,4 +104,5 @@ deepclean:
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat
+	@rm -f ./dat/vk*
 

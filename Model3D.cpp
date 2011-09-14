@@ -4479,13 +4479,14 @@ void Model3D::setAdimenDisk()
  real aux;
  real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
- real rMax = Y.Max();
+ real xrMax = X.Max();
+ real yrMax = Y.Max();
 
  for( int i=0;i<numVerts;i++ )
  {
-  aux = (X.Get(i)/rMax)*Red;
+  aux = (X.Get(i)/xrMax)*Red;
   X.Set(i,aux);
-  aux = (Y.Get(i)/rMax)*Red;
+  aux = (Y.Get(i)/yrMax)*Red;
   Y.Set(i,aux);
   //aux = Z.Get(i)*factorz*4;
   //aux = Z.Get(i)*factorz*6;

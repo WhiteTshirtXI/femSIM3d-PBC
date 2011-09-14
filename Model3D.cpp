@@ -974,7 +974,16 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(i,0);
   real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(i,5)); 
-  if( edgeLength > 1.4*triEdge[elemID] )//&&
+
+  //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(i,1)))+EPS; 
+  //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(i,2)))+EPS; 
+  //real erro1 = curv1*edgeLength;
+  //real erro2 = curv2*edgeLength;
+  //real erro = max(erro1,erro2);
+  //real erroS = 4.0*triEdge[elemID];
+
+  //if( erro > 1.6*erroS )//&&
+  if( edgeLength > 1.4*triEdge[elemID] )
   {
    //insertPoint(i);
    insertPointWithCurvature(i); // not working yet
@@ -1553,6 +1562,28 @@ void Model3D::setNeighbourSurface()
  }
 }
 
+ /* Method to flip edge (v1 and v2).
+  *
+  *                 v1                                  v1
+  *                  o                                   o 
+  *                 /|\                                 / \
+  *                / | \                               /   \
+  *               /  |  \            flip             /     \
+  *              /   |   \         -------->         /       \
+  *             /    |    \                         /    1    \
+  *            /     |     \                       /           \
+  *           /      |      \                     /             \
+  *  v3elem1 o   1   |   2   o v3elem2   v3elem1 o ------------- o v3elem2        *           \      |      /                     \             /              
+  *            \     |     /                       \           /      
+  *             \    |    /                         \    2    /               
+  *              \   |   /                           \       /               
+  *               \  |  /                             \     /        
+  *                \ | /                               \   /                
+  *                 \|/                                 \ /         
+  *                  o                                   o                 
+  *                 v2                                  v2 
+  *
+  * */
 void Model3D::flipTriangleEdge()
 {
  /* Triangle quality measure;
@@ -1766,10 +1797,134 @@ void Model3D::flipTriangleEdge()
    surfMesh.IEN.Set(elem2,2,v3elem1);
 
    // updating surface, xSurface, ySurface and zSurface
-   setSurface();
+   //setSurface(); // no need!
 
    // updating edge matrix
    setMapEdgeTri();
+
+//--------------------------------------------------
+//    // updating edge matrix with no call setMapEdgeTri() - still bug
+//    // edge: v3elem1 - v3elem2
+//    int edgePos1 = edge;
+//    real edge1 = distance(P3elem1x,P3elem1y,P3elem1z,
+// 	                     P3elem2x,P3elem2y,P3elem2z);
+//    mapEdgeTri.Set(edgePos1,0,edge1);
+//    mapEdgeTri.Set(edgePos1,1,v3elem1);
+//    mapEdgeTri.Set(edgePos1,2,v3elem2);
+//    mapEdgeTri.Set(edgePos1,3,v1);
+//    mapEdgeTri.Set(edgePos1,4,v2);
+//    mapEdgeTri.Set(edgePos1,5,elem1);
+//    mapEdgeTri.Set(edgePos1,6,elem2);
+// 
+//    // edge: v1 - v3elem1
+//    int edgePos2 = findEdge(v1,v3elem1);
+//    if( mapEdgeTri.Get(edgePos2,3) == v2 )
+//    {
+// 	mapEdgeTri.Set(edgePos2,3,v3elem2);
+// 	mapEdgeTri.Set(edgePos2,5,elem1);
+//    }
+//    else
+//    {
+// 	mapEdgeTri.Set(edgePos2,4,v3elem2);
+// 	mapEdgeTri.Set(edgePos2,6,elem1);
+//    }
+// 
+//    // edge: v3elem1-v2
+//    int edgePos3 = findEdge(v3elem1,v2);
+//    if( mapEdgeTri.Get(edgePos3,3) == v1 )
+//    {
+// 	mapEdgeTri.Set(edgePos3,3,v3elem2);
+// 	mapEdgeTri.Set(edgePos3,5,elem2);
+//    }
+//    else
+//    {
+// 	mapEdgeTri.Set(edgePos3,4,v3elem2);
+// 	mapEdgeTri.Set(edgePos3,6,elem2);
+//    }
+// 
+//    // edge: v2-v3elem2
+//    int edgePos4 = findEdge(v2,v3elem2);
+//    if( mapEdgeTri.Get(edgePos4,3) == v1 )
+//    {
+// 	mapEdgeTri.Set(edgePos4,3,v3elem1);
+// 	mapEdgeTri.Set(edgePos4,5,elem2);
+//    }
+//    else
+//    {
+// 	mapEdgeTri.Set(edgePos4,4,v3elem1);
+// 	mapEdgeTri.Set(edgePos4,6,elem2);
+//    }
+// 
+//    // edge: v3elem2-v1
+//    int edgePos5 = findEdge(v3elem2,v1);
+//    if( mapEdgeTri.Get(edgePos5,3) == v2 )
+//    {
+// 	mapEdgeTri.Set(edgePos5,3,v3elem1);
+// 	mapEdgeTri.Set(edgePos5,5,elem1);
+//    }
+//    else
+//    {
+// 	mapEdgeTri.Set(edgePos5,4,v3elem1);
+// 	mapEdgeTri.Set(edgePos5,6,elem1);
+//    }
+//-------------------------------------------------- 
+
+//--------------------------------------------------
+//    int pe = edgePos1;
+//    cout << "edge: " << pe << endl;
+//    cout << "length: " << mapEdgeTri.Get(pe,0) << endl;
+//    cout << "v1: " << mapEdgeTri.Get(pe,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(pe,2) << endl;
+//    cout << "v3elem1: " << mapEdgeTri.Get(pe,3) << endl;
+//    cout << "v3elem2: " << mapEdgeTri.Get(pe,4) << endl;
+//    cout << "elem1: " << mapEdgeTri.Get(pe,5) << endl;
+//    cout << "elem2: " << mapEdgeTri.Get(pe,6) << endl;
+//    cout << endl;
+// 
+//    pe = edgePos2;
+//    cout << "edge: " << pe << endl;
+//    cout << "length: " << mapEdgeTri.Get(pe,0) << endl;
+//    cout << "v1: " << mapEdgeTri.Get(pe,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(pe,2) << endl;
+//    cout << "v3elem1: " << mapEdgeTri.Get(pe,3) << endl;
+//    cout << "v3elem2: " << mapEdgeTri.Get(pe,4) << endl;
+//    cout << "elem1: " << mapEdgeTri.Get(pe,5) << endl;
+//    cout << "elem2: " << mapEdgeTri.Get(pe,6) << endl;
+//    cout << endl;
+// 
+//    pe = edgePos3;
+//    cout << "edge: " << pe << endl;
+//    cout << "length: " << mapEdgeTri.Get(pe,0) << endl;
+//    cout << "v1: " << mapEdgeTri.Get(pe,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(pe,2) << endl;
+//    cout << "v3elem1: " << mapEdgeTri.Get(pe,3) << endl;
+//    cout << "v3elem2: " << mapEdgeTri.Get(pe,4) << endl;
+//    cout << "elem1: " << mapEdgeTri.Get(pe,5) << endl;
+//    cout << "elem2: " << mapEdgeTri.Get(pe,6) << endl;
+//    cout << endl;
+// 
+//    pe = edgePos4;
+//    cout << "edge: " << pe << endl;
+//    cout << "length: " << mapEdgeTri.Get(pe,0) << endl;
+//    cout << "v1: " << mapEdgeTri.Get(pe,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(pe,2) << endl;
+//    cout << "v3elem1: " << mapEdgeTri.Get(pe,3) << endl;
+//    cout << "v3elem2: " << mapEdgeTri.Get(pe,4) << endl;
+//    cout << "elem1: " << mapEdgeTri.Get(pe,5) << endl;
+//    cout << "elem2: " << mapEdgeTri.Get(pe,6) << endl;
+//    cout << endl;
+// 
+//    pe = edgePos5;
+//    cout << "edge: " << pe << endl;
+//    cout << "length: " << mapEdgeTri.Get(pe,0) << endl;
+//    cout << "v1: " << mapEdgeTri.Get(pe,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(pe,2) << endl;
+//    cout << "v3elem1: " << mapEdgeTri.Get(pe,3) << endl;
+//    cout << "v3elem2: " << mapEdgeTri.Get(pe,4) << endl;
+//    cout << "elem1: " << mapEdgeTri.Get(pe,5) << endl;
+//    cout << "elem2: " << mapEdgeTri.Get(pe,6) << endl;
+//    cout << endl;
+//-------------------------------------------------- 
 
    // updating surface neighbours
    setNeighbourSurface();
@@ -1938,6 +2093,14 @@ void Model3D::insertPointWithCurvature(int _edge)
  real P2x = surfMesh.X.Get(v2);
  real P2y = surfMesh.Y.Get(v2);
  real P2z = surfMesh.Z.Get(v2);
+
+ real P3elem1x = surfMesh.X.Get(v3elem1);
+ real P3elem1y = surfMesh.Y.Get(v3elem1);
+ real P3elem1z = surfMesh.Z.Get(v3elem1);
+
+ //real P3elem2x = surfMesh.X.Get(v3elem2);
+ //real P3elem2y = surfMesh.Y.Get(v3elem2);
+ //real P3elem2z = surfMesh.Z.Get(v3elem2);
 
  // vector v1-v2 to define 2D X axis
  real v1x = P2x-P1x;
@@ -2200,11 +2363,6 @@ void Model3D::insertPointWithCurvature(int _edge)
  real va1y = YvAdd-P1y;
  real va1z = ZvAdd-P1z;
 
- // points
- real P3elem1x = surfMesh.X.Get(v3elem1);
- real P3elem1y = surfMesh.Y.Get(v3elem1);
- real P3elem1z = surfMesh.Z.Get(v3elem1);
-
  real va2x = P3elem1x-XvAdd;
  real va2y = P3elem1y-YvAdd;
  real va2z = P3elem1z-ZvAdd;
@@ -2291,13 +2449,120 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.numElems++;
  
  // updating surface, xSurface, ySurface and zSurface
- setSurface();
+ //setSurface();
+ surface.AddItem(vAdd);
+ xSurface.AddItem(XvAdd);
+ ySurface.AddItem(YvAdd);
+ zSurface.AddItem(ZvAdd);
 
  // updating edge matrix
  setMapEdgeTri();
 
+//--------------------------------------------------
+//  // updating edge matrix with no call to setMapEdgeTri() - still bug
+//  // edge: v1 - vAdd
+//  int edgePos1 = _edge;
+//  real edge1 = distance(P1x,P1y,P1z,XvAdd,YvAdd,ZvAdd);
+//  mapEdgeTri.Set(edgePos1,0,edge1);
+//  mapEdgeTri.Set(edgePos1,1,v1);
+//  mapEdgeTri.Set(edgePos1,2,vAdd);
+//  mapEdgeTri.Set(edgePos1,3,v3elem1);
+//  mapEdgeTri.Set(edgePos1,4,v3elem2);
+//  mapEdgeTri.Set(edgePos1,5,elem1);
+//  mapEdgeTri.Set(edgePos1,6,elem2);
+// 
+//  // edge: v2 - vAdd
+//  mapEdgeTri.AddRow();
+//  int edgePos2 = mapEdgeTri.DimI()-1;
+//  real edge2 = distance(P2x,P2y,P2z,XvAdd,YvAdd,ZvAdd);
+//  mapEdgeTri.Set(edgePos2,0,edge2);
+//  mapEdgeTri.Set(edgePos2,1,vAdd);
+//  mapEdgeTri.Set(edgePos2,2,v2);
+//  mapEdgeTri.Set(edgePos2,3,v3elem1);
+//  mapEdgeTri.Set(edgePos2,4,v3elem2);
+//  mapEdgeTri.Set(edgePos2,5,elem3);
+//  mapEdgeTri.Set(edgePos2,6,elem4);
+// 
+//  // edge: v3elem1 - vAdd
+//  mapEdgeTri.AddRow();
+//  int edgePos3 = mapEdgeTri.DimI()-1;
+//  real edge3 = distance(P3elem1x,P3elem1y,P3elem1z,XvAdd,YvAdd,ZvAdd);
+//  mapEdgeTri.Set(edgePos3,0,edge3);
+//  mapEdgeTri.Set(edgePos3,1,v3elem1);
+//  mapEdgeTri.Set(edgePos3,2,vAdd);
+//  mapEdgeTri.Set(edgePos3,3,v1);
+//  mapEdgeTri.Set(edgePos3,4,v2);
+//  mapEdgeTri.Set(edgePos3,5,elem1);
+//  mapEdgeTri.Set(edgePos3,6,elem3);
+// 
+//  // edge: v3elem2 - vAdd
+//  mapEdgeTri.AddRow();
+//  int edgePos4 = mapEdgeTri.DimI()-1;
+//  real edge4 = distance(P3elem2x,P3elem2y,P3elem2z,XvAdd,YvAdd,ZvAdd);
+//  mapEdgeTri.Set(edgePos4,0,edge4);
+//  mapEdgeTri.Set(edgePos4,1,vAdd);
+//  mapEdgeTri.Set(edgePos4,2,v3elem2);
+//  mapEdgeTri.Set(edgePos4,3,v2);
+//  mapEdgeTri.Set(edgePos4,4,v1);
+//  mapEdgeTri.Set(edgePos4,5,elem4);
+//  mapEdgeTri.Set(edgePos4,6,elem2);
+//  
+//  // edge: v3elem1-v1
+//  int edgePos5 = findEdge(v3elem1,v1);
+//  if( mapEdgeTri.Get(edgePos5,3) == v2 )
+//  {
+//   mapEdgeTri.Set(edgePos5,3,vAdd);
+//   mapEdgeTri.Set(edgePos5,5,elem1);
+//  }
+//  else
+//  {
+//   mapEdgeTri.Set(edgePos5,4,vAdd);
+//   mapEdgeTri.Set(edgePos5,6,elem1);
+//  }
+//  
+//  // edge: v1-v3elem2
+//  int edgePos6 = findEdge(v1,v3elem2);
+//  if( mapEdgeTri.Get(edgePos6,3) == v2 )
+//  {
+//   mapEdgeTri.Set(edgePos6,3,vAdd);
+//   mapEdgeTri.Set(edgePos6,5,elem2);
+//  }
+//  else
+//  {
+//   mapEdgeTri.Set(edgePos6,4,vAdd);
+//   mapEdgeTri.Set(edgePos6,6,elem1);
+//  }
+//  
+//  // edge: v3elem2-v2
+//  int edgePos7 = findEdge(v3elem2,v2);
+//  if( mapEdgeTri.Get(edgePos7,3) == v1 )
+//  {
+//   mapEdgeTri.Set(edgePos7,3,vAdd);
+//   mapEdgeTri.Set(edgePos7,5,elem4);
+//  }
+//  else
+//  {
+//   mapEdgeTri.Set(edgePos7,4,vAdd);
+//   mapEdgeTri.Set(edgePos7,6,elem4);
+//  }
+//  
+//  // edge: v2-v3elem1
+//  int edgePos8 = findEdge(v2,v3elem1);
+//  if( mapEdgeTri.Get(edgePos8,3) == v1 )
+//  {
+//   mapEdgeTri.Set(edgePos8,3,vAdd);
+//   mapEdgeTri.Set(edgePos8,5,elem3);
+//  }
+//  else
+//  {
+//   mapEdgeTri.Set(edgePos8,4,vAdd);
+//   mapEdgeTri.Set(edgePos8,6,elem3);
+//  }
+//-------------------------------------------------- 
+
  // updating surface neighbours
  setNeighbourSurface();
+
 }
 
 /*  Method to delete a surface point.
@@ -2352,6 +2617,29 @@ void Model3D::deletePoint(int _v)
  setNeighbourSurface();
 }
 
+ /* Method to contract edge (v1 and v2).
+  *
+  *                v3elem1                          v3elem1          
+  *                   o                                o                   
+  *                  / \                               |
+  *                 /   \                              |
+  *                /     \                             |
+  *       o       /       \       o                o   |   o
+  *        \     /    1    \     /                  \  |  /
+  *         \   /           \   /                    \ | /
+  *          \ /             \ /                      \| 
+  *        v1 o ------------- o v2                     o v1==v2
+  *          / \             / \                      /|\
+  *         /   \           /   \                    / | \
+  *        /     \    2    /     \                  /  |  \
+  *       o       \       /       o                o   |   o
+  *                \     /                             |
+  *                 \   /                              |
+  *                  \ /                               |                   
+  *                   o                                o                     
+  *                v3elem2                          v3elem2                    
+  *    
+  * */
 void Model3D::contractEdgeByLength()
 {
  // number of removed 3d mesh points by interface distance
@@ -2366,11 +2654,19 @@ void Model3D::contractEdgeByLength()
   real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
   real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
   real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  real edgeLength = mapEdgeTri.Get(edge,0);
 
   // verifying the length of each surface edge
   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
+
+  //real erro1 = curv1*edgeLength;
+  //real erro2 = curv2*edgeLength;
+  //real erro = max(erro1,erro2);
+  //real erroS = 4.0*triEdge[elemID];
+  
+  //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  mapEdgeTri.Get(edge,0) < 0.6*triEdge[elemID] && 
+	  edgeLength < 0.6*triEdge[elemID] && 
 	  curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40 ) 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
@@ -3124,7 +3420,7 @@ void Model3D::removePointByVolume()
 
  tetVol[1] = 5*mtriEdge*mtriEdge*mtriEdge*sqrt(2.0)/12.0;
 
- for( int v=2;v<triEdge.size();v++ )
+ for( int v=2;v<(int) triEdge.size();v++ )
   tetVol[v] = triEdge[v]*triEdge[v]*triEdge[v]*sqrt(2.0)/12.0;
 
  for( int elem=0;elem<numElems;elem++ )
@@ -4183,14 +4479,13 @@ void Model3D::setAdimenDisk()
  real aux;
  real Red = 100;
  real factorz = 1.0/(Z.Max()-Z.Min());
- real xrMax = X.Max();
- real yrMax = Y.Max();
+ real rMax = Y.Max();
 
  for( int i=0;i<numVerts;i++ )
  {
-  aux = (X.Get(i)/xrMax)*Red;
+  aux = (X.Get(i)/rMax)*Red;
   X.Set(i,aux);
-  aux = (Y.Get(i)/yrMax)*Red;
+  aux = (Y.Get(i)/rMax)*Red;
   Y.Set(i,aux);
   //aux = Z.Get(i)*factorz*4;
   //aux = Z.Get(i)*factorz*6;

@@ -27,7 +27,7 @@ int main(int argc, char **argv)
  real mu_l = 1.0;
  real rho_l = 1.0;
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCNONE);
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
  const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
@@ -51,12 +51,12 @@ int main(int argc, char **argv)
 
  s1.setRe(Re);
  s1.setCfl(cfl);
- s1.setDtDisk();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
  s1.init();
+ s1.setDtDisk();
  s1.assembleNuCte();
  //s1.assembleC();
  s1.matMount();

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
  real Sc = 2000;
  real cfl = 10;
  real rho_l = 1.0;
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 

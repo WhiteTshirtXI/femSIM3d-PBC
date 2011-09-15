@@ -1015,11 +1015,10 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
 
    for( int j=0;j<numVerts;j++ )
    {
-	if( X->Get(j) == X->Get(i) && Y->Get(j) == Y->Get(j) )
+	if( X->Get(j) == X->Get(i) && Y->Get(j) == 0 )
 	{
-	 int radius = X->Get(i);
+	 real radius = X->Get(i);
 	 int vert = j;
-
 
      vonKarmanFile << setw(16) <<  Z->Get(vert)  
 	               << setw(18) <<  uSol->Get(vert)/radius  

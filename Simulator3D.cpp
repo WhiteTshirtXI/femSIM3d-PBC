@@ -1579,7 +1579,8 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- if( mu_in <= mu_out ) // BUBBLE
+ //if( mu_in <= mu_out ) // BUBBLE
+ if( rho_in <= rho_out ) // BUBBLE
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
@@ -1839,16 +1840,13 @@ real Simulator3D::getDtSurfaceTension()
   *
   * */
 
-//--------------------------------------------------
-//  real capillary = sqrt( ( 0.5*(rho_in+rho_out)*triEdge*triEdge*triEdge)
-//                   /(2*3.141592*sigma) );
-//-------------------------------------------------- 
-
  triEdge = m->getTriEdge();
  real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
 
- real capillary = sqrt( ( (rho_in+rho_out)*triEdgeMin*triEdgeMin*triEdgeMin)
-                  /(3.141592*sigma) );
+ real capillary = sqrt( ( 0.5*(rho_in+rho_out)
+                          *triEdgeMin*triEdgeMin*triEdgeMin)
+                          /(2*3.141592*sigma) );
+
  return capillary;
 }
 

@@ -49,6 +49,9 @@ staticDroplet: ./script/mainStaticDroplet.o $(obj)
 oscillating: ./script/mainOscillating.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+fallingDrop: ./script/mainFallingDrop.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 bubble: ./script/mainBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 

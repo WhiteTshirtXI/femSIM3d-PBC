@@ -46,6 +46,9 @@ diskSurf: ./script/mainDiskSurf.o $(obj)
 staticDroplet: ./script/mainStaticDroplet.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+sessileDrop: ./script/mainSessileDrop.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 oscillating: ./script/mainOscillating.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 

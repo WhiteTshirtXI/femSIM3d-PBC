@@ -709,26 +709,30 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  Y.Dim(numVerts);
  Z.Dim(numVerts);
 
+ real z = 0;
+ real dz = 0;
  real points3d = 0;
  for( int jz=0;jz<nZ;jz++ )
  {
   real jzNorm = (real) jz/(nZ-1);
+
+  //dz = jzNorm;                  // linear
+  //dz = jzNorm*jzNorm;           // quadratic
+  //dz = jzNorm*jzNorm*jzNorm;    // cubic
+  dz = exp(jzNorm);               // exponential
+   
   for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
   {
    aux = xCirc.Get(jCirc-1);
    X.Set(points3d,aux);
    aux = yCirc.Get(jCirc-1);
    Y.Set(points3d,aux);
-
-   //aux = jzNorm;       // linear
-   aux = jzNorm*jzNorm;    // quadratic
-   //aux = jzNorm*jzNorm*jzNorm; // cubic
-   //aux = exp(jzNorm);  // exponential
-
+   aux = z;
    Z.Set(points3d,aux);
 
    points3d++;
   }
+  z=z+dz;
  }
 
  // clean and init tetgen mesh object

@@ -30,9 +30,9 @@ int main(int argc, char **argv)
 
  // static bubble test (Fabricio's thesis (2005))
  int iter = 0;
- real Re = 10;
+ real Re = 2;
  real Sc = 1;
- real We = 150;
+ real We = 100;
  real Fr = 1.0;
  real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // velocity
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
  real mu_out = 1.0;
 
  real rho_in = 1.0;
- real rho_out = 0.001;
+ real rho_out = 0.01;
 
  real cfl = 0.8;
 

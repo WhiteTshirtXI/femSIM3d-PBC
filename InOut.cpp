@@ -2323,33 +2323,64 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
  string file = (string) _dir + (string) _filename + "-" + str + ".dat";
  const char* filename = file.c_str();
 
- ofstream vtkFile( filename ); 
+ ofstream vtkFile( filename,ios::app );
 
+ vtkFile << "x-position" 
+         << setw(17) << "y-position" 
+		 << setw(17) << "z-position"
+		 << setw(17) << "pressure"
+		 << setw(17) << "kappa" 
+		 << endl;
+
+ // get iteration number
+ iter = s->getIter();
 
  // xVert da malha nova
- real nPoints = 100;
+ real nPoints = 1000;
  clVector xVert(nPoints);
  clVector yVert(nPoints);
  clVector zVert(nPoints);
 
  for( int i=0;i<nPoints;i++ )
  {
-  real dx = i * (3.0-0.0)/(nPoints-1);
-  xVert.Set(i,dx);
+  real dx = i * ( (X->Max()-X->Min()) )/(nPoints-1);
+  real pos = X->Min()+dx;
+  xVert.Set(i,pos);
  }
- yVert.SetAll(1.5);
- zVert.SetAll(1.5);
+ yVert.SetAll( (Y->Max()+Y->Min())/2.0 );
+ zVert.SetAll( (Z->Max()+Z->Min())/2.0 );
 
  // interpolacao linear em numVerts
  clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
- clVector pLin(nPoints);
- pLin = interpLin*(*pSol);
+ clVector pLin = interpLin*(*pSol);
+
+ clVector kappaVec(numVerts);
+ for( int i=0;i<numVerts;i++ )
+  kappaVec.Set(i,kappa->Get(i));
+
+ clDMatrix kappaLin = interpLin*(kappaVec);
 
  vtkFile << setprecision(10) << scientific;
  for( int i=0;i<nPoints;i++ )
-  vtkFile << setw(10) << xVert.Get(i) << " " << pLin.Get(i) << endl;
+  vtkFile << setw(10) << xVert.Get(i) << " " 
+          << setw(17) << yVert.Get(i) <<  " "
+          << setw(17) << zVert.Get(i) <<  " "
+          << setw(17) << pLin.Get(i) <<  " "
+          << setw(17) << kappaLin.Get(i) << endl;
 
  vtkFile.close();
+
+ /* --------- copying to file chordal.dat --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "-last" + ".dat";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
 
  cout << "chordal pressure No. " << _iter << " saved in dat" << endl;
 

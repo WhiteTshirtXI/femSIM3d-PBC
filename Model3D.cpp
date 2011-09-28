@@ -3406,9 +3406,10 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  IEN.Dim(numElems,4);
  heaviside.Dim(numVerts);
  heaviside.SetAll(0.0);
- //vertIdRegion.Dim(numVerts);
+ vertIdRegion.Dim(numVerts);
  elemIdRegion.Dim(numElems);
  elemIdRegion.SetAll(1.0);
+ edgeSize.Dim(numVerts);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // set:
@@ -3421,7 +3422,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,0.0);
-	//vertIdRegion.Set(vertice,out.pointattributelist[vertice]);
+	edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
+	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
 	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
    }
   }
@@ -3434,7 +3436,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,1.0);
-	//vertIdRegion.Set(vertice,out.pointattributelist[vertice]);
+	edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
+	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
 	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
    }
   }
@@ -3452,6 +3455,12 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   if( _tetmesh.pointmarkerlist[i] == 10 ||
 	  _tetmesh.pointmarkerlist[i] == 22 )
    heaviside.Set(i,0.5);
+
+  for( int i=0;i<surfMesh.numVerts;i++ )
+  {
+   vertIdRegion.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
+   edgeSize.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
+  }
  }
 }
 
@@ -3717,7 +3726,7 @@ void Model3D::mesh3DPoints()
 
  // 3D operations
  //insert3dMeshPointsByDiffusion();
- //remove3dMeshPointsByDiffusion();
+ remove3dMeshPointsByDiffusion();
  removePointByVolume();
  //removePointsByInterfaceDistance();
  //remove3dMeshPointsByDistance();

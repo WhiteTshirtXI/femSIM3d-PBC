@@ -89,9 +89,16 @@ class Model3D
   void contractEdgeByLength();
   void checkNeighbours();
   int findEdge(int _v1,int _v2);
+
+  // 3D points treatment
+  void mark3DPointForDeletion(int _vert);
+  void delete3DPoints();
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();
+  void remove3dMeshPointsByDiffusion();
+  void insert3dMeshPointsByDiffusion();
   void removePointByVolume();
+
   void breakup();
   clVector triangleQuality(int _v);
   void setMapEdge();
@@ -196,6 +203,8 @@ class Model3D
   clVector* getZ();
   clVector* getZVert();
   void setZ(clVector _Z);
+  clVector* getEdgeSize();
+  void setEdgeSize(clVector _edgeSize);
 
   clVector* getUC();
   clVector* getVC();
@@ -283,6 +292,7 @@ class Model3D
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
   clVector vertIdRegion,elemIdRegion;
+  clVector edgeSize;
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha

@@ -202,7 +202,7 @@ private:
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
   vector<real> triEdge;
-  clVector *heaviside;
+  clVector *heaviside,*edgeSize;
   list<int> *inElem,*outElem;
 
   Simulator3D *s;

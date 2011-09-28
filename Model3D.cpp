@@ -821,6 +821,16 @@ void Model3D::mesh2Dto3D()
  out.initialize();
 }
 
+/*
+ * mapEdgeTri.Get(i,0) // tamanho da aresta
+ * mapEdgeTri.Get(i,1) // numero do 1o. vertice da aresta
+ * mapEdgeTri.Get(i,2) // numero do 2o. vertice da areata
+ * mapEdgeTri.Get(i,3) // numero do 3o. vertice do 1o. elemento
+ * mapEdgeTri.Get(i,4) // numero do 3o. vertice do 2o. elemento
+ * mapEdgeTri.Get(i,5) // 1o. elemento
+ * mapEdgeTri.Get(i,6) // 2o. elemento 
+ *
+ * */
 void Model3D::setMapEdgeTri()
 {
  int v1,v2,v3;
@@ -1384,6 +1394,7 @@ void Model3D::deleteSurfacePoint(int _v)
  Y.Delete(_v);
  Z.Delete(_v);
  heaviside.Delete(_v);
+ edgeSize.Delete(_v);
  numVerts--;
 
  surfMesh.X.Delete(_v);
@@ -2303,6 +2314,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
  heaviside.AddItem(vAdd,0.5);
+ edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
  // update surface, xSurface, ySurface, zSurface
  surface.AddItem(vAdd);
@@ -2315,6 +2327,7 @@ void Model3D::insertPointWithCurvature(int _edge)
  surfMesh.Z.AddItem(ZvAdd);
  surfMesh.vertIdRegion.AddItem(surfMesh.vertIdRegion.Get(v1));
  surfMesh.Marker.AddItem(0.5); // interface set up
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1)); 
 
  // curvature is approx. the average between vertices
  real curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))/2.0;
@@ -2818,17 +2831,11 @@ void Model3D::removePointsByInterfaceDistance()
 // 	    << resetColor() << i << endl;
 //-------------------------------------------------- 
 
-   X.Delete(i);
-   Y.Delete(i);
-   Z.Delete(i);
-   heaviside.Delete(i);
-   interfaceDistance.Delete(i);
-   numVerts--;
-   i--;
+   mark3DPointForDeletion(i);
    rpi++;
   }
  }
- cout << "  removed by interface Distance: " << rpi << endl;
+ //cout << "  removed by interface Distance: " << rpi << endl;
 }
 
 void Model3D::remove3dMeshPointsByDistance()
@@ -2855,20 +2862,109 @@ void Model3D::remove3dMeshPointsByDistance()
 	    cout << "- " << color(none,blue,black) 
 	     << "removing dense vertex cluster: "
 	     << resetColor() << i << " " << heaviside.Get(i) << endl;
-	 X.Delete(i);
-	 Y.Delete(i);
-	 Z.Delete(i);
-	 heaviside.Delete(i);
-	 numVerts--;
-	 dVerts--;
-	 i--;
-	 j--;
+	 mark3DPointForDeletion(i);
 	 rp++;
 	}
    }
   }
  }
  cout << "  removed by distance: " << rp << endl;
+}
+
+void Model3D::insert3dMeshPointsByDiffusion()
+{
+ // number of removed points of 3d mesh
+ ip = 0;
+
+ for( int e=0;e<mapEdge.DimI();e++ )
+ {
+  int XvAdd = mapEdge.Get(e,1);
+  int YvAdd = mapEdge.Get(e,2);
+  int ZvAdd = mapEdge.Get(e,3);
+
+  int v1 = mapEdge.Get(e,4);
+  int v2 = mapEdge.Get(e,5);
+
+  real x1=X.Get(v1);
+  real y1=Y.Get(v1);
+  real z1=Z.Get(v1);
+  real x2=X.Get(v2);
+  real y2=Y.Get(v2);
+  real z2=Z.Get(v2);
+  real length = distance(x1,y1,z1,x2,y2,z2);
+
+  real hSum = heaviside.Get(v1) + heaviside.Get(v2);
+
+  // edgeSize is the result of \nabla^2 edge = 0
+  if( length > 5.0*edgeSize.Get(v1) &&
+	  hSum > 1.0)
+  {
+   cout << v1 << " (" << edgeSize.Get(v1) << ") " 
+	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
+   cout << x1 << " " << y1 << " " << z1 << endl;
+   cout << x2 << " " << y2 << " " << z2 << endl;
+   cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
+   cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+   int vAdd = numVerts; // aditional vertice
+
+   cout << "- " << color(none,blue,black) 
+	            << "inserting vertex: "
+				<< resetColor() << vAdd << " " << heaviside.Get(v1) << endl;
+
+   X.AddItem(vAdd,XvAdd);
+   Y.AddItem(vAdd,YvAdd);
+   Z.AddItem(vAdd,ZvAdd);
+   heaviside.AddItem(vAdd,heaviside.Get(v1));
+   edgeSize.AddItem(vAdd,edgeSize.Get(v1));
+
+   numVerts++;
+   dVerts++;
+   ip++;
+  }
+ }
+ cout << "  inserted by diffusion: " << ip << endl;
+}
+
+void Model3D::remove3dMeshPointsByDiffusion()
+{
+ // number of removed points of 3d mesh
+ rp = 0;
+
+ for( int e=0;e<mapEdge.DimI();e++ )
+ {
+  int v1 = mapEdge.Get(e,4);
+  int v2 = mapEdge.Get(e,5);
+
+  real x1=X.Get(v1);
+  real y1=Y.Get(v1);
+  real z1=Z.Get(v1);
+  real x2=X.Get(v2);
+  real y2=Y.Get(v2);
+  real z2=Z.Get(v2);
+  real length = vectorLength(x1-x2,y1-y2,z1-z2);
+
+  //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+  // edgeSize is the result of \nabla^2 edge = 0
+  if( length < 0.3*edgeSize.Get(v1) &&
+	  heaviside.Get(v1) != 0.5 &&  
+	  heaviside.Get(v2) != 0.5 )
+  {
+   cout << "- " << color(none,blue,black) 
+	            << "removing dense vertex cluster: "
+				<< resetColor() << v1 << " " << heaviside.Get(v1) << endl;
+   //X.Delete(v1);
+   //Y.Delete(v1);
+   //Z.Delete(v1);
+   //heaviside.Delete(v1);
+
+   //numVerts--;
+   //dVerts--;
+
+   mark3DPointForDeletion(v1);
+   rp++;
+  }
+ }
+ //cout << "  removed by diffusion: " << rp << endl;
 }
 
 void Model3D::breakup()
@@ -2912,6 +3008,7 @@ void Model3D::insertPointsByArea()
    Y.AddItem(v4,centroidY);
    Z.AddItem(v4,centroidZ);
    heaviside.AddItem(v4,0.5); // interface set up
+   edgeSize.AddItem(v4,edgeSize.Get(v1));
 
    surfMesh.X.AddItem(v4,centroidX);
    surfMesh.Y.AddItem(v4,centroidY);
@@ -3160,10 +3257,11 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*(nb-1)+1] = yMax;
   in.regionlist[5*(nb-1)+2] = zMax-triEdge[nb]*1.0;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = triEdge[nb]*
-                              triEdge[nb]*
-							  triEdge[nb]*1.4142/12.0;
+  in.regionlist[5*(nb-1)+4] = 5*triEdge[nb]*
+                                triEdge[nb]*
+							    triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];
+  //in.regionlist[5*(nb-1)+4] = 10000;
  }
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -3401,6 +3499,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
    Y.AddItem(numVerts,yMid);
    Z.AddItem(numVerts,zMid);
    heaviside.AddItem(fabs(region-1));
+   edgeSize.AddItem(numVerts,edgeSize.Get(v1));
    numVerts++;
 
    badtet++;
@@ -3422,7 +3521,7 @@ void Model3D::removePointByVolume()
  tetVol.resize(triEdge.size()); // number of surfaces + 1
  real mtriEdge = triEdge[2];
 
- tetVol[1] = 5*mtriEdge*mtriEdge*mtriEdge*sqrt(2.0)/12.0;
+ tetVol[1] = mtriEdge*mtriEdge*mtriEdge*sqrt(2.0)/12.0;
 
  for( int v=2;v<(int) triEdge.size();v++ )
   tetVol[v] = triEdge[v]*triEdge[v]*triEdge[v]*sqrt(2.0)/12.0;
@@ -3434,11 +3533,12 @@ void Model3D::removePointByVolume()
   v[2] = IEN.Get(elem,2);
   v[3] = IEN.Get(elem,3);
 
-  real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
-              heaviside.Get(v[2])+heaviside.Get(v[3]);
+//--------------------------------------------------
+//   real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
+//               heaviside.Get(v[2])+heaviside.Get(v[3]);
+//-------------------------------------------------- 
 
-  if( hSum != 2.0 && 
-	  fabs(getVolume(elem)) < tetVol[elemIdRegion.Get(elem)]*0.1 ) 
+  if( fabs(getVolume(elem)) < 0.3*tetVol[elemIdRegion.Get(elem)] ) 
   {
    // add to checkVert only non surface vertex
    list<int> checkVert;
@@ -3465,9 +3565,21 @@ void Model3D::removePointByVolume()
 	}
    }
    // mark points to delete
-   heaviside.Set(vert,-1);
+   mark3DPointForDeletion(vert);
+   rpv++;
   }
  }
+ //cout << "  removed by volume: " << rpv << endl;
+}
+
+void Model3D::mark3DPointForDeletion(int _vert)
+{
+ heaviside.Set(_vert,-1);
+}
+
+void Model3D::delete3DPoints()
+{
+ rp=0;
 
  for( int dp=0;dp<heaviside.Dim();dp++ )
  {
@@ -3478,12 +3590,13 @@ void Model3D::removePointByVolume()
    Z.Delete(dp);
    heaviside.Delete(dp);
    interfaceDistance.Delete(dp);
+   edgeSize.Delete(dp);
    numVerts--;
-   rpv++;
+   dVerts--;
+   rp++;
    dp--;
   }
  }
- cout << "  removed by volume: " << rpv << endl;
 }
 
 void Model3D::printMeshReport(tetgenio &_tetmesh)
@@ -3589,13 +3702,13 @@ void Model3D::printMeshReport(tetgenio &_tetmesh)
 	  << csp << endl; 
  cout << color(none,yellow,black) 
       << "     inserted" << resetColor()
-	  << " mesh points:                      " << ip << endl;
+	  << " mesh points by diffusion:         " << ip << endl;
+ cout << color(none,red,black)
+      << "     removed" << resetColor() 
+      << " mesh points by diffusion:          " << rp << endl;
  cout << color(none,red,black)
       << "     removed" << resetColor() 
       << " mesh points by volume:             " << rpv << endl;
- cout << color(none,red,black)
-      << "     removed" << resetColor() 
-      << " mesh points by distance:           " << rp << endl;
  cout << color(none,red,black)
       << "     removed" << resetColor() 
       << " mesh points by interface distance: " << rpi << endl;
@@ -3610,9 +3723,12 @@ void Model3D::mesh3DPoints()
  computeNormalAndKappa();
 
  // 3D operations
+ //insert3dMeshPointsByDiffusion();
+ //remove3dMeshPointsByDiffusion();
  removePointByVolume();
  //removePointsByInterfaceDistance();
  //remove3dMeshPointsByDistance();
+ delete3DPoints();
 
  // surface operations
  saveVTKSurface("./vtk/","start",0);
@@ -3644,8 +3760,10 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
- //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
- tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -4725,6 +4843,15 @@ void Model3D::checkTetrahedronOrientation()
 // fazer uma lista de arestas e numera-las de forma que uma aresta comum
 // tenha apenas 1 numero e seja compartilhada em todos os elementos que
 // tem a aresta. 
+/*
+ * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
+ * mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
+ * mapEdge.Set(edge,2,yMid ); // coordenada Y do centro da aresta
+ * mapEdge.Set(edge,3,zMid ); // coordenada Y do centro da aresta
+ * mapEdge.Set(edge,4,faces[i].p1 ); // 1o noh
+ * mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
+ *
+ * */
 void Model3D::setMapEdge()
 {
  int numFace = 6; // teraedro tem 6 arestas
@@ -6269,6 +6396,8 @@ real Model3D::getMinVolume(){return minVolume;}
 real Model3D::getMaxVolume(){return maxVolume;}
 int Model3D::getIdMinVolume(){return idMinVolume;}
 int Model3D::getIdMaxVolume(){return idMaxVolume;}
+clVector* Model3D::getEdgeSize(){ return &edgeSize; }
+void Model3D::setEdgeSize(clVector _edgeSize){ edgeSize = _edgeSize; }
 
 //-------------------------------------------------- 
 // Atribui o Model3D do argumento no corrente
@@ -6330,6 +6459,7 @@ void Model3D::operator=(Model3D &_mRight)
   elemIdRegion = _mRight.elemIdRegion;
   triEdge = _mRight.triEdge;
   tetVol = _mRight.tetVol;
+  edgeSize = _mRight.edgeSize;
 
   // STL: list and vectors
   initSurfaceVolume = _mRight.initSurfaceVolume;
@@ -6960,7 +7090,7 @@ void Model3D::applyBubbleVolumeCorrection()
  real ds = (initSurfaceVolume[nb] - bubbleVolume)/surface.Dim();
 
  while( fabs(initSurfaceVolume[nb] - bubbleVolume) > 
-        0.0001*initSurfaceVolume[nb])
+        0.00001*initSurfaceVolume[nb])
  {
   for( int i=0;i<surface.Dim();i++ )
   {

@@ -2902,7 +2902,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  cout << "Solution No. " << iter << " read" << endl;
 
- return iter+1;
+ return iter;
 } // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na

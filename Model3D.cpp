@@ -4695,6 +4695,40 @@ void Model3D::setPerturbSurfSquare()
  }
 }
 
+void Model3D::setPerturbSphere()
+{
+ real aux;
+ // factorz is compatible to newMesh. Is is set to stretch the mesh
+ // until Z Max = 1.1. Then I need to adjust to this value.
+ real factorz = 1.01;
+ real factor = sqrt(1.0/factorz);
+ //real factor = sqrt( (4.0/3.0)*3.1415*0.5*0.5*0.5*(1.0/factorz) );
+
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  aux = surfMesh.X.Get(i)*factor;
+  surfMesh.X.Set(i,aux);
+
+  aux = surfMesh.Y.Get(i)*factor;
+  surfMesh.Y.Set(i,aux);
+
+  aux = surfMesh.Z.Get(i)*factorz;
+  surfMesh.Z.Set(i,aux);
+ }
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  aux = X.Get(i)*factor;
+  X.Set(i,aux);
+
+  aux = Y.Get(i)*factor;
+  Y.Set(i,aux);
+
+  aux = Z.Get(i)*factorz;
+  Z.Set(i,aux);
+ }
+}
+
 void Model3D::setMiniElement()
 {
  numElems = numElems;

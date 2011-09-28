@@ -2952,13 +2952,6 @@ void Model3D::remove3dMeshPointsByDiffusion()
    cout << "- " << color(none,blue,black) 
 	            << "removing dense vertex cluster: "
 				<< resetColor() << v1 << " " << heaviside.Get(v1) << endl;
-   //X.Delete(v1);
-   //Y.Delete(v1);
-   //Z.Delete(v1);
-   //heaviside.Delete(v1);
-
-   //numVerts--;
-   //dVerts--;
 
    mark3DPointForDeletion(v1);
    rp++;
@@ -3728,7 +3721,7 @@ void Model3D::mesh3DPoints()
  removePointByVolume();
  //removePointsByInterfaceDistance();
  //remove3dMeshPointsByDistance();
- delete3DPoints();
+ //delete3DPoints();
 
  // surface operations
  saveVTKSurface("./vtk/","start",0);

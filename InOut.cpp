@@ -420,7 +420,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkVector(vtkFile,"surface_force",*fint);
  }
 
- vtkScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
+
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
@@ -532,7 +534,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
- vtkScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -654,7 +657,8 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
- vtkScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -763,7 +767,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
- vtkScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -885,7 +890,8 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
- vtkScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -1890,7 +1896,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  if( heaviside->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
- vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
  vtkSurfaceVector(vtkFile,"normal",surfMesh->xNormal,
                                    surfMesh->yNormal,
@@ -1968,7 +1975,8 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
- vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
+ if( edgeSize->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {

@@ -24,9 +24,9 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(3);
- triEdge[0] = 0.1; // none
- triEdge[1] = 2.0; // wall
- triEdge[2] = 0.05; // bubble 1 
+ triEdge[0] = 0.15; // none
+ triEdge[1] = 3.0; // wall
+ triEdge[2] = 0.40; // bubble 1 
 
  // static bubble test (Fabricio's thesis (2005))
  int iter = 0;
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- const char *mesh = "../../db/gmsh/3d/static.msh";
+ const char *mesh = "../../db/gmsh/3d/torus.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
-  m1.checkTriangleOrientation();
+  //m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
   m1.setMiniElement();
   m1.setOFace();

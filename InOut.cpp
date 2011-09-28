@@ -36,6 +36,7 @@ InOut::InOut( Model3D &_m )
  triEdge = m->getTriEdge();
  inElem = m->getInElem();
  outElem = m->getOutElem();
+ edgeSize = m->getEdgeSize();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -66,6 +67,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  triEdge = m->getTriEdge();
  inElem = m->getInElem();
  outElem = m->getOutElem();
+ edgeSize = m->getEdgeSize();
 
  s = &_s;
  Re = s->getRe();
@@ -367,6 +369,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
+
  vtkFile.close();
 
  cout << "mesh saved in VTK" << endl;
@@ -415,6 +420,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkVector(vtkFile,"surface_force",*fint);
  }
 
+ vtkScalar(vtkFile,"edgeSize",*edgeSize);
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
 
@@ -525,6 +531,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -646,6 +654,8 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ vtkScalar(vtkFile,"edgeSize",*edgeSize);
+
  if( kappa->Dim() > 0 )
  {
   vtkScalar(vtkFile,"kappa",*kappa);
@@ -752,6 +762,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -872,6 +884,8 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ vtkScalar(vtkFile,"edgeSize",*edgeSize);
 
  if( kappa->Dim() > 0 )
  {
@@ -1876,6 +1890,12 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  if( heaviside->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
+ vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
+
+ vtkSurfaceVector(vtkFile,"normal",surfMesh->xNormal,
+                                   surfMesh->yNormal,
+								   surfMesh->zNormal);
+
  vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
 
  vtkFile.close();
@@ -1948,12 +1968,17 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  if( heaviside->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
+ vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
+
  if( kappa->Dim() > 0 )
  {
   vtkSurfaceScalar(vtkFile,"kappa",*kappa);
   vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
   vtkSurfaceVector(vtkFile,"surface_force",*fint);
+  vtkSurfaceVector(vtkFile,"normal",surfMesh->xNormal,
+	                                surfMesh->yNormal,
+									surfMesh->zNormal);
  }
 
  vtkSurfaceScalar(vtkFile,"viscosity",*mu);

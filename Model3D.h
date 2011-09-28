@@ -158,6 +158,7 @@ class Model3D
   void setPerturbSurf();
   void setPerturbSurf2();
   void setPerturbSurfSquare();
+  void setPerturbSphere();
 
   // misc
   void moveXPoints(clVector &_vec,real _dt);

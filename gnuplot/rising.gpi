@@ -26,3 +26,8 @@ set label "experimental velocity = 0.267" at 1.5,0.11
 fileObj = "../dat/volume.dat"
 plot fileObj using 1:($5/2) title 'air water-sugar' with lines
 
+#fileObj1 = "bog2.dat"
+#fileObj2 = "bog3.dat"
+#
+#plot fileObj1 using 1:($5/2) title 'test case 1' with lines,\
+#     fileObj2 using 1:($5/2) title 'test case 2' with lines

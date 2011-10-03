@@ -71,7 +71,37 @@ VISUALIZATION REQUIREMENTS
 -- install depending on your O.S. --
 
 
+VERSION NOTES
+
+TAG 1.0
+ Centralized version of single phase flow simulator:
+ - mainDiskNuCte
+ - mainDiskNuZ
+ - mainDiskNuC
+ - mainStep
+ 
+TAG 2.0
+ Single phase flow simulator tested and working.
+ Two-phase flow simulator with 3D point re-meshing. Surface points treatment
+still under development.
+
+TAG 3.0
+ Sigle and Two-Phase flow simulator tested and working with some 
+ improvements and suggestions as follow:
+ - mainDiskNuCte   (minimum suggested mesh: 6-20-40)
+ - mainDiskNuZ     (minimum suggested mesh: 6-20-40)
+ - mainDiskNuC     (minimum suggested mesh: 6-20-60)
+ - mainBubble      (optional: Laplace3D to distribute smooth points)
+ - mainOscillating (add setSphereToEllipsoid to perturb surface)
+ - mainCurvature   (add setBiggerSphere to perturb sphere radius)
+ - mainFallingDrop (add test case: not tested yet)
+ - main2Bubbles    (2 bubbles test case - Norberto-Portela)
+ - mainMicro       (micro channel test case)
+
+
+
 STRANGE BEHAVIOR:
+(Reason: viscosity term K)
 
 # *********** SIMULATOR3D.CPP || UNCOUPLED ************* #
 

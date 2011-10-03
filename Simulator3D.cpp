@@ -1159,8 +1159,8 @@ void Simulator3D::stepLagrangian()
  m->moveZPoints(wSolOld,dt);
  m->centroidPositionCorrection();
 
- //assemble();
- assembleSlip();
+ assemble();
+ //assembleSlip();
 
  convUVW.CopyFrom(0,uSolOld);
  convUVW.CopyFrom(numNodes,vSolOld);
@@ -1279,7 +1279,7 @@ void Simulator3D::stepALEVel()
  m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- m->applyBubbleVolumeCorrection();
+ //m->applyBubbleVolumeCorrection();
 
  // velocidade da bolha
  getBubbleVelocity(uALE,vALE,wALE);
@@ -1450,7 +1450,7 @@ void Simulator3D::setGravityBoussinesq(const char* _direction)
 
 void Simulator3D::setInterfaceGeo()
 {
- m->computeNormalAndKappa();
+ m->setNormalAndKappa();
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
@@ -1669,7 +1669,10 @@ void Simulator3D::setCoupledBC()
   A.Set(j,j,1);
   b.Set(j,uc->Get(j));
  }
- cout << " boundary condition U --> SET " << endl;
+ cout << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "U ";
+ cout << resetColor() << "--> SET " << endl;
 
  nbc = idbcv->Dim();
  for( i=0;i<nbc;i++ )
@@ -1679,7 +1682,9 @@ void Simulator3D::setCoupledBC()
   A.Set( j+numNodes, j+numNodes, 1 );
   b.Set( j+numNodes, vc->Get(j) );
  }
- cout << " boundary condition V --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "V ";
+ cout << resetColor() << "--> SET " << endl;
 
  nbc = idbcw->Dim();
  for( i=0;i<nbc;i++ )
@@ -1689,7 +1694,9 @@ void Simulator3D::setCoupledBC()
   A.Set( j+numNodes*2,j+numNodes*2, 1);
   b.Set( j+numNodes*2,wc->Get(j) );
  }
- cout << " boundary condition W --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "W ";
+ cout << resetColor() << "--> SET " << endl;
 
  nbc = idbcp->Dim();
  for( i=0;i<nbc;i++ )
@@ -1700,7 +1707,10 @@ void Simulator3D::setCoupledBC()
   b.Set( j+3*numNodes, -pc->Get(j) ); // sem correcao na pressao
   //b.Set( j+3*numNodes,-pc->Get(j)*0 ); // com correcao na pressao
  }
- cout << " boundary condition P --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "P ";
+ cout << resetColor() << "--> SET " << endl;
+ cout << endl;
  
 } // fecha metodo setCoupledBC 
 
@@ -1731,7 +1741,10 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j,uc->Get(j));
   ip.Set(j,0);
  }
- cout << " boundary condition U --> SET " << endl;
+ cout << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "U ";
+ cout << resetColor() << "--> SET " << endl;
 
  nbc = idbcv->Dim();
  for( i=0;i<nbc;i++ )
@@ -1743,7 +1756,9 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j+numNodes,vc->Get(j));
   ip.Set(j+numNodes,0);
  }
- cout << " boundary condition V --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "V ";
+ cout << resetColor() << "--> SET " << endl;
 
  nbc = idbcw->Dim();
  for( i=0;i<nbc;i++ )
@@ -1755,7 +1770,9 @@ void Simulator3D::setUnCoupledBC()
   b1.Set(j+numNodes*2,wc->Get(j));
   ip.Set(j+numNodes*2,0);
  }
- cout << " boundary condition W --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "W ";
+ cout << resetColor() << "--> SET " << endl;
 
  E.Dim(numVerts,numVerts);
  nbc = idbcp->Dim();
@@ -1767,7 +1784,10 @@ void Simulator3D::setUnCoupledBC()
   b2.Set(j,-pc->Get(j));  // sem correcao na pressao
   //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
  }
- cout << " boundary condition P --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "P ";
+ cout << resetColor() << "--> SET " << endl;
+ cout << endl;
 
  ETilde = E - ((DTilde * invA) * GTilde); 
  //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
@@ -1790,7 +1810,10 @@ void Simulator3D::setUnCoupledCBC()
   b1c.Set(j,cc->Get(j));
   ipc.Set(j,0);
  }
- cout << " boundary condition C --> SET " << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "C ";
+ cout << resetColor() << "--> SET " << endl;
+ cout << endl;
 
 } // fecha metodo setUnCoupledCBC 
 
@@ -1887,7 +1910,7 @@ real Simulator3D::getDtLagrangianExtream()
  int v3 = IEN->Get(idMinVolume,2);
  int v4 = IEN->Get(idMinVolume,3);
 
- // X-component
+ /* X-component */
  real p1x = X->Get(v1);
  real p2x = X->Get(v2);
  real p3x = X->Get(v3);
@@ -1904,12 +1927,12 @@ real Simulator3D::getDtLagrangianExtream()
  minXdist = min(minXdist,d3x);
  minXdist = min(minXdist,d4x);
 
- real xVelMax = max( 1.0,fabs(uSolOld.Max()) );
- xVelMax = max( xVelMax,fabs(c2*uSmooth.Max()) );
- xVelMax = max( xVelMax,fabs(c3*uSmoothCoord.Max()) );
+ real xVelMax = max( 1.0,uSolOld.Abs().Max() );
+ xVelMax = max( xVelMax,c2*uSmooth.Abs().Max() );
+ xVelMax = max( xVelMax,c3*uSmoothCoord.Abs().Max() );
  real minDtx = minXdist/xVelMax;
 
- // Y-component
+ /* Y-component */
  real p1y = Y->Get(v1);
  real p2y = Y->Get(v2);
  real p3y = Y->Get(v3);
@@ -1926,12 +1949,12 @@ real Simulator3D::getDtLagrangianExtream()
  minYdist = min(minYdist,d3y);
  minYdist = min(minYdist,d4y);
 
- real yVelMax = max( 1.0,fabs(vSolOld.Max()) );
- yVelMax = max( yVelMax,fabs(c2*vSmooth.Max()) );
- yVelMax = max( yVelMax,fabs(c3*vSmoothCoord.Max()) );
+ real yVelMax = max( 1.0,vSolOld.Abs().Max() );
+ yVelMax = max( yVelMax,c2*vSmooth.Abs().Max() );
+ yVelMax = max( yVelMax,c3*vSmoothCoord.Abs().Max() );
  real minDty = minYdist/yVelMax;
 
- // Z-component
+ /* Z-component */
  real p1z = Z->Get(v1);
  real p2z = Z->Get(v2);
  real p3z = Z->Get(v3);
@@ -1948,9 +1971,9 @@ real Simulator3D::getDtLagrangianExtream()
  minZdist = min(minZdist,d3z);
  minZdist = min(minZdist,d4z);
 
- real zVelMax = max( 1.0,fabs(wSolOld.Max()) );
- zVelMax = max( zVelMax,fabs(c2*wSmooth.Max()) );
- zVelMax = max( zVelMax,fabs(c3*wSmoothCoord.Max()) );
+ real zVelMax = max( 1.0,wSolOld.Abs().Max() );
+ zVelMax = max( zVelMax,c2*wSmooth.Abs().Max() );
+ zVelMax = max( zVelMax,c3*wSmoothCoord.Abs().Max() );
  real minDtz = minZdist/zVelMax;
 
  real minDt1 = min(minDtx,minDty);
@@ -1981,15 +2004,15 @@ real Simulator3D::getDtLagrangian()
 
  real length = minEdge*0.86602;
 
- real velMax = max( 1.0,fabs(uSolOld.Max()) );
- velMax = max( velMax,fabs(vSolOld.Max()) );
- velMax = max( velMax,fabs(wSolOld.Max()) );
- velMax = max( velMax,fabs(c2*uSmooth.Max()) );
- velMax = max( velMax,fabs(c2*vSmooth.Max()) );
- velMax = max( velMax,fabs(c2*wSmooth.Max()) );
- velMax = max( velMax,fabs(c3*uSmoothCoord.Max()) );
- velMax = max( velMax,fabs(c3*vSmoothCoord.Max()) );
- velMax = max( velMax,fabs(c3*wSmoothCoord.Max()) );
+ real velMax = max( 1.0,uSolOld.Abs().Max() );
+ velMax = max( velMax,vSolOld.Abs().Max() );
+ velMax = max( velMax,wSolOld.Abs().Max() );
+ velMax = max( velMax,c2*uSmooth.Abs().Max() );
+ velMax = max( velMax,c2*vSmooth.Abs().Max() );
+ velMax = max( velMax,c2*wSmooth.Abs().Max() );
+ velMax = max( velMax,c3*uSmoothCoord.Abs().Max() );
+ velMax = max( velMax,c3*vSmoothCoord.Abs().Max() );
+ velMax = max( velMax,c3*wSmoothCoord.Abs().Max() );
 
  return 0.5*length/velMax;
 }
@@ -1998,9 +2021,9 @@ real Simulator3D::getDtSemiLagrangian()
 {
  real minEdge = m->getMinEdge();
 
- real velMax = max( 1.0,fabs(uSolOld.Max()) );
- velMax = max( velMax,fabs(vSolOld.Max()) );
- velMax = max( velMax,fabs(wSolOld.Max()) );
+ real velMax = max( 1.0,uSolOld.Abs().Max() );
+ velMax = max( velMax,vSolOld.Abs().Max() );
+ velMax = max( velMax,wSolOld.Abs().Max() );
 
  return minEdge/velMax;
 }
@@ -2008,7 +2031,7 @@ real Simulator3D::getDtSemiLagrangian()
 real Simulator3D::getDtGravity()
 {
  real minEdge = m->getMinEdge();
- real velMax = max( 1.0,fabs(gravity.Max()) );
+ real velMax = max( 1.0,gravity.Abs().Max() );
 
  return minEdge/velMax;
 }
@@ -3205,7 +3228,7 @@ void Simulator3D::allocateMemoryToAttrib()
  b1c.Dim( numVerts );
  b2.Dim( numVerts );
 
- // boundary condiction configured matrix
+ // boundary condition configured matrix
  ATilde.Dim( 3*numNodes,3*numNodes );
  AcTilde.Dim( numVerts,numVerts );
  GTilde.Dim( 3*numNodes,numVerts );

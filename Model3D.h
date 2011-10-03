@@ -21,6 +21,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <algorithm>
 #include "clVector.h"
 #include "clMatrix.h"
 #include "clDMatrix.h"
@@ -84,7 +85,7 @@ class Model3D
   void insertPointWithCurvature(int _edge);
   void insertPointsBetweenBubblesByPosition();
   void deletePoint(int _v);
-  void setPolyhedron(int _v);
+  list<int> setPolyhedron(list<int> _myList);
   void flipTriangleEdge();
   void contractEdgeByLength();
   void checkNeighbours();
@@ -158,7 +159,8 @@ class Model3D
   void setPerturbSurf();
   void setPerturbSurf2();
   void setPerturbSurfSquare();
-  void setPerturbSphere();
+  void setSphereToEllipsoid(real _factor);
+  void setBiggerSphere(real _factor);
 
   // misc
   void moveXPoints(clVector &_vec,real _dt);
@@ -173,7 +175,9 @@ class Model3D
   void checkTriangleOrientationPerfect();
   void setQuadElement();             
   void setNeighbour();
-  void setNeighbourSurface();
+  void setNeighbourSurfaceElem();
+  list<int> getNeighbourSurfacePoint(int _node);
+  void setNeighbourSurfacePoint();
   void setVertNeighbour();
   void setOFace();
   void printMeshReport(tetgenio &_tetmesh);
@@ -186,7 +190,8 @@ class Model3D
   void setCloser();
   void setInterfaceDistance();
   void computeKappaGeo();
-  void computeNormalAndKappa();
+  clVector getNormalAndKappa(int _node,list<int> _myList);
+  void setNormalAndKappa();
 
   // get and set methods
   clVector* getX();

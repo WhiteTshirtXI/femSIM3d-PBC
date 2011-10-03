@@ -11,6 +11,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "InOut.h"
+#include "Laplace3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -329,6 +330,19 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
+//--------------------------------------------------
+//  // Point's distribution
+//  Laplace3D d1(m1);
+//  d1.init();
+//  d1.assemble();
+//  d1.setBC();
+//  d1.matMountC();
+//  d1.setUnCoupledCBC(); 
+//  d1.setCRHS();
+//  d1.unCoupledC();
+//  //d1.saveVTK("./vtk/","edge");
+//  m1.setEdgeSize(*d1.getCSol());
+//-------------------------------------------------- 
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -378,6 +392,18 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;;
    cout << resetColor();
   }
+//--------------------------------------------------
+//   Laplace3D d2(m1,d1);
+//   d2.assemble();
+//   d2.setBC();
+//   d2.matMountC();
+//   d2.setUnCoupledCBC(); 
+//   d2.setCRHS();
+//   d2.unCoupledC();
+//   d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
+//   m1.setEdgeSize(*d2.getCSol());
+//-------------------------------------------------- 
+
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
   //m1.mesh2Dto3DOriginal();

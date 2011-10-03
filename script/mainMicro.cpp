@@ -11,6 +11,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "InOut.h"
+#include "Laplace3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -25,11 +26,11 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(6);
  triEdge[0] = 0.1;   // none
- triEdge[1] = 0.095;   // wall
- triEdge[2] = 0.1;   // bubble 1 
- triEdge[3] = 0.1;   // bubble 2 
- triEdge[4] = 0.023; // bubble 3
- triEdge[5] = 0.023; // bubble 4
+ triEdge[1] = 0.24;   // wall
+ triEdge[2] = 0.09;   // bubble 1 
+ triEdge[3] = 0.09;   // bubble 2 
+ triEdge[4] = 0.022; // bubble 3
+ triEdge[5] = 0.022; // bubble 4
 
  // bogdan's thesis 2010 - case 2
  int iter = 0;
@@ -52,11 +53,11 @@ int main(int argc, char **argv)
  real rho_in = 1;
  real rho_out = 100;
 
- real cfl = 0.8;
+ real cfl = 0.3;
 
  //const char *mesh = "../../db/gmsh/3d/micro.msh";
- //const char *mesh = "../../db/gmsh/3d/2micros.msh";
- const char *mesh = "../../db/gmsh/3d/4micros.msh";
+ const char *mesh = "../../db/gmsh/3d/2micros.msh";
+ //const char *mesh = "../../db/gmsh/3d/4micros.msh";
  
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -226,6 +227,17 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
+ // Point's distribution
+ Laplace3D d1(m1);
+ d1.init();
+ d1.assemble();
+ d1.setBC();
+ d1.matMountC();
+ d1.setUnCoupledCBC(); 
+ d1.setCRHS();
+ d1.unCoupledC();
+ //d1.saveVTK("./vtk/","edge");
+ m1.setEdgeSize(*d1.getCSol());
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -275,6 +287,16 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;;
    cout << resetColor();
   }
+  Laplace3D d2(m1,d1);
+  d2.assemble();
+  d2.setBC();
+  d2.matMountC();
+  d2.setUnCoupledCBC(); 
+  d2.setCRHS();
+  d2.unCoupledC();
+  d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
+  m1.setEdgeSize(*d2.getCSol());
+
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
   //m1.mesh2Dto3DOriginal();

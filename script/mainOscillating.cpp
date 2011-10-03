@@ -26,7 +26,7 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 0.77; // wall
- triEdge[2] = 0.1; // bubble 1 
+ triEdge[2] = 0.09; // bubble 1 
 
  // Tryggvason (Computations of Multiphase Flows by a FDM/FTM
  int iter = 0;
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setWallBC();
-  m1.setPerturbSphere();
+  m1.setSphereToEllipsoid(1.01);
 
   s1(m1);
 

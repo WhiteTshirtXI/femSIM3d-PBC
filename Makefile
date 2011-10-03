@@ -43,7 +43,13 @@ diskSurf: ./script/mainDiskSurf.o $(obj)
 2bubbles: ./script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+curvature: ./script/mainCurvature.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 staticDroplet: ./script/mainStaticDroplet.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+staticTorus: ./script/mainStaticTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 sessileDrop: ./script/mainSessileDrop.o $(obj)
@@ -61,13 +67,13 @@ bubble: ./script/mainBubble.o $(obj)
 micro: ./script/mainMicro.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+step: ./script/mainStep.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 #--------------------------------------------------
 # step: ./script/mainStep.o libtest.so
 # 	$(CXX) -L. -ltest -o $@ $<
 #-------------------------------------------------- 
-
-step: ./script/mainStep.o $(obj)
-	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 libtest.so: $(obj)
 	$(CXX) -shared $(LIBS) ${PETSC_KSP_LIB} $(INCLUDES) $(obj) -o $@
@@ -88,9 +94,9 @@ include ${PETSC_DIR}/conf/rules
 erase:
 	@rm -f core
 	@find . -name "*~" -exec rm {} \;
-	@rm -f ./vtk/*.vtk
+	@rm -f ./vtk/*.vtk ./vtk/*.vtu
 	@rm -f ./msh/*.msh
-	@rm -f ./sim/vk*.dat
+	@rm -f ./sim/vk*
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat
@@ -98,7 +104,7 @@ erase:
 
 deepclean: 
 	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
-	@rm -f 2bubbles diskSurf
+	@rm -f 2bubbles diskSurf staticTorus sessileDrop curvature fallingDrop
 	@rm -f libtest*
 	@rm -f core
 	@find $(LIBDIR) -name "*.o" -exec rm {} \;

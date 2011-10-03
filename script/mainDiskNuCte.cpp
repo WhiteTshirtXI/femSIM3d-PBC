@@ -30,14 +30,14 @@ int main(int argc, char **argv)
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
- const char *mesh = "../../db/mesh/3d/disk6-20-20.vtk";
+ const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
  const char *binFolder  = "./bin/";
  const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
 
  Model3D m1;
- m1.setMeshDisk(6,20,20);
+ m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
  m1.setMiniElement();
  //m1.setQuadElement();

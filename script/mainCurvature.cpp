@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file mainCurvature.cpp, created at 30-Sep-2011              //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -25,35 +25,35 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
- triEdge[1] = 2.0; // wall
- triEdge[2] = 0.05; // bubble 1 
+ triEdge[1] = 0.77; // wall
+ triEdge[2] = 0.1; // bubble 1 
 
- // static bubble test (Fabricio's thesis (2005))
- real Re = 10;
+ // Tryggvason (Computations of Multiphase Flows by a FDM/FTM
+ real Re = 1000;
  real Sc = 1;
  real We = 1;
- real Fr = 1.0;
- real c1 = 1.0;  // lagrangian
- real c2 = 0.0;  // velocity
- real c3 = 0.0;  // coordinates - fujiwara
- real c4 = 0.0;  // surface coordinates - fujiwara
+ real Fr = 1;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.0; // velocity
+ real c3 = 0.2; // coordinates - fujiwara
+ real c4 = 0.0; // surface
  real alpha = 1;
  real beta = 1;
 
  real sigma = 1.0;
 
- real mu_in = 1.0;
- real mu_out = 0.1;
+ real mu_in = 1;
+ real mu_out = 0.001;
 
- real rho_in = 1.0;
+ real rho_in = 1; 
  real rho_out = 0.01;
 
  real cfl = 0.8;
 
  const char *mesh = "../../db/gmsh/3d/static.msh";
-
+ 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
@@ -73,6 +73,7 @@ int main(int argc, char **argv)
  m1.setMiniElement();
  m1.setOFace();
  m1.setSurfaceConfig();
+ m1.setBiggerSphere(2);
  m1.setInitSurfaceVolume();
  m1.setWallBC();
 
@@ -106,8 +107,8 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(mesh);
 
- int nIter = 1000;
- for( int i=1;i<nIter;i++ )
+ int nIter = 1;
+ for( int i=1;i<=nIter;i++ )
  {
   cout << color(none,magenta,black);
   cout << "____________________________________ Iteration: " 
@@ -133,7 +134,6 @@ int main(int argc, char **argv)
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveSol(binFolder,"sim",i);
   save.saveBubbleInfo(datFolder);
-  save.chordalPressure(datFolder,"chordalPressure",i);
 
   s1.saveOldData();
 

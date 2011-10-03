@@ -25,9 +25,9 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(4);
  triEdge[0] = 0.2; // none
- triEdge[1] = 0.8; // wall
- triEdge[2] = 0.12; // bubble 1 
- triEdge[3] = 0.12; // bubble 2 
+ triEdge[1] = 1.2; // wall
+ triEdge[2] = 0.11; // bubble 1 
+ triEdge[3] = 0.11; // bubble 2 
 
  int iter = 0;
  real Re = 20;

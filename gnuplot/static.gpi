@@ -1,0 +1,33 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+set title "Pressure field among phases" 
+set xlabel "length"
+set ylabel "pressure"
+set label
+set xrange [-2.0:2.0]
+set yrange [-0.2:4.2]
+unset grid
+
+set terminal pdf
+set output '~/Desktop/hatplot.pdf'
+#set terminal postscript enhanced
+#set output '~/Desktop/hatplot.ps'
+
+fileObj1 = "158points-0.21e.dat"
+fileObj2 = "227points-0.16e.dat"
+fileObj3 = "328points-0.12e.dat"
+fileObj4 = "580points-0.09e.dat"
+fileObj5 = "1097points-0.06e.dat"
+fileObj6 = "1441points-0.05e.dat"
+
+plot fileObj1 using 1:4 title 's=158, h=0.21' with lines,\
+     fileObj2 using 1:4 title 's=227, h=0.16' with lines,\
+     fileObj3 using 1:4 title 's=328, h=0.12' with lines,\
+     fileObj4 using 1:4 title 's=580, h=0.09' with lines,\
+     fileObj5 using 1:4 title 's=1097, h=0.06' with lines,\
+     fileObj6 using 1:4 title 's=1441, h=0.05' with lines
+

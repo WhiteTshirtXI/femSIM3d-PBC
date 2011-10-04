@@ -3045,9 +3045,9 @@ void Model3D::remove3dMeshPointsByDiffusion()
 	  heaviside.Get(v1) != 0.5 &&  
 	  heaviside.Get(v2) != 0.5 )
   {
-   cout << "- " << color(none,blue,black) 
-	            << "removing dense vertex cluster: "
-				<< resetColor() << v1 << " " << heaviside.Get(v1) << endl;
+   //cout << "- " << color(none,blue,black) 
+	//            << "removing dense vertex cluster: "
+	//			<< resetColor() << v1 << " " << heaviside.Get(v1) << endl;
 
    mark3DPointForDeletion(v1);
    rp++;
@@ -3825,9 +3825,9 @@ void Model3D::mesh3DPoints()
 
  // 3D operations
  //insert3dMeshPointsByDiffusion();
- //remove3dMeshPointsByDiffusion();
+ remove3dMeshPointsByDiffusion();
  removePointByVolume();
- //removePointsByInterfaceDistance();
+ removePointsByInterfaceDistance();
  //remove3dMeshPointsByDistance();
  //delete3DPoints();
 

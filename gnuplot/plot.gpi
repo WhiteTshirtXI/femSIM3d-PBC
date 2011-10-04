@@ -16,10 +16,10 @@ unset grid
 #set output 'teste.pdf'
 
 N = "last"
-fileObj = "vk2."
+fileObj = "../sim/vk2."
 #fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
-#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
-fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
+fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
+#fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
 plot fileObj .N using 1:2 title 'F' ,\
      fileObj .N using 1:3 title 'G' ,\

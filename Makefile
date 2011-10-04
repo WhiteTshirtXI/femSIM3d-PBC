@@ -46,6 +46,9 @@ diskSurf: ./script/mainDiskSurf.o $(obj)
 curvature: ./script/mainCurvature.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+curvatureAndPressure: ./script/mainCurvatureAndPressure.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 staticDroplet: ./script/mainStaticDroplet.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
@@ -105,6 +108,7 @@ erase:
 deepclean: 
 	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
 	@rm -f 2bubbles diskSurf staticTorus sessileDrop curvature fallingDrop
+	@rm -f oscillating micro
 	@rm -f libtest*
 	@rm -f core
 	@find $(LIBDIR) -name "*.o" -exec rm {} \;

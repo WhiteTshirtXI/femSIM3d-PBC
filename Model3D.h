@@ -211,6 +211,7 @@ class Model3D
   void setZ(clVector _Z);
   clVector* getEdgeSize();
   void setEdgeSize(clVector _edgeSize);
+  real getAverageTriEdge();
 
   clVector* getUC();
   clVector* getVC();

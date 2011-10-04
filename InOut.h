@@ -204,6 +204,8 @@ private:
   vector<real> triEdge;
   clVector *heaviside,*edgeSize;
   list<int> *inElem,*outElem;
+  vector< list<int> >* neighbourPoint;
+  real averageTriEdge;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;

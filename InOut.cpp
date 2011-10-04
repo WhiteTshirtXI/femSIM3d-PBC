@@ -3122,11 +3122,11 @@ void InOut::saveBubbleInfo(const char* _dir)
            << setw(17) << kappaAnalytic << " " 
            << setw(17) << kappaError << " " 
            << setw(17) << kappaSD << " " 
-	       << setprecision(2) << fixed
+	       << setprecision(3) << fixed
            << setw(13) << averageTriEdge << " " 
 	       << setprecision(4) << fixed
            << setw(13) << averageTriEdge/radius << " " 
-	       << setprecision(2) << fixed
+	       << setprecision(3) << fixed
            << setw(14) << averageNeigh << " " 
 	       << setprecision(0) << fixed
 		   << setw(12) << surfacePoints << " " 
@@ -3167,11 +3167,11 @@ void InOut::saveBubbleInfo(const char* _dir)
               << setw(17) << pressureAnalytic << " " 
 			  << setw(17) << pressureError << " " 
 			  << setw(17) << pressureSD << " " 
-			  << setprecision(2) << fixed
+			  << setprecision(3) << fixed
 			  << setw(13) << averageTriEdge << " " 
 			  << setprecision(4) << fixed
 			  << setw(13) << averageTriEdge/radius << " " 
-			  << setprecision(2) << fixed
+			  << setprecision(3) << fixed
 			  << setw(14) << averageNeigh << " " 
 			  << setprecision(0) << fixed
 			  << setw(12) << surfacePoints << " " 

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- const char *mesh = "../../db/gmsh/3d/static.msh";
+ const char *mesh = "../../db/gmsh/3d/curvature/0.20.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
  m1.setMiniElement();
  m1.setOFace();
  m1.setSurfaceConfig();
- m1.setBiggerSphere(2);
+ //m1.setBiggerSphere(1);
  m1.setInitSurfaceVolume();
  m1.setWallBC();
 

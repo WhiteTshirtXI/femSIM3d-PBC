@@ -2914,22 +2914,99 @@ void InOut::saveBubbleInfo(const char* _dir)
  {
   cout << "Creating file kappa.dat" << endl;
   fileKappa << "#time" << setw(29) << "kappa" 
+			    	   << setw(18) << "error" 
+			    	   << setw(18) << "stand deviat" 
+			    	   << setw(18) << "num points" 
 			    	   << setw(6) << "iter" 
 					   << endl;
  }
 
+ real surfacePoints = surface->Dim();
  real sumKappa = 0;
- for( int i=0;i<kappa->Dim();i++ )
-  sumKappa += kappa->Get(i);
+ real sumKappaSquare = 0;
+ real sumPressure = 0;
+ real sumPressureSquare = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappa += kappa->Get(node);
+  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+  sumPressure += pSol->Get(node);
+  sumPressureSquare += pSol->Get(node)*pSol->Get(node);
+ }
+ real kappaAverage = sumKappa/surfacePoints;
+ real pressureAverage = sumPressure/surface->Dim();
 
- real kappaAverage = sumKappa/kappa->Dim();
+ real kappaAnalytic = 4.0; // sphere R=0.5
+ real pressureAnalytic = 2.0; // sphere R=0.5
+
+ real sumKappaSD = 0;
+ real sumKappaError = 0;
+ real sumPressureSD = 0;
+ real sumPressureError = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
+                   (kappa->Get(node)-kappaAnalytic);
+  sumKappaSD += (kappa->Get(node)-kappaAverage)*
+                (kappa->Get(node)-kappaAverage);
+  sumPressureError += (pSol->Get(node)-pressureAnalytic)*
+                      (pSol->Get(node)-pressureAnalytic);
+  sumPressureSD += (pSol->Get(node)-pressureAverage)*
+                   (pSol->Get(node)-pressureAverage);
+ }
+
+ real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ real kappaSD = sqrt( sumKappaSD/surfacePoints );
+
+ real pressureError = sqrt( sumPressureError/sumPressureSquare );
+ real pressureSD = sqrt( sumPressureSD/surfacePoints );
+
 
  fileKappa << setprecision(10) << scientific; 
  fileKappa << setw(10) << *simTime << " " 
            << setw(17) << kappaAverage << " " 
-	       << setw(5)  << setprecision(0) << fixed << iter 
-		   << endl;
+           << setw(17) << kappaError << " " 
+           << setw(17) << kappaSD << " " 
+	       << setprecision(0) << fixed
+		   << setw(17) << surfacePoints << " " 
+		   << setw(5) << iter << endl;
  fileKappa.close();
+ 
+ // pressure 
+ fileAux = (string) _dir + "pressure" + ".dat";
+ const char* filenamePressure = fileAux.c_str();
+
+ ifstream testFilePressure( filenamePressure);
+ ofstream filePressure( filenamePressure,ios::app );
+ if( testFilePressure )
+ {
+  testFilePressure.close();
+  cout << "appending on file pressure.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file pressure.dat" << endl;
+  filePressure << "#time" << setw(29) << "pressure" 
+			       	      << setw(18) << "error" 
+			    	      << setw(18) << "Stand Deviat" 
+						  << setw(18) << "num points" 
+			    	      << setw(6) << "iter" 
+					      << endl;
+ }
+
+
+
+ filePressure << setprecision(10) << scientific; 
+ filePressure << setw(10) << *simTime << " " 
+              << setw(17) << pressureAverage << " " 
+			  << setw(17) << pressureError << " " 
+			  << setw(17) << pressureSD << " " 
+			  << setprecision(0) << fixed
+			  << setw(17) << surfacePoints << " " 
+			  << setw(5) << iter << endl;
+ filePressure.close();
 
  // oscillating velocity
  fileAux = (string) _dir + "velocity" + ".dat";
@@ -3166,3 +3243,4 @@ void InOut::saveBubbleInfo(const char* _dir)
 		 << endl;
  fileVol.close();
 }
+

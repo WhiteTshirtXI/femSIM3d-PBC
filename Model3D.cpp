@@ -6584,6 +6584,7 @@ int Model3D::getIdMinVolume(){return idMinVolume;}
 int Model3D::getIdMaxVolume(){return idMaxVolume;}
 clVector* Model3D::getEdgeSize(){ return &edgeSize; }
 void Model3D::setEdgeSize(clVector _edgeSize){ edgeSize = _edgeSize; }
+real Model3D::getAverageTriEdge(){ return averageTriEdge; }
 
 //-------------------------------------------------- 
 // Atribui o Model3D do argumento no corrente

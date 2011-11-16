@@ -4,29 +4,31 @@
 ## e-mail: gustavo.rabello@gmail.com                                   ##
 ## =================================================================== ##
 
-LIBDIR = ../lib
 CXX = clang
 CXXFLAGS = -g -fPIC
 LIBS += -lgsl -lgslcblas -lm
 LIBS += -L. -L${TETGEN_DIR} -ltet
-INCLUDES += -I. -I$(LIBDIR) 
+INCLUDES += -I. -I${FEMLIB_DIR}
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
 
-src += $(LIBDIR)/clVector.cpp
-src += $(LIBDIR)/clMatrix.cpp
-src += $(LIBDIR)/clDMatrix.cpp
-src += $(LIBDIR)/PCGSolver.cpp
-src += $(LIBDIR)/GMRes.cpp
-src += $(LIBDIR)/PetscSolver.cpp
-src += $(LIBDIR)/FEMLinElement3D.cpp
-src += $(LIBDIR)/FEMMiniElement3D.cpp
-#src += $(LIBDIR)/FEMQuadElement3D.cpp
+src += ${FEMLIB_DIR}/clVector.cpp
+src += ${FEMLIB_DIR}/clMatrix.cpp
+src += ${FEMLIB_DIR}/clDMatrix.cpp
+src += ${FEMLIB_DIR}/PCGSolver.cpp
+src += ${FEMLIB_DIR}/GMRes.cpp
+src += ${FEMLIB_DIR}/PetscSolver.cpp
+src += ${FEMLIB_DIR}/FEMLinElement3D.cpp
+src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp
+#src += ${FEMLIB_DIR}/FEMQuadElement3D.cpp
 src += $(wildcard ./*.cpp)
 
 obj = $(src:%.cpp=%.o)
 
-all: step bubble 2bubbles diskNuC diskNuCte diskNuZ
+all: step bubble 2bubbles diskNuC diskNuCte diskNuZ \
+     diskSurf curvature curvatureAndPressure \
+	 staticDroplet staticTorus sessileDrop \
+	 oscillating fallingDrop micro 
 
 diskNuC: ./script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
@@ -106,8 +108,10 @@ erase:
 	@rm -f ./dat/vk*
 
 deepclean: 
-	@rm -f staticDroplet step bubble 2bubble diskNuC diskNuCte diskNuZ
-	@rm -f 2bubbles diskSurf staticTorus sessileDrop curvature fallingDrop
+	@rm -f staticDroplet step bubble 2bubble diskNuC 
+	@rm -f 2bubbles diskSurf staticTorus sessileDrop 
+	@rm -f curvature fallingDrop diskNuCte diskNuZ
+	@rm -f curvatureAndPressure
 	@rm -f oscillating micro
 	@rm -f libtest*
 	@rm -f core
@@ -119,6 +123,7 @@ deepclean:
 	@rm -f ./sim/vk*.dat
 	@rm -f ./sim/sim*.dat
 	@rm -f ./bin/*.bin
+	@rm -f ./*.dat
 	@rm -f ./dat/*.dat
 	@rm -f ./dat/vk*
 

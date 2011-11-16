@@ -37,11 +37,15 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- const char *mesh = "../../db/mesh/3d/step40-20-2.vtk";
+ string meshFile = "step40-20-2.vtk";
+
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  //const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/mesh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  m1.setMeshStep(40,20,2);
@@ -92,7 +96,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 100;
  int nRe = 5;

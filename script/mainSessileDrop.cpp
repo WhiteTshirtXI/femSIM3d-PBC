@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- const char *mesh = "../../db/gmsh/3d/sessile.msh";
+ string meshFile = "sessile.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -61,6 +61,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/gmsh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
@@ -258,6 +261,7 @@ int main(int argc, char **argv)
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
+   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    s1.saveOldData();
@@ -316,6 +320,7 @@ int main(int argc, char **argv)
   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder);
+  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

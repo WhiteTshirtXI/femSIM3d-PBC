@@ -50,8 +50,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.5;
 
- const char *mesh = "../../db/gmsh/3d/fallingDrop.msh";
- 
+ string meshFile = "fallingDrop.msh";
+
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -62,6 +62,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/gmsh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
@@ -234,7 +237,7 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;
@@ -268,6 +271,7 @@ int main(int argc, char **argv)
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
+   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    s1.saveOldData();
@@ -327,6 +331,7 @@ int main(int argc, char **argv)
   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder);
+  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

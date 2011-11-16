@@ -2719,9 +2719,17 @@ void Model3D::remove3dMeshPointsByDistance()
  * */
 void Model3D::insert3dMeshPointsByDiffusion()
 {
- // number of removed points of 3d mesh
+ // number of inserted points of 3d mesh
  ipd = 0;
 
+ /*
+  * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
+  * mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
+  * mapEdge.Set(edge,2,yMid ); // coordenada Y do centro da aresta
+  * mapEdge.Set(edge,3,zMid ); // coordenada Y do centro da aresta
+  * mapEdge.Set(edge,4,faces[i].p1 ); // 1o noh
+  * mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
+  * */
  for( int e=0;e<mapEdge.DimI();e++ )
  {
   int XvAdd = mapEdge.Get(e,1);
@@ -2742,8 +2750,8 @@ void Model3D::insert3dMeshPointsByDiffusion()
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 3.0*edgeSize.Get(v1) &&
-	  hSum > 1.0)
+  if( length > 2.0*edgeSize.Get(v1) &&
+	  hSum < 0.5 )
   {
    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
@@ -2761,7 +2769,9 @@ void Model3D::insert3dMeshPointsByDiffusion()
    Y.AddItem(vAdd,YvAdd);
    Z.AddItem(vAdd,ZvAdd);
    heaviside.AddItem(vAdd,heaviside.Get(v1));
-   edgeSize.AddItem(vAdd,edgeSize.Get(v1));
+   vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
+   elemIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
+   edgeSize.AddItem(vAdd,edgeSize.Get(v1)/2.0);
 
    numVerts++;
    dVerts++;

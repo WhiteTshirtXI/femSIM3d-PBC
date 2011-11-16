@@ -73,7 +73,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  alpha = _s.getAlpha();
  beta  = _s.getBeta();
  dt    = _s.getDt();
- time  = _s.getTime2();
+ time  = _s.getTime();
  cfl   = _s.getCfl();
  g     = _s.getGrav();
  mu_in  = _s.getMu_in();
@@ -1279,7 +1279,7 @@ void Simulator3D::stepALEVel()
  m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- //m->applyBubbleVolumeCorrection();
+ m->applyBubbleVolumeCorrection();
 
  // velocidade da bolha
  getBubbleVelocity(uALE,vALE,wALE);
@@ -2014,6 +2014,19 @@ real Simulator3D::getDtLagrangian()
  velMax = max( velMax,c3*vSmoothCoord.Abs().Max() );
  velMax = max( velMax,c3*wSmoothCoord.Abs().Max() );
 
+//--------------------------------------------------
+//  cout << "length: " << length << endl; 
+//  cout << "uMax: " << uSolOld.Abs().Max() << endl; 
+//  cout << "vMax: " << vSolOld.Abs().Max() << endl; 
+//  cout << "wMax: " << wSolOld.Abs().Max() << endl; 
+//  cout << "uSmooth: " << c2*uSmooth.Abs().Max() << endl; 
+//  cout << "vSmooth: " << c2*vSmooth.Abs().Max() << endl;
+//  cout << "wSmooth: " << c2*wSmooth.Abs().Max() << endl;
+//  cout << "uCoord: " << c3*uSmoothCoord.Abs().Max() << endl;
+//  cout << "vCoord: " << c3*vSmoothCoord.Abs().Max() << endl;
+//  cout << "wCoord: " << c3*wSmoothCoord.Abs().Max() << endl;
+//  cout << "velMax: " << velMax << endl;
+//-------------------------------------------------- 
  return 0.5*length/velMax;
 }
 
@@ -2221,7 +2234,6 @@ real Simulator3D::getSigma(){return sigma;}
 void Simulator3D::setDt(real _dt){dt = _dt;}
 void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
-real Simulator3D::getTime2(){return time;}
 void Simulator3D::setIter(real _iter){iter = _iter;}
 int  Simulator3D::getIter(){return iter;}
 real Simulator3D::getCfl(){return cfl;}
@@ -2461,7 +2473,7 @@ real Simulator3D::getMu_in(){return mu_in;}
 real Simulator3D::getMu_out(){return mu_out;}
 real Simulator3D::getRho_in(){return rho_in;}
 real Simulator3D::getRho_out(){return rho_out;}
-real* Simulator3D::getTime(){return &time;}
+real Simulator3D::getTime(){return time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
 void Simulator3D::setUSol(clVector &_uSol){uSol = _uSol;}
@@ -2731,7 +2743,7 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  alpha = _s.getAlpha();
  beta  = _s.getBeta();
  dt    = _s.getDt();
- time  = _s.getTime2();
+ time  = _s.getTime();
  cfl   = _s.getCfl();
  iter  = _s.getIter();
  c1    = _s.getC1();

@@ -37,8 +37,28 @@ InOut::InOut( Model3D &_m )
  inElem = m->getInElem();
  outElem = m->getOutElem();
  edgeSize = m->getEdgeSize();
+ elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
+
+ // mesh indexes:
+ isp = m->getISP();
+ ispc = m->getISPC();
+ rsp = m->getRSP();
+ rspc = m->getRSPC();
+ ip = m->getIP();
+ ipd = m->getIPD();
+ rp = m->getRP();
+ rpi = m->getRPI();
+ rpd = m->getRPD();
+ rpv = m->getRPV();
+ csp = m->getCSP();
+ flip = m->getFLIP();
+ intet = m->getINTET();
+ maxVolume = m->getMaxVolume();
+ minVolume = m->getMinVolume();
+ idMaxVolume = m->getIdMaxVolume();
+ idMinVolume = m->getIdMinVolume();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -70,8 +90,28 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  inElem = m->getInElem();
  outElem = m->getOutElem();
  edgeSize = m->getEdgeSize();
+ elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
+
+ // mesh indexes:
+ isp = m->getISP();
+ ispc = m->getISPC();
+ rsp = m->getRSP();
+ rspc = m->getRSPC();
+ ip = m->getIP();
+ ipd = m->getIPD();
+ rp = m->getRP();
+ rpi = m->getRPI();
+ rpd = m->getRPD();
+ rpv = m->getRPV();
+ csp = m->getCSP();
+ flip = m->getFLIP();
+ intet = m->getINTET();
+ maxVolume = m->getMaxVolume();
+ minVolume = m->getMinVolume();
+ idMaxVolume = m->getIdMaxVolume();
+ idMinVolume = m->getIdMinVolume();
 
  s = &_s;
  Re = s->getRe();
@@ -1184,7 +1224,7 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
+ vtkFile << simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1265,7 +1305,7 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
+ vtkFile << simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1346,7 +1386,7 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << *simTime << endl;
+ vtkFile << simTime << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1413,7 +1453,7 @@ void InOut::saveSimTime(int _iter)
   exit(1);
  }
 
- file << _iter << " " << *simTime << endl;
+ file << _iter << " " << simTime << endl;
  file << endl;
 }
 
@@ -1431,7 +1471,7 @@ void InOut::saveSimTime( const char* _dir,const char* _filename, int _iter )
  const char* filename = file.c_str();
 
  ofstream datFile( filename ); 
- datFile << _iter << " " << *simTime << endl;
+ datFile << _iter << " " << simTime << endl;
  datFile << endl;
 }
 
@@ -1659,7 +1699,7 @@ void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
  real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
 
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << pointX << " " 
                   << pointY << " " 
                   << pointZ << " " 
@@ -1693,7 +1733,7 @@ void InOut::oscillating(int point1,int point2,int point3,const char* _filename)
  real pointZ = wSol->Get(point3);
 
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << pointX << " " 
                   << pointY << " " 
                   << pointZ << " " 
@@ -1735,7 +1775,7 @@ void InOut::oscillatingD(int point1,int point2,int point3,int point4,
  real diameterZ = fabs( pointZ1-pointZ2 );
                  
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << diameterX << " " 
                   << diameterY << " " 
                   << diameterZ << " " 
@@ -1811,7 +1851,7 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
  real diameterZ = zMax - zMin; 
 
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << diameterX << " " 
                   << diameterY << " " 
                   << diameterZ << " " 
@@ -1847,7 +1887,7 @@ void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
  real kappaAverage = aux/kappa->Dim();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << kappaAverage << " " 
 				  << setprecision(0) << fixed << _iter 
 				  << endl;
@@ -2068,7 +2108,7 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  real dist2 = Ymax2-Ymax1;
 
  file << setprecision(10) << scientific; 
- file << setw(9) <<  *simTime << " " << Ymin1 << " " << Ymax1 << " " 
+ file << setw(9) <<  simTime << " " << Ymin1 << " " << Ymax1 << " " 
                                      << Ymin2 << " " << Ymax2 << " " 
 							    	 << dist1 << " " << dist2 << " "
 									 << _iter << endl;
@@ -2080,7 +2120,7 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
 
 void InOut::saveMeshInfo(const char* _dir)
 {
- real *time = s->getTime();
+ real time = s->getTime();
  string file = (string) _dir + "meshingInfo.dat";
  const char* filename = file.c_str();
 
@@ -2105,17 +2145,77 @@ void InOut::saveMeshInfo(const char* _dir)
 
 
  mesh << setprecision(10) << scientific; 
- mesh << setw(9) <<  *time << " " << setw(9) << numVerts << " " 
-                                  << setw(9) <<numNodes << " " 
-								  << setw(9) <<numElems << " "
-								  << setw(10) <<surfMesh->numVerts << " "
-								  << setw(10) <<surfMesh->numElems << " "
-								  << setw(5) << iter << " "
-								  << endl; 
+ mesh << setw(9) <<  time << " " << setw(9) << numVerts << " " 
+                                 << setw(9) <<numNodes << " " 
+						   	     << setw(9) <<numElems << " "
+							     << setw(10) <<surfMesh->numVerts << " "
+							     << setw(10) <<surfMesh->numElems << " "
+								 << setw(5) << iter << " "
+								 << endl; 
 
  mesh.close();
 
  cout << "meshing info saved" << endl;
+
+ file = (string) _dir + "meshReport.dat";
+ const char* filename2 = file.c_str();
+
+ ifstream testFile2( filename2 );
+ ofstream mesh2( filename2,ios::app );
+ if( testFile2 )
+ {
+  testFile2.close();
+  cout << "appending on file meshReport.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file meshReport.dat" << endl;
+  mesh2 << "#time" << setw(16) << "isp" 
+                   << setw(7) << "ispc" 
+                   << setw(6) << "rsp" 
+                   << setw(7) << "rspc" 
+                   << setw(5) << "ip" 
+                   << setw(6) << "ipd" 
+                   << setw(5) << "rp" 
+                   << setw(6) << "rpi" 
+                   << setw(6) << "rpd" 
+                   << setw(6) << "rpv" 
+                   << setw(6) << "csp" 
+                   << setw(7) << "flip" 
+                   << setw(8) << "intet" 
+		 		   << setw(20) << "maxVolume"
+		 		   << setw(20) << "minVolume"
+		 		   << setw(14) << "idMaxVolume"
+		 		   << setw(14) << "idMinVolume"
+		 		   << setw(7) << "iter"
+		 		   << endl;
+ }
+
+
+ mesh2 << setprecision(10) << scientific; 
+ mesh2 << setw(9) <<  time << " " << setw(4)  << isp << " " 
+                                  << setw(6)  << ispc << " " 
+						   	      << setw(5)  << rsp << " "
+						   	      << setw(6)  << rspc << " "
+						   	      << setw(4)  << ip << " "
+						   	      << setw(5)  << ipd << " "
+						   	      << setw(4)  << rp << " "
+						   	      << setw(5)  << rpi << " "
+						   	      << setw(5)  << rpd << " "
+						   	      << setw(5)  << rpv << " "
+						   	      << setw(5)  << csp << " "
+						   	      << setw(6)  << flip << " "
+						   	      << setw(7)  << intet << " "
+						   	      << setw(19) << maxVolume << " "
+						   	      << setw(19) << minVolume << " "
+						   	      << setw(13)  << idMaxVolume << " "
+						   	      << setw(13)  << idMinVolume << " "
+								  << setw(6)  << iter << " "
+								  << endl; 
+ 
+ mesh2.close();
+
+ cout << "mesh report saved" << endl;
 }
 
 void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
@@ -2148,7 +2248,7 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
  vtuFile << "FIELD FieldData 2 " << endl;
  vtuFile << "TIME 1 1 double " << endl;
  vtuFile << setprecision(10) << scientific;
- vtuFile << *simTime << endl;
+ vtuFile << simTime << endl;
  vtuFile << "ITERATION 1 1 int " << endl;
  vtuFile << setprecision(0) << fixed;
  vtuFile << _iter << endl;
@@ -2329,7 +2429,7 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
  iter = s->getIter();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << *simTime << " " 
+ file << setw(10) << simTime << " " 
                   << uError << " " 
                   << vError << " " 
                   << wError << " " 
@@ -2554,7 +2654,7 @@ void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, 
  real fluidArea = totalArea - bubbleArea;
  real voidFraction = bubbleArea/totalArea;
  voidFile << setprecision(10) << scientific;
- voidFile << setw(10) << *simTime << " " 
+ voidFile << setw(10) << simTime << " " 
                       << totalArea << " " 
 					  << bubbleArea << " " 
 					  << fluidArea << " " 
@@ -2586,7 +2686,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "DATASET UNSTRUCTURED_GRID" << endl;
  _file << "FIELD FieldData 7" << endl;
  _file << "TIME 1 3 double" << endl;
- _file << dt << " " << cfl << " " << *simTime << endl;
+ _file << dt << " " << cfl << " " << simTime << endl;
  _file << "ITERATION 1 1 int" << endl;
  _file << _iter << endl;
  _file << "NODES 1 3 int" << endl;
@@ -2955,7 +3055,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
 
  fileVel << setprecision(10) << scientific; 
- fileVel << setw(10) << *simTime << " " 
+ fileVel << setw(10) << simTime << " " 
          << setw(17) << pointX << " " 
 		 << setw(17) << pointY << " " 
 		 << setw(17) << pointZ << " " 
@@ -3025,7 +3125,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  real diameterZ = zMax - zMin; 
 
  fileD << setprecision(10) << scientific; 
- fileD << setw(10) << *simTime << " " 
+ fileD << setw(10) << simTime << " " 
        << setw(17) << diameterX << " " 
 	   << setw(17) << diameterY << " " 
 	   << setw(17) << diameterZ << " " 
@@ -3115,9 +3215,11 @@ void InOut::saveBubbleInfo(const char* _dir)
 
  real averageNeigh = sumNeighbours/surfacePoints;
 
+ m->meshStats();
+ averageTriEdge = m->getAverageTriEdge();
 
  fileKappa << setprecision(10) << scientific; 
- fileKappa << setw(10) << *simTime << " " 
+ fileKappa << setw(10) << simTime << " " 
            << setw(17) << kappaAverage << " " 
            << setw(17) << kappaAnalytic << " " 
            << setw(17) << kappaError << " " 
@@ -3162,7 +3264,7 @@ void InOut::saveBubbleInfo(const char* _dir)
 
 
  filePressure << setprecision(10) << scientific; 
- filePressure << setw(10) << *simTime << " " 
+ filePressure << setw(10) << simTime << " " 
               << setw(17) << pressureAverage << " " 
               << setw(17) << pressureAnalytic << " " 
 			  << setw(17) << pressureError << " " 
@@ -3262,7 +3364,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  }
 
  fileVol << setprecision(10) << scientific; 
- fileVol << setw(10) << *simTime << " " 
+ fileVol << setw(10) << simTime << " " 
          << setw(17) << sumVolume << " " 
 	     << setw(17) << sumXVelVolume/sumVolume << " " 
 	     << setw(17) << sumYVelVolume/sumVolume << " " 
@@ -3275,3 +3377,161 @@ void InOut::saveBubbleInfo(const char* _dir)
  fileVol.close();
 }
 
+void InOut::printMeshReport()
+{
+ m->meshStats();
+ intet = m->getINTET();
+ maxVolume = m->getMaxVolume();
+ minVolume = m->getMinVolume();
+ idMaxVolume = m->getIdMaxVolume();
+ idMinVolume = m->getIdMinVolume();
+
+ time_t currentTime;
+
+ time( &currentTime );
+
+ // ATTRIBUTES  :none,underscore,blink,reverse,concealed
+ // COLORS      :black,red,green,yellow,blue,magenta,cyan,white
+ cout << endl;
+ cout << endl;
+ cout << "   |------------------------------ Mesh Report ----------------------------|" 
+      << endl;
+ cout << "   |                                                                       |" 
+      << endl;
+ cout << "          number of 3D points          (numVerts):   " 
+      << numVerts << endl;
+ cout << "          number of 3D nodes           (numNodes):   " 
+      << numNodes << endl;
+ cout << "          number of tetrahedrons        (numEles):   " 
+      << numElems << endl;
+ cout << "          number of surface points     (surfMesh):   " 
+      << surfMesh->numVerts << endl;
+ cout << "          number of surface triangles    (numTri):   " 
+      << surfMesh->numElems << endl;
+ cout << "          interface average element edge length:     " 
+      << averageTriEdge << endl;
+ cout << "          desired tetrahedron volume:                " 
+      << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
+
+ for(int nb=1;nb<=elemIdRegion->Max();nb++ )
+  cout << "          triangle edge size (" << nb 
+       << "):                    " << triEdge[nb] << endl;
+
+ cout << "          min tetrahedron volume:                    " 
+      << minVolume << " (" << idMinVolume << ")" << endl;
+ cout << "          max tetrahedron volume:                    " 
+      << maxVolume <<  " (" << idMaxVolume << ")" << endl;
+
+ cout << color(none,yellow,black) 
+      << "          inserted" << resetColor() 
+	  << " surface points by length:         " 
+	  << isp << endl;
+ cout << color(none,yellow,black) 
+      << "          inserted" << resetColor() 
+	  << " surface points by curvature:      " 
+	  << ispc << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+	  << " surface points by lenght:          " 
+	  << rsp << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+	  << " surface points by curvature:       " 
+	  << rspc << endl;
+ cout << color(none,green,black)
+      << "          flipped" << resetColor() 
+	  << " operations at surface:             " 
+	  << flip << endl; 
+ cout << color(none,cyan,black)
+      << "          contracted" << resetColor() 
+	  << " surface points by lenght:       " 
+	  << csp << endl; 
+ cout << color(none,yellow,black) 
+      << "          inserted" << resetColor()
+	  << " mesh points by diffusion:         " << ipd << endl;
+ cout << color(none,yellow,black) 
+      << "          inserted" << resetColor()
+	  << " 3D mesh points:                   " << ip << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+      << " mesh points by diffusion:          " << rpd << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+      << " mesh points by volume:             " << rpv << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+      << " 3D mesh points:                    " << rp << endl;
+ cout << color(none,red,black)
+      << "          removed" << resetColor() 
+      << " mesh points by interface distance: " << rpi << endl;
+ cout << "          number of tets with 4 verts on surface:    " 
+      << intet << endl;
+ cout << "   |                                                                       |" 
+      << endl;
+ cout << "   |-----------------------------------------------------------------------|" 
+      << endl;
+ cout << endl;
+}
+
+void InOut::printSimulationReport()
+{
+ cout << endl;
+ cout << "   |-------------------------- Simulation Report --------------------------|" 
+      << endl;
+ cout << "   |                                                                       |" 
+      << endl;
+ cout << color(none,magenta,black)
+      << "          Reynolds" << resetColor()
+	  << " number:                           " << Re << endl;
+ cout << color(none,magenta,black)
+      << "          Froud" << resetColor()
+	  << " number:                              " << Fr << endl;
+ cout << color(none,magenta,black)
+      << "          Webber" << resetColor()
+	  << " number:                             " << We << endl;
+ cout << color(none,magenta,black)
+      << "          alpha" << resetColor()
+	  << " number:                              " << alpha << endl;
+ cout << color(none,magenta,black)
+      << "          beta" << resetColor()
+	  << " number:                               " << beta << endl;
+ cout << "          parameter " << color(none,magenta,black)
+      << "c1                               " 
+	  << resetColor() << c1 << endl;
+ cout << "          parameter " << color(none,magenta,black)
+      << "c2                               " 
+	  << resetColor() << c2 << endl;
+ cout << "          parameter " << color(none,magenta,black)
+      << "c3                               " 
+	  << resetColor() << c3 << endl;
+ cout << "          parameter " << color(none,magenta,black)
+      << "c4                               " 
+	  << resetColor() << c4 << endl;
+ cout << color(none,magenta,black)
+      << "          liquid viscosity                           " 
+	  << resetColor() << mu_out << endl;
+ cout << color(none,magenta,black)
+      << "          gas viscosity                              " 
+	  << resetColor() << mu_in << endl;
+ cout << color(none,magenta,black)
+      << "          liquid density                             " 
+	  << resetColor() << rho_out << endl;
+ cout << color(none,magenta,black)
+      << "          gas density                                " 
+	  << resetColor() << rho_in << endl;
+ cout << color(none,magenta,black)
+      << "          CFL" << resetColor()
+	  << " number:                                " << cfl << endl;
+ cout << color(none,magenta,black)
+      << "          dt:                                        " << resetColor() 
+	  << dt << endl;
+ cout << color(none,magenta,black)
+      << "          time:                                      " << resetColor() 
+	  << simTime << endl;
+ cout << "   |                                                                       |" 
+      << endl;
+ cout << "   |-----------------------------------------------------------------------|" 
+      << endl;
+ cout << endl;
+ cout << endl;
+}

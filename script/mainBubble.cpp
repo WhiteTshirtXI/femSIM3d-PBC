@@ -22,42 +22,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
-//--------------------------------------------------
-//  // bogdan's thesis 2010 - case 1
-//  // set each bubble length
-//  vector< real > triEdge;
-//  triEdge.resize(3);
-//  triEdge[0] = 0.1; // none
-//  triEdge[1] = 0.11; // wall
-//  triEdge[2] = 0.11; // bubble
-//
-//  int iter = 0;
-//  real Re = 6.53;
-//  real Sc = 1;
-//  real We = 115.66;
-//  real Fr = 1.0;
-//  real c1 = 0.01; // lagrangian
-//  real c2 = 1.00; // smooth
-//  real c3 = 0.03; // smooth
-//  real c4 = 0.03; // surface
-//  real alpha = 1;
-//  real beta = 1;
-// 
-//  real sigma = 0.078;
-// 
-//  real mu_in = 0.0000178;
-//  real mu_out = 2.73;
-// 
-//  real rho_in = 1.225;
-//  real rho_out = 1350;
-// 
-//  real cfl = 0.02;
-// 
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
-//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
-//-------------------------------------------------- 
-
- // bogdan's thesis 2010 - case 2
+ // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(3);
@@ -66,7 +31,9 @@ int main(int argc, char **argv)
  triEdge[2] = 0.10; // bubble
 
  int iter = 0;
- real Re = 13.8487;
+ //real Re = 6.53; // case 1
+ real Re = 13.8487; // case 2
+ //real Re = 32.78; // case 3
  real Sc = 1;
  real We = 115.66;
  real Fr = 1.0;
@@ -89,76 +56,6 @@ int main(int argc, char **argv)
 
  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
- 
-//--------------------------------------------------
-//  // bogdan's thesis 2010 - case 3
-//  // set each bubble length
-//  vector< real > triEdge;
-//  triEdge.resize(3);
-//  triEdge[0] = 0.1; // none
-//  triEdge[1] = 0.11; // wall
-//  triEdge[2] = 0.09; // bubble
-//
-//  int iter = 0;
-//  real Re = 32.78;
-//  real Sc = 1;
-//  real We = 115.66;
-//  real Fr = 1.0;
-//  real c1 = 0.00; // lagrangian
-//  real c2 = 1.00; // smooth vel
-//  real c3 = 0.05; // smooth - fujiwara
-//  real c4 = 0.2; // smooth surface - fujiwara
-//  real alpha = 1;
-//  real beta = 1;
-// 
-//  real sigma = 0.078;
-// 
-//  real mu_in = 0.0000178;
-//  real mu_out = 0.54;
-// 
-//  real rho_in = 1.225;
-//  real rho_out = 1350;
-// 
-//  real cfl = 1;
-// 
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
-//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
-//-------------------------------------------------- 
-
-//--------------------------------------------------
-//  // 
-//  // set each bubble length
-//  vector< real > triEdge;
-//  triEdge.resize(3);
-//  triEdge[0] = 0.1; // none
-//  triEdge[1] = 0.11; // wall
-//  triEdge[2] = 0.11; // bubble
-//
-//  int iter = 0;
-//  real Re = 30.83;
-//  real Sc = 1;
-//  real We = 339;
-//  real Fr = 1.0;
-//  real c1 = 0.00; // lagrangian
-//  real c2 = 1.00; // smooth vel
-//  real c3 = 0.08; // smooth - fujiwara
-//  real c4 = 0.1; // smooth surface - fujiwara
-//  real alpha = 1;
-//  real beta = 1;
-// 
-//  real sigma = 0.078;
-// 
-//  real mu_in = 0.0000178;
-//  real mu_out = 0.54;
-// 
-//  real rho_in = 1.225;
-//  real rho_out = 1350;
-// 
-//  real cfl = 0.01;
-// 
-//  const char *mesh = "../../db/gmsh/3d/bubble-tube5.msh";
-//  //const char *mesh = "../../db/gmsh/3d/risingBubble6D.msh";
-//-------------------------------------------------- 
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -330,19 +227,17 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
-//--------------------------------------------------
-//  // Point's distribution
-//  Laplace3D d1(m1);
-//  d1.init();
-//  d1.assemble();
-//  d1.setBC();
-//  d1.matMountC();
-//  d1.setUnCoupledCBC(); 
-//  d1.setCRHS();
-//  d1.unCoupledC();
-//  //d1.saveVTK("./vtk/","edge");
-//  m1.setEdgeSize(*d1.getCSol());
-//-------------------------------------------------- 
+ // Point's distribution
+ Laplace3D d1(m1);
+ d1.init();
+ d1.assemble();
+ d1.setBC();
+ d1.matMountC();
+ d1.setUnCoupledCBC(); 
+ d1.setCRHS();
+ d1.unCoupledC();
+ //d1.saveVTK("./vtk/","edge");
+ m1.setEdgeSize(*d1.getCSol());
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -383,6 +278,7 @@ int main(int argc, char **argv)
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
+   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    s1.saveOldData();
@@ -392,20 +288,42 @@ int main(int argc, char **argv)
 	    << i*nReMesh+j+iter << endl << endl;;
    cout << resetColor();
   }
-//--------------------------------------------------
-//   Laplace3D d2(m1,d1);
-//   d2.assemble();
-//   d2.setBC();
-//   d2.matMountC();
-//   d2.setUnCoupledCBC(); 
-//   d2.setCRHS();
-//   d2.unCoupledC();
-//   d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
-//   m1.setEdgeSize(*d2.getCSol());
-//-------------------------------------------------- 
+  Laplace3D d2(m1,d1);
+  d2.assemble();
+  d2.setBC();
+  d2.matMountC();
+  d2.setUnCoupledCBC(); 
+  d2.setCRHS();
+  d2.unCoupledC();
+  d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
+  m1.setEdgeSize(*d2.getCSol());
 
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
+
+  /* *********** MESH TREATMENT ************* */
+  // set normal and kappa values
+  m1.setNormalAndKappa();
+
+  // 3D operations
+  m1.insert3dMeshPointsByDiffusion();
+  m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume();
+  //m1.removePointsByInterfaceDistance();
+  //m1.remove3dMeshPointsByDistance();
+  m1.delete3DPoints();
+
+  // surface operations
+  m1.insertPointsByLength();
+  //m1.insertPointsByCurvature();
+  m1.removePointsByCurvature();
+  //m1.insertPointsByInterfaceDistance();
+  m1.contractEdgeByLength();
+  //m1.removePointsByLength();
+  m1.flipTriangleEdge();
+  m1.checkNeighbours();
+  /* **************************************** */
+
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();
@@ -430,6 +348,7 @@ int main(int argc, char **argv)
   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder);
+  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

@@ -256,6 +256,7 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.bubblesDistance(datFolder,"distance",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
+   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    s1.saveOldData();
@@ -267,6 +268,30 @@ int main(int argc, char **argv)
   }
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
+
+  /* *********** MESH TREATMENT ************* */
+  // set normal and kappa values
+  m1.setNormalAndKappa();
+
+  // 3D operations
+  //m1.insert3dMeshPointsByDiffusion();
+  //m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume();
+  //m1.removePointsByInterfaceDistance();
+  //m1.remove3dMeshPointsByDistance();
+  m1.delete3DPoints();
+
+  // surface operations
+  m1.insertPointsByLength();
+  //m1.insertPointsByCurvature();
+  m1.removePointsByCurvature();
+  //m1.insertPointsByInterfaceDistance();
+  m1.contractEdgeByLength();
+  //m1.removePointsByLength();
+  m1.flipTriangleEdge();
+  m1.checkNeighbours();
+  /* **************************************** */
+
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();
@@ -291,6 +316,7 @@ int main(int argc, char **argv)
   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
   saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
   saveEnd.saveMeshInfo(datFolder);
+  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

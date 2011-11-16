@@ -238,7 +238,6 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << endl;
 
-
  vtkFile << "POINTS " << numVerts << " double" << endl;
  for( int i=0;i<numVerts;i++ )
   vtkFile << X->Get(i) << " " 
@@ -247,19 +246,56 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  vtkFile << endl;
 
- vtkFile << "CELLS " << numElems << " " << 5*numElems << endl;
+ // conta numero de elementos
+ real plane1 = ( X->Max()+X->Min() )/2.0;
+ int count = 0;
  for( int i=0;i<numElems;i++ )
  {
-   vtkFile << "4 " << IEN->Get(i,0) << " "
-	               << IEN->Get(i,1) << " "
-	               << IEN->Get(i,2) << " "
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+   count++;
+ }
+ 
+ vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << setprecision(0) << fixed; 
+ for( int i=0;i<numElems;i++ )
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+  {
+   vtkFile << "4 " << IEN->Get(i,0) << " "  
+            	   << IEN->Get(i,1) << " " 
+				   << IEN->Get(i,2) << " " 
 				   << IEN->Get(i,3) << endl;
+  }
  }
  vtkFile << endl;
 
- vtkFile <<  "CELL_TYPES " << numElems << endl;
+ vtkFile <<  "CELL_TYPES " << count << endl;
  for( int i=0;i<numElems;i++ )
-  vtkFile << "10 ";
+ {
+  int v1 = IEN->Get(i,0);
+  int v2 = IEN->Get(i,1);
+  int v3 = IEN->Get(i,2);
+  int v4 = IEN->Get(i,3);
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+   vtkFile << "10 ";
+ }
 
  vtkFile << endl;
 

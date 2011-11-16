@@ -103,7 +103,7 @@ void MeshSmooth::stepSmoothFujiwara()
  list<int> plist;
  list<int>::iterator vert;
  real xSum,ySum,zSum,distSum;
- real size; // numero de elementos da lista
+ //real size; // numero de elementos da lista
  uSmooth.Dim(numNodes);
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
@@ -111,7 +111,7 @@ void MeshSmooth::stepSmoothFujiwara()
  for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  {
   plist = neighbourVert->at(*it);
-  size = plist.size();
+  //size = plist.size();
   xSum = 0.0;
   ySum = 0.0;
   zSum = 0.0;

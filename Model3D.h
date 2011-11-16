@@ -68,7 +68,6 @@ class Model3D
   SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
-  void computeAverageTriangleEdge();
   void insertPointsByLength();
   void insertPointsByCurvature();
   void removePointsByCurvature();
@@ -82,9 +81,8 @@ class Model3D
   void markSurfElemForDeletion(int _elem);
   void deleteSurfaceElements();
   void insertPoint(int _edge);
-  void insertPointWithCurvature(int _edge);
+  clVector considerCurvature(int _v1,int _v2);
   void insertPointsBetweenBubblesByPosition();
-  void deletePoint(int _v);
   list<int> setPolyhedron(list<int> _myList);
   void flipTriangleEdge();
   void contractEdgeByLength();
@@ -127,6 +125,19 @@ class Model3D
   Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
   void convertTetgenToModel3D(tetgenio &_tetmesh);
   void convertModel3DtoTetgen(tetgenio &_tetmesh);
+  int getISP();
+  int getISPC();
+  int getRSP();
+  int getRSPC();
+  int getIP();
+  int getIPD();
+  int getRP();
+  int getRPI();
+  int getRPD();
+  int getRPV();
+  int getCSP();
+  int getFLIP();
+  int getINTET();
 
   // boundary condition settings
   void setNuCteDiskBC();
@@ -180,7 +191,7 @@ class Model3D
   void setNeighbourSurfacePoint();
   void setVertNeighbour();
   void setOFace();
-  void printMeshReport(tetgenio &_tetmesh);
+  void meshStats();
   void clearBC();
   void reAllocStruct();
   void computeSurfaceNormal();
@@ -189,7 +200,6 @@ class Model3D
   void setKappaSurface(clVector &_kappa);
   void setCloser();
   void setInterfaceDistance();
-  void computeKappaGeo();
   clVector getNormalAndKappa(int _node,list<int> _myList);
   void setNormalAndKappa();
 
@@ -316,10 +326,13 @@ class Model3D
   int rsp;                        // rsp: num of removed surface points
   int rspc;                       // ispc: num of removed surface points
   int csp;                        // csp: num of contracted surface points
+  int intet;                      // csp: num of surface tetrahedrons
   int ip;                         // ip: num of inserted 3d mesh points
+  int ipd;                        // ipd: by diffusion 
   int rp;                         // rp: num of removed 3d mesh points
   int rpi;                        // rpi: by interface distance
-  int rpv;                        // rpi: by volume 
+  int rpv;                        // rpv: by volume 
+  int rpd;                        // rpd: by diffusion 
   int flip;                       // flip: flipping operations
   int badtet;                     // num of shit tetrahedrons
   int idMinVolume;                // ID of min tet volume

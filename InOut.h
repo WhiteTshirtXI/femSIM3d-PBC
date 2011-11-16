@@ -190,6 +190,8 @@ class InOut
   void vtkVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_v);
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
+  void printMeshReport();
+  void printSimulationReport();
 
 private:
   Model3D *m;
@@ -203,12 +205,17 @@ private:
   clVector *interfaceDistance;
   vector<real> triEdge;
   clVector *heaviside,*edgeSize;
+  clVector *elemIdRegion;
   list<int> *inElem,*outElem;
   vector< list<int> >* neighbourPoint;
   real averageTriEdge;
+  // mesh indexes
+  int isp,ispc,rsp,rspc,ip,ipd,rp,rpi,rpd,rpv,csp,flip; 
+  int idMaxVolume,idMinVolume,intet;
+  real maxVolume,minVolume;
 
   Simulator3D *s;
-  real Re,Sc,We,Fr,dt,cfl,alpha,beta,*simTime;
+  real Re,Sc,We,Fr,dt,cfl,alpha,beta,simTime;
   real mu_in,mu_out,rho_in,rho_out,sigma;
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;

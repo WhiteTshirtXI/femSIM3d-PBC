@@ -146,81 +146,9 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
  }
- else if( strcmp( *(argv+1),"remesh") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING & STARTING..." << endl;
-  cout << endl;
+ else
+  cout << "The options are: NULL or restart" << endl;
 
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
-
-  // load surface mesh and create new mesh
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  m1.mesh2Dto3DOriginal();
-  m1.setMiniElement();
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setWallBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
- }
- else if( strcmp( *(argv+1),"restop") == 0 )  
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
-  cout << endl;
-
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
-
-  // load surface mesh and create new one
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  m1.mesh2Dto3DOriginal();
-  m1.setMiniElement();
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-
-  s1(m1);
-  //file = (string) "sim-" + *(argv+2);
-  //const char *sol = file.c_str();
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
-  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
-  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
-  return 0;
- }
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -272,6 +200,30 @@ int main(int argc, char **argv)
   }
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
+
+  /* *********** MESH TREATMENT ************* */
+  // set normal and kappa values
+  //m1.setNormalAndKappa();
+
+  // 3D operations
+  //m1.insert3dMeshPointsByDiffusion();
+  //m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume();
+  //m1.removePointsByInterfaceDistance();
+  //m1.remove3dMeshPointsByDistance();
+  //m1.delete3DPoints();
+
+  // surface operations
+  //m1.insertPointsByLength();
+  //m1.insertPointsByCurvature();
+  //m1.removePointsByCurvature();
+  //m1.insertPointsByInterfaceDistance();
+  //m1.contractEdgeByLength();
+  //m1.removePointsByLength();
+  //m1.flipTriangleEdge();
+  //m1.checkNeighbours();
+  /* **************************************** */
+
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMiniElement();

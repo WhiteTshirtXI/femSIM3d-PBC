@@ -108,8 +108,7 @@ class Simulator3D
   void setDt(real _dt);
   void setTime(real _time);
   real getDt();
-  real getTime2();
-  real* getTime();
+  real getTime();
   void setCfl(real _cfl);
   void setCflBubble(real _cfl);
   real getDtLagrangian();

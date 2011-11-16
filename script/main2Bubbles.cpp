@@ -51,6 +51,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.5;
 
+ string meshFile = "2bubbles.msh";
+
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
@@ -59,7 +61,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *mesh = "../../db/gmsh/3d/2bubbles.msh";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/gmsh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
@@ -222,7 +226,7 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;

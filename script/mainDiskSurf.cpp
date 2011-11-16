@@ -36,12 +36,16 @@ int main(int argc, char **argv)
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *mesh = "../../db/mesh/3d/disk6-10-20.vtk";
+ string meshFile = "disk6-10-20.vtk";
+
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *simFolder  = "./sim/";
+ //const char *simFolder  = "./sim/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/mesh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  m1.setMeshDisk(8,8,7);
@@ -57,7 +61,8 @@ int main(int argc, char **argv)
  //m1.setInOutElem();
  m1.setVertNeighbour();
  m1.setInOutElem();
- m1.setNeighbourSurface();
+ m1.setNeighbourSurfaceElem();
+ m1.setNeighbourSurfacePoint();
  //m1.setMapEdgeTri();
  //m1.computeNormalAndKappa();
 
@@ -84,7 +89,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;

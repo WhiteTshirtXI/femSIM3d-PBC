@@ -1,19 +1,19 @@
 # -------------------------------------------------------------------------- #
-#
-#                    Single and Two-Phase flow Simulator
-#  
-#  Method: Finite Element.
-#  Elements: 5 nodes mini-element and 10 nodes quadratic element
-#  Discretization: Galerkin for all terms except of the convection term 
-#                  which is Semi-Lagrangian.
-#  Lin Sys Solution: in-house solvers and PETSc library
-#  Meshing: TetGen by Hang Si
-#
-#  authors: Gustavo R. ANJOS              gustavo.rabello@gmail.com
-#           Norberto MANGIAVACCHI         norberto@uerj.br
-#           Jose PONTES                   jopontes@metalmat.ufrj.br
-#           John R. THOME                 john.thome@epfl.ch
-#
+#                                                                            #
+#                    Single and Two-Phase flow Simulator                     #
+#                                                                            #
+#  Method: Finite Element.                                                   #
+#  Elements: 5 nodes mini-element and 10 nodes quadratic element             #
+#  Discretization: Galerkin for all terms except of the convection term      # 
+#                  which is Semi-Lagrangian.                                 #
+#  Lin Sys Solution: in-house solvers and PETSc library                      #
+#  Meshing: TetGen by Hang Si                                                #
+#                                                                            #
+#  authors: Gustavo R. ANJOS              gustavo.rabello@gmail.com          #
+#           Norberto MANGIAVACCHI         norberto@uerj.br                   #
+#           Jose PONTES                   jopontes@metalmat.ufrj.br          #
+#           John R. THOME                 john.thome@epfl.ch                 #
+#                                                                            #
 # -------------------------------------------------------------------------- #
 
 
@@ -56,6 +56,15 @@ $HOME/Programs/petsc/petsc-dev
 $HOME/Programs/tetgen/1.4.3
 $HOME/Programs/boost/1.47.0
 $HOME/Programs/triangle
+
+# defining some important bash variables (Linux example)
+export PETSC_ARCH=linux-gnu-cxx-debug
+export PETSC_DIR=$HOME/Programs/petsc/petsc-dev
+export TETGEN_DIR=$HOME/Programs/tetgen/1.4.3
+export DATA_DIR=$HOME/projects/db
+export FEM_DIR=$HOME/projects/cpp/femSIM3d
+export FEMLIB_DIR=$HOME/projects/cpp/lib
+
 
 MESHING
 

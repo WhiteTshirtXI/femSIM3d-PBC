@@ -5897,7 +5897,6 @@ void Model3D::setOFace()
  int vec[3];
  int v[4];
  int aresta = 0;
- int jAresta = 0;
  int vertOp1 = 0;
  int vertOp2 = 0;
  int kFace = 0;
@@ -5929,8 +5928,7 @@ void Model3D::setOFace()
 	if( count == 1 ) // aresta localizada!
 	{
 	 for( int m=0;m<3;m++ )
-	  if( vec[m] == aresta ) jAresta = m; 
-	  else if( vec[m] != ii ) kFace = m; 
+	  if( vec[m] != ii ) kFace = m; 
 	 
 	 for( int m=0;m<3;m++ )
 	 {

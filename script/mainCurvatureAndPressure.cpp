@@ -50,6 +50,10 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
 
+ //string meshFile = (string) getenv("MESHLIB");
+ //meshFile += "/gmsh/3d/";
+ //const char *mesh = meshFile.c_str();
+
  /* meshes */
  vector<const char*> mesh;
  mesh.resize(34);

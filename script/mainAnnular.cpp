@@ -48,11 +48,15 @@ int main(int argc, char **argv)
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU); // MUMPS
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
+ //string meshFile = "squareAnnular.msh";
+ string meshFile = "cylinderAnnular.msh";
+
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
- //const char *mesh = "../../db/gmsh/3D/squareAnnular.msh";
- const char *mesh = "../../db/gmsh/3D/cylinderAnnular.msh";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/gmsh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1,mOld;
  Simulator3D s1,s2;
@@ -209,7 +213,7 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo("./","info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 1;
  int nReMesh = 3;

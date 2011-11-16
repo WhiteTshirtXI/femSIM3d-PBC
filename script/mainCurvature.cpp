@@ -50,8 +50,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- const char *mesh = "../../db/gmsh/3d/curvature/0.20.msh";
- 
+ string meshFile = "static.msh";
+
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
@@ -60,6 +60,9 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+ meshDir += "/gmsh/3d/" + meshFile;
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
@@ -105,7 +108,7 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(mesh);
+ save.printInfo(meshFile.c_str());
 
  int nIter = 1;
  for( int i=1;i<=nIter;i++ )

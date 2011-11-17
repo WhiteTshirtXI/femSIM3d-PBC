@@ -21,6 +21,7 @@
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //PetscInitializeNoArguments();
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  // set each bubble length
@@ -240,7 +241,7 @@ int main(int argc, char **argv)
  d1.setCRHS();
  d1.unCoupledC();
  //d1.saveVTK("./vtk/","edge");
- m1.setEdgeSize(*d1.getCSol());
+ d1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -299,7 +300,7 @@ int main(int argc, char **argv)
   d2.setCRHS();
   d2.unCoupledC();
   d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
-  m1.setEdgeSize(*d2.getCSol());
+  d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);

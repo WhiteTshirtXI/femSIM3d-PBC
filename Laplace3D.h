@@ -40,6 +40,7 @@ class Laplace3D
   void setBC();
   void setUnCoupledCBC();
   void unCoupledC();
+  void setModel3DEdgeSize();
 
   void setSolver(Solver *s);
 

@@ -219,6 +219,7 @@ void Laplace3D::allocateMemoryToAttrib()
 
 clVector* Laplace3D::getCSol(){return &cSol;}
 void Laplace3D::setSolver(Solver *s){solver = s;}
+void Laplace3D::setModel3DEdgeSize(){ m->setEdgeSize(cSol); }
 
 void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 {

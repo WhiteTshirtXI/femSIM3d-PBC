@@ -40,8 +40,8 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.1; // smooth - fujiwara
- real c4 = 0.2; // smooth surface - fujiwara
+ real c3 = 0.01; // smooth - fujiwara
+ real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
  save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
- int nReMesh = 1;
+ int nReMesh = 3;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
 
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
-	    << i*nReMesh+j+iter << endl << endl;
+	    << iter << endl << endl;
    cout << resetColor();
 
    s1.setDt();
@@ -276,21 +276,23 @@ int main(int argc, char **argv)
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao
-   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+   save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    save.printSimulationReport();
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
-	    << i*nReMesh+j+iter << endl << endl;;
+	    << iter << endl << endl;;
    cout << resetColor();
+
+   iter++;
   }
   Laplace3D d2(m1,d1);
   d2.assemble();
@@ -299,7 +301,7 @@ int main(int argc, char **argv)
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
   d2.unCoupledC();
-  d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
+  d2.saveVTK("./vtk/","edge",iter);
   d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
@@ -310,7 +312,7 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion();
+  //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -344,13 +346,13 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(mshFolder,"newMesh",iter);
+  saveEnd.saveVTK(vtkFolder,"sim",iter);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",iter);
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter);
+  saveEnd.saveSol(binFolder,"sim",iter);
+  //saveEnd.saveVTU(vtkFolder,"sim",iter);
+  //saveEnd.saveSolTXT(binFolder,"sim",iter);
   saveEnd.saveMeshInfo(datFolder);
   saveEnd.printMeshReport();
  }

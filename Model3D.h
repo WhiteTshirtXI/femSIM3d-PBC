@@ -44,6 +44,7 @@ class Model3D
 {
  public:
   Model3D();                      // construtor padrao
+  Model3D(const Model3D &_mRight);
   virtual ~Model3D();             // destrutor padrao
 
   // reading files

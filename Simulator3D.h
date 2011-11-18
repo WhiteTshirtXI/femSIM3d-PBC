@@ -38,8 +38,8 @@ class Simulator3D
  public:
   Simulator3D(); // construtor padrao
   Simulator3D( Model3D &_m ); // construtor 
+  Simulator3D( const Simulator3D &_sRight ); // construtor 
   Simulator3D( Model3D &_m, Simulator3D &_s );  // copia
-  Simulator3D( Model3D &_mNew, Model3D &_mOld, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
 
   void getModel3DAttrib(Model3D &_m);
@@ -208,6 +208,7 @@ class Simulator3D
   SurfaceMesh *surfMesh;
   Mesh3D *mesh3d;
   clVector *heaviside,*interfaceDistance,*elemIdRegion;
+  list<int> *boundaryVert;
 
 
   real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;

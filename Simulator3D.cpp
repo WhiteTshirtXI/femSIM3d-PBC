@@ -60,6 +60,146 @@ Simulator3D::Simulator3D( Model3D &_m )
  allocateMemoryToAttrib();
 }
 
+Simulator3D::Simulator3D( const Simulator3D &_sRight )  
+{
+ getModel3DAttrib(*_sRight.m);
+
+ Re = _sRight.Re;
+ Sc = _sRight.Sc;
+ Fr = _sRight.Fr;
+ We = _sRight.We;
+ alpha = _sRight.alpha;
+ beta = _sRight.beta;
+ dt = _sRight.dt;
+ cfl = _sRight.cfl;
+ time = _sRight.time;
+ c1 = _sRight.c1;
+ c2 = _sRight.c2;
+ c3 = _sRight.c3;
+ c4 = _sRight.c4;
+ iter = _sRight.iter;
+
+ g = _sRight.g;
+ sigma = _sRight.sigma;
+ rho_in = _sRight.rho_in;
+ rho_out = _sRight.rho_out;
+ mu_in = _sRight.mu_in;
+ mu_out = _sRight.mu_out;
+
+ g_0 = _sRight.g_0;
+ sigma_0 = _sRight.sigma_0;
+ rho_0 = _sRight.rho_0;
+ mu_0 = _sRight.mu_0;
+
+ gAdimen = _sRight.gAdimen;
+ sigmaAdimen = _sRight.sigmaAdimen;
+ rho_inAdimen = _sRight.rho_inAdimen;
+ rho_outAdimen = _sRight.rho_outAdimen;
+ mu_inAdimen = _sRight.mu_inAdimen;
+ mu_outAdimen = _sRight.mu_outAdimen;
+
+ K = _sRight.K;
+ Kc = _sRight.Kc;
+ Mrho = _sRight.Mrho;
+ M = _sRight.M;
+ Mc = _sRight.Mc;
+ G = _sRight.G;
+ D = _sRight.D;
+ mat = _sRight.mat;
+ matc = _sRight.matc;
+ MrhoLumped = _sRight.MrhoLumped;
+ MLumped = _sRight.MLumped;
+ McLumped = _sRight.McLumped;
+ gx = _sRight.gx;
+ gy = _sRight.gy;
+ gz = _sRight.gz;
+ A = _sRight.A;
+ b = _sRight.b;
+ ATilde = _sRight.ATilde;
+ AcTilde = _sRight.AcTilde;
+ GTilde = _sRight.GTilde;
+ DTilde = _sRight.DTilde;
+ ETilde = _sRight.ETilde;
+ E = _sRight.E;
+ invA = _sRight.invA;
+ invC = _sRight.invC;
+ invMrhoLumped = _sRight.invMrhoLumped;
+ invMLumped = _sRight.invMLumped;
+ invMcLumped = _sRight.invMcLumped;
+
+ uSol = _sRight.uSol;
+ vSol = _sRight.vSol;
+ wSol = _sRight.wSol;
+ pSol = _sRight.pSol;
+ cSol = _sRight.cSol;
+ velU = _sRight.velU;
+ velV = _sRight.velV;
+ velW = _sRight.velW;
+ uALE = _sRight.uALE;
+ vALE = _sRight.vALE;
+ wALE = _sRight.wALE;
+ uSL = _sRight.uSL;
+ vSL = _sRight.vSL;
+ wSL = _sRight.wSL;
+ cSL = _sRight.cSL;
+ uSmooth = _sRight.uSmooth;
+ vSmooth = _sRight.vSmooth;
+ wSmooth = _sRight.wSmooth;
+ uSmoothCoord = _sRight.uSmoothCoord;
+ vSmoothCoord = _sRight.vSmoothCoord;
+ wSmoothCoord = _sRight.wSmoothCoord;
+ uSmoothSurface = _sRight.uSmoothSurface;
+ vSmoothSurface = _sRight.vSmoothSurface;
+ wSmoothSurface = _sRight.wSmoothSurface;
+
+ va = _sRight.va;
+ vcc = _sRight.vcc;
+ convUVW = _sRight.convUVW;
+ convC = _sRight.convC;
+ uTilde = _sRight.uTilde;
+ cTilde = _sRight.cTilde;
+ pTilde = _sRight.pTilde;
+ b1 = _sRight.b1;
+ b1c = _sRight.b1c;
+ b2 = _sRight.b2;
+ ip = _sRight.ip;
+ ipc = _sRight.ipc;
+
+ // two-phase vectors
+ kappa   = _sRight.kappa;
+ fint    = _sRight.fint;
+ gravity = _sRight.gravity;
+ Fold    = _sRight.Fold;
+ mu      = _sRight.mu;
+ rho     = _sRight.rho;
+ hSmooth = _sRight.hSmooth;
+ 
+ // old ints
+ numVertsOld = _sRight.numVerts;
+ numNodesOld = _sRight.numNodes;
+ numElemsOld = _sRight.numElems;
+ 
+ // oldSol vectors
+ uSolOld    = _sRight.uSolOld;
+ vSolOld    = _sRight.vSolOld;
+ wSolOld    = _sRight.wSolOld;
+ pSolOld    = _sRight.pSolOld;
+ cSolOld    = _sRight.cSolOld;
+ uALEOld    = _sRight.uALEOld;
+ vALEOld    = _sRight.vALEOld;
+ wALEOld    = _sRight.wALEOld;
+ kappaOld   = _sRight.kappaOld;
+ fintOld    = _sRight.fintOld;
+ gravityOld = _sRight.gravityOld;
+ muOld      = _sRight.muOld;
+ rhoOld     = _sRight.rhoOld;
+ hSmoothOld = _sRight.hSmoothOld;
+
+ solverV = _sRight.solverV;
+ solverP = _sRight.solverP;
+ solverC = _sRight.solverC;
+}
+
 Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)  
 {
  // mesh information vectors
@@ -1570,6 +1710,7 @@ void Simulator3D::unCoupled()
  clVector b1Tilde;
  clVector b2Tilde;
 
+ // applying boundary conditions to b1Tilde
  vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
 
  b1Tilde = b1 + vaIp;
@@ -1583,12 +1724,16 @@ void Simulator3D::unCoupled()
  if( rho_in <= rho_out ) // BUBBLE
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
-  uvw = uTilde + dt*invMLumped*fint + dt*invMrhoLumped*gravity;
+  uvw = uTilde + 
+        dt*invMLumped*(fint.MultVec(ip)) + 
+		dt*invMrhoLumped*(gravity.MultVec(ip));
  }
  else // DROPLET
  {
   cout << setw(70) << "DROPLET SIMULATION" << endl;
-  uvw = uTilde + invA*fint + invA*gravity;
+  uvw = uTilde + 
+        invA*(fint.MultVec(ip)) + 
+		invA*(gravity.MultVec(ip));
  }
  
  //uvw = uTilde;
@@ -3157,25 +3302,16 @@ void Simulator3D::setLagrangianVelBC()
 }
 
 // impoe velocidade ALE = 0 no contorno
+//-------------------------------------------------- 
 void Simulator3D::setALEVelBC()
 {
- for( int i=0;i<idbcw->Dim();i++ )
+ for (list<int>::iterator it=boundaryVert->begin(); 
+                          it!=boundaryVert->end(); 
+						  ++it)
  {
-  int vertice = idbcw->Get(i);
-//--------------------------------------------------
-//   if( (Y->Get(vertice) == Y->Max() || Y->Get(vertice) == Y->Min()) &&
-//        X->Get(vertice) < X->Max() && X->Get(vertice) > X->Min() &&
-//        Z->Get(vertice) < Z->Max() && Z->Get(vertice) > Z->Min() )
-//   {
-//    vALE.Set(vertice,0.0);
-//   }
-//   else 
-//   {
-//-------------------------------------------------- 
-   uALE.Set(vertice,0.0);
-   vALE.Set(vertice,0.0);
-   wALE.Set(vertice,0.0);
- // }
+  uALE.Set(*it,0.0);
+  vALE.Set(*it,0.0);
+  wALE.Set(*it,0.0);
  }
 }
 
@@ -3208,6 +3344,7 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  mesh3d = m->getMesh3d();
  interfaceDistance = m->getInterfaceDistance();
  elemIdRegion = m->getElemIdRegion();
+ boundaryVert = m->getBoundaryVert();
  triEdge = m->getTriEdge();
 }
 

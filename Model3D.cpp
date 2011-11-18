@@ -56,6 +56,87 @@ Model3D::Model3D()
   tetVol[v] = triEdge[v]*triEdge[v]*triEdge[v]*sqrt(2.0)/12.0;
 }
 
+Model3D::Model3D(const Model3D &_mRight)
+{
+  // ints and floats
+  numVerts = _mRight.numVerts;
+  numNodes = _mRight.numNodes;
+  numElems = _mRight.numElems;
+  rMax = _mRight.rMax;
+  xCenter = _mRight.xCenter;
+  yCenter = _mRight.yCenter;
+  zCenter = _mRight.zCenter;
+  bubbleRadius = _mRight.bubbleRadius;
+  dVerts = _mRight.dVerts;                  
+  numTriangles = _mRight.numTriangles;
+  minEdge = _mRight.minEdge;
+  minEdgeTri = _mRight.minEdgeTri;
+  averageTriEdge = _mRight.averageTriEdge;
+  isp = _mRight.isp;
+  ispc = _mRight.ispc;
+  rsp = _mRight.rsp;        
+  rspc = _mRight.rspc;
+  ip = _mRight.ip;                    
+  ipd = _mRight.ipd;                    
+  rp = _mRight.rp;              
+  rpi = _mRight.rpi;                   
+  rpd = _mRight.rpd;                   
+  rpv = _mRight.rpv;                   
+  csp = _mRight.csp;                   
+  flip = _mRight.flip;
+  intet = _mRight.intet;
+  maxVolume = _mRight.maxVolume;
+  minVolume = _mRight.minVolume;
+  idMaxVolume = _mRight.idMaxVolume;
+  idMinVolume = _mRight.idMinVolume;
+
+  // clVector and clMatrix
+  surface = _mRight.surface;
+  nonSurface = _mRight.nonSurface;
+  uc = _mRight.uc;
+  vc = _mRight.vc;
+  wc = _mRight.wc;
+  pc = _mRight.pc;
+  cc = _mRight.cc;
+  heaviside = _mRight.heaviside;
+  X = _mRight.X;
+  Y = _mRight.Y;
+  Z = _mRight.Z;
+  outflow = _mRight.outflow;
+  idbcu = _mRight.idbcu;
+  idbcv = _mRight.idbcv;
+  idbcw = _mRight.idbcw;
+  idbcp = _mRight.idbcp;
+  idbcc = _mRight.idbcc;
+  V = _mRight.V;
+  IEN = _mRight.IEN;
+  faceFace = _mRight.faceFace;
+  freeFace = _mRight.freeFace;
+  mapViz = _mRight.mapViz;
+  oFace = _mRight.oFace;
+  surfMesh = _mRight.surfMesh;
+  interfaceMesh = _mRight.interfaceMesh;
+  convexMesh = _mRight.convexMesh;
+  vertIdRegion = _mRight.vertIdRegion;
+  elemIdRegion = _mRight.elemIdRegion;
+  triEdge = _mRight.triEdge;
+  tetVol = _mRight.tetVol;
+  edgeSize = _mRight.edgeSize;
+
+  // STL: list and vectors
+  initSurfaceVolume = _mRight.initSurfaceVolume;
+  neighbourElem = _mRight.neighbourElem; 
+  neighbourVert = _mRight.neighbourVert;
+  neighbourFace = _mRight.neighbourFace;
+  neighbourSurfaceElem = _mRight.neighbourSurfaceElem;
+  neighbourPoint = _mRight.neighbourPoint;
+  faceIEN = _mRight.faceIEN;
+  boundaryVert = _mRight.boundaryVert;
+  inVert = _mRight.inVert;
+  outElem = _mRight.outElem;
+  inElem = _mRight.inElem;
+}
+
 Model3D::~Model3D(){}
 
 void Model3D::readVTK( const char* filename )

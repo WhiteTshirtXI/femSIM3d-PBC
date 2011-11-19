@@ -2887,7 +2887,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length < 0.3*edgeSize.Get(v1) &&
+  if( length < 0.35*edgeSize.Get(v1) &&
 	  heaviside.Get(v1) != 0.5 &&  
 	  heaviside.Get(v2) != 0.5 )
   {

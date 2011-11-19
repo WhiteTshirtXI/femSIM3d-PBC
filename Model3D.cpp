@@ -528,6 +528,9 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
   }
  }
 
+ /*
+  * Q: Quiet: No terminal output except errors.
+  * */
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -829,6 +832,9 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   in.pointlist[3*i+2] = Z.Get(i);
  }
 
+ /*
+  * Q: Quiet: No terminal output except errors.
+  * */
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -878,6 +884,18 @@ void Model3D::mesh2Dto3D()
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+
+ /*
+  * Q: Quiet: No terminal output except errors.
+  * Y: mesh boundary preserving
+  * YY: no mesh boundary points inserted
+  * R: mesh coarsening
+  * C: Checks the consistency of the final mesh.
+  * A: Assigns attributes to identify tetrahedra in certain regions.
+  * a: Applies a maximum tetrahedron volume constraint.
+  * p:  Tetrahedralizes a picecwise linear complex
+  * q: Quality mesh generation. Min radius-edge ratio may be specifyed
+  * */
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -2798,7 +2816,7 @@ void Model3D::remove3dMeshPointsByDistance()
  * given by the class Laplace3D.
  *
  * */
-void Model3D::insert3dMeshPointsByDiffusion()
+void Model3D::insert3dMeshPointsByDiffusion(real _factor)
 {
  // number of inserted points of 3d mesh
  ipd = 0;
@@ -2831,8 +2849,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 2.0*edgeSize.Get(v1) &&
-	  hSum < 0.5 )
+  if( length > _factor*edgeSize.Get(v1) && hSum < 0.5 )
   {
    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
@@ -2867,7 +2884,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
  * given by the class Laplace3D.
  *
  * */
-void Model3D::remove3dMeshPointsByDiffusion()
+void Model3D::remove3dMeshPointsByDiffusion(real _factor)
 {
  // number of removed points of 3d mesh
  rpd = 0;
@@ -2887,7 +2904,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length < 0.35*edgeSize.Get(v1) &&
+  if( length < _factor*edgeSize.Get(v1) &&
 	  heaviside.Get(v1) != 0.5 &&  
 	  heaviside.Get(v2) != 0.5 )
   {
@@ -3082,6 +3099,10 @@ void Model3D::mesh2Dto3DOriginal()
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+
+ /*
+  * Q: Quiet: No terminal output except errors.
+  * */
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -3666,14 +3687,25 @@ void Model3D::mesh3DPoints()
  //in.save_poly("bubble");
  //in.save_nodes("bubble");
  //in.save_elements("in");
+ /*
+  * Q: Quiet: No terminal output except errors.
+  * Y: mesh boundary preserving
+  * YY: no mesh boundary points inserted
+  * R: mesh coarsening
+  * C: Checks the consistency of the final mesh.
+  * A: Assigns attributes to identify tetrahedra in certain regions.
+  * a: Applies a maximum tetrahedron volume constraint.
+  * p:  Tetrahedralizes a picecwise linear complex
+  * q: Quality mesh generation. Min radius-edge ratio may be specifyed
+  * */
  cout << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 

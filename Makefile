@@ -115,7 +115,7 @@ deepclean:
 	@rm -f oscillating micro
 	@rm -f libtest*
 	@rm -f core
-	@find $(LIBDIR) -name "*.o" -exec rm {} \;
+	@find ${FEMLIB_DIR} -name "*.o" -exec rm {} \;
 	@find . -name "*.o" -exec rm {} \;
 	@find . -name "*~" -exec rm {} \;
 	@rm -f ./vtk/*.vtk

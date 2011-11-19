@@ -240,7 +240,7 @@ int main(int argc, char **argv)
  d1.setCRHS();
  d1.unCoupledC();
  //d1.saveVTK("./vtk/","edge");
- d1.setModel3DEdgeSize()
+ d1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
   d2.setCRHS();
   d2.unCoupledC();
   d2.saveVTK("./vtk/","edge",nReMesh+i*nReMesh+iter-1);
-  d2.setModel3DEdgeSize()
+  d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
@@ -309,8 +309,8 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion();
-  m1.remove3dMeshPointsByDiffusion();
+  m1.insert3dMeshPointsByDiffusion(2.0);
+  m1.remove3dMeshPointsByDiffusion(0.33);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

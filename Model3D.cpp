@@ -3704,7 +3704,8 @@ void Model3D::mesh3DPoints()
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
@@ -6690,10 +6691,6 @@ void Model3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  * */
 clVector Model3D::getNormalAndKappa(int _node,list<int> _myList)
 {
-
-
-
-
  real P0x = surfMesh.X.Get(_node);
  real P0y = surfMesh.Y.Get(_node);
  real P0z = surfMesh.Z.Get(_node);

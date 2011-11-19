@@ -41,10 +41,6 @@ export BOOST_DIR=$HOME/Programs/boost/1.47.0
 export DYLD_LIBRARY_PATH=${BOOST_DIR}/lib:DYLD_LIBRARY_PATH (Mac OS X)
 export LD_LIBRARY_PATH=${BOOST_DIR}/lib:LD_LIBRARY_PATH (Linux)
 
-# download and install Triangle (http://www.cs.cmu.edu/~quake/triangle.html)
-make tetlibrary
-export TRIANGLE_DIR=$HOME/Programs/triangle
-
 # download and install Petsc4py (http://code.google.com/p/petsc4py)
 python setup.py install --home=$HOME/Programs/python/
 -------- END OPTIONAL INSTALL ----------

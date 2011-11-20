@@ -3519,10 +3519,11 @@ void Model3D::removePointByVolume()
 
  tetVol.clear();
  tetVol.resize(triEdge.size()); // number of surfaces + 1
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
 
  // set tetVol ---> wall,bubble1, bubble2 etc.
  for( int v=0;v<(int) triEdge.size();v++ )
-  tetVol[v] = 0.001*triEdge[v]*triEdge[v]*triEdge[v]*sqrt(2.0)/12.0;
+  tetVol[v] = 0.005*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
 
  for( int elem=0;elem<numElems;elem++ )
  {

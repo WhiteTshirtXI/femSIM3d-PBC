@@ -3509,7 +3509,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  * deleted.
  *
  * */
-void Model3D::removePointByVolume()
+void Model3D::removePointByVolume(real _factor)
 {
  real vSum;
  real vertSum;
@@ -3523,7 +3523,7 @@ void Model3D::removePointByVolume()
 
  // set tetVol ---> wall,bubble1, bubble2 etc.
  for( int v=0;v<(int) triEdge.size();v++ )
-  tetVol[v] = 0.005*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
+  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
 
  for( int elem=0;elem<numElems;elem++ )
  {

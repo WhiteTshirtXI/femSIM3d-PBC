@@ -2884,9 +2884,10 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << "2" << endl;
- mshFile << "2 1 \"bubble\""<< endl;
- mshFile << "2 2 \"wall\""<< endl;
+ mshFile << surfMesh->elemIdRegion.Max() << endl;
+ mshFile << "2 1 \"wall\""<< endl;
+ for( int nb=2;nb<=surfMesh->elemIdRegion.Max();nb++ )
+   mshFile << "2 " << nb << " \"bubble" << nb-1 << "\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -2946,9 +2947,10 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << "2" << endl;
- mshFile << "2 1 \"bubble\""<< endl;
- mshFile << "2 2 \"wall\""<< endl;
+ mshFile << surfMesh->elemIdRegion.Max() << endl;
+ mshFile << "2 1 \"wall\""<< endl;
+ for( int nb=2;nb<=surfMesh->elemIdRegion.Max();nb++ )
+   mshFile << "2 " << nb << " \"bubble" << nb-1 << "\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -3398,73 +3400,77 @@ void InOut::printMeshReport()
       << endl;
  cout << "   |                                                                       |" 
       << endl;
- cout << "          number of 3D points          (numVerts):   " 
+ cout << "        number of 3D points          (numVerts):      " 
       << numVerts << endl;
- cout << "          number of 3D nodes           (numNodes):   " 
+ cout << "        number of 3D nodes           (numNodes):      " 
       << numNodes << endl;
- cout << "          number of tetrahedrons        (numEles):   " 
+ cout << "        number of tetrahedrons        (numEles):      " 
       << numElems << endl;
- cout << "          number of surface points     (surfMesh):   " 
+ cout << "        number of surface points     (surfMesh):      " 
       << surfMesh->numVerts << endl;
- cout << "          number of surface triangles    (numTri):   " 
+ cout << "        number of surface triangles    (numTri):      " 
       << surfMesh->numElems << endl;
- cout << "          interface average element edge length:     " 
+ cout << "        interface average element edge length:        " 
       << averageTriEdge << endl;
- cout << "          desired tetrahedron volume:                " 
+ cout << "        desired tetrahedron volume:                   " 
       << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
 
  for(int nb=1;nb<=elemIdRegion->Max();nb++ )
-  cout << "          triangle edge size (" << nb 
-       << "):                    " << triEdge[nb] << endl;
+  cout << "        triangle edge size (" << nb 
+       << "):                       " << triEdge[nb] << endl;
 
- cout << "          min tetrahedron volume:                    " 
+ cout << "        min tetrahedron volume:                       " 
       << minVolume << " (" << idMinVolume << ")" << endl;
- cout << "          max tetrahedron volume:                    " 
+ cout << "        max tetrahedron volume:                       " 
       << maxVolume <<  " (" << idMaxVolume << ")" << endl;
+ cout << "        min tetrahedron edge size:                    " 
+      << m->getMinEdge() << endl;
+ cout << "        min triangle edge size:                       " 
+      << m->getMinEdgeTri() << endl;
 
  cout << color(none,yellow,black) 
-      << "          inserted" << resetColor() 
-	  << " surface points by length:         " 
+      << "        inserted" << resetColor() 
+	  << " surface points by length:            " 
 	  << isp << endl;
+ cout << color(none,red,black)
+      << "        removed" << resetColor() 
+	  << " surface points by lenght:             " 
+	  << rsp << endl;
  cout << color(none,yellow,black) 
-      << "          inserted" << resetColor() 
-	  << " surface points by curvature:      " 
+      << "        inserted" << resetColor() 
+	  << " surface points by curvature:         " 
 	  << ispc << endl;
  cout << color(none,red,black)
-      << "          removed" << resetColor() 
-	  << " surface points by lenght:          " 
-	  << rsp << endl;
- cout << color(none,red,black)
-      << "          removed" << resetColor() 
-	  << " surface points by curvature:       " 
+      << "        removed" << resetColor() 
+	  << " surface points by curvature:          " 
 	  << rspc << endl;
  cout << color(none,green,black)
-      << "          flipped" << resetColor() 
-	  << " operations at surface:             " 
+      << "        flipped" << resetColor() 
+	  << " operations at surface:                " 
 	  << flip << endl; 
  cout << color(none,cyan,black)
-      << "          contracted" << resetColor() 
-	  << " surface points by lenght:       " 
+      << "        contracted" << resetColor() 
+	  << " surface points by lenght:          " 
 	  << csp << endl; 
  cout << color(none,yellow,black) 
-      << "          inserted" << resetColor()
-	  << " mesh points by diffusion:         " << ipd << endl;
+      << "        inserted" << resetColor()
+	  << " 3D mesh points by diffusion:         " << ipd << endl;
+ cout << color(none,red,black)
+      << "        removed" << resetColor() 
+      << " 3D mesh points by diffusion:          " << rpd << endl;
  cout << color(none,yellow,black) 
-      << "          inserted" << resetColor()
-	  << " 3D mesh points:                   " << ip << endl;
+      << "        inserted" << resetColor()
+	  << " 3D mesh points:                      " << ip << endl;
  cout << color(none,red,black)
-      << "          removed" << resetColor() 
-      << " mesh points by diffusion:          " << rpd << endl;
+      << "        removed" << resetColor() 
+      << " 3D mesh points:                       " << rp << endl;
  cout << color(none,red,black)
-      << "          removed" << resetColor() 
-      << " mesh points by volume:             " << rpv << endl;
+      << "        removed" << resetColor() 
+      << " 3D mesh points by volume:             " << rpv << endl;
  cout << color(none,red,black)
-      << "          removed" << resetColor() 
-      << " 3D mesh points:                    " << rp << endl;
- cout << color(none,red,black)
-      << "          removed" << resetColor() 
-      << " mesh points by interface distance: " << rpi << endl;
- cout << "          number of tets with 4 verts on surface:    " 
+      << "        removed" << resetColor() 
+      << " 3D mesh points by interface distance: " << rpi << endl;
+ cout << "        number of tets with 4 verts on surface:       " 
       << intet << endl;
  cout << "   |                                                                       |" 
       << endl;

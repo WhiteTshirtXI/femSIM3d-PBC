@@ -58,7 +58,7 @@ export PETSC_ARCH=linux-gnu-cxx-debug
 export PETSC_DIR=$HOME/Programs/petsc/petsc-dev
 export TETGEN_DIR=$HOME/Programs/tetgen/1.4.3
 export DATA_DIR=$HOME/projects/db
-export FEM_DIR=$HOME/projects/cpp/femSIM3d
+export FEM3D_DIR=$HOME/projects/cpp/femSIM3d
 export FEMLIB_DIR=$HOME/projects/cpp/lib
 
 

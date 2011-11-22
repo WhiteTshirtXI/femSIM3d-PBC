@@ -29,7 +29,7 @@ int main(int argc, char **argv)
  triEdge[2] = 0.1; // bubble 1 
 
  // static bubble test (Fabricio's thesis (2005))
- int iter = 0;
+ int iter = 1;
  real Re = 2;
  real Sc = 1;
  real We = 100;
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
 
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
-	    << i*nReMesh+j+iter << endl << endl;
+	    << iter << endl << endl;
    cout << resetColor();
 
    s1.setDt();
@@ -255,21 +255,23 @@ int main(int argc, char **argv)
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao
-   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+   save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
+   save.crossSectionalPlane(datFolder,"XZ",iter);
    save.printSimulationReport();
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
 
    s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
-	    << i*nReMesh+j+iter << endl << endl;;
+	    << iter << endl << endl;;
    cout << resetColor();
+
+   iter++;
   }
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
@@ -312,13 +314,13 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveSol(binFolder,"sim",iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
+  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
   saveEnd.printMeshReport();
  }

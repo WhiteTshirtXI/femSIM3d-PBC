@@ -170,7 +170,7 @@ class InOut
   void saveConvergence(const char* _dir,const char* _filename);
   void chordalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
-  void crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter );
+  void crossSectionalPlane(const char* _dir,const char* _filename, int _iter);
   void saveBubbleInfo(const char* _dir);
 
   /* VTK Building Tools  */

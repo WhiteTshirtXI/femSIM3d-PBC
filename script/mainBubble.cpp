@@ -31,7 +31,7 @@ int main(int argc, char **argv)
  triEdge[1] = 1.1; // wall
  triEdge[2] = 0.10; // bubble
 
- int iter = 0;
+ int iter = 1;
  //real Re = 6.53; // case 1
  real Re = 13.8487; // case 2
  //real Re = 32.78; // case 3
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
   d2.unCoupledC();
-  d2.saveVTK("./vtk/","edge",iter);
+  d2.saveVTK("./vtk/","edge",iter-1);
   d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
@@ -346,13 +346,13 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",iter);
-  saveEnd.saveVTK(vtkFolder,"sim",iter);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter);
-  saveEnd.saveSol(binFolder,"sim",iter);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter);
+  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveSol(binFolder,"sim",iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
+  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
   saveEnd.printMeshReport();
  }

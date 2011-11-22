@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- int iter = 0;
+ int iter = 1;
  real Re = 25;
  real Sc = 2;
  real We = 2;
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
 
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
-	    << resetColor() << i*nReMesh+j+iter << endl;
+	    << resetColor() << iter << endl;
 
    //s1.stepLagrangian();
    //s1.stepALE();
@@ -240,19 +240,21 @@ int main(int argc, char **argv)
    s1.unCoupled();
 
    InOut save(m1,s1); // cria objeto de gravacao
-   save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
-   save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",i*nReMesh+j+iter);
+   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
-	    << resetColor() << i*nReMesh+j+iter << endl;
+	    << resetColor() << iter << endl;
+
+   iter++;
   }
   mOld = m1; 
 
@@ -294,12 +296,12 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
-  saveEnd.saveSimTime(nReMesh+i*nReMesh+iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTU(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
+  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
+  saveEnd.saveSol(binFolder,"sim",iter-1);
+  saveEnd.saveSimTime(iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }
 

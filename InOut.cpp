@@ -2575,100 +2575,6 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
 
 } // fecha metodo chordalPressure
 
-void InOut::crossSectionalVoidFraction( const char* _dir,const char* _filename, int _iter )
-{
- // file output
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- // concatenando nomes para o nome do arquivo final
- string file = (string) _dir + (string) _filename + ".dat";
- const char* filename = file.c_str();
-
- // xVert da malha nova
- int nX = 100;
- int nY = 100;
- int nTotal = nX*nY;
- clVector xVert(nTotal);
- clVector yVert(nTotal);
- clVector zVert(nTotal);
-
- // structured mesh points generator
- real xi = X->Min();
- real xf = X->Max();
- real yi = Y->Min();
- real yf = Y->Max();
- //real zi = (Z->Max()-Z->Min())/2.0;
- real zi = 1.5;
- real dx = (xf-xi)/(nX-1);
- real dy = (yf-yi)/(nY-1);
- int count = 0;
- for( int i=0;i<nX;i++ )
- {
-  for( int j=0;j<nY;j++ )
-  {
-   real x = xi + i * dx ;
-   xVert.Set(count,x);
-   real y = yi + j * dy;
-   yVert.Set(count,y);
-   count++;
-  }
- }
- zVert.SetAll(zi);
-
- // linear interpolation on nTotal
- clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
- clVector cLin(nTotal);
- cLin = interpLin*(*heaviside);
-
- int gas=0;
- for( int i=0;i<cLin.Dim();i++ )
- {
-  if( cLin.Get(i) >= 0.5 )
-   gas++;
- }
-
- // saving in DAT format
- ifstream testFile( filename );
- ofstream voidFile( filename,ios::app );
- if( testFile )
- {
-  testFile.close();
-  cout << "appending on file " << _filename << ".dat" << endl;
- }
- else
- {
-  cout << "Creating file " << _filename << ".dat" << endl;
-  voidFile << "#time" << setw(20) << "total c-s area" 
-				      << setw(15) << "bubble c-s area"
-					  << setw(15) << "fluid c-s area" 
-					  << setw(15) << "void fraction" 
-					  << setw(15) << "iteration" 
-					  << endl;
- }
-
- real totalArea = (xf-xi)*(yf-yi);
- real bubbleArea = gas*dx*dy;
- real fluidArea = totalArea - bubbleArea;
- real voidFraction = bubbleArea/totalArea;
- voidFile << setprecision(10) << scientific;
- voidFile << setw(10) << simTime << " " 
-                      << totalArea << " " 
-					  << bubbleArea << " " 
-					  << fluidArea << " " 
-					  << voidFraction << " " 
-                      << setprecision(0) << fixed
-                      << _iter << endl;
-
- voidFile.close();
-
- cout << "cross sectional void fraction No. " << _iter 
-      << " saved in dat" << endl;
-
-} // fecha metodo crossSectionalVoidFraction
-
 void InOut::vtkHeader(ofstream& _file)
 {
  _file << "# vtk DataFile Version 1.0" << endl;
@@ -3458,18 +3364,20 @@ void InOut::printMeshReport()
  cout << color(none,red,black)
       << "        removed" << resetColor() 
       << " 3D mesh points by diffusion:          " << rpd << endl;
- cout << color(none,yellow,black) 
-      << "        inserted" << resetColor()
-	  << " 3D mesh points:                      " << ip << endl;
- cout << color(none,red,black)
-      << "        removed" << resetColor() 
-      << " 3D mesh points:                       " << rp << endl;
  cout << color(none,red,black)
       << "        removed" << resetColor() 
       << " 3D mesh points by volume:             " << rpv << endl;
  cout << color(none,red,black)
       << "        removed" << resetColor() 
       << " 3D mesh points by interface distance: " << rpi << endl;
+ cout << "        total number of " << color(none,yellow,black)
+      << "inserted" << resetColor()
+	  << " 3D mesh points:      " << color(none,yellow,black)
+	  << ip << resetColor() << endl;
+ cout << "        total number of " << color(none,red,black)
+      << "removed" << resetColor() 
+      << " 3D mesh points:       " << color(none,red,black)
+	  << rp << resetColor() << endl;
  cout << "        number of tets with 4 verts on surface:       " 
       << intet << endl;
  cout << "   |                                                                       |" 
@@ -3541,3 +3449,242 @@ void InOut::printSimulationReport()
  cout << endl;
  cout << endl;
 }
+
+/*
+ * This method saves into the file the information about the volume
+ * occupied by 2 phases. It uses a 2D structured cartesian grid, defined by
+ * np1 and np2. Thus, the 3D mesh data is interpolated to the 2D one
+ * using the meshInterp function. Depending on the _filename, one of the
+ * 3 planes are used (XY, XZ and YZ). 
+ *
+ * */
+void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _iter )
+{
+ // file output
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ real _pos = (Y->Max()+Y->Min())/2.0;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + ".dat";
+ const char* filename = file.c_str();
+
+ // xVert da malha nova
+ int np1 = 100;
+ int np2 = 100;
+ int nTotal = np1*np2;
+ clVector xVert(nTotal);
+ clVector yVert(nTotal);
+ clVector zVert(nTotal);
+
+ real plane1_i,plane1_f,plane2_i,plane2_f;
+ real dp1,dp2; // mesh space in 2 directions: plane1 and plane2
+ if( (strcmp(_filename,"XY") == 0) ||
+     (strcmp(_filename,"XY") == 0)  )
+ {
+  // structured mesh points generator
+  real xi = X->Min();
+  real xf = X->Max();
+  real yi = Y->Min();
+  real yf = Y->Max();
+  real zi = _pos;
+  real dx = (xf-xi)/(np1-1);
+  real dy = (yf-yi)/(np2-1);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	real x = xi + i * dx ;
+	xVert.Set(count,x);
+	real y = yi + j * dy;
+	yVert.Set(count,y);
+	count++;
+   }
+  }
+  zVert.SetAll(zi);
+  plane1_i = xi;
+  plane1_f = xf;
+  plane2_i = yi;
+  plane2_f = yf;
+  dp1=dx;
+  dp2=dy;
+ }
+ else if( (strcmp(_filename,"XZ") == 0) ||  
+          (strcmp(_filename,"ZX") == 0) )
+ {
+  // structured mesh points generator
+  real xi = X->Min();
+  real xf = X->Max();
+  real yi = _pos;
+  real zi = Z->Min();
+  real zf = Z->Max();
+  real dx = (xf-xi)/(np1-1);
+  real dz = (zf-zi)/(np2-1);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	real x = xi + i * dx ;
+	xVert.Set(count,x);
+	real z = zi + j * dz;
+	zVert.Set(count,z);
+	count++;
+   }
+  }
+  yVert.SetAll(yi);
+  plane1_i = xi;
+  plane1_f = xf;
+  plane2_i = zi;
+  plane2_f = zf;
+  dp1=dx;
+  dp2=dz;
+ }
+ else if( (strcmp(_filename,"YZ") == 0) || 
+          (strcmp(_filename,"ZY") == 0) )
+ {
+  // structured mesh points generator
+  real xi = _pos;
+  real yi = Y->Min();
+  real yf = Y->Max();
+  real zi = Z->Min();
+  real zf = Z->Max();
+  real dy = (yf-yi)/(np1-1);
+  real dz = (zf-zi)/(np2-1);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	real y = yi + i * dy;
+	yVert.Set(count,y);
+	real z = zi + j * dz;
+	zVert.Set(count,z);
+	count++;
+   }
+  }
+  xVert.SetAll(xi);
+  plane1_i = yi;
+  plane1_f = yf;
+  plane2_i = zi;
+  plane2_f = zf;
+  dp1=dy;
+  dp2=dz;
+ }
+ else
+ {
+  cout << endl;
+  cout << "       * ************************************** *" << endl;
+  cout << "       *  You should define a plane:            *" << endl;
+  cout << "       *  Ex. XY,XZ,YZ,YX,YZ,ZX                 *" << endl;
+  cout << "       *             Using plane XZ             *" << endl;
+  cout << "       * ************************************** *" << endl;
+  cout << endl;
+  // structured mesh points generator
+  real xi = X->Min();
+  real xf = X->Max();
+  real yi = _pos;
+  real zi = Z->Min();
+  real zf = Z->Max();
+  real dx = (xf-xi)/(np1-1);
+  real dz = (zf-zi)/(np2-1);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	real x = xi + i * dx ;
+	xVert.Set(count,x);
+	real z = zi + j * dz;
+	zVert.Set(count,z);
+	count++;
+   }
+  }
+  yVert.SetAll(yi);
+  plane1_i = xi;
+  plane1_f = xf;
+  plane2_i = zi;
+  plane2_f = zf;
+  dp1=dx;
+  dp2=dz;
+ }
+
+ // linear interpolation on nTotal using the 2D generated grid.
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
+ clVector cLin(nTotal);
+ cLin = interpLin*(*heaviside);
+
+ // gas is the number of vertices inside the bubble/drop.
+ int gas=0;
+ for( int i=0;i<cLin.Dim();i++ )
+ {
+  if( cLin.Get(i) >= 0.5 )
+   gas++;
+ }
+
+ // saving in DAT format
+ ifstream testFile( filename );
+ ofstream voidFile( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  voidFile << "#time" << setw(20) << "total c-s area" 
+				      << setw(15) << "bubble c-s area"
+					  << setw(15) << "fluid c-s area" 
+					  << setw(15) << "void fraction" 
+					  << setw(15) << "iteration" 
+					  << endl;
+ }
+
+ real totalArea = (plane1_f-plane1_i)*(plane2_f-plane2_i);
+ real bubbleArea = gas*dp1*dp2;
+ real fluidArea = totalArea - bubbleArea;
+ real voidFraction = bubbleArea/totalArea;
+ voidFile << setprecision(10) << scientific;
+ voidFile << setw(10) << simTime << " " 
+                      << totalArea << " " 
+					  << bubbleArea << " " 
+					  << fluidArea << " " 
+					  << voidFraction << " " 
+                      << setprecision(0) << fixed
+                      << _iter << endl;
+
+ voidFile.close();
+
+ cout << "cross sectional void fraction No. " << _iter 
+      << " saved in dat" << endl;
+ 
+ // concatenando nomes para o nome do arquivo final
+ file = (string) _dir + (string) _filename + "pressure-" + str + ".dat";
+ const char* filenameP = file.c_str();
+
+ ofstream pFile( filenameP ); 
+ // interpolacao linear em numVerts
+ clVector pLin(nTotal);
+ pLin = interpLin*(*pSol);
+
+ pFile << setprecision(10) << scientific;
+ for( int i=0;i<nTotal;i++ )
+ {
+  pFile << setw(10) << setprecision(10) << scientific 
+        << xVert.Get(i) << " " 
+		<< pLin.Get(i) << " "
+		<< setprecision(0) << fixed
+		<< _iter << endl;
+ }
+
+ pFile.close();
+
+ cout << "cross sectional pressure No. " << _iter << " saved in dat" << endl;
+
+} // fecha metodo crossSectionalPlane
+

@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- int iter = 0;
+ int iter = 1;
  real Re = 10000;
  real Sc = 2000;
  real Fr = 10;
@@ -105,21 +105,23 @@ int main(int argc, char **argv)
   for( int j=0;j<nRe;j++ )
   {
    cout << "____________________________________ Iteration: " 
-	    << i*nRe+j+iter << endl;
+	    << iter << endl;
 
    s1.stepSL();
    s1.setRHS();
    s1.setCRHS();
    s1.unCoupled();
    s1.unCoupledC();
-   save.saveVTK(vtkFolder,"sim",i*nRe+j+iter);
-   save.saveVTU(vtkFolder,"sim",i*nRe+j+iter);
-   save.saveSol(binFolder,"sim",i*nRe+j+iter);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTU(vtkFolder,"sim",iter);
+   save.saveSol(binFolder,"sim",iter);
 
    s1.saveOldData();
 
    cout << "________________________________________ END of "
-	    << i*nRe+j+iter << endl;
+	    << iter << endl;
+
+   iter++;
   }
  }
 

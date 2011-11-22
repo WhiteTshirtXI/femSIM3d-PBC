@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
- int iter = 0;
+ int iter = 1;
  real Re = 500;
  real Sc = 1;
  real Fr = 1;

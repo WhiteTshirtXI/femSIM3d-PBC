@@ -2846,10 +2846,17 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
   real z2=Z.Get(v2);
   real length = distance(x1,y1,z1,x2,y2,z2);
 
+  // minVert should be bigger then surfMesh.numVerts because we are
+  // treating only 3D vertices after the surface mesh vertices.
+  int minVert = min(v1,v2);
+
+  // insert points only outside bubble/drop
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > _factor*edgeSize.Get(v1) && hSum < 0.5 )
+  if( length > _factor*edgeSize.Get(v1) && 
+	  hSum < 0.5 && 
+	  minVert > surfMesh.numVerts )
   {
    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
@@ -2902,9 +2909,14 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
   real z2=Z.Get(v2);
   real length = vectorLength(x1-x2,y1-y2,z1-z2);
 
+  // minVert should be bigger then surfMesh.numVerts because we are
+  // treating only 3D vertices after the surface mesh vertices.
+  int minVert = min(v1,v2);
+
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = 0
   if( length < _factor*edgeSize.Get(v1) &&
+	  minVert > surfMesh.numVerts &&
 	  heaviside.Get(v1) != 0.5 &&  
 	  heaviside.Get(v2) != 0.5 )
   {
@@ -3535,8 +3547,11 @@ void Model3D::removePointByVolume(real _factor)
   real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
               heaviside.Get(v[2])+heaviside.Get(v[3]);
 
+  real minVol = min(5.0E-06,tetVol[elemIdRegion.Get(elem)]);
+
+  int count=0;
   if( hSum != 2.0 && 
-	  fabs(getVolume(elem)) < tetVol[elemIdRegion.Get(elem)] ) 
+	  fabs(getVolume(elem)) < minVol ) 
   {
    // add to checkVert only non surface vertex
    list<int> checkVert;
@@ -3555,15 +3570,21 @@ void Model3D::removePointByVolume(real _factor)
 	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
 	 vSum += fabs(getVolume(*mele));
 
-	if( vSum < vertSum )
+	// The problem is: if all the vertices are lower then
+	// surfMesh.numVerts, 
+	if( vSum < vertSum && *mvert > surfMesh.numVerts )
 	{
 	 vertSum = vSum;
 	 vert = *mvert;
+	 count++;
 	}
    }
    // mark points to delete
-   mark3DPointForDeletion(vert);
-   rpv++;
+   if( count > 0 )
+   {
+	mark3DPointForDeletion(vert);
+	rpv++;
+   }
   }
  }
  //cout << "  removed by volume: " << rpv << endl;
@@ -3705,9 +3726,9 @@ void Model3D::mesh3DPoints()
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- //tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 

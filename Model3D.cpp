@@ -3547,11 +3547,11 @@ void Model3D::removePointByVolume(real _factor)
   real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
               heaviside.Get(v[2])+heaviside.Get(v[3]);
 
-  real minVol = min(5.0E-06,tetVol[elemIdRegion.Get(elem)]);
+  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(elem)]);
 
   int count=0;
   if( hSum != 2.0 && 
-	  fabs(getVolume(elem)) < minVol ) 
+	  fabs(getVolume(elem)) < maxVol ) 
   {
    // add to checkVert only non surface vertex
    list<int> checkVert;

@@ -33,7 +33,7 @@ uncomment #define TETLIBRARY in tetgen.h
 make tetlib
 export TETGEN_DIR=$HOME/Programs/tetgen/1.4.3
 
----------- OPTIONAL INSTALL ------------
+-------------------------- OPTIONAL INSTALL ----------------------------
 # download and install Boost (http://www.boost.org)
 check if python-dev package is installed
 ./bootstrap.sh --prefix=$HOME/Programs/boost/1.47.0/;./bjam install
@@ -43,7 +43,7 @@ export LD_LIBRARY_PATH=${BOOST_DIR}/lib:LD_LIBRARY_PATH (Linux)
 
 # download and install Petsc4py (http://code.google.com/p/petsc4py)
 python setup.py install --home=$HOME/Programs/python/
--------- END OPTIONAL INSTALL ----------
+------------------------ END OPTIONAL INSTALL --------------------------
 
 # proposed directory layout
 $HOME/projects/cpp/femSIM3d

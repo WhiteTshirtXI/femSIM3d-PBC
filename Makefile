@@ -21,7 +21,7 @@ src += ${FEMLIB_DIR}/PetscSolver.cpp
 src += ${FEMLIB_DIR}/FEMLinElement3D.cpp
 src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp
 #src += ${FEMLIB_DIR}/FEMQuadElement3D.cpp
-src += $(wildcard ./*.cpp)
+src += $(wildcard ${FEM3D_DIR}/*.cpp)
 
 obj = $(src:%.cpp=%.o)
 
@@ -30,49 +30,49 @@ all: step bubble 2bubbles diskNuC diskNuCte diskNuZ \
 	 staticDroplet staticTorus sessileDrop \
 	 oscillating fallingDrop micro 
 
-diskNuC: ./script/mainDiskNuC.o $(obj)
+diskNuC: ${FEM3D_DIR}/script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuCte: ./script/mainDiskNuCte.o $(obj)
+diskNuCte: ${FEM3D_DIR}/script/mainDiskNuCte.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskNuZ: ./script/mainDiskNuZ.o $(obj)
+diskNuZ: ${FEM3D_DIR}/script/mainDiskNuZ.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-diskSurf: ./script/mainDiskSurf.o $(obj)
+diskSurf: ${FEM3D_DIR}/script/mainDiskSurf.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-2bubbles: ./script/main2Bubbles.o $(obj)
+2bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-curvature: ./script/mainCurvature.o $(obj)
+curvature: ${FEM3D_DIR}/script/mainCurvature.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-curvatureAndPressure: ./script/mainCurvatureAndPressure.o $(obj)
+curvatureAndPressure: ${FEM3D_DIR}/script/mainCurvatureAndPressure.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-staticDroplet: ./script/mainStaticDroplet.o $(obj)
+staticDroplet: ${FEM3D_DIR}/script/mainStaticDroplet.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-staticTorus: ./script/mainStaticTorus.o $(obj)
+staticTorus: ${FEM3D_DIR}/script/mainStaticTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-sessileDrop: ./script/mainSessileDrop.o $(obj)
+sessileDrop: ${FEM3D_DIR}/script/mainSessileDrop.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-oscillating: ./script/mainOscillating.o $(obj)
+oscillating: ${FEM3D_DIR}/script/mainOscillating.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-fallingDrop: ./script/mainFallingDrop.o $(obj)
+fallingDrop: ${FEM3D_DIR}/script/mainFallingDrop.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-bubble: ./script/mainBubble.o $(obj)
+bubble: ${FEM3D_DIR}/script/mainBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-micro: ./script/mainMicro.o $(obj)
+micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-step: ./script/mainStep.o $(obj)
+step: ${FEM3D_DIR}/script/mainStep.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 #--------------------------------------------------

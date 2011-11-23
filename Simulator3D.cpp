@@ -2255,8 +2255,8 @@ void Simulator3D::setDt()
 {
  m->setMapEdge();
 
- //real minDt = min(getDtLagrangianExtream(),getDtSemiLagrangian());
- real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
+ real minDt = min(getDtLagrangianExtream(),getDtSemiLagrangian());
+ //real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
  minDt = min(minDt,getDtSurfaceTension());
  minDt = min(minDt,getDtGravity());
 

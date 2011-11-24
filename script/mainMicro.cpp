@@ -59,7 +59,8 @@ int main(int argc, char **argv)
  string meshFile = "2micros.msh";
  //string meshFile = "4micros.msh";
 
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ //Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
@@ -91,6 +92,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -110,7 +112,7 @@ int main(int argc, char **argv)
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
-  s1.setDt();
+  s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -261,7 +263,7 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setDt();
+   s1.setDtALETwoPhase();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();

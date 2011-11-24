@@ -446,7 +446,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ if( uALE->Dim() > 0 )
+  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cSol->Dim() > 0 )
@@ -456,13 +458,19 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
  if( kappa->Dim() > 0 )
- {
   vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
   vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( hSmooth->Dim() > 0 )
   vtkScalar(vtkFile,"hSmooth",*hSmooth);
+
+ if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
- }
 
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);
@@ -572,23 +580,29 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cc->Dim() > 0 )
+ if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ if( kappa->Dim() > 0 )
+  vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( hSmooth->Dim() > 0 )
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+
+ if( gravity->Dim() > 0 )
+  vtkVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
+  vtkVector(vtkFile,"surface_force",*fint);
+
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- if( kappa->Dim() > 0 )
- {
-  vtkScalar(vtkFile,"kappa",*kappa);
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-  vtkVector(vtkFile,"gravity",*gravity);
-  vtkVector(vtkFile,"surface_force",*fint);
- }
 
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
@@ -695,23 +709,29 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cc->Dim() > 0 )
+ if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ if( kappa->Dim() > 0 )
+  vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( hSmooth->Dim() > 0 )
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+
+ if( gravity->Dim() > 0 )
+  vtkVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
+  vtkVector(vtkFile,"surface_force",*fint);
+
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- if( kappa->Dim() > 0 )
- {
-  vtkScalar(vtkFile,"kappa",*kappa);
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-  vtkVector(vtkFile,"gravity",*gravity);
-  vtkVector(vtkFile,"surface_force",*fint);
- }
 
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
@@ -749,9 +769,11 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
  vtkHeader(vtkFile,_iter);
  vtkCoords(vtkFile);
 
+ // define plane
+ clVector *coord = Z;
 
  // conta numero de elementos
- real plane1 = 1.0+( Y->Max()+Y->Min() )/2.0;
+ real plane1 = ( coord->Max()+coord->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -759,8 +781,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
-	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
+	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
    count++;
  }
  
@@ -772,8 +794,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
-	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
+	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -790,8 +812,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (Y->Get( v1 ) <  plane1) && (Y->Get( v2 ) <  plane1) && 
-	  (Y->Get( v3 ) <  plane1) && (Y->Get( v4 ) <  plane1) )
+  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
+	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
    vtkFile << "10 ";
  }
 
@@ -805,23 +827,29 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cc->Dim() > 0 )
+ if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ if( kappa->Dim() > 0 )
+  vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( hSmooth->Dim() > 0 )
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+
+ if( gravity->Dim() > 0 )
+  vtkVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
+  vtkVector(vtkFile,"surface_force",*fint);
+
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- if( kappa->Dim() > 0 )
- {
-  vtkScalar(vtkFile,"kappa",*kappa);
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-  vtkVector(vtkFile,"gravity",*gravity);
-  vtkVector(vtkFile,"surface_force",*fint);
- }
 
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
@@ -928,23 +956,29 @@ void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename,
  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
- if( cc->Dim() > 0 )
+ if( cSol->Dim() > 0 )
   vtkScalar(vtkFile,"concentration",*cSol);
 
  if( heaviside->Dim() > 0 )
   vtkScalar(vtkFile,"heaviside",*heaviside);
 
+ if( kappa->Dim() > 0 )
+  vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( hSmooth->Dim() > 0 )
+  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+
+ if( gravity->Dim() > 0 )
+  vtkVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
+  vtkVector(vtkFile,"surface_force",*fint);
+
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- if( kappa->Dim() > 0 )
- {
-  vtkScalar(vtkFile,"kappa",*kappa);
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-  vtkVector(vtkFile,"gravity",*gravity);
-  vtkVector(vtkFile,"surface_force",*fint);
- }
 
  vtkScalar(vtkFile,"viscosity",*mu);
  vtkScalar(vtkFile,"density",*rho);
@@ -3283,6 +3317,40 @@ void InOut::saveBubbleInfo(const char* _dir)
 	     << setw(5) << setprecision(0) << fixed << iter 
 		 << endl;
  fileVol.close();
+ 
+ // time step
+ fileAux = (string) _dir + "time" + ".dat";
+ const char* filenameTime = fileAux.c_str();
+
+ ifstream testFileTime( filenameTime );
+ ofstream fileTime( filenameTime,ios::app );
+ if( testFileTime )
+ {
+  testFileTime.close();
+  cout << "appending on file volume.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file volume.dat" << endl;
+  fileTime << "#time" << setw(30) << "lagrangian" 
+                      << setw(17) << "semi-lagrangian" 
+                      << setw(18) << "gravity"
+                      << setw(18) << "surface tension"
+                      << setw(6) << "cfl" 
+			   		  << setw(7)  << "iter" 
+			  		  << endl;
+ }
+
+ fileTime << setprecision(10) << scientific; 
+ fileTime << setw(16) << simTime << " " 
+         << setw(17) << s->getDtLagrangian() << " " 
+         << setw(17) << s->getDtSemiLagrangian() << " " 
+         << setw(17) << s->getDtGravity() << " " 
+         << setw(17) << s->getDtSurfaceTension() << " " 
+         << setw(5) << setprecision(2) << fixed << s->getCfl() << " " 
+	     << setw(6) << setprecision(0) << fixed << iter 
+		 << endl;
+ fileTime.close();
 }
 
 void InOut::printMeshReport()

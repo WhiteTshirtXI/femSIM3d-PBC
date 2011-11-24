@@ -138,7 +138,7 @@ int main(int argc, char **argv)
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
-  s1.setDt();
+  s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);

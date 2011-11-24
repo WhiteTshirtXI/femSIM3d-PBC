@@ -91,7 +91,7 @@ int main(int argc, char **argv)
   //s1.setSigma(sigma);
   s1.setMu(mu_l,mu_g);
   s1.setRho(rho_l,rho_g);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
   s1.init();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   //s1.setSigma(sigma);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
   s1.setMu(mu_l,mu_g);
   s1.setRho(rho_l,rho_g);
   s1.init();
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
   file = (string) "sim-" + *(argv+2);
   const char *sol = file.c_str();
   s1.loadSolution(binFolder,sol);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
   iter = s1.loadIteration(vtkFolder,sol);
  }
  else if( strcmp( *(argv+1),"remesh") == 0 )  
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
   file = (string) "sim-" + *(argv+2);
   const char *sol = file.c_str();
   s1.loadSolution(binFolder,sol);
-  s1.setCflBubble(cfl);
+  s1.setCfl(cfl);
   iter = s1.loadIteration(vtkFolder,sol);
 
   mOld = m1; 

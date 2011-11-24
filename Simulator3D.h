@@ -102,17 +102,23 @@ class Simulator3D
   real getBeta();
   void setSigma(real _sigma);
   real getSigma();
-  void setDtStep();
-  void setDtDisk();
+  void setDtLagrangian();
+  void setDtLagrangianExtream();
+  void setDtLagrangianNorberto();
+  void setDtSemiLagrangian();
+  void setDtGravity();
+  void setDtSurfaceTension();
+  void setDtEulerian();
+  void setDtALESinglePhase();
+  void setDtALETwoPhase();
   void setDt();
   void setDt(real _dt);
   void setTime(real _time);
-  real getDt();
   real getTime();
   void setCfl(real _cfl);
   void setCflBubble(real _cfl);
+  real getDt();
   real getDtLagrangian();
-  real getDtLagrangianExtream();
   real getDtSemiLagrangian();
   real getDtSurfaceTension();
   real getDtGravity();
@@ -211,7 +217,8 @@ class Simulator3D
   list<int> *boundaryVert;
 
 
-  real Re,Sc,Fr,We,alpha,beta,dt,cfl,time;
+  real Re,Sc,Fr,We,alpha,beta,cfl,time;
+  real dt,dtLagrangian,dtSemiLagrangian,dtSurfaceTension,dtGravity;
   real c1,c2,c3,c4;
   real bubbleXVel,bubbleYVel,bubbleZVel;
   real sigma,g,rho_in,rho_out,mu_in,mu_out;

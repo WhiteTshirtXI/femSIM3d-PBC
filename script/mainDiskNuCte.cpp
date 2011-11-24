@@ -60,7 +60,7 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
  s1.init();
- s1.setDtDisk();
+ s1.setDtEulerian();
  s1.assembleNuCte();
  //s1.assembleC();
  s1.matMount();
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
    cout << resetColor();
 
    /* dt variable */
-   //s1.setDtDisk();
+   //s1.setDtEulerian();
    //s1.assembleNuCte();
    ////s1.assembleC();
    //s1.matMount();

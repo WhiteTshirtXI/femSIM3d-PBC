@@ -55,7 +55,7 @@ int main(int argc, char **argv)
  s1.setSolverPressure(solverP);
 
  s1.init();
- s1.setDtDisk();
+ s1.setDtEulerian();
  s1.assembleNuZ();
  s1.matMount();
  s1.setUnCoupledBC(); 
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	    << i*nR+j+iter << endl;
 
    /* dt variable */
-   //s1.setDtDisk();
+   //s1.setDtEulerian();
    //s1.assembleNuZ();
    //s1.matMount();
    //s1.setUnCoupledBC(); 

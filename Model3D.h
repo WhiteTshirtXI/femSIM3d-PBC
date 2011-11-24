@@ -109,9 +109,11 @@ class Model3D
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
   void setInitSurfaceVolume();
+  void setInitSurfaceArea();
   real computeBubbleVolume();
   real computeBubbleVolume2();
   real computeSurfaceVolume(int _region);
+  real computeSurfaceArea(int _region);
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
 
@@ -158,6 +160,7 @@ class Model3D
   void setWallAnnularBC();
   void set2BubbleBC();
   void setStepBC();
+  void setWallStepBC();
   void setCStepBC();
   void setStepReservBC();
   void setStepReservInvBC();
@@ -237,6 +240,8 @@ class Model3D
   clVector* getIdbcp();
   clVector* getIdbcc();
   clMatrix* getIEN();
+  clMatrix* getMapEdge();
+  clMatrix* getMapEdgeTri();
   clVector* getInterfaceDistance();
   clDMatrix* getCurvature();
   clVector* getElemIdRegion();
@@ -342,6 +347,7 @@ class Model3D
   real maxVolume;                 // max tet volume
 
   vector<real> initSurfaceVolume;     // vector de volumes iniciais
+  vector<real> initSurfaceArea;       // vector de areas iniciais
   vector<real> triEdge;               // vector de tamanho de aresta 
   vector<real> tetVol;                // vector de volumes 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no

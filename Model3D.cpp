@@ -125,6 +125,7 @@ Model3D::Model3D(const Model3D &_mRight)
 
   // STL: list and vectors
   initSurfaceVolume = _mRight.initSurfaceVolume;
+  initSurfaceArea = _mRight.initSurfaceArea;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -604,17 +605,58 @@ void Model3D::setStepBC()
  }
 }
 
+void Model3D::setWallStepBC()
+{
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  if( X.Get(*it)==X.Max() && Y.Get(*it)<Y.Max() && Y.Get(*it)>Y.Min() )
+  {
+   idbcp.AddItem(*it);
+
+   outflow.Set(*it,0);
+   pc.Set(*it,0.0);
+  }
+  else if( (Z.Get(*it)==Z.Min()) || (Z.Get(*it) == Z.Max()) )
+  {
+   idbcw.AddItem(*it);
+
+   wc.Set(*it,0.0);
+  }
+  else if( (X.Get(*it)==X.Min()) && (Y.Get(*it)>(Y.Max()/2.0)) && (Y.Get(*it)<Y.Max()) )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else  
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux);
+  }
+ }
+}
+
 void Model3D::setCStepBC()
 {
- for( int i=0;i<numVerts;i++ )
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )
+  if( (X.Get(*it)==X.Min()) || (Y.Get(*it)==Y.Min()) || (Y.Get(*it)==Y.Max()) )
   {
-   if( (X.Get(i)==X.Min()) && (Y.Get(i)>(Y.Max()/2.0)) && (Y.Get(i)<Y.Max()) )
+   if( (X.Get(*it)==X.Min()) && (Y.Get(*it)>(Y.Max()/2.0)) && (Y.Get(*it)<Y.Max()) )
    {
-	idbcc.AddItem(i);
+	idbcc.AddItem(*it);
 
-	cc.Set(i,1.0);
+	cc.Set(*it,1.0);
    }
   }
  }
@@ -2876,7 +2918,7 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
    heaviside.AddItem(vAdd,heaviside.Get(v1));
    vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
    elemIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
-   edgeSize.AddItem(vAdd,edgeSize.Get(v1)/2.0);
+   edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
    numVerts++;
    dVerts++;
@@ -3616,8 +3658,9 @@ void Model3D::delete3DPoints()
    X.Delete(dp);
    Y.Delete(dp);
    Z.Delete(dp);
+   //cc.Delete(dp);
    heaviside.Delete(dp);
-   interfaceDistance.Delete(dp);
+   //interfaceDistance.Delete(dp);
    edgeSize.Delete(dp);
    numVerts--;
    dVerts--;
@@ -6408,6 +6451,8 @@ clVector* Model3D::getIdbcw(){ return &idbcw; }
 clVector* Model3D::getIdbcp(){ return &idbcp; }
 clVector* Model3D::getIdbcc(){ return &idbcc; }
 clMatrix* Model3D::getIEN(){ return &IEN; }
+clMatrix* Model3D::getMapEdge(){ return &mapEdge; }
+clMatrix* Model3D::getMapEdgeTri(){ return &mapEdgeTri; }
 clVector* Model3D::getInterfaceDistance(){ return &interfaceDistance; }
 clVector* Model3D::getElemIdRegion(){ return &elemIdRegion; }
 clVector* Model3D::getVertIdRegion(){ return &vertIdRegion; }
@@ -6533,6 +6578,7 @@ void Model3D::operator=(Model3D &_mRight)
 
   // STL: list and vectors
   initSurfaceVolume = _mRight.initSurfaceVolume;
+  initSurfaceArea = _mRight.initSurfaceArea;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -6967,11 +7013,25 @@ void Model3D::setInitSurfaceVolume()
  initSurfaceVolume.clear();
  initSurfaceVolume.resize((int) surfMesh.elemIdRegion.Max()+1);
 
+ // surfMesh.elemIdRegion == 0 --> none
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
   initSurfaceVolume[nb] = computeSurfaceVolume(nb);
+}
+
+void Model3D::setInitSurfaceArea()
+{
+ initSurfaceArea.clear();
+ initSurfaceArea.resize((int) surfMesh.elemIdRegion.Max()+1);
+
+ // surfMesh.elemIdRegion == 0 --> none
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+  initSurfaceArea[nb] = computeSurfaceArea(nb);
 }
 
 /* 
@@ -7157,6 +7217,17 @@ real Model3D::computeSurfaceVolume(int _region)
  return vol;
 }
 
+real Model3D::computeSurfaceArea(int _region)
+{
+ real sumArea = 0;
+ for(int tri=0;tri<surfMesh.numElems;tri++ )
+ {
+  if( surfMesh.elemIdRegion.Get(tri) == _region )
+   sumArea += getAreaElem(tri);
+ }
+ return sumArea;
+}
+
 real Model3D::computeBubbleVolume2()
 {
  real sumVolume=0;
@@ -7177,47 +7248,6 @@ real Model3D::computeBubbleVolume2()
  return sumVolume;
 }
 
-void Model3D::applyBubbleVolumeCorrection()
-{
- // surfMesh.elemIdRegion == 1 --> wall
- // surfMesh.elemIdRegion == 2 --> bubble 1
- // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
- for( int nb=2;nb<=surfMesh.elemIdRegion.Max();nb++ )
- {
- real aux = 0;
- real bubbleVolume = computeSurfaceVolume(nb);
- real ds = (initSurfaceVolume[nb] - bubbleVolume)/surface.Dim();
-
- while( fabs(initSurfaceVolume[nb] - bubbleVolume) > 0.0001*initSurfaceVolume[nb])
- {
-  for( int i=0;i<surface.Dim();i++ )
-  {
-   int surfaceNode = surface.Get(i);
-
-   aux = surfMesh.X.Get(surfaceNode) + surfMesh.xNormal.Get(surfaceNode)*ds;
-   X.Set(surfaceNode,aux);
-   surfMesh.X.Set(surfaceNode,aux);
-
-   aux = surfMesh.Y.Get(surfaceNode) + surfMesh.yNormal.Get(surfaceNode)*ds;
-   Y.Set(surfaceNode,aux);
-   surfMesh.Y.Set(surfaceNode,aux);
-
-   aux = surfMesh.Z.Get(surfaceNode) + surfMesh.zNormal.Get(surfaceNode)*ds;
-   Z.Set(surfaceNode,aux);
-   surfMesh.Z.Set(surfaceNode,aux);
-  }
- bubbleVolume = computeSurfaceVolume(nb);
- ds = (initSurfaceVolume[nb] - bubbleVolume)/surface.Dim();
- }
-//--------------------------------------------------
-//  cout << "init volume = " << initSurfaceVolume[nb]<< endl;
-//  cout << "volume2 = " << computeSurfaceVolume(nb) << endl;
-//  cout << "ds = " << ds << endl;
-//  cout << "diff = " << fabs(initSurfaceVolume[nb] - bubbleVolume) << endl;
-//  cout << endl;
-//-------------------------------------------------- 
- }
-}
 
 void Model3D::checkNeighbours()
 {
@@ -8026,3 +8056,74 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
  return coordAdd;
 }
+
+void Model3D::applyBubbleVolumeCorrection()
+{
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=2;nb<=surfMesh.elemIdRegion.Max();nb++ )
+ {
+  real aux = 0;
+  real bubbleVolume = computeSurfaceVolume(nb);
+  real bubbleArea = computeSurfaceArea(nb);
+  real radius = 3.0*bubbleVolume/bubbleArea;
+
+  real initBubbleVolume = initSurfaceVolume[nb];
+  real initBubbleArea = initSurfaceArea[nb];
+  real initRadius = 3.0*initBubbleVolume/initBubbleArea;
+
+  real dr = (initRadius - radius);
+  real da = (initBubbleArea - bubbleArea);
+  real dv = (initBubbleVolume - bubbleVolume);
+
+  int count = 0;
+  //while( fabs(dv) > 1E-06 )
+  //while( fabs(da) > 1E-06 )
+  while( fabs(dv) > 1E-03 && count < 30 )
+  {
+   for( int i=0;i<surface.Dim();i++ )
+   {
+	int surfaceNode = surface.Get(i);
+
+	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
+	{
+	 aux = surfMesh.X.Get(surfaceNode) + 
+	       surfMesh.xNormal.Get(surfaceNode)*1E-01*dv;
+	       //surfMesh.xNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	 X.Set(surfaceNode,aux);
+	 surfMesh.X.Set(surfaceNode,aux);
+
+	 aux = surfMesh.Y.Get(surfaceNode) + 
+	       surfMesh.yNormal.Get(surfaceNode)*1E-01*dv;
+	       //surfMesh.yNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	 Y.Set(surfaceNode,aux);
+	 surfMesh.Y.Set(surfaceNode,aux);
+
+	 aux = surfMesh.Z.Get(surfaceNode) + 
+	       surfMesh.zNormal.Get(surfaceNode)*1E-01*dv;
+	       //surfMesh.zNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	 Z.Set(surfaceNode,aux);
+	 surfMesh.Z.Set(surfaceNode,aux);
+	}
+   }
+   bubbleVolume = computeSurfaceVolume(nb);
+   bubbleArea = computeSurfaceArea(nb);
+   radius = 3.0*bubbleVolume/bubbleArea;
+   dr = (initRadius - radius);
+   da = (initBubbleArea - bubbleArea);
+   dv = (initBubbleVolume - bubbleVolume);
+   count++;
+  }
+  cout << "init volume = " << initBubbleVolume << endl;
+  cout << "final volume = " << bubbleVolume << endl;
+  cout << "init area = " << initBubbleArea << endl;
+  cout << "final area = " << bubbleArea << endl;
+  cout << "dr = " << dr << endl;
+  cout << "dv = " << dv << endl;
+  cout << "da = " << da << endl;
+  cout << "loop number = " << count << endl;
+  cout << endl;
+ }
+}
+

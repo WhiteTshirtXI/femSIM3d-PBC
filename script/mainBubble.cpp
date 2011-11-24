@@ -40,7 +40,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.01; // smooth - fujiwara
+ real c3 = 0.1; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
-  s1.setDt();
+  s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setDt();
+   s1.setDtALETwoPhase();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(2.0);
+  //m1.insert3dMeshPointsByDiffusion(2.0);
   m1.remove3dMeshPointsByDiffusion(0.33);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();

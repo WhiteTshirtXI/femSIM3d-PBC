@@ -23,7 +23,7 @@ Simulator3D::Simulator3D( Model3D &_m )
  // ------------------------------------------------------------------- //
  // dt          -> time between 2 iterations
  // ------------------------------------------------------------------- //
- // cfl         -> stability condiction (velocity x lenght)
+ // cfl         -> stability condiction (velocity x length)
  // ------------------------------------------------------------------- //
  // Solver      -> Pre-Conjugate Gradiente     :PCGSolver
  //             -> Conjugate Gradiente         :CGSolver
@@ -37,6 +37,10 @@ Simulator3D::Simulator3D( Model3D &_m )
  alpha = 1;
  beta  = 0;
  dt    = 0.01;
+ dtSemiLagrangian = 0.01;
+ dtLagrangian = 0.01;
+ dtSurfaceTension = 0.01;
+ dtGravity = 0.01;
  time  = 0.0;
  cfl   = 0.5;
  iter  = 0;
@@ -71,6 +75,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  alpha = _sRight.alpha;
  beta = _sRight.beta;
  dt = _sRight.dt;
+ dtSemiLagrangian = _sRight.dtSemiLagrangian;
+ dtLagrangian = _sRight.dtLagrangian;
+ dtSurfaceTension = _sRight.dtSurfaceTension;
+ dtGravity = _sRight.dtGravity;
  cfl = _sRight.cfl;
  time = _sRight.time;
  c1 = _sRight.c1;
@@ -213,6 +221,10 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  alpha = _s.getAlpha();
  beta  = _s.getBeta();
  dt    = _s.getDt();
+ dtLagrangian = _s.getDtLagrangian();
+ dtSemiLagrangian = _s.getDtSemiLagrangian();
+ dtGravity = _s.getDtGravity();
+ dtSurfaceTension = _s.getDtSurfaceTension();
  time  = _s.getTime();
  cfl   = _s.getCfl();
  g     = _s.getGrav();
@@ -1271,19 +1283,6 @@ void Simulator3D::step()
  uvwSol.Append(uSolOld);
  uvwSol.Append(vSolOld);
  uvwSol.Append(wSolOld);
-
- // sem correcao na pressao
- va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * uvwSol;
- 
- // com correcao na pressao
- //va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * uvwSol - (G*pSol);
-
- // ainda nao funcionando
- //vcc = ( (1.0/dt) * Mc + (1-alpha) * -(1.0/(Re*Sc)) * Kc ) * cSol;
- vcc = ( (1.0/dt) * McLumped ) * cSolOld;
-
- va = va + convUVW;
- vcc = vcc + convC;
 } // fecha metodo step 
 
 // metodo para movimentacao dos pontos da malha atraves da velocidade do
@@ -1298,9 +1297,6 @@ void Simulator3D::stepLagrangian()
  m->moveYPoints(vSolOld,dt);
  m->moveZPoints(wSolOld,dt);
  m->centroidPositionCorrection();
-
- assemble();
- //assembleSlip();
 
  convUVW.CopyFrom(0,uSolOld);
  convUVW.CopyFrom(numNodes,vSolOld);
@@ -1329,17 +1325,12 @@ void Simulator3D::stepLagrangianZ()
  convUVW.CopyFrom(0,uSL);
  convUVW.CopyFrom(numNodes,vSL);
  convUVW.CopyFrom(2*numNodes,wSol);
-
- // atualizacao de todas as matrizes do sistema
- assemble();
- //assembleSlip();
-
 } // fecha metodo stepLagragianZ
 
 void Simulator3D::stepALE()
 {
- //setInterfaceVelNormal();
  setInterfaceVel();
+ //setInterfaceVelNormal();
 
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1355,6 +1346,7 @@ void Simulator3D::stepALE()
 
  // impoe velocidade (componente normal) do fluido na interface
  setInterfaceVel();
+ //setInterfaceVelNormal();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1419,10 +1411,10 @@ void Simulator3D::stepALEVel()
  m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- m->applyBubbleVolumeCorrection();
+ //m->applyBubbleVolumeCorrection();
 
  // velocidade da bolha
- getBubbleVelocity(uALE,vALE,wALE);
+ //getBubbleVelocity(uALE,vALE,wALE);
 } // fecha metodo stepALEVel
 
 void Simulator3D::setInterfaceVel()
@@ -1962,60 +1954,57 @@ void Simulator3D::setUnCoupledCBC()
 
 } // fecha metodo setUnCoupledCBC 
 
-real Simulator3D::getDtSurfaceTension()
+/* cfl based on the booklet:
+ * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
+ * G. Tryggvason, R. Scardovelli and S. Zaleski
+ *
+ * - cfl of advection term:
+ *
+ *  Umax*dt
+ * --------- <= 1
+ *  triEdge
+ *  
+ *
+ * - smallest resolved wave:
+ *         pi
+ * k = ---------
+ *      triEdge
+ *
+ * - phase velocity of a capillary wave:
+ * 
+ *            sigma*kappa
+ * c = sqrt( ------------- )
+ *             rho1+rho2
+ *
+ *          (rho1+rho2)*triEdge*triEdge*triEdge
+ * dt <= ( ------------------------------------- )
+ *                       pi*sigma
+ *
+ * cfl based on the paper:
+ * A Continuum Method for Modeling Surface Tension
+ * J.U. Brackbill, D.B. Kothe and C. Zemach
+ *
+ * - cfl of advection term:
+ *
+ *  Umax*dt      1
+ * --------- <= ---
+ *  minEdge      2
+ *
+ *          0.5*(rho1+rho2)*minEdgeTri*minEdgeTri*minEdgeTri
+ * dt <= ( -------------------------------------------------- )
+ *                            2*pi*sigma
+ * */
+void Simulator3D::setDtSurfaceTension()
 {
- /* cfl based on the booklet:
-  * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
-  * G. Tryggvason, R. Scardovelli and S. Zaleski
-  *
-  * - cfl of advection term:
-  *
-  *  Umax*dt
-  * --------- <= 1
-  *  triEdge
-  *  
-  *
-  * - smallest resolved wave:
-  *         pi
-  * k = ---------
-  *      triEdge
-  *
-  * - phase velocity of a capillary wave:
-  * 
-  *            sigma*kappa
-  * c = sqrt( ------------- )
-  *             rho1+rho2
-  *
-  *          (rho1+rho2)*triEdge*triEdge*triEdge
-  * dt <= ( ------------------------------------- )
-  *                       pi*sigma
-  *
-  * */
+ // We assume that the minEdgeTri is ALWAYS lied on the surface.
+ real minEdgeTri = m->getMinEdgeTri();
 
- /* cfl based on the paper:
-  * A Continuum Method for Modeling Surface Tension
-  * J.U. Brackbill, D.B. Kothe and C. Zemach
-  *
-  * - cfl of advection term:
-  *
-  *  Umax*dt      1
-  * --------- <= ---
-  *  triEdge      2
-  *
-  *          0.5*(rho1+rho2)*triEdge*triEdge*triEdge
-  * dt <= ( ----------------------------------------- )
-  *                        2*pi*sigma
-  *
-  * */
-
- triEdge = m->getTriEdge();
- real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
-
- real capillary = sqrt( ( 0.5*(rho_in+rho_out)
-                          *triEdgeMin*triEdgeMin*triEdgeMin)
-                          /(2*3.141592*sigma) );
-
- return capillary;
+ // OBS.: minEdgeTri is also considering the wall elements and that is
+ // wrong for the dtSurfaceTension. Should make a loop in all the
+ // surface elements and check the smaller edge length.
+ dtSurfaceTension = sqrt( ( 0.5*(rho_in+rho_out)*
+                    minEdgeTri*minEdgeTri*minEdgeTri)/
+                    (2*3.141592*sigma) );
 }
 
 /*
@@ -2043,7 +2032,7 @@ real Simulator3D::getDtSurfaceTension()
  *                   x centroid
  *                
  * */
-real Simulator3D::getDtLagrangianExtream()
+void Simulator3D::setDtLagrangianExtream()
 {
  int idMinVolume = m->getIdMinVolume();
  real minEdge = m->getMinEdge();
@@ -2128,14 +2117,12 @@ real Simulator3D::getDtLagrangianExtream()
  velMax = max(velMax,zVelMax);
  real minDt2 = 0.5*minEdge/velMax;
 
- real minDt = min(minDt1,minDt2);
+ dtLagrangian = min(minDt1,minDt2);
 
  //cout << "minDt: " <<  minDt1 << " " << minDt2 << endl;
  //cout << minXdist << " " << minYdist << " " << minZdist << endl;
  //cout << xVelMax << " " << yVelMax << " " << zVelMax << endl;
  //cout << minDtx << " " << minDty << " " << minDtz << endl;
-
- return minDt;
 }
 
 /*     
@@ -2143,7 +2130,7 @@ real Simulator3D::getDtLagrangianExtream()
  *   height = h = --------- = l*0.86602
  *                    2
  * */
-real Simulator3D::getDtLagrangian()
+void Simulator3D::setDtLagrangian()
 {
  real minEdge = m->getMinEdge();
 
@@ -2172,10 +2159,100 @@ real Simulator3D::getDtLagrangian()
 //  cout << "wCoord: " << c3*wSmoothCoord.Abs().Max() << endl;
 //  cout << "velMax: " << velMax << endl;
 //-------------------------------------------------- 
- return 0.5*length/velMax;
+ 
+ dtLagrangian = 0.5*length/velMax;
 }
 
-real Simulator3D::getDtSemiLagrangian()
+/*
+ * Set lagrangian dt.
+ * This method checks all the tetrahedron's edge length and respective
+ * velocities at both extremities, then the gradient module |u| is used to
+ * compute dt. 
+ *
+ * 1D example:
+ *
+ *
+ *                  u1=+1                u2=-1               
+ * case1:           x--->            <---x       |u|=|u1-u2|=2
+ * (contract)       o--------------------o       dt=l/|u| = 0.5 (ok!) 
+ *                 v1                    v2      
+ *
+ *              
+ *                  u1=-1                u2=+1
+ * case2:       <---x                    x--->   |u1-u2|=2
+ * (stretch)        o--------------------o       dt=l/|u| = 0.5 (not ok!)
+ *                 v1                    v2      (should be) dt = inf
+ *              
+ *
+ *                  u1=+1                u2=+1
+ * case3:           x--->                x--->   |u1-u2|=0
+ * (displace)       o--------------------o       dt=l/|u| = inf (ok!)
+ *                 v1                    v2
+ *              
+ *                  |                    |
+ *                  |<------ l=1 ------->|
+ *
+ * OBS.: for case2, the dt could be anything, since the vertices are
+ * stretching and they would never touch themselves. But is difficult to
+ * predict such a case and for this reason we treat such a case as we
+ * treat case1.
+ *
+ * */
+void Simulator3D::setDtLagrangianNorberto()
+{
+ clMatrix* mapEdge = m->getMapEdge();
+
+ dtLagrangian = 0.1;
+ for( int edge=0;edge<mapEdge->DimI();edge++ )
+ {
+  int v1 = mapEdge->Get(edge,4);
+  int v2 = mapEdge->Get(edge,5);
+
+  real x1=X->Get(v1);
+  real y1=Y->Get(v1);
+  real z1=Z->Get(v1);
+  real x2=X->Get(v2);
+  real y2=Y->Get(v2);
+  real z2=Z->Get(v2);
+  real length = distance(x1,y1,z1,x2,y2,z2);
+
+  //real x = x1 - x2;
+  //real y = y1 - y2;
+  //real z = z1 - z2;
+  //real length = vectorLength(x,y,z);
+
+  // bubble.py - 146 iterations
+  //real xVel = fabs( uALE.Get(v1) ) - fabs( uALE.Get(v2) );
+  //real yVel = fabs( vALE.Get(v1) ) - fabs( vALE.Get(v2) );
+  //real zVel = fabs( wALE.Get(v1) ) - fabs( wALE.Get(v2) );
+  real xVel = uALE.Get(v1) - uALE.Get(v2);
+  real yVel = vALE.Get(v1) - vALE.Get(v2);
+  real zVel = wALE.Get(v1) - wALE.Get(v2);
+
+  real vel = vectorLength(xVel,yVel,zVel);
+  //real vel = distance(uALE.Get(v1),vALE.Get(v1),wALE.Get(v1),
+  //                    uALE.Get(v2),vALE.Get(v2),wALE.Get(v2));
+
+  real a = 0.09; // security parameter
+
+  real minDt = a*length/vel;
+
+  if( minDt < dtLagrangian && minDt > 0 )
+   dtLagrangian = minDt;
+ }
+}
+
+/* 
+ * Method to compute the Semi-Lagrangian dt using the biggest velocity
+ * and the smallest tetrahedron edge length as:
+ *
+ * dt = l_min/v_max
+ *
+ * OBS.: This will limit the dt too much! Should be the same as the
+ * setDtLagrangianNorberto!
+ *
+ * */
+void Simulator3D::setDtSemiLagrangian()
 {
  real minEdge = m->getMinEdge();
 
@@ -2183,15 +2260,15 @@ real Simulator3D::getDtSemiLagrangian()
  velMax = max( velMax,vSolOld.Abs().Max() );
  velMax = max( velMax,wSolOld.Abs().Max() );
 
- return minEdge/velMax;
+ dtSemiLagrangian = minEdge/velMax;
 }
 
-real Simulator3D::getDtGravity()
+void Simulator3D::setDtGravity()
 {
  real minEdge = m->getMinEdge();
  real velMax = max( 1.0,gravity.Abs().Max() );
 
- return minEdge/velMax;
+ dtGravity = sqrt(velMax/minEdge);
 }
 
 /*
@@ -2199,44 +2276,22 @@ real Simulator3D::getDtGravity()
  * Explicity terms:
  *  - Semi-Lagrangian;
  *  */
-void Simulator3D::setDtStep()
+void Simulator3D::setDtEulerian()
 {
  m->setMapEdge();
 
- real minDt = min(1.0,getDtSemiLagrangian());
+ // setting required dt
+ setDtSemiLagrangian();
 
- dt = cfl*minDt;
+ real dtEulerian = min(1.0,getDtSemiLagrangian());
+
+ dt = cfl*dtEulerian;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
                   << "|-------------------------------------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
-                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
- cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
- cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
- cout << resetColor() << endl;
-}
-
-/*
- * Set Dt of the current simulation.
- * Explicity terms:
- *  - Semi-Lagrangian;
- *  */
-void Simulator3D::setDtDisk()
-{
- m->setMapEdge();
-
- real minDt = min(1.0,getDtSemiLagrangian());
-
- dt = cfl*minDt;
- cout << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
- cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
- cout << setw(27) << color(none,white,black) 
-                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
+                  << "Semi-lagrangian: " << dtSemiLagrangian << endl;
  cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
  cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
  cout << setw(20) << color(none,red,black) 
@@ -2251,28 +2306,83 @@ void Simulator3D::setDtDisk()
  *  - Surface Tension;
  *  - Gravity.
  *  */
-void Simulator3D::setDt()
+void Simulator3D::setDtALETwoPhase()
 {
  m->setMapEdge();
 
- real minDt = min(getDtLagrangianExtream(),getDtSemiLagrangian());
- //real minDt = min(getDtLagrangian(),getDtSemiLagrangian());
- minDt = min(minDt,getDtSurfaceTension());
- minDt = min(minDt,getDtGravity());
+ // setting required dt
+ setDtLagrangianNorberto();
+ setDtSurfaceTension();
+ setDtGravity();
 
- dt = cfl*minDt;
+ real dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
+ dtALETwoPhase = min(dtALETwoPhase,getDtGravity());
+
+ dt = cfl*dtALETwoPhase;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
                   << "|-------------------------------------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
-                  << "lagrangian: " << getDtLagrangian() << endl;
+                  << "lagrangian: " << dtLagrangian << endl;
  cout << setw(27) << color(none,white,black) 
-                  << "Semi-lagrangian: " << getDtSemiLagrangian() << endl;
+                  << "Surface tension: " << dtSurfaceTension << endl;
  cout << setw(27) << color(none,white,black) 
-                  << "Surface tension: " << getDtSurfaceTension() << endl;
+                  << "Gravity: " << dtGravity << endl;
+ cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << resetColor() << endl;
+}
+
+/*
+ * Set Dt of the current simulation.
+ * Explicity terms:
+ *  - Semi-Lagrangian;
+ *  - Surface Tension;
+ *  - Gravity.
+ *  */
+void Simulator3D::setDtALESinglePhase()
+{
+ m->setMapEdge();
+
+ // setting required dt
+ setDtLagrangianNorberto();
+ setDtGravity();
+
+ real dtALETwoPhase = min(getDtLagrangian(),getDtGravity());
+
+ dt = cfl*dtALETwoPhase;
+ cout << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
-                  << "Gravity: " << getDtGravity() << endl;
+                  << "lagrangian: " << dtLagrangian << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Gravity: " << dtGravity << endl;
+ cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
+ cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << resetColor() << endl;
+}
+
+void Simulator3D::setDt()
+{
+ setDtALETwoPhase();
+
+ cout << endl;
+ cout << setw(20) << color(none,red,black) 
+                  << "|-------------------------------------|" << endl;
+ cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "lagrangian: " << dtLagrangian << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Surface tension: " << dtSurfaceTension << endl;
+ cout << setw(27) << color(none,white,black) 
+                  << "Gravity: " << dtGravity << endl;
  cout << setw(27) << color(none,white,black) << "dt:  " << dt << endl;
  cout << setw(27) << color(none,white,black) << "time:  " << time << endl;
  cout << setw(20) << color(none,red,black) 
@@ -2379,6 +2489,10 @@ real Simulator3D::getSigma(){return sigma;}
 void Simulator3D::setDt(real _dt){dt = _dt;}
 void Simulator3D::setTime(real _time){time = _time;}
 real Simulator3D::getDt(){return dt;}
+real Simulator3D::getDtLagrangian(){return dtLagrangian;}
+real Simulator3D::getDtSemiLagrangian(){return dtSemiLagrangian;}
+real Simulator3D::getDtGravity(){return dtGravity;}
+real Simulator3D::getDtSurfaceTension(){return dtSurfaceTension;}
 void Simulator3D::setIter(real _iter){iter = _iter;}
 int  Simulator3D::getIter(){return iter;}
 real Simulator3D::getCfl(){return cfl;}
@@ -2713,6 +2827,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  alpha = _sRight.alpha;
  beta = _sRight.beta;
  dt = _sRight.dt;
+ dtSemiLagrangian = _sRight.dtSemiLagrangian;
+ dtLagrangian = _sRight.dtLagrangian;
+ dtSurfaceTension = _sRight.dtSurfaceTension;
+ dtGravity = _sRight.dtGravity;
  cfl = _sRight.cfl;
  time = _sRight.time;
  c1 = _sRight.c1;
@@ -2855,6 +2973,10 @@ void Simulator3D::operator()(Model3D &_m)
  alpha = 1;
  beta  = 0;
  dt    = 0.01;
+ dtSemiLagrangian = 0.01;
+ dtLagrangian = 0.01;
+ dtSurfaceTension = 0.01;
+ dtGravity = 0.01;
  time  = 0.0;
  cfl   = 0.5;
  iter  = 0;
@@ -2888,6 +3010,10 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  alpha = _s.getAlpha();
  beta  = _s.getBeta();
  dt    = _s.getDt();
+ dtLagrangian = _s.getDtLagrangian();
+ dtSemiLagrangian = _s.getDtSemiLagrangian();
+ dtGravity = _s.getDtGravity();
+ dtSurfaceTension = _s.getDtSurfaceTension();
  time  = _s.getTime();
  cfl   = _s.getCfl();
  iter  = _s.getIter();
@@ -3146,6 +3272,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector vSolOldVert(_mOld.getNumVerts());
  clVector wSolOldVert(_mOld.getNumVerts());
  clVector pSolOldVert(_mOld.getNumVerts());
+ clVector cSolOldVert(_mOld.getNumVerts());
  clVector uALEOldVert(_mOld.getNumVerts());
  clVector vALEOldVert(_mOld.getNumVerts());
  clVector wALEOldVert(_mOld.getNumVerts());
@@ -3160,6 +3287,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  vSolOld.CopyTo(0,vSolOldVert);
  wSolOld.CopyTo(0,wSolOldVert);
  pSolOld.CopyTo(0,pSolOldVert);
+ cSolOld.CopyTo(0,cSolOldVert);
  uALEOld.CopyTo(0,uALEOldVert);
  vALEOld.CopyTo(0,vALEOldVert);
  wALEOld.CopyTo(0,wALEOldVert);
@@ -3292,12 +3420,13 @@ void Simulator3D::getBubbleVelocity(clVector _uVel,
 // impoe velocidade Lagrangian = 0 no contorno
 void Simulator3D::setLagrangianVelBC()
 {
- for( int i=0;i<idbcw->Dim();i++ )
+ for (list<int>::iterator it=boundaryVert->begin(); 
+                          it!=boundaryVert->end(); 
+						  ++it)
  {
-  int vertice = idbcw->Get(i);
-  uSolOld.Set(vertice,0.0);
-  vSolOld.Set(vertice,0.0);
-  wSolOld.Set(vertice,0.0);
+  uSolOld.Set(*it,0.0);
+  vSolOld.Set(*it,0.0);
+  wSolOld.Set(*it,0.0);
  }
 }
 

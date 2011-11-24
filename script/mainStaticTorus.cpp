@@ -99,12 +99,12 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
-  //s1.setDt(dt);
+  //s1.setDtALETwoPhase(dt);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
-  s1.setDt();
+  s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setDt();
+   s1.setDtALETwoPhase();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();

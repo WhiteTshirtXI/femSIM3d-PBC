@@ -75,6 +75,9 @@ micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
 step: ${FEM3D_DIR}/script/mainStep.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 #--------------------------------------------------
 # step: ./script/mainStep.o libtest.so
 # 	$(CXX) -L. -ltest -o $@ $<

@@ -63,7 +63,7 @@ int main(int argc, char **argv)
  s1.setSc(Sc);
  s1.setFr(Fr);
  s1.setCfl(cfl);
- s1.setDtStep();
+ s1.setDtEulerian();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setSolverPressure(solverP);
@@ -128,5 +128,3 @@ int main(int argc, char **argv)
  PetscFinalize();
  return 0;
 }
-
-

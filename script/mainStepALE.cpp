@@ -54,12 +54,13 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/mesh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/" + meshFile;
  const char *mesh = meshDir.c_str();
+ cout << mesh << endl;
 
  Model3D m1;
  //m1.setMeshStep(40,20,4);
- m1.readMSH("/home/gustavo/projects/db/gmsh/3d/step.msh");
+ m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.setTriEdge(triEdge);
  m1.checkTriangleOrientation();

@@ -609,20 +609,25 @@ void Model3D::setWallStepBC()
 {
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  if( X.Get(*it)==X.Max() && Y.Get(*it)<Y.Max() && Y.Get(*it)>Y.Min() )
+  if( X.Get(*it)==X.Max() && Y.Get(*it)<Y.Max() && Y.Get(*it)>Y.Min() &&
+     (Z.Get(*it)>Z.Min()) && (Z.Get(*it)<Z.Max()) )
   {
    idbcp.AddItem(*it);
 
    outflow.Set(*it,0);
    pc.Set(*it,0.0);
   }
-  else if( (Z.Get(*it)==Z.Min()) || (Z.Get(*it) == Z.Max()) )
-  {
-   idbcw.AddItem(*it);
-
-   wc.Set(*it,0.0);
-  }
-  else if( (X.Get(*it)==X.Min()) && (Y.Get(*it)>(Y.Max()/2.0)) && (Y.Get(*it)<Y.Max()) )
+//--------------------------------------------------
+//   else if( (Z.Get(*it)==Z.Min()) || (Z.Get(*it) == Z.Max()) )
+//   {
+//    idbcw.AddItem(*it);
+// 
+//    wc.Set(*it,0.0);
+//   }
+//-------------------------------------------------- 
+  else if( (X.Get(*it)==X.Min()) && (Y.Get(*it)>(Y.Max()/2.0)) && 
+	       (Y.Get(*it)<Y.Max()) && 
+           (Z.Get(*it)>Z.Min()) && (Z.Get(*it)<Z.Max()) )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);

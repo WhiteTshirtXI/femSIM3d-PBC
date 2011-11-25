@@ -5,6 +5,7 @@
 #include "clVector.h"
 #include "clMatrix.h"
 #include "Model3D.h"
+#include "TElement.h"
 #include "interpolations.h"
 #include <iostream>
 #include <math.h>

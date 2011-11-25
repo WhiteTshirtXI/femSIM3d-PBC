@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iomanip>
 #include "Model3D.h"
+#include "TElement.h"
 #include "FEMLinElement3D.h"
 #include "FEMMiniElement3D.h"
 #include "FEMQuadElement3D.h"
@@ -65,6 +66,7 @@ class Simulator3D
   void stepLagrangianZ();
   void stepALE();
   void stepALEVel();
+  void movePoints();
   void stepSmooth();
   void setInterfaceVel();
   void setInterfaceVelNormal();

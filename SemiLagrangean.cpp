@@ -69,49 +69,54 @@ SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
  neighbourElem = m->getNeighbourElem(); 
  oFace = m->getOFace();
 
+#if NUMGLEU == 5 
+ convLin.Dim(numVerts,numVerts);
+#else 
  convLin.Dim(numVerts,numVerts);
  convQuad.Dim(numNodes,numNodes);
+#endif
 }
 
 void SemiLagrangean::compute(real dt)
 {
- if( NUMGLEU == 5 )
- {
-  getDepartElem(dt); // procura de elemento
+#if NUMGLEU == 5 
+ getDepartElem(dt); // procura de elemento
 
-  clVector uVert(numVerts);
-  clVector vVert(numVerts);
-  clVector wVert(numVerts);
-  uSol.CopyTo(0,uVert);
-  vSol.CopyTo(0,vVert);
-  wSol.CopyTo(0,wVert);
+ clVector uVert(numVerts);
+ clVector vVert(numVerts);
+ clVector wVert(numVerts);
+ uSol.CopyTo(0,uVert);
+ vSol.CopyTo(0,vVert);
+ wSol.CopyTo(0,wVert);
 
-  uParticle = convLin*uVert; 
-  vParticle = convLin*vVert; 
-  wParticle = convLin*wVert;
-  cParticle = convLin*cSol;
+ uParticle = convLin*uVert; 
+ vParticle = convLin*vVert; 
+ wParticle = convLin*wVert;
+ cParticle = convLin*cSol;
 
-  clVector zerosConv(numNodes-numVerts);
-  uParticle.Append(zerosConv);
-  vParticle.Append(zerosConv);
-  wParticle.Append(zerosConv);
-  setCentroid();
- }
- else 
- {
-  getDepartElemQuad(dt); // procura de elemento
+ clVector zerosConv(numNodes-numVerts);
+ uParticle.Append(zerosConv);
+ vParticle.Append(zerosConv);
+ wParticle.Append(zerosConv);
 
-  uParticle = convQuad*uSol; 
-  vParticle = convQuad*vSol; 
-  wParticle = convQuad*wSol;
-  cParticle = convLin*cSol;
- }
+ uParticle = setTetCentroid(*IEN,uParticle);
+ vParticle = setTetCentroid(*IEN,vParticle);
+ wParticle = setTetCentroid(*IEN,wParticle);
+#else 
+ getDepartElemQuad(dt); // procura de elemento
+
+ uParticle = convQuad*uSol; 
+ vParticle = convQuad*vSol; 
+ wParticle = convQuad*wSol;
+ cParticle = convLin*cSol;
+#endif
 
  setBC();
 } // fim do metodo compute
 
 void SemiLagrangean::computeFreeSurface(real dt)
 {
+#if NUMGLEU == 5 
  getDepartElem2(dt); // procura de elemento
 
  clVector uVert(numVerts);
@@ -131,9 +136,19 @@ void SemiLagrangean::computeFreeSurface(real dt)
  vParticle.Append(zerosConv);
  wParticle.Append(zerosConv);
 
- setBC();
- setCentroid();
+ uParticle = setTetCentroid(*IEN,uParticle);
+ vParticle = setTetCentroid(*IEN,vParticle);
+ wParticle = setTetCentroid(*IEN,wParticle);
+#else 
+ getDepartElemQuad(dt); // procura de elemento
 
+ uParticle = convQuad*uSol; 
+ vParticle = convQuad*vSol; 
+ wParticle = convQuad*wSol;
+ cParticle = convLin*cSol;
+#endif
+
+ setBC();
 } // fim do metodo computeFreeSurface
 
 void SemiLagrangean::setCentroid()

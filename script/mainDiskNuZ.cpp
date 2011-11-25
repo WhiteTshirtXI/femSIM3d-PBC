@@ -8,6 +8,7 @@
 #include "Model3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
+#include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
 #include "Simulator3D.h"
@@ -40,8 +41,11 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
+#if NUMGLEU == 5
  m1.setMiniElement();
- //m1.setQuadElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setNuZDiskBC();;
  m1.setOFace();
  //m1.readBaseStateNu("NuCte");

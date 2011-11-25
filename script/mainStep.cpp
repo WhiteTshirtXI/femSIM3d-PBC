@@ -10,6 +10,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "Simulator3D.h"
+#include "TElement.h"
 #include "InOut.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
@@ -51,8 +52,11 @@ int main(int argc, char **argv)
  m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
  //m1.setSingleElement();
+#if NUMGLEU == 5
  m1.setMiniElement();
- //m1.setQuadElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setStepBC();
  m1.setCStepBC();
  m1.setOFace();

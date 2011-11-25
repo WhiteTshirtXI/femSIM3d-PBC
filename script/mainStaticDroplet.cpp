@@ -9,6 +9,7 @@
 #include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
+#include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
 #include "PetscSolver.h"
@@ -73,7 +74,11 @@ int main(int argc, char **argv)
  m1.setTriEdge(triEdge);
  m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
+#if NUMGLEU == 5
  m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setOFace();
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();

@@ -10,6 +10,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "Simulator3D.h"
+#include "TElement.h"
 #include "InOut.h"
 #include "PetscSolver.h"
 #include "petscpc.h"
@@ -43,8 +44,11 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
+#if NUMGLEU == 5
  m1.setMiniElement();
- //m1.setQuadElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setOFace();
  m1.setNuCteDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");

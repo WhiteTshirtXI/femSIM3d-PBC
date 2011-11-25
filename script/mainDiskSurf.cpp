@@ -8,7 +8,7 @@
 #include "Model3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
-//#include "GMRes.h"
+#include "TElement.h"
 #include "Simulator3D.h"
 #include "InOut.h"
 #include "PetscSolver.h"
@@ -49,7 +49,11 @@ int main(int argc, char **argv)
 
  Model3D m1;
  m1.setMeshDisk(8,8,7);
+#if NUMGLEU == 5
  m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setDiskFSBC();
  m1.setDiskCFSBC();
  m1.setPerturbSurf();
@@ -84,7 +88,7 @@ int main(int argc, char **argv)
  s1.setSolverConcentration(solverC);
 
  s1.init();
- s1.setDtDisk();
+ s1.setDtEulerian();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -140,7 +144,11 @@ int main(int argc, char **argv)
 //   Model3D mOld = m1; 
 //   //m1.mesh2Dto3DOriginal();
 //   m1.mesh3DPoints();
-//   m1.setMiniElement();
+//#if NUMGLEU == 5
+// m1.setMiniElement();
+//#else
+// m1.setQuadElement();
+//#endif
 //   m1.setDiskFSBC();
 //   m1.setOFace();
 //   m1.setSurface();

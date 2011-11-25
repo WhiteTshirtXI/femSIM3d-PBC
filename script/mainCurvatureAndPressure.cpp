@@ -10,6 +10,7 @@
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
+#include "TElement.h"
 #include "InOut.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
@@ -114,7 +115,11 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   //m1.setBiggerSphere(1);

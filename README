@@ -104,6 +104,14 @@ TAG 3.0
  - mainMicro       (micro channel test case)
 
 
+CHANGE ELEMENTS (MINI or QUAD):
+
+All the main files can be used with both MINI and QUAD element but for Two-Phase flows the QUAD element is not tested and probably won't work.
+To change the elements along the code, 2 steps are required:
+
+- Makefile: comment and uncomment FEMMiniElement3D and FEMQuadElement3D.
+- TElement: change the definitio of NUMGLEU to 5 (MINI) or 10 (QUAD) on its header.
+
 
 STRANGE BEHAVIOR:
 (Reason: viscosity term K)

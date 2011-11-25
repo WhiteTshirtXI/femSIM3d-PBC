@@ -9,6 +9,7 @@
 #include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
+#include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
 #include "Laplace3D.h"
@@ -87,8 +88,11 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
-  m1.setMiniElement();
-  //m1.setQuadElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
@@ -333,8 +337,11 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
-  m1.setMiniElement();
-  //m1.setQuadElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setWallBC();

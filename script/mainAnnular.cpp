@@ -10,6 +10,7 @@
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
+#include "TElement.h"
 #include "InOut.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
@@ -71,7 +72,11 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.mesh2Dto3D();
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setWallAnnularBC();
@@ -110,7 +115,11 @@ int main(int argc, char **argv)
 
   m1.setInterfaceBC();
   m1.mesh2Dto3D();
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setWallAnnularBC();
@@ -136,7 +145,11 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
 
   m1.readVTK(vtkFile);
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -166,7 +179,11 @@ int main(int argc, char **argv)
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
   m1.mesh2Dto3D();
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setWallAnnularBC();
@@ -176,7 +193,11 @@ int main(int argc, char **argv)
   file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
   m1.readVTK(vtkFile);
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -285,7 +306,11 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
-  m1.setMiniElement();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setWallAnnularBC();

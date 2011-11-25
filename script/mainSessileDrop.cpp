@@ -241,10 +241,11 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setDtALETwoPhase();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
+   s1.setDtALETwoPhase();
+   s1.movePoints();
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();

@@ -332,8 +332,12 @@ void Simulator3D::assemble()
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
+
  FEMLinElement3D linElem(*X,*Y,*Z);
 
  //setMu( mu_in );
@@ -526,8 +530,11 @@ void Simulator3D::assembleNuCte()
  clMatrix Dy( numVerts,numNodes );
  clMatrix Dz( numVerts,numNodes );
 
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
 
  setMu(mu_in);
  setRho(rho_in);
@@ -640,8 +647,11 @@ void Simulator3D::assembleNuC()
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
 
  FEMLinElement3D linElem(*X,*Y,*Z);
 
@@ -817,8 +827,11 @@ void Simulator3D::assembleSlip()
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
 
  FEMLinElement3D linElem(*X,*Y,*Z);
 
@@ -995,8 +1008,11 @@ void Simulator3D::assembleNuZ()
  setMuZ();      // carregando o arquivo de perfil nuZ
  setRho(rho_in);
  
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -1135,8 +1151,11 @@ void Simulator3D::assembleK()
  clMatrix Kzz( numNodes,numNodes );
  clMatrix KcMat( numVerts,numVerts );
 
+#if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
- //FEMQuadElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
 
  FEMLinElement3D linElem(*X,*Y,*Z);
 
@@ -1293,11 +1312,6 @@ void Simulator3D::stepLagrangian()
  // impoe velocidade SolOld = 0 no contorno
  setLagrangianVelBC();
 
- m->moveXPoints(uSolOld,dt);
- m->moveYPoints(vSolOld,dt);
- m->moveZPoints(wSolOld,dt);
- m->centroidPositionCorrection();
-
  convUVW.CopyFrom(0,uSolOld);
  convUVW.CopyFrom(numNodes,vSolOld);
  convUVW.CopyFrom(2*numNodes,wSolOld);
@@ -1335,10 +1349,16 @@ void Simulator3D::stepALE()
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
  e1.stepSmoothFujiwara();
- e1.setCentroid();
- uSmoothCoord = *e1.getUSmooth();
- vSmoothCoord = *e1.getVSmooth();
- wSmoothCoord = *e1.getWSmooth();
+
+#if NUMGLEU == 5
+  uSmooth = setTetCentroid(*IEN,*e1.getUSmooth());
+  vSmooth = setTetCentroid(*IEN,*e1.getVSmooth());
+  wSmooth = setTetCentroid(*IEN,*e1.getWSmooth());
+#else
+  uSmooth = setTetQuad(*IEN,*e1.getUSmooth());
+  vSmooth = setTetQuad(*IEN,*e1.getVSmooth());
+  wSmooth = setTetQuad(*IEN,*e1.getWSmooth());
+#endif
 
  uALE = c1*uSolOld+c3*uSmoothCoord;
  vALE = c1*vSolOld+c3*vSmoothCoord;
@@ -1353,12 +1373,6 @@ void Simulator3D::stepALE()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
-
- // movimentando os pontos da malha com velocidade ALE
- m->moveXPoints(uALE,dt);
- m->moveYPoints(vALE,dt);
- m->moveZPoints(wALE,dt);
- m->centroidPositionCorrection();
 } // fecha metodo stepALE
 
 void Simulator3D::stepALEVel()
@@ -1372,10 +1386,16 @@ void Simulator3D::stepALEVel()
   // smoothing - velocidade
   MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
   e2.stepSmooth(uALE,vALE,wALE);
-  e2.setCentroid();
-  uSmooth = *e2.getUSmooth();
-  vSmooth = *e2.getVSmooth();
-  wSmooth = *e2.getWSmooth();
+
+#if NUMGLEU == 5
+  uSmooth = setTetCentroid(*IEN,*e2.getUSmooth());
+  vSmooth = setTetCentroid(*IEN,*e2.getVSmooth());
+  wSmooth = setTetCentroid(*IEN,*e2.getWSmooth());
+#else
+  uSmooth = setTetQuad(*IEN,*e2.getUSmooth());
+  vSmooth = setTetQuad(*IEN,*e2.getVSmooth());
+  wSmooth = setTetQuad(*IEN,*e2.getWSmooth());
+#endif
 
   // impoe velocidade (componente normal) do fluido na interface
   setInterfaceVelNormal();
@@ -1385,10 +1405,16 @@ void Simulator3D::stepALEVel()
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
  e1.stepSmoothFujiwara();
- e1.setCentroid();
- uSmoothCoord = *e1.getUSmooth();
- vSmoothCoord = *e1.getVSmooth();
- wSmoothCoord = *e1.getWSmooth();
+
+#if NUMGLEU == 5
+ uSmoothCoord = setTetCentroid(*IEN,*e1.getUSmooth());
+ vSmoothCoord = setTetCentroid(*IEN,*e1.getVSmooth());
+ wSmoothCoord = setTetCentroid(*IEN,*e1.getWSmooth());
+#else
+ uSmoothCoord = setTetQuad(*IEN,*e1.getUSmooth());
+ vSmoothCoord = setTetQuad(*IEN,*e1.getVSmooth());
+ wSmoothCoord = setTetQuad(*IEN,*e1.getWSmooth());
+#endif
 
  uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
  vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
@@ -1403,7 +1429,10 @@ void Simulator3D::stepALEVel()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
+} // fecha metodo stepALEVel
 
+void Simulator3D::movePoints()
+{
  // movimentando os vertices pontos da malha com velocidade ALE
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
@@ -1415,7 +1444,7 @@ void Simulator3D::stepALEVel()
 
  // velocidade da bolha
  //getBubbleVelocity(uALE,vALE,wALE);
-} // fecha metodo stepALEVel
+}
 
 void Simulator3D::setInterfaceVel()
 {
@@ -1777,6 +1806,15 @@ void Simulator3D::saveOldData()
  wSolOld = wSol;
  pSolOld = pSol;
  cSolOld = cSol;
+ uALEOld    = uALE;
+ vALEOld    = vALE;
+ wALEOld    = wALE;
+ fintOld    = fint;
+ gravityOld = gravity;
+ kappaOld   = kappa;
+ muOld      = mu;
+ rhoOld     = rho;
+ hSmoothOld = hSmooth;
 }
 
 /**
@@ -2061,9 +2099,7 @@ void Simulator3D::setDtLagrangianExtream()
  minXdist = min(minXdist,d3x);
  minXdist = min(minXdist,d4x);
 
- real xVelMax = max( 1.0,uSolOld.Abs().Max() );
- xVelMax = max( xVelMax,c2*uSmooth.Abs().Max() );
- xVelMax = max( xVelMax,c3*uSmoothCoord.Abs().Max() );
+ real xVelMax = max( 1.0,uALE.Abs().Max() );
  real minDtx = minXdist/xVelMax;
 
  /* Y-component */
@@ -2083,9 +2119,7 @@ void Simulator3D::setDtLagrangianExtream()
  minYdist = min(minYdist,d3y);
  minYdist = min(minYdist,d4y);
 
- real yVelMax = max( 1.0,vSolOld.Abs().Max() );
- yVelMax = max( yVelMax,c2*vSmooth.Abs().Max() );
- yVelMax = max( yVelMax,c3*vSmoothCoord.Abs().Max() );
+ real yVelMax = max( 1.0,vALE.Abs().Max() );
  real minDty = minYdist/yVelMax;
 
  /* Z-component */
@@ -2105,9 +2139,7 @@ void Simulator3D::setDtLagrangianExtream()
  minZdist = min(minZdist,d3z);
  minZdist = min(minZdist,d4z);
 
- real zVelMax = max( 1.0,wSolOld.Abs().Max() );
- zVelMax = max( zVelMax,c2*wSmooth.Abs().Max() );
- zVelMax = max( zVelMax,c3*wSmoothCoord.Abs().Max() );
+ real zVelMax = max( 1.0,wALE.Abs().Max() );
  real minDtz = minZdist/zVelMax;
 
  real minDt1 = min(minDtx,minDty);
@@ -2136,27 +2168,15 @@ void Simulator3D::setDtLagrangian()
 
  real length = minEdge*0.86602;
 
- real velMax = max( 1.0,uSolOld.Abs().Max() );
- velMax = max( velMax,vSolOld.Abs().Max() );
- velMax = max( velMax,wSolOld.Abs().Max() );
- velMax = max( velMax,c2*uSmooth.Abs().Max() );
- velMax = max( velMax,c2*vSmooth.Abs().Max() );
- velMax = max( velMax,c2*wSmooth.Abs().Max() );
- velMax = max( velMax,c3*uSmoothCoord.Abs().Max() );
- velMax = max( velMax,c3*vSmoothCoord.Abs().Max() );
- velMax = max( velMax,c3*wSmoothCoord.Abs().Max() );
+ real velMax = max( 1.0,uALE.Abs().Max() );
+ velMax = max( velMax,vALE.Abs().Max() );
+ velMax = max( velMax,wALE.Abs().Max() );
 
 //--------------------------------------------------
 //  cout << "length: " << length << endl; 
-//  cout << "uMax: " << uSolOld.Abs().Max() << endl; 
-//  cout << "vMax: " << vSolOld.Abs().Max() << endl; 
-//  cout << "wMax: " << wSolOld.Abs().Max() << endl; 
-//  cout << "uSmooth: " << c2*uSmooth.Abs().Max() << endl; 
-//  cout << "vSmooth: " << c2*vSmooth.Abs().Max() << endl;
-//  cout << "wSmooth: " << c2*wSmooth.Abs().Max() << endl;
-//  cout << "uCoord: " << c3*uSmoothCoord.Abs().Max() << endl;
-//  cout << "vCoord: " << c3*vSmoothCoord.Abs().Max() << endl;
-//  cout << "wCoord: " << c3*wSmoothCoord.Abs().Max() << endl;
+//  cout << "uMax: " << uALE.Abs().Max() << endl; 
+//  cout << "vMax: " << vALE.Abs().Max() << endl; 
+//  cout << "wMax: " << wALE.Abs().Max() << endl; 
 //  cout << "velMax: " << velMax << endl;
 //-------------------------------------------------- 
  
@@ -2208,32 +2228,21 @@ void Simulator3D::setDtLagrangianNorberto()
   int v1 = mapEdge->Get(edge,4);
   int v2 = mapEdge->Get(edge,5);
 
-  real x1=X->Get(v1);
-  real y1=Y->Get(v1);
-  real z1=Z->Get(v1);
-  real x2=X->Get(v2);
-  real y2=Y->Get(v2);
-  real z2=Z->Get(v2);
-  real length = distance(x1,y1,z1,x2,y2,z2);
-
-  //real x = x1 - x2;
-  //real y = y1 - y2;
-  //real z = z1 - z2;
-  //real length = vectorLength(x,y,z);
+  real x=X->Get(v1)-X->Get(v2);
+  real y=Y->Get(v1)-Y->Get(v2);
+  real z=Z->Get(v1)-Z->Get(v2);
+  real length = vectorLength(x,y,z);
 
   // bubble.py - 146 iterations
-  //real xVel = fabs( uALE.Get(v1) ) - fabs( uALE.Get(v2) );
-  //real yVel = fabs( vALE.Get(v1) ) - fabs( vALE.Get(v2) );
-  //real zVel = fabs( wALE.Get(v1) ) - fabs( wALE.Get(v2) );
   real xVel = uALE.Get(v1) - uALE.Get(v2);
   real yVel = vALE.Get(v1) - vALE.Get(v2);
   real zVel = wALE.Get(v1) - wALE.Get(v2);
 
   real vel = vectorLength(xVel,yVel,zVel);
-  //real vel = distance(uALE.Get(v1),vALE.Get(v1),wALE.Get(v1),
-  //                    uALE.Get(v2),vALE.Get(v2),wALE.Get(v2));
+  //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
+  //                    fabs(x),fabs(y),fabs(z));
 
-  real a = 0.09; // security parameter
+  real a = 0.1; // security parameter
 
   real minDt = a*length/vel;
 
@@ -2256,9 +2265,13 @@ void Simulator3D::setDtSemiLagrangian()
 {
  real minEdge = m->getMinEdge();
 
- real velMax = max( 1.0,uSolOld.Abs().Max() );
- velMax = max( velMax,vSolOld.Abs().Max() );
- velMax = max( velMax,wSolOld.Abs().Max() );
+ clVector velU = uSolOld-uALE;
+ clVector velV = vSolOld-vALE;
+ clVector velW = wSolOld-wALE;
+
+ real velMax = max( 1.0,velU.Abs().Max() );
+ velMax = max( velMax,velV.Abs().Max() );
+ velMax = max( velMax,velW.Abs().Max() );
 
  dtSemiLagrangian = minEdge/velMax;
 }
@@ -2278,8 +2291,6 @@ void Simulator3D::setDtGravity()
  *  */
 void Simulator3D::setDtEulerian()
 {
- m->setMapEdge();
-
  // setting required dt
  setDtSemiLagrangian();
 
@@ -2308,8 +2319,6 @@ void Simulator3D::setDtEulerian()
  *  */
 void Simulator3D::setDtALETwoPhase()
 {
- m->setMapEdge();
-
  // setting required dt
  setDtLagrangianNorberto();
  setDtSurfaceTension();
@@ -2345,8 +2354,6 @@ void Simulator3D::setDtALETwoPhase()
  *  */
 void Simulator3D::setDtALESinglePhase()
 {
- m->setMapEdge();
-
  // setting required dt
  setDtLagrangianNorberto();
  setDtGravity();
@@ -3297,40 +3304,60 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  rhoOld.CopyTo(0,rhoOldVert);
  hSmoothOld.CopyTo(0,hSmoothOldVert);
 
- uSol = interpLin*(uSolOld);
- vSol = interpLin*(vSolOld);
- wSol = interpLin*(wSolOld);
+ // interpolation and increase number of elements
+
  pSol = interpLin*(pSolOld);
  cSol = interpLin*(cSolOld);
- uALE = interpLin*(uALEOld);
- vALE = interpLin*(vALEOld);
- wALE = interpLin*(wALEOld);
  mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
  hSmooth = interpLin*(hSmoothOld);
- clVector xKappa = interpLin*(xKappaOld);
- clVector xFint = interpLin*(xFintOld);
- clVector yFint = interpLin*(yFintOld);
- clVector zFint = interpLin*(zFintOld);
- clVector xGravity = interpLin*(xGravityOld);
- clVector yGravity = interpLin*(yGravityOld);
- clVector zGravity = interpLin*(zGravityOld);
 
- // set do centroid
- uSol = setTetCentroid(*IEN,uSol);
- vSol = setTetCentroid(*IEN,vSol);
- wSol = setTetCentroid(*IEN,wSol);
- uALE = setTetCentroid(*IEN,uALE);
- vALE = setTetCentroid(*IEN,vALE);
- wALE = setTetCentroid(*IEN,wALE);
- xKappa = setTetCentroid(*IEN,xKappa);
- xFint = setTetCentroid(*IEN,xFint);
- yFint = setTetCentroid(*IEN,yFint);
- zFint = setTetCentroid(*IEN,zFint);
- xGravity = setTetCentroid(*IEN,xGravity);
- yGravity = setTetCentroid(*IEN,yGravity);
- zGravity = setTetCentroid(*IEN,zGravity);
+ clVector zeros(numNodes-numVerts);
+ uSol = interpLin*(uSolOld);uSol.Append(zeros);
+ vSol = interpLin*(vSolOld);vSol.Append(zeros);
+ wSol = interpLin*(wSolOld);wSol.Append(zeros);
+ uALE = interpLin*(uALEOld);uALE.Append(zeros);
+ vALE = interpLin*(vALEOld);vALE.Append(zeros);
+ wALE = interpLin*(wALEOld);wALE.Append(zeros);
+ clVector xKappa = interpLin*(xKappaOld);xKappa.Append(zeros);
+ clVector xFint = interpLin*(xFintOld);xFint.Append(zeros);
+ clVector yFint = interpLin*(yFintOld);yFint.Append(zeros);
+ clVector zFint = interpLin*(zFintOld);zFint.Append(zeros);
+ clVector xGravity = interpLin*(xGravityOld);xGravity.Append(zeros);
+ clVector yGravity = interpLin*(yGravityOld);yGravity.Append(zeros);
+ clVector zGravity = interpLin*(zGravityOld);zGravity.Append(zeros);
 
+#if NUMGLEU == 5
+  // set do centroid
+  uSol = setTetCentroid(*IEN,uSol);
+  vSol = setTetCentroid(*IEN,vSol);
+  wSol = setTetCentroid(*IEN,wSol);
+  uALE = setTetCentroid(*IEN,uALE);
+  vALE = setTetCentroid(*IEN,vALE);
+  wALE = setTetCentroid(*IEN,wALE);
+  xKappa = setTetCentroid(*IEN,xKappa);
+  xFint = setTetCentroid(*IEN,xFint);
+  yFint = setTetCentroid(*IEN,yFint);
+  zFint = setTetCentroid(*IEN,zFint);
+  xGravity = setTetCentroid(*IEN,xGravity);
+  yGravity = setTetCentroid(*IEN,yGravity);
+  zGravity = setTetCentroid(*IEN,zGravity);
+#else
+  // set do quad
+  uSol = setTetQuad(*IEN,uSol);
+  vSol = setTetQuad(*IEN,vSol);
+  wSol = setTetQuad(*IEN,wSol);
+  uALE = setTetQuad(*IEN,uALE);
+  vALE = setTetQuad(*IEN,vALE);
+  wALE = setTetQuad(*IEN,wALE);
+  xKappa = setTetQuad(*IEN,xKappa);
+  xFint = setTetQuad(*IEN,xFint);
+  yFint = setTetQuad(*IEN,yFint);
+  zFint = setTetQuad(*IEN,zFint);
+  xGravity = setTetQuad(*IEN,xGravity);
+  yGravity = setTetQuad(*IEN,yGravity);
+  zGravity = setTetQuad(*IEN,zGravity);
+#endif
 
  // setting kappa
  kappa.Dim(3*numNodes);
@@ -3352,20 +3379,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravity.CopyFrom(numNodes*1,yGravity);
  gravity.CopyFrom(numNodes*2,zGravity);
 
- uSolOld    = uSol;
- vSolOld    = vSol;
- wSolOld    = wSol;
- pSolOld    = pSol;
- cSolOld    = cSol;
- uALEOld    = uALE;
- vALEOld    = vALE;
- wALEOld    = wALE;
- fintOld    = fint;
- gravityOld = gravity;
- kappaOld   = kappa;
- muOld      = mu;
- rhoOld     = rho;
- hSmoothOld = hSmooth;
+ saveOldData();
 } // fecha metodo applyLinearInterpolation
 
 // calcula velocidade media da bolha tomando como referencia o centro de

@@ -564,12 +564,11 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
 
 void Model3D::setStepBC()
 {
- real numBCPoints;
-
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -669,12 +668,11 @@ void Model3D::setCStepBC()
 
 void Model3D::setStepReservBC()
 {
- real numBCPoints;
-
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -708,12 +706,12 @@ void Model3D::setStepReservBC()
 
 void Model3D::setStepReservInvBC()
 {
- real numBCPoints;
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -747,12 +745,11 @@ void Model3D::setStepReservInvBC()
 
 void Model3D::setCouetteBC()
 {
- real numBCPoints;
-
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -2954,7 +2951,7 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
   real x2=X.Get(v2);
   real y2=Y.Get(v2);
   real z2=Z.Get(v2);
-  real length = vectorLength(x1-x2,y1-y2,z1-z2);
+  real length = distance(x1,y1,z1,x2,y2,z2);
 
   // minVert should be bigger then surfMesh.numVerts because we are
   // treating only 3D vertices after the surface mesh vertices.
@@ -3286,7 +3283,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*(nb-1)+1] = yIn;
   in.regionlist[5*(nb-1)+2] = zIn;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = 3*triEdge[nb]*
+  in.regionlist[5*(nb-1)+4] = 5*triEdge[nb]*
                               triEdge[nb]*
 							  triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];
@@ -3799,14 +3796,14 @@ void Model3D::mesh3DPoints()
 
 void Model3D::setDiskCouetteBC()
 {
- real numBCPoints;
  real aux;
  rMax = Y.Max(); 
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -3873,15 +3870,15 @@ void Model3D::setDiskCouetteBC()
 
 void Model3D::setNuCteDiskBC()
 {
- real numBCPoints;
  real omega,aux;
  real radius;
  rMax = Y.Max();
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -3944,14 +3941,14 @@ void Model3D::setNuCteDiskBC()
 
 void Model3D::setNuCDiskBC()
 {
- real numBCPoints;
  real omega,aux,radius;
  rMax = Y.Max();
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -4148,7 +4145,13 @@ void Model3D::setCDiskBC()
 
 void Model3D::setCubeBC()
 {
- for( int i=0;i<numVerts;i++ )
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   // condicao de parede v=0
   if( (X.Get(i)==X.Max()) || (X.Get(i)==X.Min()) || 
@@ -4288,7 +4291,13 @@ void Model3D::set2BubbleBC()
 {
  real aux;
 
- for( int i=0;i<numVerts;i++ )
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
  {
   // condicao de velocidade
   if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
@@ -4472,14 +4481,14 @@ void Model3D::readBaseStateNu( const char* _filename )
 
 void Model3D::setNuZDiskBC()
 {
- real numBCPoints;
  real omega,aux,radius;
  rMax = Y.Max();
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -4540,15 +4549,15 @@ void Model3D::setNuZDiskBC()
 // FSBC - Free Surface Boundary Condition
 void Model3D::setDiskFSBC()
 {
- real numBCPoints;
  real aux;
  heaviside.Dim(numVerts);
  rMax = Y.Max();
 
- if( NUMGLEU == 10 )
-  numBCPoints = numNodes;
- else
-  numBCPoints = numVerts;
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
 
  for( int i=0;i<numBCPoints;i++ )
  {
@@ -6173,6 +6182,7 @@ void Model3D::setSurfaceConfig()
  setSurfaceTri(); // triang superficie - interfaceMesh
  //setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
+ setMapEdge(); 
  setMapEdgeTri(); 
  setNormalAndKappa();
 }
@@ -8132,3 +8142,140 @@ void Model3D::applyBubbleVolumeCorrection()
  }
 }
 
+void Model3D::removePointByVolumeIn(real _factor)
+{
+ real vSum;
+ real vertSum;
+ int v[NUMGLE];
+ int vert=0;
+ //rpv=0;
+
+ tetVol.clear();
+ tetVol.resize(triEdge.size()); // number of surfaces + 1
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+
+ // set tetVol ---> wall,bubble1, bubble2 etc.
+ for( int v=0;v<(int) triEdge.size();v++ )
+  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
+
+ for (list<int>::iterator elem=inElem.begin(); elem!=inElem.end(); ++elem)
+ {
+  v[0] = IEN.Get(*elem,0);
+  v[1] = IEN.Get(*elem,1);
+  v[2] = IEN.Get(*elem,2);
+  v[3] = IEN.Get(*elem,3);
+
+  real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
+              heaviside.Get(v[2])+heaviside.Get(v[3]);
+
+  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(*elem)]);
+
+  int count=0;
+  if( hSum != 2.0 && 
+	  fabs(getVolume(*elem)) < maxVol ) 
+  {
+   // add to checkVert only non surface vertex
+   list<int> checkVert;
+   for( int j=0;j<NUMGLE;j++ )
+	if( heaviside.Get(v[j]) != 0.5 )
+	  checkVert.push_back( v[j] );
+
+   vertSum = 1.0E+17; // initial value
+
+   // check sum of volumes of each non surface vertex neighbours
+   list<int> plist = checkVert;
+   for(list<int>::iterator mvert=plist.begin(); mvert!= plist.end();++mvert )
+   {
+	vSum = 0;
+	list<int> plist2 = neighbourElem.at(*mvert);
+	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
+	 vSum += fabs(getVolume(*mele));
+
+	// The problem is: if all the vertices are lower then
+	// surfMesh.numVerts, 
+	if( vSum < vertSum && *mvert > surfMesh.numVerts )
+	{
+	 vertSum = vSum;
+	 vert = *mvert;
+	 count++;
+	}
+   }
+   // mark points to delete
+   if( count > 0 )
+   {
+	mark3DPointForDeletion(vert);
+	rpv++;
+   }
+  }
+ }
+ //cout << "  removed by volume: " << rpv << endl;
+}
+
+void Model3D::removePointByVolumeOut(real _factor)
+{
+ real vSum;
+ real vertSum;
+ int v[NUMGLE];
+ int vert=0;
+ //rpv=0;
+
+ tetVol.clear();
+ tetVol.resize(triEdge.size()); // number of surfaces + 1
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+
+ // set tetVol ---> wall,bubble1, bubble2 etc.
+ for( int v=0;v<(int) triEdge.size();v++ )
+  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
+
+ for (list<int>::iterator elem=outElem.begin(); elem!=outElem.end(); ++elem)
+ {
+  v[0] = IEN.Get(*elem,0);
+  v[1] = IEN.Get(*elem,1);
+  v[2] = IEN.Get(*elem,2);
+  v[3] = IEN.Get(*elem,3);
+
+  real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
+              heaviside.Get(v[2])+heaviside.Get(v[3]);
+
+  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(*elem)]);
+
+  int count=0;
+  if( hSum != 2.0 && 
+	  fabs(getVolume(*elem)) < maxVol ) 
+  {
+   // add to checkVert only non surface vertex
+   list<int> checkVert;
+   for( int j=0;j<NUMGLE;j++ )
+	if( heaviside.Get(v[j]) != 0.5 )
+	  checkVert.push_back( v[j] );
+
+   vertSum = 1.0E+17; // initial value
+
+   // check sum of volumes of each non surface vertex neighbours
+   list<int> plist = checkVert;
+   for(list<int>::iterator mvert=plist.begin(); mvert!= plist.end();++mvert )
+   {
+	vSum = 0;
+	list<int> plist2 = neighbourElem.at(*mvert);
+	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
+	 vSum += fabs(getVolume(*mele));
+
+	// The problem is: if all the vertices are lower then
+	// surfMesh.numVerts, 
+	if( vSum < vertSum && *mvert > surfMesh.numVerts )
+	{
+	 vertSum = vSum;
+	 vert = *mvert;
+	 count++;
+	}
+   }
+   // mark points to delete
+   if( count > 0 )
+   {
+	mark3DPointForDeletion(vert);
+	rpv++;
+   }
+  }
+ }
+ //cout << "  removed by volume: " << rpv << endl;
+}

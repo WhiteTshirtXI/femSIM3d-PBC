@@ -10,6 +10,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "Simulator3D.h"
+#include "TElement.h"
 #include "InOut.h"
 #include "Laplace3D.h"
 #include "PetscSolver.h"
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.1; // lagrangian
+ real c1 = 0.3; // lagrangian
  real c2 = 0.00; // smooth vel
  real c3 = 0.2; // smooth - fujiwara
  real c4 = 0.00; // smooth surface - fujiwara
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "step.msh";
+ string meshFile = "stepSimple.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
@@ -56,7 +57,6 @@ int main(int argc, char **argv)
  string meshDir = (string) getenv("DATA_DIR");
  meshDir += "/gmsh/3d/" + meshFile;
  const char *mesh = meshDir.c_str();
- cout << mesh << endl;
 
  Model3D m1;
  //m1.setMeshStep(40,20,4);
@@ -67,12 +67,15 @@ int main(int argc, char **argv)
  m1.mesh2Dto3D();
  //m1.setAdimenStep();
  //m1.setSingleElement();
+#if NUMGLEU == 5
  m1.setMiniElement();
- //m1.setQuadElement();
+#else
+ m1.setQuadElement();
+#endif
  m1.setOFace();
  m1.setVertNeighbour();
  m1.setInOutVert();
- m1.setWallStepBC();
+ m1.setStepBC();
  m1.setCStepBC();
 
  Simulator3D s1(m1);
@@ -138,11 +141,12 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   //s1.setDtEulerian();
+   //s1.stepSL();
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   //s1.stepSL();
+   s1.setDtEulerian();
+   s1.movePoints();
    s1.assembleSlip();
    s1.matMount();
    s1.matMountC();
@@ -192,12 +196,15 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+#if NUMGLEU == 5
   m1.setMiniElement();
-  //m1.setQuadElement();
+#else
+  m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setVertNeighbour();
   m1.setInOutVert();
-  m1.setWallStepBC();
+  m1.setStepBC();
   m1.setCStepBC();
 
   Simulator3D s2(m1,s1);

@@ -281,6 +281,15 @@ void Simulator3D::init()
  cSolOld.CopyFrom( 0,*cc );
 }
 
+void Simulator3D::initHeatTransfer()
+{
+ init();
+
+ for( int i=0;i<numVerts;i++ )
+  if( Z->Get(i) < 0.5*Z->Max() && Z->Get(i) > 0.4*Z->Max() )
+   cSolOld.Set(i,1.0);
+}
+
 void Simulator3D::initFixedBubbleZ()
 {
  init();

@@ -142,8 +142,11 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
 
   m1.readVTK(vtkFile);
+#if NUMGLEU == 5
   m1.setMiniElement();
-  //m1.setQuadElement();
+#else
+  m1.setQuadElement();
+#endif
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -179,8 +182,11 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
+#if NUMGLEU == 5
   m1.setMiniElement();
-  //m1.setQuadElement();
+#else
+  m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
@@ -215,8 +221,11 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
+#if NUMGLEU == 5
   m1.setMiniElement();
-  //m1.setQuadElement();
+#else
+  m1.setQuadElement();
+#endif
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();

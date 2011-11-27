@@ -69,6 +69,9 @@ fallingDrop: ${FEM3D_DIR}/script/mainFallingDrop.o $(obj)
 bubble: ${FEM3D_DIR}/script/mainBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+bubbleHT: ${FEM3D_DIR}/script/mainBubbleHT.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 

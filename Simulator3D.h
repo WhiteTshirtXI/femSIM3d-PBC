@@ -46,6 +46,7 @@ class Simulator3D
   void getModel3DAttrib(Model3D &_m);
   void allocateMemoryToAttrib();
   void init();
+  void initHeatTransfer();
   void initFixedBubbleZ();
   void init2Bubbles();
   void assemble();

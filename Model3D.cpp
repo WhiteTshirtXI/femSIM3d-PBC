@@ -1148,7 +1148,10 @@ void Model3D::removePointsByCurvature()
   if( curv > 50 )
   {
    cout << "----------------- " << color(none,red,black) 
-	    << "removing vertex at(" 
+	    << "removing vertex with curvature (" << 
+		<< resetColor() << curv
+		<< color(none,red,black) 
+		<< ") at (" 
 		<< resetColor()
 		<< surfMesh.vertIdRegion.Get(surfaceNode)
 		<< color(none,red,black) 
@@ -2678,7 +2681,7 @@ void Model3D::removePointsByLength()
 	if( sumLength1 < sumLength2 )
 	{
 	 cout << "----------------- " << color(none,red,black) 
-	      << "removing vertex at(" 
+	      << "removing vertex at (" 
 	      << resetColor()
 	      << surfMesh.vertIdRegion.Get(v1)
 	      << color(none,red,black) 

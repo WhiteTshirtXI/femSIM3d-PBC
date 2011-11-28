@@ -1148,7 +1148,7 @@ void Model3D::removePointsByCurvature()
   if( curv > 50 )
   {
    cout << "----------------- " << color(none,red,black) 
-	    << "removing vertex with curvature (" << 
+	    << "removing vertex with curvature (" 
 		<< resetColor() << curv
 		<< color(none,red,black) 
 		<< ") at (" 

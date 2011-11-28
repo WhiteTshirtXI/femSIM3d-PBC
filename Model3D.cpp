@@ -1145,7 +1145,7 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 35 )
+  if( curv > 50 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex at(" 
@@ -2953,23 +2953,23 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
   real z2=Z.Get(v2);
   real length = distance(x1,y1,z1,x2,y2,z2);
 
-  // minVert should be bigger then surfMesh.numVerts because we are
-  // treating only 3D vertices after the surface mesh vertices.
-  int minVert = min(v1,v2);
+  real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = 0
   if( length < _factor*edgeSize.Get(v1) &&
-	  minVert > surfMesh.numVerts &&
-	  heaviside.Get(v1) != 0.5 &&  
-	  heaviside.Get(v2) != 0.5 )
+	  hSum == 2.0 )
   {
-   //cout << "- " << color(none,blue,black) 
-	//            << "removing dense vertex cluster: "
-	//			<< resetColor() << v1 << " " << heaviside.Get(v1) << endl;
-
-   mark3DPointForDeletion(v1);
-   rpd++;
+   if( v1 > surfMesh.numVerts )
+   {
+	mark3DPointForDeletion(v1);
+	rpd++;
+   }
+   else
+   {
+	mark3DPointForDeletion(v2);
+	rpd++;
+   }
   }
  }
  //cout << "  removed by diffusion: " << rpd << endl;
@@ -8074,6 +8074,7 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
 void Model3D::applyBubbleVolumeCorrection()
 {
+ real TOL = 1E-03;
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
@@ -8095,7 +8096,7 @@ void Model3D::applyBubbleVolumeCorrection()
   int count = 0;
   //while( fabs(dv) > 1E-06 )
   //while( fabs(da) > 1E-06 )
-  while( fabs(dv) > 1E-03 && count < 30 )
+  while( fabs(dv) > TOL && count < 30 )
   {
    for( int i=0;i<surface.Dim();i++ )
    {
@@ -8130,15 +8131,28 @@ void Model3D::applyBubbleVolumeCorrection()
    dv = (initBubbleVolume - bubbleVolume);
    count++;
   }
-  cout << "init volume = " << initBubbleVolume << endl;
-  cout << "final volume = " << bubbleVolume << endl;
-  cout << "init area = " << initBubbleArea << endl;
-  cout << "final area = " << bubbleArea << endl;
-  cout << "dr = " << dr << endl;
-  cout << "dv = " << dv << endl;
-  cout << "da = " << da << endl;
-  cout << "loop number = " << count << endl;
   cout << endl;
+  cout << setw(20) << color(none,red,black) 
+                   << "|--------- VOLUME CORRECTION ---------|" << endl;
+  cout << setw(27) << color(none,white,black) << "initial volume: " 
+                   << initBubbleArea << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "final volume: " << bubbleVolume << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "dv: " << dv << endl;
+  cout << setw(27) << color(none,white,black) << "initial area: " 
+                   << initBubbleArea << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "final area: " << bubbleVolume << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "da: " << dv << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "dr: " << dv << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "number of iterations: " << count << endl;
+  cout << setw(20) << color(none,red,black) 
+                   << "|-------------------------------------|" << endl;
+  cout << resetColor() << endl;
  }
 }
 

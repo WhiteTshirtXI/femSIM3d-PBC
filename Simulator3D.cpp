@@ -1449,7 +1449,7 @@ void Simulator3D::movePoints()
  m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- //m->applyBubbleVolumeCorrection();
+ m->applyBubbleVolumeCorrection();
 
  // velocidade da bolha
  //getBubbleVelocity(uALE,vALE,wALE);
@@ -2243,9 +2243,9 @@ void Simulator3D::setDtLagrangianNorberto()
   real length = vectorLength(x,y,z);
 
   // bubble.py - 146 iterations
-  real xVel = uALE.Get(v1) - uALE.Get(v2);
-  real yVel = vALE.Get(v1) - vALE.Get(v2);
-  real zVel = wALE.Get(v1) - wALE.Get(v2);
+  real xVel = uSolOld.Get(v1) - uSolOld.Get(v2);
+  real yVel = vSolOld.Get(v1) - vSolOld.Get(v2);
+  real zVel = wSolOld.Get(v1) - wSolOld.Get(v2);
 
   real vel = vectorLength(xVel,yVel,zVel);
   //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
@@ -2308,7 +2308,7 @@ void Simulator3D::setDtEulerian()
  dt = cfl*dtEulerian;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
+                  << "|---------- TIME RESTRICTION ---------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
                   << "Semi-lagrangian: " << dtSemiLagrangian << endl;
@@ -2339,7 +2339,7 @@ void Simulator3D::setDtALETwoPhase()
  dt = cfl*dtALETwoPhase;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
+                  << "|---------- TIME RESTRICTION ---------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
                   << "lagrangian: " << dtLagrangian << endl;
@@ -2372,7 +2372,7 @@ void Simulator3D::setDtALESinglePhase()
  dt = cfl*dtALETwoPhase;
  cout << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
+                  << "|---------- TIME RESTRICTION ---------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
                   << "lagrangian: " << dtLagrangian << endl;
@@ -2391,7 +2391,7 @@ void Simulator3D::setDt()
 
  cout << endl;
  cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
+                  << "|---------- TIME RESTRICTION ---------|" << endl;
  cout << setw(27) << color(none,white,black) << "cfl: " << cfl << endl;
  cout << setw(27) << color(none,white,black) 
                   << "lagrangian: " << dtLagrangian << endl;

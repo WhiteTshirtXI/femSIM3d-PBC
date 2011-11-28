@@ -54,7 +54,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.8;
+ real cfl = 1.0;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -96,6 +96,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
   m1.setWallBC();
 
   s1(m1);
@@ -264,7 +265,7 @@ int main(int argc, char **argv)
  save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
- int nReMesh = 3;
+ int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -331,7 +332,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(0.33);
+  m1.remove3dMeshPointsByDiffusion(0.3);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

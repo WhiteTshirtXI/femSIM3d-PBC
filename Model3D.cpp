@@ -8138,7 +8138,7 @@ void Model3D::applyBubbleVolumeCorrection()
   cout << setw(20) << color(none,red,black) 
                    << "|--------- VOLUME CORRECTION ---------|" << endl;
   cout << setw(27) << color(none,white,black) << "initial volume: " 
-                   << initBubbleArea << endl;
+                   << initBubbleVolume << endl;
   cout << setw(27) << color(none,white,black) 
                    << "final volume: " << bubbleVolume << endl;
   cout << setw(27) << color(none,white,black) 

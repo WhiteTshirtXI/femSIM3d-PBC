@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.10; // bubble
+ triEdge[2] = 0.09; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
@@ -152,6 +152,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
   m1.setWallBC();
 
   s1(m1);
@@ -191,6 +192,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
   m1.setWallBC();
 
   s1(m1);
@@ -230,6 +232,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -332,7 +335,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(0.3);
+  m1.remove3dMeshPointsByDiffusion(0.35);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

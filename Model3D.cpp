@@ -3262,7 +3262,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   int node;
   //real curv = fabs(surfMesh.curvature.Get(node));
   // find the first vertex with region == nb
-  for( int i=surfMesh.numVerts-1;i<=0;i-- )
+  for( int i=surfMesh.numVerts-1;i>=0;i-- )
    //if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
    if( surfMesh.vertIdRegion.Get(i) == nb )
    {

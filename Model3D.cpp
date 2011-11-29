@@ -2222,12 +2222,6 @@ void Model3D::insertPoint(int _edge)
  heaviside.AddItem(vAdd,0.5);
  edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
- // update surface, xSurface, ySurface, zSurface
- surface.AddItem(vAdd);
- xSurface.AddItem(XvAdd);
- ySurface.AddItem(YvAdd);
- zSurface.AddItem(ZvAdd);
-
  surfMesh.X.AddItem(XvAdd);
  surfMesh.Y.AddItem(YvAdd);
  surfMesh.Z.AddItem(ZvAdd);

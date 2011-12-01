@@ -233,6 +233,7 @@ class Simulator3D
   clMatrix mat,matc;
   clMatrix gx,gy,gz;
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
+  clMatrix interpLin;
   clDMatrix MrhoLumped,McLumped;
   clDMatrix invA,invC,invMrhoLumped,invMcLumped;
   clDMatrix MLumped,invMLumped;

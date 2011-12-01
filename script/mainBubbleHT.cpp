@@ -30,12 +30,12 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.09; // bubble
+ triEdge[2] = 0.08; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
- real Re = 13.8487; // case 2
- //real Re = 32.78; // case 3
+ //real Re = 13.8487; // case 2
+ real Re = 32.78; // case 3
  real Sc = 1000;
  real We = 115.66;
  real Fr = 1.0;
@@ -249,10 +249,9 @@ int main(int argc, char **argv)
   return 0;
  }
  // Point's distribution
- Laplace3D d1(m1);
- d1.init();
- d1.assemble();
+ Laplace3D d1(m1,s1.getDt());
  d1.setBC();
+ d1.assemble();
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -316,9 +315,9 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
-  d2.assemble();
+  Laplace3D d2(m1,d1,s1.getDt());
   d2.setBC();
+  d2.assemble();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -335,7 +334,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(0.35);
+  m1.remove3dMeshPointsByDiffusion(1.0);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
@@ -344,7 +343,7 @@ int main(int argc, char **argv)
   // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  m1.removePointsByCurvature();
+  //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   //m1.removePointsByLength();

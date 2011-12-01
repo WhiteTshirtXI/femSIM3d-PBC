@@ -960,6 +960,9 @@ void Model3D::mesh2Dto3D()
 
  in.initialize();
  out.initialize();
+
+ // this is not the right place to init edgeSize!
+ edgeSize.Dim(numVerts);
 }
 
 /*
@@ -1145,7 +1148,7 @@ void Model3D::removePointsByCurvature()
   // edge length
   int surfaceNode = surface.Get(i);
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 60 )
+  if( curv > 65 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1211,10 +1214,12 @@ void Model3D::insertPointsByCurvature()
   //real edgeLength = mapEdgeTri.Get(i,0);
   int v1 = mapEdgeTri.Get(i,1);
   int v2 = mapEdgeTri.Get(i,2);
-  if( (fabs(surfMesh.curvature.Get(v1)) > 40 && 
-	   fabs(surfMesh.curvature.Get(v2)) > 40) && 
-	   ispc < 2 )
+  real curv1 = fabs(surfMesh.curvature.Get(v1));
+  real curv2 = fabs(surfMesh.curvature.Get(v2));
+
+  if( curv1 > 70 || curv2 > 70 )
   {
+   cout << "----------- Inserting by curvature..." << endl;
    insertPoint(i);
 
    ispc++;
@@ -2510,6 +2515,10 @@ void Model3D::insertPoint(int _edge)
 //  // update vAdd
 //  neighbourPoint.push_back( getNeighbourSurfacePoint(vAdd) );
 //-------------------------------------------------- 
+//--------------------------------------------------
+//  clVector myVec = getNormalAndKappa(vAdd,getNeighbourSurfacePoint(vAdd));
+//  cout << "calculated curv: " << myVec.Get(0) << endl;
+//-------------------------------------------------- 
 }
 
 
@@ -3450,7 +3459,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  vertIdRegion.Dim(numVerts);
  elemIdRegion.Dim(numElems);
  elemIdRegion.SetAll(1.0);
- edgeSize.Dim(numVerts);
+ //edgeSize.Dim(numVerts);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   // set:
@@ -3463,7 +3472,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,0.0);
-	edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
+	//edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
 	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
 	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
    }
@@ -3477,7 +3486,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,1.0);
-	edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
+	//edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
 	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
 	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
    }
@@ -3500,7 +3509,7 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   for( int i=0;i<surfMesh.numVerts;i++ )
   {
    vertIdRegion.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
-   edgeSize.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
+   //edgeSize.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
   }
  }
 }

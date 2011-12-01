@@ -3242,6 +3242,17 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  Y->CopyTo(0,yVert);
  Z->CopyTo(0,zVert);
 
+ /*
+  * LINEAR interpolation of mesh - numVerts - (lib/interpolation.h)
+  * interpLin is a interpolation matrix, considering the previous Model3D 
+  * passed as argument and the new mesh coordinates (xVert,yVert and zVert).
+  * Due to its linear kink, the iterpolation is only considering the
+  * vertices and it is NOT including the others nodes (centroid, mid
+  * edge point, etc.)
+  * This matrix is ready to be applied to some vector.
+  * */ 
+ clMatrix interpLin = meshInterp(_mOld,xVert,yVert,zVert);
+
  uSol.Dim( numVerts );
  vSol.Dim( numVerts );
  wSol.Dim( numVerts );
@@ -3253,6 +3264,12 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );
+
+ // the edgeSize vector is not part of the Simulator3D, but because we
+ // are not saving the matrix interpLin, we should interpolate edgeSize
+ // and send it back to Model3D. 
+ // It is better to find another solution!!!
+ clVector edgeSize( numVerts );
 
  // only 1 component because the 2 others are exactly the same
  clVector xKappaOld(_mOld.getNumVerts());
@@ -3274,31 +3291,25 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravityOld.CopyTo(_mOld.getNumNodes()*0,xGravityOld);
  gravityOld.CopyTo(_mOld.getNumNodes()*1,yGravityOld);
  gravityOld.CopyTo(_mOld.getNumNodes()*2,zGravityOld);
-
- /*
-  * linear interpolation of mesh - numVerts - (lib/interpolation.h)
-  * interpLin is a interpolation matrix, considering the Model3D passed
-  * as argument and the new mesh coordinates, passed as xVert,yVert and zVert.
-  * Then it is ready to be applied to some vector.
-  * */ 
- clMatrix interpLin = meshInterp(_mOld,xVert,yVert,zVert);
  
- // solution of old mesh
- clVector uSolOldVert(_mOld.getNumVerts());
- clVector vSolOldVert(_mOld.getNumVerts());
- clVector wSolOldVert(_mOld.getNumVerts());
- clVector pSolOldVert(_mOld.getNumVerts());
- clVector cSolOldVert(_mOld.getNumVerts());
- clVector uALEOldVert(_mOld.getNumVerts());
- clVector vALEOldVert(_mOld.getNumVerts());
- clVector wALEOldVert(_mOld.getNumVerts());
- clDMatrix kappaOldVert(_mOld.getNumVerts());
- clVector fintOldVert(_mOld.getNumVerts());
- clVector gravityOldVert(_mOld.getNumVerts());
- clVector muOldVert(_mOld.getNumVerts());
- clVector rhoOldVert(_mOld.getNumVerts());
- clVector hSmoothOldVert(_mOld.getNumVerts());
+ // setting dimension of numVertsOld for all vectors.
+ int numVertsOld =  _mOld.getNumVerts();
+ clVector uSolOldVert(numVertsOld);
+ clVector vSolOldVert(numVertsOld);
+ clVector wSolOldVert(numVertsOld);
+ clVector pSolOldVert(numVertsOld);
+ clVector cSolOldVert(numVertsOld);
+ clVector uALEOldVert(numVertsOld);
+ clVector vALEOldVert(numVertsOld);
+ clVector wALEOldVert(numVertsOld);
+ clDMatrix kappaOldVert(numVertsOld);
+ clVector fintOldVert(numVertsOld);
+ clVector gravityOldVert(numVertsOld);
+ clVector muOldVert(numVertsOld);
+ clVector rhoOldVert(numVertsOld);
+ clVector hSmoothOldVert(numVertsOld);
  
+ // shrinking the solution vectors with size numNodes to numVerts. 
  uSolOld.CopyTo(0,uSolOldVert);
  vSolOld.CopyTo(0,vSolOldVert);
  wSolOld.CopyTo(0,wSolOldVert);
@@ -3312,15 +3323,20 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  muOld.CopyTo(0,muOldVert);
  rhoOld.CopyTo(0,rhoOldVert);
  hSmoothOld.CopyTo(0,hSmoothOldVert);
+ clVector edgeSizeOld = *_mOld.getEdgeSize();
 
- // interpolation and increase number of elements
-
+ // interpolation process between the old mesh with numVertsOld to the new
+ // numVert.
  pSol = interpLin*(pSolOld);
  cSol = interpLin*(cSolOld);
  mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
  hSmooth = interpLin*(hSmoothOld);
+ edgeSize = interpLin*(edgeSizeOld);
 
+ // For velocities, kappa, fint and gravity it is mandatory to
+ // reallocate these vectors using numNodes. For this we should first
+ // append zeros (numNodes-numVerts) and then setCentroi or setQuad.
  clVector zeros(numNodes-numVerts);
  uSol = interpLin*(uSolOld);uSol.Append(zeros);
  vSol = interpLin*(vSolOld);vSol.Append(zeros);
@@ -3336,7 +3352,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector yGravity = interpLin*(yGravityOld);yGravity.Append(zeros);
  clVector zGravity = interpLin*(zGravityOld);zGravity.Append(zeros);
 
-#if NUMGLEU == 5
+#if NUMGLEU == 5 // for the MINI element
   // set do centroid
   uSol = setTetCentroid(*IEN,uSol);
   vSol = setTetCentroid(*IEN,vSol);
@@ -3351,7 +3367,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
   xGravity = setTetCentroid(*IEN,xGravity);
   yGravity = setTetCentroid(*IEN,yGravity);
   zGravity = setTetCentroid(*IEN,zGravity);
-#else
+#else // for the QUAD element
   // set do quad
   uSol = setTetQuad(*IEN,uSol);
   vSol = setTetQuad(*IEN,vSol);
@@ -3368,7 +3384,14 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
   zGravity = setTetQuad(*IEN,zGravity);
 #endif
 
- // setting kappa
+ /* fint and gravity (as well as kappa) are calculated every time step,
+  * thus their interpolation to the new mesh is not mandatory, but since
+  * we are saving up all the simulation after the re-meshing process, it
+  * is necessary to interpolate then so they can be shown on the VTK
+  * file. 
+  * */
+ // kappaX,kappaY and kappaZ have the same values, so we need to set up 
+ // these values on the vector kappa(3*numNodes)
  kappa.Dim(3*numNodes);
  for( int i=0;i<numNodes;i++ )
  {
@@ -3377,8 +3400,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
   kappa.Set(i+numNodes,aux);
   kappa.Set(i+numNodes*2,aux);
  }
-
- // setting fint and gravity
+ 
+ // setting up fint and gravity.
  fint.Dim(3*numNodes);
  fint.CopyFrom(numNodes*0,xFint);
  fint.CopyFrom(numNodes*1,yFint);
@@ -3387,7 +3410,11 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravity.CopyFrom(numNodes*0,xGravity);
  gravity.CopyFrom(numNodes*1,yGravity);
  gravity.CopyFrom(numNodes*2,zGravity);
+ 
+ // updating setEdgeSize on Model3D.
+ m->setEdgeSize(edgeSize);
 
+ // updating old data vectors with the new mesh.
  saveOldData();
 } // fecha metodo applyLinearInterpolation
 

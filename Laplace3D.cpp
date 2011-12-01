@@ -9,18 +9,22 @@
 
 Laplace3D::Laplace3D(){}
 
-Laplace3D::Laplace3D( Model3D &_m )  
+Laplace3D::Laplace3D( Model3D &_m, real _dt )  
 {
  getModel3DAttrib(_m);
+
+ dt = _dt;
 
  setSolver( new PCGSolver() );
 
  allocateMemoryToAttrib();
 }
 
-Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )  
+Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d, real _dt )  
 {
  getModel3DAttrib(_m);
+
+ dt = _dt;
 
  setSolver( new PCGSolver() );
 
@@ -32,16 +36,7 @@ Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )
 
 void Laplace3D::init()
 {
- cSolOld.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  if( heaviside->Get(i) < 0.5 )
-   cSolOld.Set(i,triEdge[1]);
-  else if( heaviside->Get(i) > 0.5 )
-   cSolOld.Set(i,triEdge[2]);
-  else
-   cSolOld.Set(i,triEdge[2]);
- }
+ cSolOld.CopyFrom( 0,cc );
 }
 
 void Laplace3D::assemble()
@@ -87,44 +82,43 @@ void Laplace3D::assemble()
 
 void Laplace3D::setCRHS()
 {
- //real k = 0.1;
- //vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
- //vcc = ( (1.0/dt) * McLumped - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
- //vcc = ( (1.0/dt) * McLumped ) * convC;
- //vcc = (1.0/k) * (cSolOld);
+ vcc = ( (1.0/dt) * McLumped ) * convC;
 }
 
 void Laplace3D::matMountC()
 {
- real k=1.0;
- matc = k * Kc;
+ real k=10.0;
+ for( int i=0;i<numVerts;i++ )
+ {
+  real sumMc = Mc.SumLine(i);
+  McLumped.Set( i,sumMc );
+  invMcLumped.Set( i,1.0/sumMc );
+ }
+ matc =( (1.0/dt) * McLumped )+ (k * Kc);
+
 }
 
 void Laplace3D::setBC()
 {
  cc.Dim(numVerts);
-
- for (list<int>::iterator it=boundaryVert->begin(); 
-                          it!=boundaryVert->end(); ++it)
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  idbcc.AddItem(*it);
-
-  real aux = triEdge[1]; // edge length
-  //real aux = triEdge[1]*triEdge[1]*triEdge[1]*sqrt(2.0)/12.0; // volume
-  cc.Set(*it,aux);
- }
-
- for( int i=0;i<numVerts;i++ )
- {
-  if( heaviside->Get(i) == 0.5 )
-  {
    idbcc.AddItem(i);
 
-   real aux = triEdge[2]; // edge length
-   //real aux = triEdge[2]*triEdge[2]*triEdge[2]*sqrt(2.0)/12.0; // volume
+   real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
    cc.Set(i,aux);
-  }
+
+   convC.Set(i,aux);
  }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real aux = triEdge[vertIdRegion->Get(i)]/4.0;
+  convC.Set(i,aux);
+ }
+
 }
 
 
@@ -164,6 +158,7 @@ void Laplace3D::unCoupledC()
  cout << " ------------------------------------ " << endl;
 
  cSol = cTilde;
+ cSolOld = cSol;
 }
 
 void Laplace3D::getModel3DAttrib(Model3D &_m)
@@ -181,9 +176,11 @@ void Laplace3D::getModel3DAttrib(Model3D &_m)
 
  heaviside = m->getHeaviside();
  surfMesh = m->getSurfMesh();
+ interfaceDistance = m->getInterfaceDistance();
 
  triEdge = m->getTriEdge();
  boundaryVert = m->getBoundaryVert();
+ edgeSize = m->getEdgeSize();
 }
 
 void Laplace3D::allocateMemoryToAttrib()
@@ -203,7 +200,7 @@ void Laplace3D::allocateMemoryToAttrib()
  // K + M matrix set
  matc.Dim( numVerts,numVerts );
  //invC.Dim( numVerts );
- //invMcLumped.Dim( numVerts );
+ invMcLumped.Dim( numVerts );
 
  // solution vectors 
  // vetores solucao
@@ -301,7 +298,23 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkFile << endl;
 
  vtkFile << "POINT_DATA " << numVerts << endl;
- vtkFile << "SCALARS edge double" << endl;
+ vtkFile << "SCALARS edge-boundary double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << cc.Get(i) << endl;
+
+ vtkFile << endl;
+ vtkFile << "SCALARS edge-d double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << convC.Get(i) << endl;
+
+ vtkFile << endl;
+ vtkFile << "SCALARS edgeSol double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(10) << scientific;

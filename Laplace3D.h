@@ -26,8 +26,8 @@ class Laplace3D
 {
  public:
   Laplace3D(); // construtor padrao
-  Laplace3D( Model3D &_m ); // construtor 
-  Laplace3D( Model3D &_m,Laplace3D &_d ); // construtor 
+  Laplace3D( Model3D &_m,real _dt ); // construtor 
+  Laplace3D( Model3D &_m,Laplace3D &_d,real _dt ); // construtor 
   //virtual ~Laplace3D(); // destrutor padrao
 
   void getModel3DAttrib(Model3D &_m);
@@ -53,9 +53,11 @@ class Laplace3D
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
   vector<real> triEdge;
+  real dt;
   clVector *X,*Y,*Z;
   clMatrix *IEN;
-  clVector *heaviside;
+  clVector *heaviside,*interfaceDistance;
+  clVector *edgeSize;
   clVector cc,idbcc;
   SurfaceMesh *surfMesh;
   Mesh3D *mesh3d;
@@ -63,8 +65,8 @@ class Laplace3D
   list<int> *boundaryVert;
 
   clMatrix Kc,Mc;
-  clMatrix matc,AcTilde,McLumped;
-  clDMatrix invC,invMcLumped;
+  clMatrix matc,AcTilde;
+  clDMatrix invC,invMcLumped,McLumped;
   clVector vcc,convC;
   clVector cTilde,b1c,ipc;
   clVector cSol,cSolOld;

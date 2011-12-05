@@ -117,8 +117,8 @@ deepclean:
 	@rm -f staticDroplet step bubble 2bubble diskNuC 
 	@rm -f 2bubbles diskSurf staticTorus sessileDrop 
 	@rm -f curvature fallingDrop diskNuCte diskNuZ
-	@rm -f curvatureAndPressure
-	@rm -f oscillating micro
+	@rm -f curvatureAndPressure bubbleHT
+	@rm -f oscillating micro stepALE
 	@rm -f libtest*
 	@rm -f core
 	@find ${FEMLIB_DIR} -name "*.o" -exec rm {} \;

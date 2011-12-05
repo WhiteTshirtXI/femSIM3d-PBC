@@ -286,7 +286,7 @@ void Simulator3D::initHeatTransfer()
  init();
 
  for( int i=0;i<numVerts;i++ )
-  if( Z->Get(i) < 0.4*Z->Max() )
+  if( Z->Get(i) > 0.4*Z->Max() )
    cSolOld.Set(i,1.0);
 }
 

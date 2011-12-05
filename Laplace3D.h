@@ -20,6 +20,7 @@
 #include "clDMatrix.h"
 #include "colors.h"
 #include "geometry.h"
+#include "interpolations.h"
 #include <algorithm>
 
 class Laplace3D
@@ -45,6 +46,7 @@ class Laplace3D
   void setSolver(Solver *s);
 
   void saveVTK( const char* _dir,const char* _filename, int _iter );
+  void saveChordalEdge( const char* _dir,const char* _filename, int _iter );
 
   clVector* getCSol();
 

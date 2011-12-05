@@ -210,9 +210,11 @@ private:
   vector< list<int> >* neighbourPoint;
   real averageTriEdge;
   // mesh indexes
-  int isp,ispc,rsp,rspc,ip,ipd,rp,rpi,rpd,rpv,csp,flip; 
+  int isp,ispc,rsp,rspn,rspc,ip,ipd,rp,rpi,rpd,rpv,csp,flip; 
   int idMaxVolume,idMinVolume,intet;
   real maxVolume,minVolume;
+  int idMaxArea,idMinArea;
+  real maxArea,minArea;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,simTime;

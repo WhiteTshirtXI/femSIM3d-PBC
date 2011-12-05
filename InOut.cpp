@@ -41,11 +41,20 @@ InOut::InOut( Model3D &_m )
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
 
- // mesh indexes:
+ // surface mesh indexes:
  isp = m->getISP();
  ispc = m->getISPC();
  rsp = m->getRSP();
+ rspn = m->getRSPN();
  rspc = m->getRSPC();
+ flip = m->getFLIP();
+ intet = m->getINTET();
+ maxArea = m->getMaxArea();
+ minArea = m->getMinArea();
+ idMaxArea = m->getIdMaxArea();
+ idMinArea = m->getIdMinArea();
+
+ // volumetric mesh indexes:
  ip = m->getIP();
  ipd = m->getIPD();
  rp = m->getRP();
@@ -53,8 +62,6 @@ InOut::InOut( Model3D &_m )
  rpd = m->getRPD();
  rpv = m->getRPV();
  csp = m->getCSP();
- flip = m->getFLIP();
- intet = m->getINTET();
  maxVolume = m->getMaxVolume();
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
@@ -94,11 +101,20 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
 
- // mesh indexes:
+ // surface mesh indexes:
  isp = m->getISP();
  ispc = m->getISPC();
  rsp = m->getRSP();
+ rspn = m->getRSPN();
  rspc = m->getRSPC();
+ flip = m->getFLIP();
+ intet = m->getINTET();
+ maxArea = m->getMaxArea();
+ minArea = m->getMinArea();
+ idMaxArea = m->getIdMaxArea();
+ idMinArea = m->getIdMinArea();
+
+ // volumetric mesh indexes:
  ip = m->getIP();
  ipd = m->getIPD();
  rp = m->getRP();
@@ -106,8 +122,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  rpd = m->getRPD();
  rpv = m->getRPV();
  csp = m->getCSP();
- flip = m->getFLIP();
- intet = m->getINTET();
  maxVolume = m->getMaxVolume();
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
@@ -2207,6 +2221,7 @@ void InOut::saveMeshInfo(const char* _dir)
   mesh2 << "#time" << setw(16) << "isp" 
                    << setw(7) << "ispc" 
                    << setw(6) << "rsp" 
+                   << setw(7) << "rspn" 
                    << setw(7) << "rspc" 
                    << setw(5) << "ip" 
                    << setw(6) << "ipd" 
@@ -2230,6 +2245,7 @@ void InOut::saveMeshInfo(const char* _dir)
  mesh2 << setw(9) <<  time << " " << setw(4)  << isp << " " 
                                   << setw(6)  << ispc << " " 
 						   	      << setw(5)  << rsp << " "
+						   	      << setw(6)  << rspn << " "
 						   	      << setw(6)  << rspc << " "
 						   	      << setw(4)  << ip << " "
 						   	      << setw(5)  << ipd << " "
@@ -3361,6 +3377,10 @@ void InOut::printMeshReport()
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
  idMinVolume = m->getIdMinVolume();
+ maxArea = m->getMaxArea();
+ minArea = m->getMinArea();
+ idMaxArea = m->getIdMaxArea();
+ idMinArea = m->getIdMinArea();
 
  time_t currentTime;
 
@@ -3414,6 +3434,10 @@ void InOut::printMeshReport()
       << "        inserted" << resetColor() 
 	  << " surface points by curvature:         " 
 	  << ispc << endl;
+ cout << color(none,red,black)
+      << "        removed" << resetColor() 
+	  << " surface points by neighbour check:    " 
+	  << rspn << endl;
  cout << color(none,red,black)
       << "        removed" << resetColor() 
 	  << " surface points by curvature:          " 

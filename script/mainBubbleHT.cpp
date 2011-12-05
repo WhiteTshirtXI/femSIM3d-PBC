@@ -34,8 +34,8 @@ int main(int argc, char **argv)
 
  int iter = 1;
  //real Re = 6.53; // case 1
- //real Re = 13.8487; // case 2
- real Re = 32.78; // case 3
+ real Re = 13.8487; // case 2
+ //real Re = 32.78; // case 3
  real Sc = 1000;
  real We = 115.66;
  real Fr = 1.0;
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(1.0);
+  m1.remove3dMeshPointsByDiffusion(0.5);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.checkNeighbours();
+  m1.removePointsByNeighbourCheck();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

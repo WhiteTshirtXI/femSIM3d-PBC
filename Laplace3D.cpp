@@ -115,7 +115,7 @@ void Laplace3D::setBC()
  clVector* vertIdRegion = m->getVertIdRegion();
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real aux = triEdge[vertIdRegion->Get(i)]/4.0;
+  real aux = triEdge[vertIdRegion->Get(i)]/3.0;
   convC.Set(i,aux);
  }
 
@@ -253,10 +253,12 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
    count++;
  }
  
@@ -268,10 +270,12 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -288,10 +292,12 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
    vtkFile << "10 ";
  }
 

@@ -301,7 +301,7 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.checkNeighbours();
+  m1.removePointByNeighbourCheck();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

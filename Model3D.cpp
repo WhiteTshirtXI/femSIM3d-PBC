@@ -27,7 +27,15 @@ Model3D::Model3D()
  isp = 0;                    
  ispc = 0;                    
  rspc = 0;                    
+ rspn = 0;                    
  rsp = 0;                    
+ flip = 0;
+ intet = 0;
+ maxArea = 0;
+ minArea = 0;
+ idMaxArea = 0;
+ idMinArea = 0;
+
  ip = 0;                     
  ipd = 0;                     
  rp = 0;                     
@@ -35,8 +43,6 @@ Model3D::Model3D()
  rpv = 0;                   
  rpd = 0;                   
  csp = 0;
- flip = 0;
- intet = 0;
  maxVolume = 0;
  minVolume = 0;
  idMaxVolume = 0;
@@ -75,7 +81,15 @@ Model3D::Model3D(const Model3D &_mRight)
   isp = _mRight.isp;
   ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
+  rspn = _mRight.rspn;        
   rspc = _mRight.rspc;
+  flip = _mRight.flip;
+  intet = _mRight.intet;
+  maxArea = _mRight.maxArea;
+  minArea = _mRight.minArea;
+  idMaxArea = _mRight.idMaxArea;
+  idMinArea = _mRight.idMinArea;
+
   ip = _mRight.ip;                    
   ipd = _mRight.ipd;                    
   rp = _mRight.rp;              
@@ -83,8 +97,6 @@ Model3D::Model3D(const Model3D &_mRight)
   rpd = _mRight.rpd;                   
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
-  flip = _mRight.flip;
-  intet = _mRight.intet;
   maxVolume = _mRight.maxVolume;
   minVolume = _mRight.minVolume;
   idMaxVolume = _mRight.idMaxVolume;
@@ -1888,10 +1900,10 @@ void Model3D::flipTriangleEdge()
    *   new triangles
    * */
   if( q1+q2 < q3+q4 && // quality sum
-	(curv1 < 40 && curv2 < 40) && // curvature
-	(curv3_1 < 40 && curv3_2 < 40) && // curvature
+	(curv1 < 60 && curv2 < 60) && // curvature
+	(curv3_1 < 60 && curv3_2 < 60) && // curvature
 	area1+area2  > area3+area4 && // area sum
-	dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+	//dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -2962,9 +2974,9 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
-  // edgeSize is the result of \nabla^2 edge = 0
+  // edgeSize is the result of \nabla^2 edge = f
   if( length < _factor*edgeSize.Get(v1) &&
-	  hSum == 2.0 )
+	  (hSum > 1.5 || hSum < 0.5 ) )
   {
    if( v1 > surfMesh.numVerts )
    {
@@ -3272,12 +3284,15 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   //real curv = fabs(surfMesh.curvature.Get(node));
   // find the first vertex with region == nb
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
+  {
+  //for( int i=0;i<surfMesh.numVerts;i++ )
    //if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
    if( surfMesh.vertIdRegion.Get(i) == nb )
    {
 	node = i;
 	break;
    }
+  }
 
   setNeighbourSurfaceElem();
   clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
@@ -3736,6 +3751,31 @@ void Model3D::meshStats()
   {
    maxVolume = aux;
    idMaxVolume = i;
+  }
+ }
+
+ minArea = 1.0E+20; // initial value
+ maxArea = 1.0E-20; // initial value
+ idMinArea =0;
+ idMaxArea =0;
+
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+
+  aux = fabs(getAreaElem(i));
+
+  if( aux < minArea ) 
+  {
+   minArea = aux;
+   idMinArea = i;
+  }
+  if( aux > maxArea ) 
+  {
+   maxArea = aux;
+   idMaxArea = i;
   }
  }
 }
@@ -6512,7 +6552,14 @@ real Model3D::getAverageTriEdge(){ return averageTriEdge; }
 int Model3D::getISP(){return isp;}
 int Model3D::getISPC(){return ispc;}
 int Model3D::getRSP(){return rsp;}
+int Model3D::getRSPN(){return rspn;}
 int Model3D::getRSPC(){return rspc;}
+int Model3D::getFLIP(){return flip;}
+int Model3D::getINTET(){return intet;}
+real Model3D::getMinArea(){return minArea;}
+real Model3D::getMaxArea(){return maxArea;}
+int Model3D::getIdMinArea(){return idMinArea;}
+int Model3D::getIdMaxArea(){return idMaxArea;}
 int Model3D::getIP(){return ip;}
 int Model3D::getIPD(){return ipd;}
 int Model3D::getRP(){return rp;}
@@ -6520,8 +6567,6 @@ int Model3D::getRPI(){return rpi;}
 int Model3D::getRPD(){return rpd;}
 int Model3D::getRPV(){return rpv;}
 int Model3D::getCSP(){return csp;}
-int Model3D::getFLIP(){return flip;}
-int Model3D::getINTET(){return intet;}
 real Model3D::getMinVolume(){return minVolume;}
 real Model3D::getMaxVolume(){return maxVolume;}
 int Model3D::getIdMinVolume(){return idMinVolume;}
@@ -6549,7 +6594,15 @@ void Model3D::operator=(Model3D &_mRight)
   isp = _mRight.isp;
   ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
+  rspn = _mRight.rspn;        
   rspc = _mRight.rspc;
+  flip = _mRight.flip;
+  intet = _mRight.intet;
+  maxArea = _mRight.maxArea;
+  minArea = _mRight.minArea;
+  idMaxArea = _mRight.idMaxArea;
+  idMinArea = _mRight.idMinArea;
+
   ip = _mRight.ip;                    
   ipd = _mRight.ipd;                    
   rp = _mRight.rp;              
@@ -6557,8 +6610,6 @@ void Model3D::operator=(Model3D &_mRight)
   rpd = _mRight.rpd;                   
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
-  flip = _mRight.flip;
-  intet = _mRight.intet;
   maxVolume = _mRight.maxVolume;
   minVolume = _mRight.minVolume;
   idMaxVolume = _mRight.idMaxVolume;
@@ -7269,11 +7320,17 @@ real Model3D::computeBubbleVolume2()
  return sumVolume;
 }
 
-
-void Model3D::checkNeighbours()
+void Model3D::removePointsByNeighbourCheck()
 {
+ rspn = 0;
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
+  /* 
+   * This if checks whether the point on the surface has only 3 surface
+   * elements. This is caused by the re-meshing process that sometimes
+   * creates these problematic local mesh. Such a point should be
+   * removed to avoid mesh problems.
+   * */
   if( neighbourSurfaceElem.at( i ).size() < 3 )
   {
    // marking the desired elements for deletion
@@ -7282,7 +7339,8 @@ void Model3D::checkNeighbours()
 	markSurfElemForDeletion(*mele);
 
    cout << "----------------- " << color(none,red,black) 
-	    << "removing fake triangle: " << resetColor() << i << endl;
+	    << "removing fake triangle: " << resetColor() 
+		<< i << endl;
 
    // deleting elements
    deleteSurfaceElements();
@@ -7299,6 +7357,57 @@ void Model3D::checkNeighbours()
 
    // updating surface neighbour points
    setNeighbourSurfacePoint();
+
+   rspn++;
+  }
+  /*
+   * This if removes a surface point when the number of its neighbours
+   * are equal or lower than 4. Usually these points demage the mesh
+   * quality and breaks the simulation flow. 
+   * */
+  if( neighbourPoint.at( i ).size() <= 4 )
+  {
+   cout << "----------------- " << color(none,red,black) 
+	<< "removing low-quality point cluster: " << resetColor() 
+	<< i << endl;
+
+   // delete v1 from surface, xSurface, ySurface, zSurface vectors
+   // surface is not used to add/remove/flip elements before the remeshing
+   // but it's used on removePointsByInterfaceDistance
+   // to be implemented 
+
+   // marking the desired elements for deletion
+   list<int> plist = neighbourSurfaceElem.at(i);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	markSurfElemForDeletion(*mele);
+
+   // deleting elements
+   deleteSurfaceElements();
+
+   // after the deletion process it's mandatory to create new elements
+   // to fill the space left by the deleting process
+   //surfaceTriangulator(v1);
+   surfaceTriangulatorEarClipping(i);
+   //surfaceTriangulatorQualityEarClipping(v1);
+
+   // deleting X,Y and Z coordinate; deleting the point maker funcition
+   deleteSurfacePoint(i);
+
+   // update surface
+   setSurface();
+
+   // updating edge matrix
+   setMapEdgeTri();
+
+   // updating surface neighbour elems
+   setNeighbourSurfaceElem();
+
+   // updating surface neighbour points
+   setNeighbourSurfacePoint();
+
+   saveVTKSurface("./vtk/","removedBad",rsp);
+
+   rspn++;
   }
  }
 }

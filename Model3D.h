@@ -75,6 +75,7 @@ class Model3D
   void removePointsByCurvature();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
+  void removePointsByNeighbourCheck();
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
   void surfaceTriangulatorEarClipping(int _v);
@@ -88,7 +89,6 @@ class Model3D
   list<int> setPolyhedron(list<int> _myList);
   void flipTriangleEdge();
   void contractEdgeByLength();
-  void checkNeighbours();
   int findEdge(int _v1,int _v2);
 
   // 3D points treatment
@@ -134,7 +134,15 @@ class Model3D
   int getISP();
   int getISPC();
   int getRSP();
+  int getRSPN();
   int getRSPC();
+  int getFLIP();
+  int getINTET();
+  real getMinArea();
+  real getMaxArea();
+  int getIdMinArea();
+  int getIdMaxArea();
+
   int getIP();
   int getIPD();
   int getRP();
@@ -142,8 +150,10 @@ class Model3D
   int getRPD();
   int getRPV();
   int getCSP();
-  int getFLIP();
-  int getINTET();
+  real getMinVolume();
+  real getMaxVolume();
+  int getIdMinVolume();
+  int getIdMaxVolume();
 
   // boundary condition settings
   void setNuCteDiskBC();
@@ -287,10 +297,6 @@ class Model3D
   vector<real> getTriEdge();
   void setTetVol(vector< real > _tetVol);
   vector<real> getTetVol();
-  real getMinVolume();
-  real getMaxVolume();
-  int getIdMinVolume();
-  int getIdMaxVolume();
   void setSingleElement();
   void setTwoElements();
   void setThreeElements();
@@ -330,24 +336,30 @@ class Model3D
   real bubbleRadius;
   real minEdge;
   real minEdgeTri,averageTriEdge;
-  int isp;                        // isp: num of inserted surface points
-  int ispc;                       // ispc: num of inserted surface points
-  int rsp;                        // rsp: num of removed surface points
-  int rspc;                       // ispc: num of removed surface points
-  int csp;                        // csp: num of contracted surface points
-  int intet;                      // csp: num of surface tetrahedrons
-  int ip;                         // ip: num of inserted 3d mesh points
-  int ipd;                        // ipd: by diffusion 
-  int rp;                         // rp: num of removed 3d mesh points
-  int rpi;                        // rpi: by interface distance
-  int rpv;                        // rpv: by volume 
-  int rpd;                        // rpd: by diffusion 
-  int flip;                       // flip: flipping operations
-  int badtet;                     // num of shit tetrahedrons
-  int idMinVolume;                // ID of min tet volume
-  int idMaxVolume;                // ID of max tet volume
-  real minVolume;                 // min tet volume
-  real maxVolume;                 // max tet volume
+  int isp;           // isp: num of inserted surface points by length
+  int ispc;          // ispc: num of inserted surface points by curv
+  int rsp;           // rsp: num of removed surface points by length
+  int rspn;          // rspn: num of removed surface points by neigh check
+  int rspc;          // rspc: num of removed surface points by curv
+  int csp;           // csp: num of contracted surface points
+  int intet;         // csp: num of surface tetrahedrons 
+  int flip;          // flip: flipping operations
+  int idMinArea;     // ID of min tri area 
+  int idMaxArea;     // ID of max tri area 
+  real minArea;      // min triangle area 
+  real maxArea;      // max triangle area
+
+  int ip;            // ip: num of inserted 3d mesh points
+  int ipd;           // ipd: by diffusion 
+  int rp;            // rp: num of removed 3d mesh points
+  int rpi;           // rpi: by interface distance
+  int rpv;           // rpv: by volume 
+  int rpd;           // rpd: by diffusion 
+  int badtet;        // num of shit tetrahedrons
+  int idMinVolume;   // ID of min tet volume
+  int idMaxVolume;   // ID of max tet volume
+  real minVolume;    // min tet volume
+  real maxVolume;    // max tet volume
 
   vector<real> initSurfaceVolume;     // vector de volumes iniciais
   vector<real> initSurfaceArea;       // vector de areas iniciais

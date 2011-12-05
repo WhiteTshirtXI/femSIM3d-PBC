@@ -28,6 +28,8 @@ class Laplace3D
  public:
   Laplace3D(); // construtor padrao
   Laplace3D( Model3D &_m,real _dt ); // construtor 
+  Laplace3D( Model3D &_m ); // construtor 
+  Laplace3D( Model3D &_m,Laplace3D &_d ); // construtor 
   Laplace3D( Model3D &_m,Laplace3D &_d,real _dt ); // construtor 
   //virtual ~Laplace3D(); // destrutor padrao
 

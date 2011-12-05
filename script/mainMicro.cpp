@@ -320,6 +320,7 @@ int main(int argc, char **argv)
   d2.setCRHS();
   d2.unCoupledC();
   d2.saveVTK("./vtk/","edge",iter-1);
+  d2.saveChordalEdge(datFolder,"edge",iter-1);
   d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
@@ -345,7 +346,7 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.removePointByNeighbourCheck();
+  m1.removePointsByNeighbourCheck();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

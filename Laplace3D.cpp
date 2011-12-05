@@ -9,6 +9,18 @@
 
 Laplace3D::Laplace3D(){}
 
+Laplace3D::Laplace3D( Model3D &_m )  
+{
+ getModel3DAttrib(_m);
+
+ cout << " ----> dt not defined! Set dt=0.01 for Laplace3D <----" << endl;
+ dt = 0.01;
+
+ setSolver( new PCGSolver() );
+
+ allocateMemoryToAttrib();
+}
+
 Laplace3D::Laplace3D( Model3D &_m, real _dt )  
 {
  getModel3DAttrib(_m);
@@ -18,6 +30,21 @@ Laplace3D::Laplace3D( Model3D &_m, real _dt )
  setSolver( new PCGSolver() );
 
  allocateMemoryToAttrib();
+}
+
+Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )  
+{
+ getModel3DAttrib(_m);
+
+ cout << " ----> dt not defined! Set dt=0.01 for Laplace3D <----" << endl;
+ dt = 0.01;
+
+ setSolver( new PCGSolver() );
+
+ allocateMemoryToAttrib();
+
+ //cSolOld = *_d.getCSol();
+ cSolOld = *_m.getEdgeSize();
 }
 
 Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d, real _dt )  
@@ -253,12 +280,10 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
    count++;
  }
  
@@ -270,12 +295,10 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -292,12 +315,10 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
+  if( (heaviside->Get(v1)+heaviside->Get(v2)+
+	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
    vtkFile << "10 ";
  }
 

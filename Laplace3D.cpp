@@ -331,3 +331,72 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 }
+
+void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".dat";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename,ios::app );
+
+ vtkFile << "x-position" 
+         << setw(17) << "y-position" 
+		 << setw(17) << "z-position"
+		 << setw(17) << "edge-boundary"
+		 << setw(17) << "edge-init" 
+		 << setw(17) << "edgeSol" 
+		 << endl;
+
+ // xVert da malha nova
+ real nPoints = 1000;
+ clVector xVert(nPoints);
+ clVector yVert(nPoints);
+ clVector zVert(nPoints);
+
+ xVert.SetAll( (X->Max()+X->Min())/2.0 );
+ yVert.SetAll( (Y->Max()+Y->Min())/2.0 );
+ for( int i=0;i<nPoints;i++ )
+ {
+  real dz = i * ( (Z->Max()-Z->Min()) )/(nPoints-1);
+  real pos = Z->Min()+dz;
+  zVert.Set(i,pos);
+ }
+
+ // interpolacao linear em numVerts
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert);
+ clVector ccLin = interpLin*(cc);
+ clVector convCLin = interpLin*(convC);
+ clVector cSolLin = interpLin*(cSol);
+
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<nPoints;i++ )
+  vtkFile << setw(10) << xVert.Get(i) << " " 
+          << setw(17) << yVert.Get(i) <<  " "
+          << setw(17) << zVert.Get(i) <<  " "
+          << setw(17) << ccLin.Get(i) <<  " "
+          << setw(17) << convCLin.Get(i) <<  " "
+          << setw(17) << cSolLin.Get(i) << endl;
+
+ vtkFile.close();
+
+ /* --------- copying to file chordal.dat --------- */
+ ifstream inFile( filename,ios::binary ); 
+
+ string last = (string) _dir + (string) _filename + "-last" + ".dat";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary ); 
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* ------------------------------------------------ */ 
+
+ cout << "chordal edge No. " << _iter << " saved in dat" << endl;
+
+} // fecha metodo chordalEdge

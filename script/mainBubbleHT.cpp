@@ -41,7 +41,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.1; // smooth - fujiwara
+ real c3 = 0.06; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
  d1.unCoupledC();
- //d1.saveVTK("./vtk/","edge");
+ //d1.saveVTK(vtkFolder,"edge");
  d1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -322,7 +322,8 @@ int main(int argc, char **argv)
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
   d2.unCoupledC();
-  d2.saveVTK("./vtk/","edge",iter-1);
+  d2.saveVTK(vtkFolder,"edge",iter-1);
+  d2.saveChordalEdge(datFolder,"edge",iter-1);
   d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 

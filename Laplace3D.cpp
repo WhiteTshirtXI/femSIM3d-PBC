@@ -114,7 +114,7 @@ void Laplace3D::setCRHS()
 
 void Laplace3D::matMountC()
 {
- real k=10.0;
+ real k=50;
  for( int i=0;i<numVerts;i++ )
  {
   real sumMc = Mc.SumLine(i);
@@ -142,8 +142,16 @@ void Laplace3D::setBC()
  clVector* vertIdRegion = m->getVertIdRegion();
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real aux = triEdge[vertIdRegion->Get(i)]/3.0;
-  convC.Set(i,aux);
+  if( heaviside->Get(i) < 0.5 ) // outside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)]/4.0;
+   convC.Set(i,aux);
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)]*10;
+   convC.Set(i,aux);
+  }
  }
 
 }
@@ -409,7 +417,7 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
  /* --------- copying to file chordal.dat --------- */
  ifstream inFile( filename,ios::binary ); 
 
- string last = (string) _dir + (string) _filename + "-last";
+ string last = (string) _dir + (string) _filename + ".last";
  const char* filenameCopy = last.c_str();
  ofstream outFile( filenameCopy,ios::binary ); 
 

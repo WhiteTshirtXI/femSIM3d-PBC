@@ -41,7 +41,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.06; // smooth - fujiwara
+ real c3 = 0.1; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;

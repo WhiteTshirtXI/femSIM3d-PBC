@@ -1903,7 +1903,7 @@ void Model3D::flipTriangleEdge()
 	(curv1 < 60 && curv2 < 60) && // curvature
 	(curv3_1 < 60 && curv3_2 < 60) && // curvature
 	area1+area2  > area3+area4 && // area sum
-	//dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+	dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -2583,8 +2583,8 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.6*triEdge[elemID] && 
-	  curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40 ) 
+	  edgeLength < 0.6*triEdge[elemID] ) //&& 
+	  //curv1 < 60 && curv2 < 60 && curv3 < 60 && curv4 < 60 ) 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1

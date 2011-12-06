@@ -361,7 +361,7 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
  ss >> str;
 
  // concatenando nomes para o nome do arquivo final
- string file = (string) _dir + (string) _filename + "-" + str + ".dat";
+ string file = (string) _dir + (string) _filename + "." + str;
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename,ios::app );
@@ -409,7 +409,7 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
  /* --------- copying to file chordal.dat --------- */
  ifstream inFile( filename,ios::binary ); 
 
- string last = (string) _dir + (string) _filename + "-last" + ".dat";
+ string last = (string) _dir + (string) _filename + "-last";
  const char* filenameCopy = last.c_str();
  ofstream outFile( filenameCopy,ios::binary ); 
 

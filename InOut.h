@@ -26,6 +26,7 @@
 #include <cmath>
 #include "colors.h" 
 #include "interpolations.h" 
+#include "searchInterp3D.h" 
 
 /**
  * @brief classe responsavel pela manipulacao de entrada e saida de

@@ -21,6 +21,7 @@
 #include "colors.h"
 #include "geometry.h"
 #include "interpolations.h"
+#include "searchInterp3D.h"
 #include <algorithm>
 
 class Laplace3D

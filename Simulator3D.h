@@ -16,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 #include "Model3D.h"
 #include "TElement.h"
 #include "FEMLinElement3D.h"
@@ -32,7 +33,7 @@
 #include "clDMatrix.h"
 #include "colors.h"
 #include "geometry.h"
-#include <algorithm>
+#include "searchInterp3D.h"
 
 class Simulator3D
 {

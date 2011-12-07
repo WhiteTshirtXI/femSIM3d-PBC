@@ -28,7 +28,7 @@ obj = $(src:%.cpp=%.o)
 all: step bubble 2bubbles diskNuC diskNuCte diskNuZ \
      diskSurf curvature curvatureAndPressure \
 	 staticDroplet staticTorus sessileDrop \
-	 oscillating fallingDrop micro 
+	 oscillating fallingDrop micro bubbleHT
 
 diskNuC: ${FEM3D_DIR}/script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@

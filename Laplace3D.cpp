@@ -114,7 +114,7 @@ void Laplace3D::setCRHS()
 
 void Laplace3D::matMountC()
 {
- real k=50;
+ real k=30;
  for( int i=0;i<numVerts;i++ )
  {
   real sumMc = Mc.SumLine(i);
@@ -144,7 +144,7 @@ void Laplace3D::setBC()
  {
   if( heaviside->Get(i) < 0.5 ) // outside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)]/4.0;
+   real aux = triEdge[vertIdRegion->Get(i)]/3.3;
    convC.Set(i,aux);
   }
   else                         // inside mesh

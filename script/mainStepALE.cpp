@@ -75,6 +75,7 @@ int main(int argc, char **argv)
  m1.setOFace();
  m1.setVertNeighbour();
  m1.setInOutVert();
+ m1.setMapEdge();
  m1.setStepBC();
  m1.setCStepBC();
 
@@ -113,7 +114,7 @@ int main(int argc, char **argv)
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
  }
  // Point's distribution
- Laplace3D d1(m1);
+ Laplace3D d1(m1,s1.getDt());
  d1.init();
  d1.assemble();
  d1.setBC();
@@ -172,7 +173,7 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
+  Laplace3D d2(m1,d1,s1.getDt());
   d2.assemble();
   d2.setBC();
   d2.matMountC();
@@ -204,6 +205,7 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setVertNeighbour();
   m1.setInOutVert();
+  m1.setMapEdge();
   m1.setStepBC();
   m1.setCStepBC();
 

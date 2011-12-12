@@ -53,6 +53,7 @@ InOut::InOut( Model3D &_m )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ surfaceArea = m->getSurfaceArea();
 
  // volumetric mesh indexes:
  ip = m->getIP();
@@ -66,6 +67,7 @@ InOut::InOut( Model3D &_m )
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
  idMinVolume = m->getIdMinVolume();
+ surfaceVolume = m->getSurfaceVolume();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -113,6 +115,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ surfaceArea = m->getSurfaceArea();
 
  // volumetric mesh indexes:
  ip = m->getIP();
@@ -126,6 +129,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
  idMinVolume = m->getIdMinVolume();
+ surfaceVolume = m->getSurfaceVolume();
 
  s = &_s;
  Re = s->getRe();
@@ -2255,11 +2259,11 @@ void InOut::saveMeshInfo(const char* _dir)
 						   	      << setw(5)  << rpv << " "
 						   	      << setw(5)  << csp << " "
 						   	      << setw(6)  << flip << " "
-						   	      << setw(7)  << intet << " "
-						   	      << setw(19) << maxVolume << " "
-						   	      << setw(19) << minVolume << " "
-						   	      << setw(13)  << idMaxVolume << " "
-						   	      << setw(13)  << idMinVolume << " "
+						   	      << setw(7)  << intet[2] << " "
+						   	      << setw(19) << maxVolume[2] << " "
+						   	      << setw(19) << minVolume[2] << " "
+						   	      << setw(13)  << idMaxVolume[2] << " "
+						   	      << setw(13)  << idMinVolume[2] << " "
 								  << setw(6)  << iter << " "
 								  << endl; 
  
@@ -3120,6 +3124,8 @@ void InOut::saveBubbleInfo(const char* _dir)
 			    	   << setw(18) << "stand deviat" 
 			    	   << setw(14) << "averag edge" 
 					   << setw(14) << "edge/radius" 
+					   << setw(14) << "area" 
+					   << setw(14) << "volume" 
 					   << setw(15) << "averag neigh" 
 			    	   << setw(13) << "num points" 
 			    	   << setw(6) << "iter" 
@@ -3183,10 +3189,12 @@ void InOut::saveBubbleInfo(const char* _dir)
            << setw(17) << kappaError << " " 
            << setw(17) << kappaSD << " " 
 	       << setprecision(3) << fixed
-           << setw(13) << averageTriEdge << " " 
+           << setw(13) << averageTriEdge[2] << " " 
 	       << setprecision(4) << fixed
-           << setw(13) << averageTriEdge/radius << " " 
+           << setw(13) << averageTriEdge[2]/radius << " " 
 	       << setprecision(3) << fixed
+           << setw(14) << surfaceArea[2] << " " 
+           << setw(14) << surfaceVolume[2] << " " 
            << setw(14) << averageNeigh << " " 
 	       << setprecision(0) << fixed
 		   << setw(12) << surfacePoints << " " 
@@ -3213,6 +3221,8 @@ void InOut::saveBubbleInfo(const char* _dir)
 			    	      << setw(18) << "Stand Deviat" 
 						  << setw(14) << "averag edge" 
 						  << setw(14) << "edge/radius" 
+						  << setw(14) << "area" 
+						  << setw(14) << "volume" 
 						  << setw(15) << "averag neigh" 
 						  << setw(13) << "num points" 
 			    	      << setw(6) << "iter" 
@@ -3228,10 +3238,12 @@ void InOut::saveBubbleInfo(const char* _dir)
 			  << setw(17) << pressureError << " " 
 			  << setw(17) << pressureSD << " " 
 			  << setprecision(3) << fixed
-			  << setw(13) << averageTriEdge << " " 
+			  << setw(13) << averageTriEdge[2] << " " 
 			  << setprecision(4) << fixed
-			  << setw(13) << averageTriEdge/radius << " " 
+			  << setw(13) << averageTriEdge[2]/radius << " " 
 			  << setprecision(3) << fixed
+              << setw(14) << surfaceArea[2] << " " 
+              << setw(14) << surfaceVolume[2] << " " 
 			  << setw(14) << averageNeigh << " " 
 			  << setprecision(0) << fixed
 			  << setw(12) << surfacePoints << " " 
@@ -3404,19 +3416,28 @@ void InOut::printMeshReport()
       << surfMesh->numVerts << endl;
  cout << "        number of surface triangles    (numTri):      " 
       << surfMesh->numElems << endl;
- cout << "        interface average element edge length:        " 
-      << averageTriEdge << endl;
- cout << "        desired tetrahedron volume:                   " 
-      << averageTriEdge*averageTriEdge*averageTriEdge*sqrt(2)/12 << endl;
 
+ cout << endl;
  for(int nb=1;nb<=elemIdRegion->Max();nb++ )
-  cout << "        triangle edge size (" << nb 
-       << "):                       " << triEdge[nb] << endl;
+ {
+  cout << "        surface (" << nb << ")" << endl;
+  cout << "         |average element edge length:                " 
+       << averageTriEdge[nb] << endl;
+  cout << "         |desired tetrahedron volume:                 "   
+       << averageTriEdge[nb]*
+	      averageTriEdge[nb]*
+		  averageTriEdge[nb]*sqrt(2)/12 << endl;
+  cout << "         |triangle edge size:                         "  
+       << triEdge[nb] << endl;
+  cout << "         |min tetrahedron volume:                     " 
+      << minVolume[nb] << " (" << idMinVolume[nb] << ")" << endl;
+  cout << "         |max tetrahedron volume:                     " 
+       << maxVolume[nb] <<  " (" << idMaxVolume[nb] << ")" << endl;
+  cout << "         |number of tets with 4 verts on surface:     " 
+       << intet[nb] << endl;
+ }
+ cout << endl;
 
- cout << "        min tetrahedron volume:                       " 
-      << minVolume << " (" << idMinVolume << ")" << endl;
- cout << "        max tetrahedron volume:                       " 
-      << maxVolume <<  " (" << idMaxVolume << ")" << endl;
  cout << "        min tetrahedron edge size:                    " 
       << m->getMinEdge() << endl;
  cout << "        min triangle edge size:                       " 
@@ -3470,8 +3491,6 @@ void InOut::printMeshReport()
       << "removed" << resetColor() 
       << " 3D mesh points:       " << color(none,red,black)
 	  << rp << resetColor() << endl;
- cout << "        number of tets with 4 verts on surface:       " 
-      << intet << endl;
  cout << "   |                                                                       |" 
       << endl;
  cout << "   |-----------------------------------------------------------------------|" 

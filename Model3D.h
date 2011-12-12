@@ -112,11 +112,13 @@ class Model3D
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
   void setInitSurfaceVolume();
+  void setSurfaceVolume();
   void setInitSurfaceArea();
+  void setSurfaceArea();
   real computeBubbleVolume();
   real computeBubbleVolume2();
-  real computeSurfaceVolume(int _region);
-  real computeSurfaceArea(int _region);
+  real getSurfaceVolume(int _region);
+  real getSurfaceArea(int _region);
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
 
@@ -137,11 +139,11 @@ class Model3D
   int getRSPN();
   int getRSPC();
   int getFLIP();
-  int getINTET();
-  real getMinArea();
-  real getMaxArea();
-  int getIdMinArea();
-  int getIdMaxArea();
+  vector<int> getINTET();
+  vector<real> getMinArea();
+  vector<real> getMaxArea();
+  vector<int> getIdMinArea();
+  vector<int> getIdMaxArea();
 
   int getIP();
   int getIPD();
@@ -150,10 +152,10 @@ class Model3D
   int getRPD();
   int getRPV();
   int getCSP();
-  real getMinVolume();
-  real getMaxVolume();
-  int getIdMinVolume();
-  int getIdMaxVolume();
+  vector<real> getMinVolume();
+  vector<real> getMaxVolume();
+  vector<int> getIdMinVolume();
+  vector<int> getIdMaxVolume();
 
   // boundary condition settings
   void setNuCteDiskBC();
@@ -238,7 +240,7 @@ class Model3D
   void setZ(clVector _Z);
   clVector* getEdgeSize();
   void setEdgeSize(clVector _edgeSize);
-  real getAverageTriEdge();
+  vector<real> getAverageTriEdge();
 
   clVector* getUC();
   clVector* getVC();
@@ -297,6 +299,8 @@ class Model3D
   vector<real> getTriEdge();
   void setTetVol(vector< real > _tetVol);
   vector<real> getTetVol();
+  vector<real> getSurfaceArea();
+  vector<real> getSurfaceVolume();
   void setSingleElement();
   void setTwoElements();
   void setThreeElements();
@@ -335,19 +339,14 @@ class Model3D
   real xCenter,yCenter,zCenter;
   real bubbleRadius;
   real minEdge;
-  real minEdgeTri,averageTriEdge;
+  real minEdgeTri;
   int isp;           // isp: num of inserted surface points by length
   int ispc;          // ispc: num of inserted surface points by curv
   int rsp;           // rsp: num of removed surface points by length
   int rspn;          // rspn: num of removed surface points by neigh check
   int rspc;          // rspc: num of removed surface points by curv
   int csp;           // csp: num of contracted surface points
-  int intet;         // csp: num of surface tetrahedrons 
   int flip;          // flip: flipping operations
-  int idMinArea;     // ID of min tri area 
-  int idMaxArea;     // ID of max tri area 
-  real minArea;      // min triangle area 
-  real maxArea;      // max triangle area
 
   int ip;            // ip: num of inserted 3d mesh points
   int ipd;           // ipd: by diffusion 
@@ -356,14 +355,21 @@ class Model3D
   int rpv;           // rpv: by volume 
   int rpd;           // rpd: by diffusion 
   int badtet;        // num of shit tetrahedrons
-  int idMinVolume;   // ID of min tet volume
-  int idMaxVolume;   // ID of max tet volume
-  real minVolume;    // min tet volume
-  real maxVolume;    // max tet volume
 
-  vector<real> initSurfaceVolume;     // vector de volumes iniciais
-  vector<real> initSurfaceArea;       // vector de areas iniciais
+  vector<int> intet;         // csp: num of surface tetrahedrons 
+  vector<int> idMinVolume;   // ID of min tet volume
+  vector<int> idMaxVolume;   // ID of max tet volume
+  vector<real> minVolume;    // min tet volume
+  vector<real> maxVolume;    // max tet volume
+  vector<int> idMinArea;     // ID of min tri area 
+  vector<int> idMaxArea;     // ID of max tri area 
+  vector<real> minArea;      // min triangle area 
+  vector<real> maxArea;      // max triangle area
+
+  vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
+  vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais
   vector<real> triEdge;               // vector de tamanho de aresta 
+  vector<real> averageTriEdge;        // vector de tamanho de aresta medio
   vector<real> tetVol;                // vector de volumes 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

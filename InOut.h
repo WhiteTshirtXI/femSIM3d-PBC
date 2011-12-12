@@ -209,13 +209,14 @@ private:
   clVector *elemIdRegion;
   list<int> *inElem,*outElem;
   vector< list<int> >* neighbourPoint;
-  real averageTriEdge;
+  vector<real> averageTriEdge;
   // mesh indexes
   int isp,ispc,rsp,rspn,rspc,ip,ipd,rp,rpi,rpd,rpv,csp,flip; 
-  int idMaxVolume,idMinVolume,intet;
-  real maxVolume,minVolume;
-  int idMaxArea,idMinArea;
-  real maxArea,minArea;
+  vector<int> idMaxVolume,idMinVolume,intet;
+  vector<real> maxVolume,minVolume;
+  vector<int> idMaxArea,idMinArea;
+  vector<real> maxArea,minArea;
+  vector<real> surfaceVolume,surfaceArea;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,simTime;

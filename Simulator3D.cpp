@@ -2081,7 +2081,7 @@ void Simulator3D::setDtSurfaceTension()
  * */
 void Simulator3D::setDtLagrangianExtream()
 {
- int idMinVolume = m->getIdMinVolume();
+ int idMinVolume = *min_element(m->getIdMinVolume().begin(),m->getIdMinVolume().end());
  real minEdge = m->getMinEdge();
 
  //cout << idMinVolume << " " << minEdge << endl;

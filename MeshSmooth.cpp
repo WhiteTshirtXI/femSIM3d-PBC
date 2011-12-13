@@ -96,6 +96,15 @@ void MeshSmooth::stepSmooth()
  }
 } // fecha metodo stepSmooth
 
+/*
+ * Implicit Fairing of Irregular Meshes using Diffusion and Curvature
+ * Flow
+ * Mathieu Desbrun, Mark Meyer, Peter Schroder, Alan H. Barr
+ * Caltech*
+ *
+ * Notes on Mesh Smoothing
+ * Nicolas Bray
+ * */
 // calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSmoothFujiwara()
 {
@@ -108,6 +117,7 @@ void MeshSmooth::stepSmoothFujiwara()
  vSmooth.Dim(numNodes);
  wSmooth.Dim(numNodes);
 
+ // loop over all the vertices except those belonging to the boundary
  for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  {
   plist = neighbourVert->at(*it);
@@ -118,22 +128,28 @@ void MeshSmooth::stepSmoothFujiwara()
   distSum = 0.0;
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
+   // distance between the vertex *it and all its neighbours
    real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
 	                     X->Get(*it),Y->Get(*it),Z->Get(*it) );
+   // sum of distances
    distSum += dist;   
+
+   // 
    xSum += ( X->Get(*vert)-X->Get(*it) )*dist;
    ySum += ( Y->Get(*vert)-Y->Get(*it) )*dist;
    zSum += ( Z->Get(*vert)-Z->Get(*it) )*dist;
   }
-  aux = (xSum/distSum)/dt; // velocidade USmooth
+  aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+  //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
   uSmooth.Set(*it,aux);
 
-  aux = (ySum/distSum)/dt; // velocidade VSmooth
+  aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
+  //aux = (2.0/distSum)*ySum/dt; // velocidade VSmooth
   vSmooth.Set(*it,aux);
 
-  aux = (zSum/distSum)/dt; // velocidade WSmooth
+  aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
+  //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
-
  }
 } // fecha metodo stepSmooth
 
@@ -168,13 +184,16 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
    ySum += ( Y->Get(*vert)-Y->Get(surfaceNode) )*dist;
    zSum += ( Z->Get(*vert)-Z->Get(surfaceNode) )*dist;
   }
-  aux = (xSum/distSum)/dt; // velocidade USmooth
+  aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+  //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
   uSmoothSurface.Set(surfaceNode,aux);
 
-  aux = (ySum/distSum)/dt; // velocidade VSmooth
+  aux = (1.0/distSum)*ySum/dt; // velocidade USmooth
+  //aux = (2.0/distSum)*ySum/dt; // velocidade USmooth
   vSmoothSurface.Set(surfaceNode,aux);
 
-  aux = (zSum/distSum)/dt; // velocidade WSmooth
+  aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
+  //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
   wSmoothSurface.Set(surfaceNode,aux);
  }
 } // fecha metodo stepSmooth

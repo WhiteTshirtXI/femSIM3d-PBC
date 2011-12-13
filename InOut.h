@@ -211,7 +211,7 @@ private:
   vector< list<int> >* neighbourPoint;
   vector<real> averageTriEdge;
   // mesh indexes
-  int isp,ispc,rsp,rspn,rspc,ip,ipd,rp,rpi,rpd,rpv,csp,flip; 
+  vector<int> isp,ispc,rsp,rspn,rspc,ip,ipd,rp,rpi,rpd,rpdist,rpv,csp,flip; 
   vector<int> idMaxVolume,idMinVolume,intet;
   vector<real> maxVolume,minVolume;
   vector<int> idMaxArea,idMinArea;

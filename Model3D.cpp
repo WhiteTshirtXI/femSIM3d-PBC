@@ -23,36 +23,56 @@ Model3D::Model3D()
  bubbleRadius = 0;
  minEdge = 0.10;
  minEdgeTri = 0.10;
- isp = 0;                    
- ispc = 0;                    
- rspc = 0;                    
- rspn = 0;                    
- rsp = 0;                    
- flip = 0;
+ 
+ // number of surfaces + 1
+ int numSurface = 3;
+ isp.resize(numSurface);
+ ispc.resize(numSurface);
+ rsp.resize(numSurface);
+ rspn.resize(numSurface);
+ rspc.resize(numSurface);
+ csp.resize(numSurface);
+ flip.resize(numSurface);
 
- ip = 0;                     
- ipd = 0;                     
- rp = 0;                     
- rpi = 0;                   
- rpv = 0;                   
- rpd = 0;                   
- csp = 0;
+ ip.resize(numSurface);
+ ipd.resize(numSurface);
+ rp.resize(numSurface);
+ rpi.resize(numSurface);
+ rpv.resize(numSurface);
+ rpd.resize(numSurface);
+ rpdist.resize(numSurface);
+ badtet.resize(numSurface);
 
  // set surface lengths
- triEdge.resize(3); // number of surfaces + 1
- averageTriEdge.resize(3); // number of surfaces + 1
- tetVol.resize(3); // number of surfaces + 1
- maxVolume.resize(3); // number of surfaces + 1
- minVolume.resize(3); // number of surfaces + 1
- idMaxVolume.resize(3); // number of surfaces + 1
- idMinVolume.resize(3); // number of surfaces + 1
- maxArea.resize(3);
- minArea.resize(3);
- idMaxArea.resize(3);
- idMinArea.resize(3);
- intet.resize(3);
- for( int v=1;v<(int) triEdge.size();v++ )
+ triEdge.resize(numSurface); 
+ averageTriEdge.resize(numSurface); 
+ tetVol.resize(numSurface); 
+ maxVolume.resize(numSurface); 
+ minVolume.resize(numSurface); 
+ idMaxVolume.resize(numSurface); 
+ idMinVolume.resize(numSurface); 
+ maxArea.resize(numSurface);
+ minArea.resize(numSurface);
+ idMaxArea.resize(numSurface);
+ idMinArea.resize(numSurface);
+ intet.resize(numSurface);
+ for( int v=0;v<numSurface;v++ )
  {
+  isp[v]=0;
+  ispc[v]=0;
+  rsp[v]=0;
+  rspn[v]=0;
+  rspc[v]=0;
+  csp[v]=0;
+  flip[v]=0;
+  ip[v]=0;
+  ipd[v]=0;
+  rp[v]=0;
+  rpi[v]=0;
+  rpv[v]=0;
+  rpd[v]=0;
+  rpdist[v]=0;
+  badtet[v]=0;
   triEdge[v] = 0.10; 
   averageTriEdge[v] = 0.10; 
   tetVol[v] = triEdge[v]*triEdge[v]*triEdge[v]*sqrt(2.0)/12.0;
@@ -101,6 +121,7 @@ Model3D::Model3D(const Model3D &_mRight)
   rp = _mRight.rp;              
   rpi = _mRight.rpi;                   
   rpd = _mRight.rpd;                   
+  rpdist = _mRight.rpdist; 
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
   maxVolume = _mRight.maxVolume;
@@ -1121,7 +1142,7 @@ int Model3D::findEdge(int _v1,int _v2)
 void Model3D::insertPointsByLength()
 {
  // number of inserted surface points
- isp = 0;
+ fill(isp.begin(),isp.end(),0);
 
  // surfMesh.elemIdRegion == 0 --> none
  // surfMesh.elemIdRegion == 1 --> wall
@@ -1131,15 +1152,15 @@ void Model3D::insertPointsByLength()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(edge,0);
-  real elemID = surfMesh.vertIdRegion.Get(mapEdgeTri.Get(edge,1)); 
+  real vertID = surfMesh.vertIdRegion.Get(mapEdgeTri.Get(edge,1)); 
   //real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5)); 
 
-  if( edgeLength > 1.4*triEdge[elemID] )
+  if( edgeLength > 1.4*triEdge[vertID] )
   {
    insertPoint(edge);
 
-   saveVTKSurface("./vtk/","inserted",isp);
-   isp++;
+   saveVTKSurface("./vtk/","inserted",isp[vertID]);
+   isp[vertID]++;
   }
  }
 }
@@ -1161,12 +1182,13 @@ void Model3D::insertPointsByLength()
 void Model3D::removePointsByCurvature()
 {
  // number of removed surface points by Curvature
- rspc = 0;
+ fill(rspc.begin(),rspc.end(),0);
 
  for( int i=0;i<surface.Dim();i++ )
  {
   // edge length
   int surfaceNode = surface.Get(i);
+  real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
   if( curv > 65 )
   {
@@ -1216,9 +1238,8 @@ void Model3D::removePointsByCurvature()
    // updating surface neighbour points
    setNeighbourSurfacePoint();
 
-
-   saveVTKSurface("./vtk/","remCurv",rspc);
-   rspc++;
+   saveVTKSurface("./vtk/","remCurv",rspc[vertID]);
+   rspc[vertID]++;
   }
  }
 }
@@ -1226,7 +1247,7 @@ void Model3D::removePointsByCurvature()
 void Model3D::insertPointsByCurvature()
 {
  // number of inserted surface points
- ispc = 0;
+ fill(ispc.begin(),ispc.end(),0);
 
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
@@ -1236,13 +1257,14 @@ void Model3D::insertPointsByCurvature()
   int v2 = mapEdgeTri.Get(i,2);
   real curv1 = fabs(surfMesh.curvature.Get(v1));
   real curv2 = fabs(surfMesh.curvature.Get(v2));
+  real vertID = surfMesh.vertIdRegion.Get(v1); 
 
   if( curv1 > 70 || curv2 > 70 )
   {
    cout << "----------- Inserting by curvature..." << endl;
    insertPoint(i);
 
-   ispc++;
+   ispc[vertID]++;
   }
  }
 }
@@ -1792,7 +1814,7 @@ void Model3D::flipTriangleEdge()
   * Roundtable, pp. 363:374 (1997)
   * */
 
- flip = 0;
+ fill(flip.begin(),flip.end(),0);
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   real edge = i;
@@ -1802,6 +1824,7 @@ void Model3D::flipTriangleEdge()
   int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
   int elem1 = mapEdgeTri.Get(edge,5); // elem1
   int elem2 = mapEdgeTri.Get(edge,6); // elem2
+  int elemID = surfMesh.elemIdRegion.Get(elem1);
 
   real P1x = surfMesh.X.Get(v1);
   real P1y = surfMesh.Y.Get(v1);
@@ -2142,8 +2165,8 @@ void Model3D::flipTriangleEdge()
 //    neighbourPoint.at(v3elem2) = getNeighbourSurfacePoint(v3elem2);
 //-------------------------------------------------- 
 
-   saveVTKSurface("./vtk/","flipped",flip);
-   flip++;
+   saveVTKSurface("./vtk/","flipped",flip[elemID]);
+   flip[elemID]++;
   }
  }
 }
@@ -2568,7 +2591,7 @@ void Model3D::insertPoint(int _edge)
 void Model3D::contractEdgeByLength()
 {
  // number of removed 3d mesh points by interface distance
- csp=0;
+ fill(csp.begin(),csp.end(),0);
 
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
@@ -2651,8 +2674,8 @@ void Model3D::contractEdgeByLength()
 		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
-   saveVTKSurface("./vtk/","contract",csp);
-   csp++;
+   saveVTKSurface("./vtk/","contract",csp[elemID]);
+   csp[elemID]++;
   }
  }
 }
@@ -2660,17 +2683,17 @@ void Model3D::contractEdgeByLength()
 void Model3D::removePointsByLength()
 {
  // number of removed surface points
- rsp=0;
+ fill(rsp.begin(),rsp.end(),0);
 
   for( int i=0;i<mapEdgeTri.DimI();i++ )
   {
    // edge vertices
    int v1 = mapEdgeTri.Get(i,1);
    int v2 = mapEdgeTri.Get(i,2);
-   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(i,5));
+   int vertID = surfMesh.elemIdRegion.Get(v1);
 
    // verifying the length of each surface edge
-   if( mapEdgeTri.Get(i,0) < 0.2*triEdge[elemID] ) //&&
+   if( mapEdgeTri.Get(i,0) < 0.2*triEdge[vertID] ) //&&
    {
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength1=0;
@@ -2746,8 +2769,8 @@ void Model3D::removePointsByLength()
 	 // updating surface neighbour points
 	 setNeighbourSurfacePoint();
 
-	 saveVTKSurface("./vtk/","removed",rsp);
-	 rsp++;
+	 saveVTKSurface("./vtk/","removed",rsp[vertID]);
+	 rsp[vertID]++;
 	}
 	else // if the 2nd. node has the smallest edge length sum
 	{
@@ -2794,8 +2817,8 @@ void Model3D::removePointsByLength()
 	 // updating surface neighbour points
 	 setNeighbourSurfacePoint();
 
-	 saveVTKSurface("./vtk/","removed",rsp);
-	 rsp++;
+	 saveVTKSurface("./vtk/","removed",rsp[vertID]);
+	 rsp[vertID]++;
 	}
    }
   }
@@ -2816,7 +2839,7 @@ void Model3D::removePointsByLength()
 void Model3D::removePointsByInterfaceDistance()
 {
  // number of removed 3d mesh points by interface distance
- rpi=0;
+ fill(rpi.begin(),rpi.end(),0);
 
  clVector surfaceAux = heaviside==0.5;
  clVector surface = surfaceAux.Find();
@@ -2829,6 +2852,7 @@ void Model3D::removePointsByInterfaceDistance()
  real h = triEdge[2]*0.86602; 
  for( int i=0;i<numVerts;i++ )
  {
+  int vertID = vertIdRegion.Get(i);
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge[2] ) // mainBubble.cpp
   if( d>0 && d<h*1.2 && heaviside.Get(i) < 0.5 ) // hiRe
@@ -2839,10 +2863,10 @@ void Model3D::removePointsByInterfaceDistance()
 //-------------------------------------------------- 
 
    mark3DPointForDeletion(i);
-   rpi++;
+   rpi[vertID]++;
   }
  }
- //cout << "  removed by interface Distance: " << rpi << endl;
+ //cout << "  removed by interface Distance: " << rpi[vertID] << endl;
 }
 
 /* 
@@ -2854,12 +2878,17 @@ void Model3D::removePointsByInterfaceDistance()
  * */
 void Model3D::remove3dMeshPointsByDistance()
 {
+ fill(rpdist.begin(),rpdist.end(),0);
+
  for( int i=surfMesh.numVerts;i<numVerts;i++ )
  {
+  int vertID = vertIdRegion.Get(i);
+
   for( int j=surfMesh.numVerts;j<numVerts;j++ )
   {
    if( heaviside.Get(i) != 0.5 && heaviside.Get(j) != 0.5 )
    {
+
 	real d = distance( X.Get(i),Y.Get(i),Z.Get(i),
 	                   X.Get(j),Y.Get(j),Z.Get(j) );
 	//--------------------------------------------------
@@ -2877,8 +2906,8 @@ void Model3D::remove3dMeshPointsByDistance()
 	}
    }
   }
+  cout << "  removed by distance: " << rpdist[vertID] << endl;
  }
- cout << "  removed by distance: " << rp << endl;
 }
 
 /*
@@ -2889,7 +2918,7 @@ void Model3D::remove3dMeshPointsByDistance()
 void Model3D::insert3dMeshPointsByDiffusion(real _factor)
 {
  // number of inserted points of 3d mesh
- ipd = 0;
+ fill(ipd.begin(),ipd.end(),0);
 
  /*
   * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
@@ -2907,6 +2936,8 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
 
   int v1 = mapEdge.Get(e,4);
   int v2 = mapEdge.Get(e,5);
+
+  int vertID = vertIdRegion.Get(v1);
 
   real x1=X.Get(v1);
   real y1=Y.Get(v1);
@@ -2950,10 +2981,10 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
 
    numVerts++;
    dVerts++;
-   ipd++;
+   ipd[vertID]++;
   }
  }
- //cout << "  inserted by diffusion: " << ipd << endl;
+ //cout << "  inserted by diffusion: " << ipd[vertID] << endl;
 }
 
 /*
@@ -2964,12 +2995,14 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
 void Model3D::remove3dMeshPointsByDiffusion(real _factor)
 {
  // number of removed points of 3d mesh
- rpd = 0;
+ fill(rpd.begin(),rpd.end(),0);
 
  for( int e=0;e<mapEdge.DimI();e++ )
  {
   int v1 = mapEdge.Get(e,4);
   int v2 = mapEdge.Get(e,5);
+
+  int vertID = vertIdRegion.Get(v1);
 
   real x1=X.Get(v1);
   real y1=Y.Get(v1);
@@ -2985,20 +3018,21 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
   // edgeSize is the result of \nabla^2 edge = f
   if( length < _factor*edgeSize.Get(v1) &&
 	  (hSum > 1.5 || hSum < 0.5 ) )
+  //if( length < _factor*edgeSize.Get(v1) && hSum != 1.0 )
   {
    if( v1 > surfMesh.numVerts )
    {
 	mark3DPointForDeletion(v1);
-	rpd++;
+	rpd[vertID]++;
    }
    else
    {
 	mark3DPointForDeletion(v2);
-	rpd++;
+	rpd[vertID]++;
    }
   }
  }
- //cout << "  removed by diffusion: " << rpd << endl;
+ //cout << "  removed by diffusion: " << rpd[vertID] << endl;
 }
 
 /* 
@@ -3544,8 +3578,8 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 {
  bool flag = false;
+ fill(badtet.begin(),badtet.end(),0);
 
- badtet=0;
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
   int v1 = _tetmesh.tetrahedronlist[i*4+0];
@@ -3553,6 +3587,8 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
   int v3 = _tetmesh.tetrahedronlist[i*4+2];
   int v4 = _tetmesh.tetrahedronlist[i*4+3];
   int region = _tetmesh.tetrahedronattributelist[i];
+
+  int elemID = elemIdRegion.Get(i);
 
   if( _tetmesh.pointmarkerlist[v1] == 22 &&
 	  _tetmesh.pointmarkerlist[v2] == 22 &&
@@ -3581,7 +3617,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
    edgeSize.AddItem(numVerts,edgeSize.Get(v1));
    numVerts++;
 
-   badtet++;
+   badtet[elemID]++;
    flag = true;
   }
  }
@@ -3600,7 +3636,7 @@ void Model3D::removePointByVolume(real _factor)
  real vertSum;
  int v[NUMGLE];
  int vert=0;
- rpv=0;
+ fill(rpv.begin(),rpv.end(),0);
 
  tetVol.clear();
  tetVol.resize(triEdge.size()); // number of surfaces + 1
@@ -3619,6 +3655,8 @@ void Model3D::removePointByVolume(real _factor)
 
   real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
               heaviside.Get(v[2])+heaviside.Get(v[3]);
+
+  int elemID = elemIdRegion.Get(elem);
 
   real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(elem)]);
 
@@ -3656,11 +3694,11 @@ void Model3D::removePointByVolume(real _factor)
    if( count > 0 )
    {
 	mark3DPointForDeletion(vert);
-	rpv++;
+	rpv[elemID]++;
    }
   }
  }
- //cout << "  removed by volume: " << rpv << endl;
+ //cout << "  removed by volume: " << rpv[elemID] << endl;
 }
 
 /*
@@ -3680,8 +3718,6 @@ void Model3D::mark3DPointForDeletion(int _vert)
  * */
 void Model3D::delete3DPoints()
 {
- rp=0;
-
  for( int dp=0;dp<heaviside.Dim();dp++ )
  {
   if( heaviside.Get(dp) == -1 )
@@ -3689,13 +3725,11 @@ void Model3D::delete3DPoints()
    X.Delete(dp);
    Y.Delete(dp);
    Z.Delete(dp);
-   //cc.Delete(dp);
    heaviside.Delete(dp);
    //interfaceDistance.Delete(dp);
    edgeSize.Delete(dp);
    numVerts--;
    dVerts--;
-   rp++;
    dp--;
   }
  }
@@ -6573,24 +6607,25 @@ vector<real> Model3D::getSurfaceArea(){return surfaceArea;}
 vector<real> Model3D::getSurfaceVolume(){return surfaceVolume;}
 
 // Mesh indexes:
-int Model3D::getISP(){return isp;}
-int Model3D::getISPC(){return ispc;}
-int Model3D::getRSP(){return rsp;}
-int Model3D::getRSPN(){return rspn;}
-int Model3D::getRSPC(){return rspc;}
-int Model3D::getFLIP(){return flip;}
+vector<int> Model3D::getISP(){return isp;}
+vector<int> Model3D::getISPC(){return ispc;}
+vector<int> Model3D::getRSP(){return rsp;}
+vector<int> Model3D::getRSPN(){return rspn;}
+vector<int> Model3D::getRSPC(){return rspc;}
+vector<int> Model3D::getFLIP(){return flip;}
 vector<int> Model3D::getINTET(){return intet;}
 vector<real> Model3D::getMinArea(){return minArea;}
 vector<real> Model3D::getMaxArea(){return maxArea;}
 vector<int> Model3D::getIdMinArea(){return idMinArea;}
 vector<int> Model3D::getIdMaxArea(){return idMaxArea;}
-int Model3D::getIP(){return ip;}
-int Model3D::getIPD(){return ipd;}
-int Model3D::getRP(){return rp;}
-int Model3D::getRPI(){return rpi;}
-int Model3D::getRPD(){return rpd;}
-int Model3D::getRPV(){return rpv;}
-int Model3D::getCSP(){return csp;}
+vector<int> Model3D::getIP(){return ip;}
+vector<int> Model3D::getIPD(){return ipd;}
+vector<int> Model3D::getRP(){return rp;}
+vector<int> Model3D::getRPI(){return rpi;}
+vector<int> Model3D::getRPD(){return rpd;}
+vector<int> Model3D::getRPDist(){return rpdist;}
+vector<int> Model3D::getRPV(){return rpv;}
+vector<int> Model3D::getCSP(){return csp;}
 vector<real> Model3D::getMinVolume(){return minVolume;}
 vector<real> Model3D::getMaxVolume(){return maxVolume;}
 vector<int> Model3D::getIdMinVolume(){return idMinVolume;}
@@ -6632,6 +6667,7 @@ void Model3D::operator=(Model3D &_mRight)
   rp = _mRight.rp;              
   rpi = _mRight.rpi;                   
   rpd = _mRight.rpd;                   
+  rpdist = _mRight.rpdist;                   
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
   maxVolume = _mRight.maxVolume;
@@ -7374,9 +7410,11 @@ real Model3D::computeBubbleVolume2()
 
 void Model3D::removePointsByNeighbourCheck()
 {
- rspn = 0;
+ fill(rspn.begin(),rspn.end(),0);
+
  for( int i=0;i<surfMesh.numVerts;i++ )
  {
+  int vertID = surfMesh.vertIdRegion.Get(i);
   /* 
    * This if checks whether the point on the surface has only 3 surface
    * elements. This is caused by the re-meshing process that sometimes
@@ -7410,7 +7448,7 @@ void Model3D::removePointsByNeighbourCheck()
    // updating surface neighbour points
    setNeighbourSurfacePoint();
 
-   rspn++;
+   rspn[vertID]++;
   }
   /*
    * This if removes a surface point when the number of its neighbours
@@ -7457,9 +7495,9 @@ void Model3D::removePointsByNeighbourCheck()
    // updating surface neighbour points
    setNeighbourSurfacePoint();
 
-   saveVTKSurface("./vtk/","removedBad",rsp);
+   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
 
-   rspn++;
+   rspn[vertID]++;
   }
  }
 }
@@ -8318,140 +8356,3 @@ void Model3D::applyBubbleVolumeCorrection()
  }
 }
 
-void Model3D::removePointByVolumeIn(real _factor)
-{
- real vSum;
- real vertSum;
- int v[NUMGLE];
- int vert=0;
- //rpv=0;
-
- tetVol.clear();
- tetVol.resize(triEdge.size()); // number of surfaces + 1
- real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
-
- // set tetVol ---> wall,bubble1, bubble2 etc.
- for( int v=0;v<(int) triEdge.size();v++ )
-  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
-
- for (list<int>::iterator elem=inElem.begin(); elem!=inElem.end(); ++elem)
- {
-  v[0] = IEN.Get(*elem,0);
-  v[1] = IEN.Get(*elem,1);
-  v[2] = IEN.Get(*elem,2);
-  v[3] = IEN.Get(*elem,3);
-
-  real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
-              heaviside.Get(v[2])+heaviside.Get(v[3]);
-
-  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(*elem)]);
-
-  int count=0;
-  if( hSum != 2.0 && 
-	  fabs(getVolume(*elem)) < maxVol ) 
-  {
-   // add to checkVert only non surface vertex
-   list<int> checkVert;
-   for( int j=0;j<NUMGLE;j++ )
-	if( heaviside.Get(v[j]) != 0.5 )
-	  checkVert.push_back( v[j] );
-
-   vertSum = 1.0E+17; // initial value
-
-   // check sum of volumes of each non surface vertex neighbours
-   list<int> plist = checkVert;
-   for(list<int>::iterator mvert=plist.begin(); mvert!= plist.end();++mvert )
-   {
-	vSum = 0;
-	list<int> plist2 = neighbourElem.at(*mvert);
-	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
-	 vSum += fabs(getVolume(*mele));
-
-	// The problem is: if all the vertices are lower then
-	// surfMesh.numVerts, 
-	if( vSum < vertSum && *mvert > surfMesh.numVerts )
-	{
-	 vertSum = vSum;
-	 vert = *mvert;
-	 count++;
-	}
-   }
-   // mark points to delete
-   if( count > 0 )
-   {
-	mark3DPointForDeletion(vert);
-	rpv++;
-   }
-  }
- }
- //cout << "  removed by volume: " << rpv << endl;
-}
-
-void Model3D::removePointByVolumeOut(real _factor)
-{
- real vSum;
- real vertSum;
- int v[NUMGLE];
- int vert=0;
- //rpv=0;
-
- tetVol.clear();
- tetVol.resize(triEdge.size()); // number of surfaces + 1
- real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
-
- // set tetVol ---> wall,bubble1, bubble2 etc.
- for( int v=0;v<(int) triEdge.size();v++ )
-  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
-
- for (list<int>::iterator elem=outElem.begin(); elem!=outElem.end(); ++elem)
- {
-  v[0] = IEN.Get(*elem,0);
-  v[1] = IEN.Get(*elem,1);
-  v[2] = IEN.Get(*elem,2);
-  v[3] = IEN.Get(*elem,3);
-
-  real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
-              heaviside.Get(v[2])+heaviside.Get(v[3]);
-
-  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(*elem)]);
-
-  int count=0;
-  if( hSum != 2.0 && 
-	  fabs(getVolume(*elem)) < maxVol ) 
-  {
-   // add to checkVert only non surface vertex
-   list<int> checkVert;
-   for( int j=0;j<NUMGLE;j++ )
-	if( heaviside.Get(v[j]) != 0.5 )
-	  checkVert.push_back( v[j] );
-
-   vertSum = 1.0E+17; // initial value
-
-   // check sum of volumes of each non surface vertex neighbours
-   list<int> plist = checkVert;
-   for(list<int>::iterator mvert=plist.begin(); mvert!= plist.end();++mvert )
-   {
-	vSum = 0;
-	list<int> plist2 = neighbourElem.at(*mvert);
-	for(list<int>::iterator mele=plist2.begin(); mele != plist2.end();++mele )
-	 vSum += fabs(getVolume(*mele));
-
-	// The problem is: if all the vertices are lower then
-	// surfMesh.numVerts, 
-	if( vSum < vertSum && *mvert > surfMesh.numVerts )
-	{
-	 vertSum = vSum;
-	 vert = *mvert;
-	 count++;
-	}
-   }
-   // mark points to delete
-   if( count > 0 )
-   {
-	mark3DPointForDeletion(vert);
-	rpv++;
-   }
-  }
- }
- //cout << "  removed by volume: " << rpv << endl;
-}

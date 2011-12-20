@@ -22,31 +22,6 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- real Re = 100;
- real Sc = 1;
- real We = 1;
- real Fr = 1;
- real c1 = 0.0;  // lagrangian
- real c2 = 0.0; // velocity
- real c3 = 0.0; // coordinates - fujiwara
- real c4 = 0.0; // surface
- real alpha = 1;
- real beta = 1;
-
- real sigma = 1.0;
-
- real mu_in = 1;
- real mu_out = 0.001;
-
- real rho_in = 1; 
- real rho_out = 0.01;
-
- real cfl = 0.8;
-
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCICC);
- Solver *solverC = new PetscSolver(KSPCG,PCICC);
-
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
@@ -114,7 +89,7 @@ int main(int argc, char **argv)
   triEdge.resize(3);
   triEdge[0] = 0.1; // none
   triEdge[1] = 0.6; // wall
-  triEdge[2] = 0.90-i*2; // bubble 1 
+  triEdge[2] = 0.90-0.01*i*2; // bubble 1 
 
   Model3D m1;
   Simulator3D s1;
@@ -123,6 +98,7 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
   m1.checkTriangleOrientation();
+
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();

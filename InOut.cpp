@@ -3153,7 +3153,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  real pressureAverage = sumPressure/surface->Dim();
 
  real radius = (diameterX+diameterY+diameterZ)/6.0;
- real kappaAnalytic = 2*sigma/radius; 
+ real kappaAnalytic = 2.0/radius; 
  real pressureAnalytic = sigma/radius; 
 
  real sumKappaSD = 0;

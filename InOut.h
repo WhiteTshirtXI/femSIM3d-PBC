@@ -193,6 +193,7 @@ class InOut
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
   void printMeshReport();
   void printSimulationReport();
+  void bubbleWallDistance( const char* _dir,const char* _filename, int _iter );
 
 private:
   Model3D *m;

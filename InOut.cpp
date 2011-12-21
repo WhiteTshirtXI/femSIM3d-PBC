@@ -3828,3 +3828,63 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
 
 } // fecha metodo crossSectionalPlane
 
+void InOut::bubbleWallDistance( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ //string file = (string) _dir + (string) _filename + "-" + str + ".dat";
+ string file  = (string) _dir + (string) _filename + "." + str;
+ const char* filename = file.c_str();
+
+ ofstream dist ( filename ); 
+
+ dist << "#P1x" << setw(18)
+      << "P1y"  << setw(20) 
+      << "P1z"  << setw(20) 
+	  << "zMin" << setw(21)
+	  << "length" << setw(18)
+	  << "kappa" << setw(22)
+	  << "pressure" << endl; 
+
+ real zMin = surfMesh->Z.Min();
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->Marker.Get(i) == 0.5 )
+  {
+   real P1x = X->Get(i);
+   real P1y = Y->Get(i);
+   real P1z = Z->Get(i);
+   real length = fabs(P1z-zMin);
+
+   dist << setprecision(10) << scientific; 
+   dist << setw(11) << P1x << " " 
+	    << setw(18) << P1y << " " 
+	    << setw(18) << P1z << " " 
+		<< setw(18) << zMin << " " 
+	    << setw(18) << length << " " 
+		<< setw(18) << kappa->Get(i) << " " 
+		<< setw(18) << pSol->Get(i) << endl;
+  }
+ }
+
+ dist.close();
+
+ /* ---- copiando para arquivo sim-last.vtk ---- */
+ ifstream inFile( filename );            
+
+ string last = (string) _dir + (string) _filename + ".last";
+ const char* filenameCopy = last.c_str();
+ ofstream outFile( filenameCopy,ios::binary );
+
+ outFile << inFile.rdbuf();
+ inFile.close();
+ outFile.close();
+ /* -------------------------------------------- */
+
+ cout << "Drop-Wall distance No. " << _iter << " saved in dat" << endl;
+} // fecha metodo bubbleWallDistance
+

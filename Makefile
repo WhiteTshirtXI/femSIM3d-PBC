@@ -112,6 +112,7 @@ erase:
 	@rm -f ./bin/*.bin
 	@rm -f ./dat/*.dat
 	@rm -f ./dat/vk*
+	@rm -f ./dat/edge.*
 
 deepclean: 
 	@rm -f staticDroplet step bubble 2bubble diskNuC 
@@ -132,4 +133,5 @@ deepclean:
 	@rm -f ./*.dat
 	@rm -f ./dat/*.dat
 	@rm -f ./dat/vk*
+	@rm -f ./dat/edge.*
 

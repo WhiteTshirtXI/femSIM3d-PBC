@@ -167,6 +167,8 @@ Model3D::Model3D(const Model3D &_mRight)
   surfaceVolume = _mRight.surfaceVolume;
   initSurfaceArea = _mRight.initSurfaceArea;
   surfaceArea = _mRight.surfaceArea;
+  initSurfaceRadius = _mRight.initSurfaceRadius;
+  surfaceRadius = _mRight.surfaceRadius;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -6285,8 +6287,6 @@ void Model3D::setSurfaceConfig()
  setMapEdge(); 
  setMapEdgeTri(); 
  setNormalAndKappa();
- setSurfaceArea();
- setSurfaceVolume();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -6713,6 +6713,8 @@ void Model3D::operator=(Model3D &_mRight)
   surfaceVolume = _mRight.surfaceVolume;
   initSurfaceArea = _mRight.initSurfaceArea;
   surfaceArea = _mRight.surfaceArea;
+  initSurfaceRadius = _mRight.initSurfaceRadius;
+  surfaceRadius = _mRight.surfaceRadius;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -7194,90 +7196,41 @@ void Model3D::setSurfaceArea()
   surfaceArea[nb] = getSurfaceArea(nb);
 }
 
-/* 
- * OBS: The mesh needs to be oriented, otherwise the method doesn't work!
- * */
-real Model3D::computeBubbleVolume()
+void Model3D::setInitSurfaceRadius()
 {
- real sumVolume = 0;
- //real sumCentroidX = 0;
- //real sumCentroidY = 0;
- //real sumCentroidZ = 0;
- for( int mele=0;mele<surfMesh.numElems;mele++ )
- {
-  int v1 = surfMesh.IEN.Get(mele,0);
-  int v2 = surfMesh.IEN.Get(mele,1);
-  int v3 = surfMesh.IEN.Get(mele,2);
+ initSurfaceRadius.clear();
+ initSurfaceRadius.resize((int) surfMesh.elemIdRegion.Max()+1);
 
-  if( surfMesh.Marker.Get(v1) == 0.5 )
-  {
-   // P1
-   real p1x = surfMesh.X.Get(v1);
-   real p1y = surfMesh.Y.Get(v1);
-   real p1z = surfMesh.Z.Get(v1);
+ // surfMesh.elemIdRegion == 0 --> none
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+  initSurfaceRadius[nb] = 3.0*initSurfaceVolume[nb]/initSurfaceArea[nb];
+}
 
-   // P2
-   real p2x = surfMesh.X.Get(v2);
-   real p2y = surfMesh.Y.Get(v2);
-   real p2z = surfMesh.Z.Get(v2);
+/*
+ * A = 4*PI*r^2
+ * V = (4/3)*PI*r^3
+ *
+ *         4
+ *        --- * PI * r^3
+ *  V      3                 r            3*V
+ * --- = ---------------- = --- ---> r = -----
+ *  A      4 * PI * r^2      3             A
+ *
+ * */
+void Model3D::setSurfaceRadius()
+{
+ surfaceRadius.clear();
+ surfaceRadius.resize((int) surfMesh.elemIdRegion.Max()+1);
 
-   // P3
-   real p3x = surfMesh.X.Get(v3);
-   real p3y = surfMesh.Y.Get(v3);
-   real p3z = surfMesh.Z.Get(v3);
-
-   // element centroid
-   real xCentroid = (p1x+p2x+p3x)/3.0;
-   real yCentroid = (p1y+p2y+p3y)/3.0;
-   real zCentroid = (p1z+p2z+p3z)/3.0;
-
-   // distance from point 1 to 2
-   real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
-
-   // distance from point 2 to 3
-   real b = distance(p2x,p2y,p2z,p3x,p3y,p3z);
-
-   // unit vectors
-   real x1Unit = (p2x-p1x)/a;
-   real y1Unit = (p2y-p1y)/a;
-   real z1Unit = (p2z-p1z)/a;
-
-   real x2Unit = (p3x-p2x)/b;
-   real y2Unit = (p3y-p2y)/b;
-   real z2Unit = (p3z-p2z)/b;
-
-   // calculando o produto vetorial de cada elemento triangular da superficie
-   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
-
-   // somatorio ponderado pela area dos vetores unitarios normais 
-   // aos triangulos encontrados na estrela do vertice
-   real xNormalElem = cross.Get(0);
-   real yNormalElem = cross.Get(1);
-   real zNormalElem = cross.Get(2);
-
-   real len = vectorLength(xNormalElem,yNormalElem,zNormalElem);
-
-   real xNormalElemUnit = xNormalElem/len;
-   real yNormalElemUnit = yNormalElem/len;
-   real zNormalElemUnit = zNormalElem/len;
-
-   real area = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
-
-   sumVolume += ( xCentroid*xNormalElemUnit + 
-	              yCentroid*yNormalElemUnit +
-				  zCentroid*zNormalElemUnit ) * area;
-
-   //sumCentroidX += (xCentroid*xCentroid)*xNormalElemUnit*area;
-   //sumCentroidY += (yCentroid*yCentroid)*yNormalElemUnit*area;
-   //sumCentroidZ += (zCentroid*zCentroid)*zNormalElemUnit*area;
-  }
- }
- real vol = (1.0/3.0)*sumVolume;
- //real xc = sumCentroidX/(2*vol);
- //real yc = sumCentroidY/(2*vol);
- //real zc = sumCentroidZ/(2*vol);
-
- return vol;
+ // surfMesh.elemIdRegion == 0 --> none
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+  surfaceRadius[nb] = 3.0*surfaceVolume[nb]/surfaceArea[nb];
 }
 
 /* 
@@ -7388,24 +7341,10 @@ real Model3D::getSurfaceArea(int _region)
  return sumArea;
 }
 
-real Model3D::computeBubbleVolume2()
+real Model3D::getSurfaceRadius(int _region)
 {
- real sumVolume=0;
- for(int i=0;i<IEN.DimI();i++ )
- {
-  int v1 = IEN.Get(i,0);
-  int v2 = IEN.Get(i,1);
-  int v3 = IEN.Get(i,2);
-  int v4 = IEN.Get(i,3);
-
-  real hsum = heaviside.Get(v1)+heaviside.Get(v2)+
-              heaviside.Get(v3)+heaviside.Get(v4);
-
-  if( hsum > 1.5 )
-   sumVolume += getVolume(i);
- }
-
- return sumVolume;
+ real radius = 3.0*surfaceVolume[_region]/surfaceArea[_region];
+ return radius;
 }
 
 void Model3D::removePointsByNeighbourCheck()
@@ -8279,6 +8218,10 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
 void Model3D::applyBubbleVolumeCorrection()
 {
+ setSurfaceVolume();
+ setSurfaceArea();
+ setSurfaceRadius();
+
  real TOL = 1E-03;
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
@@ -8286,10 +8229,8 @@ void Model3D::applyBubbleVolumeCorrection()
  for( int nb=2;nb<=surfMesh.elemIdRegion.Max();nb++ )
  {
   real aux = 0;
-  real radius = 3.0*surfaceVolume[nb]/surfaceArea[nb];
-  real initRadius = 3.0*initSurfaceVolume[nb]/initSurfaceArea[nb];
 
-  real dr = (initRadius - radius);
+  real dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
 
@@ -8325,8 +8266,8 @@ void Model3D::applyBubbleVolumeCorrection()
    }
    surfaceVolume[nb] = getSurfaceVolume(nb);
    surfaceArea[nb] = getSurfaceArea(nb);
-   radius = 3.0*surfaceVolume[nb]/surfaceArea[nb];
-   dr = (initRadius - radius);
+   surfaceRadius[nb] = getSurfaceRadius(nb);
+   dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
    da = (initSurfaceArea[nb] - surfaceArea[nb]);
    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
    count++;
@@ -8346,6 +8287,10 @@ void Model3D::applyBubbleVolumeCorrection()
                    << "final area: " << surfaceArea[nb] << endl;
   cout << setw(27) << color(none,white,black) 
                    << "da: " << da << endl;
+  cout << setw(27) << color(none,white,black) << "initial radius: " 
+                   << initSurfaceRadius[nb] << endl;
+  cout << setw(27) << color(none,white,black) 
+                   << "final radius: " << surfaceRadius[nb] << endl;
   cout << setw(27) << color(none,white,black) 
                    << "dr: " << dr << endl;
   cout << setw(27) << color(none,white,black) 

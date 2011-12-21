@@ -111,14 +111,22 @@ class Model3D
   void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
+
+  // Volume calculation
   void setInitSurfaceVolume();
   void setSurfaceVolume();
+  real getSurfaceVolume(int _region);
+
+  // Area calculation
   void setInitSurfaceArea();
   void setSurfaceArea();
-  real computeBubbleVolume();
-  real computeBubbleVolume2();
-  real getSurfaceVolume(int _region);
   real getSurfaceArea(int _region);
+
+  // Radius calculation
+  void setInitSurfaceRadius();
+  void setSurfaceRadius();
+  real getSurfaceRadius(int _region);
+
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
 
@@ -371,6 +379,7 @@ class Model3D
 
   vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
   vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais
+  vector<real> initSurfaceRadius,surfaceRadius;  // vector de areas iniciais
   vector<real> triEdge;               // vector de tamanho de aresta 
   vector<real> averageTriEdge;        // vector de tamanho de aresta medio
   vector<real> tetVol;                // vector de volumes 

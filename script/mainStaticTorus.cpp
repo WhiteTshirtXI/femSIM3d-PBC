@@ -69,179 +69,50 @@ int main(int argc, char **argv)
  Model3D m1;
  Simulator3D s1;
 
- if( *(argv+1) == NULL )     
- {
-  cout << endl;
-  cout << "--------------> STARTING FROM 0" << endl;
-  cout << endl;
+ cout << endl;
+ cout << "--------------> STARTING FROM 0" << endl;
+ cout << endl;
 
-  const char *mesh1 = mesh;
-  m1.readMSH(mesh1);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  //m1.checkTriangleOrientation();
-  m1.mesh2Dto3D();
+ const char *mesh1 = mesh;
+ m1.readMSH(mesh1);
+ m1.setInterfaceBC();
+ m1.setTriEdge(triEdge);
+ //m1.checkTriangleOrientation();
+ m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setWallBC();
+ m1.setOFace();
+ m1.setSurfaceConfig();
+ m1.setInitSurfaceVolume();
+ m1.setInitSurfaceArea();
+ m1.setInitSurfaceRadius();
+ m1.setWallBC();
 
-  s1(m1);
+ s1(m1);
 
-  s1.setRe(Re);
-  s1.setSc(Sc);
-  s1.setWe(We);
-  s1.setFr(Fr);
-  s1.setC1(c1);
-  s1.setC2(c2);
-  s1.setC3(c3);
-  s1.setC4(c4);
-  s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
-  //s1.setDtALETwoPhase(dt);
-  s1.setMu(mu_in,mu_out);
-  s1.setRho(rho_in,rho_out);
-  s1.setCfl(cfl);
-  s1.init();
-  s1.setDtALETwoPhase();
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
- }
- else if( strcmp( *(argv+1),"restart") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-STARTING..." << endl;
-  cout << endl;
-
-  // load surface mesh
-  string aux = *(argv+2);
-  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  m1.mesh2Dto3D();
-
-  s1(m1);
-
-  // load 3D mesh
-  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-
-  m1.readVTK(vtkFile);
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.readVTKHeaviside(vtkFile);
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setWallBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
- }
- else if( strcmp( *(argv+1),"remesh") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING & STARTING..." << endl;
-  cout << endl;
-
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
-
-  // load surface mesh and create new mesh
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  m1.mesh2Dto3DOriginal();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setWallBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
- }
- else if( strcmp( *(argv+1),"restop") == 0 )  
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
-  cout << endl;
-
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
-
-  // load surface mesh and create new one
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
-  m1.mesh2Dto3DOriginal();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-
-  s1(m1);
-  //file = (string) "sim-" + *(argv+2);
-  //const char *sol = file.c_str();
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
-  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
-  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
-  return 0;
- }
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setWe(We);
+ s1.setFr(Fr);
+ s1.setC1(c1);
+ s1.setC2(c2);
+ s1.setC3(c3);
+ s1.setC4(c4);
+ s1.setAlpha(alpha);
+ s1.setBeta(beta);
+ s1.setSigma(sigma);
+ //s1.setDtALETwoPhase(dt);
+ s1.setMu(mu_in,mu_out);
+ s1.setRho(rho_in,rho_out);
+ s1.setCfl(cfl);
+ s1.init();
+ s1.setDtALETwoPhase();
+ s1.setSolverPressure(solverP);
+ s1.setSolverVelocity(solverV);
+ s1.setSolverConcentration(solverC);
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");

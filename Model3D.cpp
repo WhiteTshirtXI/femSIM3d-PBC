@@ -3352,6 +3352,16 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
                               triEdge[nb]*
 							  triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];
+//--------------------------------------------------
+//   cout << " ------ " << node << " ------" << endl;
+//   cout << "triEdge: " << triEdge[nb] << endl;
+//   cout << "xIn: " << xIn << endl; 
+//   cout << "yIn: " << yIn << endl; 
+//   cout << "zIn: " << zIn << endl; 
+//   cout << surfMesh.X.Get(node) << "      " << "xNormal: " << myVec.Get(1) << endl;
+//   cout << surfMesh.Y.Get(node) << "      " << "yNormal: " << myVec.Get(2) << endl;
+//   cout << surfMesh.Z.Get(node) << "      " << "zNormal: " << myVec.Get(3) << endl;
+//-------------------------------------------------- 
  }
 
  tetgenio::facet *f;   // Define a pointer of facet. 
@@ -4103,6 +4113,76 @@ void Model3D::setNuCDiskBC()
  {
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+  {
+   idbcp.AddItem(i);
+   aux = 0.0;
+   pc.Set(i,aux);
+  }
+ }
+}
+
+void Model3D::setNuCFiniteDiskBC()
+{
+ real omega,aux;
+ rMax = Y.Max();
+
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
+ {
+  if( Z.Get(i) == Z.Max() )
+  {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
+
+   uc.Set(i,0.0); 
+   vc.Set(i,0.0); 
+   wc.Set(i,0.0); 
+  }
+
+  if( Z.Get(i) == Z.Min() && 
+	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<rMax/4.0*rMax/4.0) )
+  {
+   //radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
+
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
+
+   omega=1.0;
+
+   //aux = (-1.0)*omega*radius;
+   aux = (-1.0)*Y.Get(i)*omega;
+   uc.Set(i,aux);
+   //aux = omega*radius;
+   aux = X.Get(i)*omega;
+   vc.Set(i,aux);
+   aux = 0.0;
+   wc.Set(i,aux);
+  }
+
+  // casca do cilindro
+  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
+	( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+  {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
+
+   uc.Set(i,0.0); 
+   vc.Set(i,0.0); 
+   wc.Set(i,0.0); 
+  }
+ }
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( Z.Get(i) == Z.Min() && 
+	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<=rMax/4.0*rMax/4.0) )
   {
    idbcp.AddItem(i);
    aux = 0.0;
@@ -6287,6 +6367,10 @@ void Model3D::setSurfaceConfig()
  setMapEdge(); 
  setMapEdgeTri(); 
  setNormalAndKappa();
+
+ setSurfaceVolume();
+ setSurfaceArea();
+ setSurfaceRadius();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -7011,7 +7095,12 @@ clVector Model3D::getNormalAndKappa(int _node,list<int> _myList)
   fz += zPlaneNormalUnit*base;
 
   // 1/3 of area P0-Pm01-Pm02
-  sumArea += (1.0/3.0)*getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+  real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+  sumArea += (1.0/3.0)*area;
+
+  // norb's correction
+  //real fact = (a*b*c*c)/ (4*area*area);
+  //sumArea += (1.0/4.0)*area*fact;
  }
  mele=_myList.end();
 
@@ -7071,6 +7160,22 @@ void Model3D::setNormalAndKappa()
   surfMesh.yNormal.Set(node,yNormalUnit);
   surfMesh.zNormal.Set(node,zNormalUnit);
   surfMesh.curvature.Set(node,pressure);
+
+//--------------------------------------------------
+//   if( node == 201 )
+//   {
+//    cout << " ---> " << node << " <---" << endl;
+//    cout << "x: " << surfMesh.X.Get(node) << endl;
+//    cout << "y: " << surfMesh.Y.Get(node) << endl;
+//    cout << "z: " << surfMesh.Z.Get(node) << endl;
+//    cout << "xNormal: " << xNormalUnit << endl;
+//    cout << "yNormal: " << yNormalUnit << endl;
+//    cout << "zNormal: " << zNormalUnit << endl;
+//    cout << "xN: " << surfMesh.X.Get(node) + xNormalUnit << endl;
+//    cout << "yN: " << surfMesh.Y.Get(node) + yNormalUnit << endl;
+//    cout << "zN: " << surfMesh.Z.Get(node) + zNormalUnit << endl;
+//   }
+//-------------------------------------------------- 
  }
 } // fecha metodo setNormalAndKappa
 
@@ -8218,10 +8323,6 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
 void Model3D::applyBubbleVolumeCorrection()
 {
- setSurfaceVolume();
- setSurfaceArea();
- setSurfaceRadius();
-
  real TOL = 1E-03;
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1

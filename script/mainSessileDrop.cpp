@@ -90,6 +90,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -147,6 +148,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -187,6 +189,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -227,6 +230,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setInitSurfaceRadius();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -284,6 +288,7 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    save.crossSectionalPlane(datFolder,"XZ",iter);
+   save.bubbleWallDistance(datFolder,"dist",iter);
    save.printSimulationReport();
 
    s1.saveOldData();

@@ -110,6 +110,7 @@ int main(int argc, char **argv)
   //m1.setBiggerSphere(1);
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);

@@ -169,6 +169,7 @@ class Model3D
   // boundary condition settings
   void setNuCteDiskBC();
   void setNuCDiskBC();
+  void setNuCFiniteDiskBC();
   void setNuZDiskBC();
   void readAndSetVelocityDiskBC(const char* _dir,const char* _filename);
   void readAndSetPressureDiskBC(const char* _dir,const char* _filename);

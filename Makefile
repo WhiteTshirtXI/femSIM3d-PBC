@@ -1,17 +1,29 @@
 ## =================================================================== ##
-## this is file bubble3d, created at 10-Jun-2009                       ##
+## this is file Makefile, created at 10-Jun-2009                       ##
 ## maintained by Gustavo Rabello dos Anjos                             ##
 ## e-mail: gustavo.rabello@gmail.com                                   ##
 ## =================================================================== ##
 
+# Compilers
+CXX = g++ 
 CXX = clang
+
+# Flags
 CXXFLAGS = -g -fPIC
+
+# Libraries and includes
 LIBS += -lgsl -lgslcblas -lm
 LIBS += -L. -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I${FEMLIB_DIR}
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
 
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
+
+
+# Sorces
 src += ${FEMLIB_DIR}/clVector.cpp
 src += ${FEMLIB_DIR}/clMatrix.cpp
 src += ${FEMLIB_DIR}/clDMatrix.cpp
@@ -23,13 +35,35 @@ src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp
 #src += ${FEMLIB_DIR}/FEMQuadElement3D.cpp
 src += $(wildcard ${FEM3D_DIR}/*.cpp)
 
+# Rules
 obj = $(src:%.cpp=%.o)
 
-all: step bubble 2bubbles diskNuC diskNuCte diskNuZ \
-     diskSurf curvature curvatureAndPressure \
-	 staticDroplet staticTorus sessileDrop \
-	 oscillating fallingDrop micro bubbleHT stepALE 
+all: single-phase two-phase two-phaseHT
 
+single-phase: diskNuC diskNuZ diskNuCte diskSurf step stepALE 
+
+two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
+           curvatureTorus curvatureAndPressureSphere \
+	       curvatureAndPressureCylinder curvatureAndPressureTorus\
+		   sessileDrop oscillatingDrop fallingDrop risingBubble \
+		   2bubbles micro
+
+two-phaseHT: risingBubbleHT
+
+
+# --------------------<< backward step (single-phase) >>-------------------- #
+#                                                                            #
+step: ${FEM3D_DIR}/script/mainStep.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
+
+
+# ------------------<< rotating disk (single-phase) >>---------------------- #
+#                                                                            #
 diskNuC: ${FEM3D_DIR}/script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
@@ -38,48 +72,85 @@ diskNuCte: ${FEM3D_DIR}/script/mainDiskNuCte.o $(obj)
 
 diskNuZ: ${FEM3D_DIR}/script/mainDiskNuZ.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
+
+# -----------------<< free surface disk (single-phase) >>------------------- #
+#                                                                            #
+# free surface (single-phase)
 diskSurf: ${FEM3D_DIR}/script/mainDiskSurf.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
-2bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
+
+# --------<< benchmarks for sphere,cylinder and torus (two-phase) >>-------- #
+#                                                                            #
+sphere: ${FEM3D_DIR}/script/mainSphere.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-curvature: ${FEM3D_DIR}/script/mainCurvature.o $(obj)
+cylinder: ${FEM3D_DIR}/script/mainCylinder.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-curvatureAndPressure: ${FEM3D_DIR}/script/mainCurvatureAndPressure.o $(obj)
+torus: ${FEM3D_DIR}/script/mainTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-staticDroplet: ${FEM3D_DIR}/script/mainStaticDroplet.o $(obj)
+curvatureSphere: ${FEM3D_DIR}/script/mainCurvatureSphere.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-staticTorus: ${FEM3D_DIR}/script/mainStaticTorus.o $(obj)
+curvatureCylinder: ${FEM3D_DIR}/script/mainCurvatureCylinder.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+curvatureTorus: ${FEM3D_DIR}/script/mainCurvatureTorus.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+curvatureAndPressureSphere: ${FEM3D_DIR}/script/mainCurvatureAndPressureSphere.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+curvatureAndPressureCylinder: ${FEM3D_DIR}/script/mainCurvatureAndPressureCylinder.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+curvatureAndPressureTorus: ${FEM3D_DIR}/script/mainCurvatureAndPressureTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 sessileDrop: ${FEM3D_DIR}/script/mainSessileDrop.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-oscillating: ${FEM3D_DIR}/script/mainOscillating.o $(obj)
+oscillatingDrop: ${FEM3D_DIR}/script/mainOscillatingDrop.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 fallingDrop: ${FEM3D_DIR}/script/mainFallingDrop.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-bubble: ${FEM3D_DIR}/script/mainBubble.o $(obj)
+risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
-bubbleHT: ${FEM3D_DIR}/script/mainBubbleHT.o $(obj)
+
+# --------------------------<< misc (two-phase) >>-------------------------- #
+#                                                                            #
+2bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
+
+# -----------------------<< microchannels (two-phase) >>-------------------- #
+#                                                                            #
 micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
-step: ${FEM3D_DIR}/script/mainStep.o $(obj)
-	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
+# ---------------------<< heat-transfer (two-phase) >>---------------------- #
+#                                                                            #
+risingBubbleHT: ${FEM3D_DIR}/script/mainRisingBubbleHT.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+#                                                                            #
+# -------------------------------------------------------------------------- #
 
 #--------------------------------------------------
 # step: ./script/mainStep.o libtest.so
@@ -98,10 +169,6 @@ libtest.so: $(obj)
 %.o: %.cpp $(wildcard *.h)
 	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
 	
-# Petsc new config
-include ${PETSC_DIR}/conf/variables
-include ${PETSC_DIR}/conf/rules
-
 erase:
 	@rm -f core
 	@find . -name "*~" -exec rm {} \;
@@ -115,11 +182,7 @@ erase:
 	@rm -f ./dat/edge.*
 
 deepclean: 
-	@rm -f staticDroplet step bubble 2bubble diskNuC 
-	@rm -f 2bubbles diskSurf staticTorus sessileDrop 
-	@rm -f curvature fallingDrop diskNuCte diskNuZ
-	@rm -f curvatureAndPressure bubbleHT
-	@rm -f oscillating micro stepALE
+	@find . -type f -executable -exec rm {} \;
 	@rm -f libtest*
 	@rm -f core
 	@find ${FEMLIB_DIR} -name "*.o" -exec rm {} \;

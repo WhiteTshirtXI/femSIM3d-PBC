@@ -7096,6 +7096,7 @@ clVector Model3D::getNormalAndKappa(int _node,list<int> _myList)
 
   // 1/3 of area P0-Pm01-Pm02
   real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+
   sumArea += (1.0/3.0)*area;
 
   // norb's correction

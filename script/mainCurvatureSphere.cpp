@@ -22,13 +22,8 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
-
- //string meshFile = (string) getenv("MESHLIB");
- //meshFile += "/gmsh/3d/curvature/";
- //const char *mesh = meshFile.c_str();
 
  /* meshes */
  vector<const char*> mesh;

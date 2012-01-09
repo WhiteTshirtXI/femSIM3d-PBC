@@ -25,12 +25,11 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(3);
- triEdge[0] = 0.15; // none
- triEdge[1] = 3.0; // wall
- triEdge[2] = 0.40; // bubble 1 
+ triEdge[0] = 0.1; // none
+ triEdge[1] = 2.0; // wall
+ triEdge[2] = 0.05; // bubble 1 
 
  // static bubble test (Fabricio's thesis (2005))
- int iter = 1;
  real Re = 10;
  real Sc = 1;
  real We = 1;
@@ -52,7 +51,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "torus.msh";
+ string meshFile = "sphere.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -63,21 +62,17 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/sphere/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
 
- cout << endl;
- cout << "--------------> STARTING FROM 0" << endl;
- cout << endl;
-
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
  m1.setTriEdge(triEdge);
- //m1.checkTriangleOrientation();
+ m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -121,80 +116,42 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(meshFile.c_str());
 
- int nIter = 3000;
- int nReMesh = 1;
- for( int i=1;i<=nIter;i++ )
+ int nIter = 1000;
+ for( int i=1;i<nIter;i++ )
  {
-  for( int j=0;j<nReMesh;j++ )
-  {
+  cout << color(none,magenta,black);
+  cout << "____________________________________ Iteration: " 
+       << i << endl << endl;
+  cout << resetColor();
 
-   cout << color(none,magenta,black);
-   cout << "____________________________________ Iteration: " 
-	    << iter << endl << endl;
-   cout << resetColor();
+  //s1.stepLagrangian();
+  //s1.stepALE();
+  s1.stepALEVel();
+  s1.setDtALETwoPhase();
+  s1.movePoints();
+  s1.assemble();
+  s1.matMount();
+  s1.setUnCoupledBC();
+  s1.setRHS();
+  //s1.setInterface();
+  s1.setInterfaceGeo();
+  s1.unCoupled();
 
-   //s1.stepLagrangian();
-   //s1.stepALE();
-   s1.stepALEVel();
-   s1.setDtALETwoPhase();
-   s1.movePoints();
-   s1.assemble();
-   s1.matMount();
-   s1.setUnCoupledBC();
-   s1.setRHS();
-   //s1.setGravity("Z");
-   //s1.setInterface();
-   s1.setInterfaceGeo();
-   s1.unCoupled();
+  InOut save(m1,s1); // cria objeto de gravacao
+  save.saveMSH(mshFolder,"newMesh",i);
+  save.saveVTK(vtkFolder,"sim",i);
+  save.saveVTKTest(vtkFolder,"simCutPlane",i);
+  save.saveVTKSurface(vtkFolder,"sim",i);
+  save.saveSol(binFolder,"sim",i);
+  save.saveBubbleInfo(datFolder);
+  save.chordalPressure(datFolder,"chordalPressure",i);
 
-   InOut save(m1,s1); // cria objeto de gravacao
-   save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
-   save.saveVTKSurface(vtkFolder,"sim",iter);
-   save.saveSol(binFolder,"sim",iter);
-   save.saveBubbleInfo(datFolder);
-   save.chordalPressure(datFolder,"chordalPressure",iter);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
+  s1.saveOldData();
 
-   s1.saveOldData();
-
-   cout << color(none,magenta,black);
-   cout << "________________________________________ END of " 
-	    << iter << endl << endl;;
-   cout << resetColor();
-
-   iter++;
-  }
-  Model3D mOld = m1; 
-  m1.setTriEdge(triEdge);
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setWallBC();
-
-  Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
-  s1 = s2;
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
-  saveEnd.saveMeshInfo(datFolder);
+  cout << color(none,magenta,black);
+  cout << "________________________________________ END of " 
+       << i << endl << endl;;
+  cout << resetColor();
  }
 
  PetscFinalize();

@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file mainRisingBubbleHT.cpp, created at 10-Nov-20011        //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -30,13 +30,13 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.10; // bubble
+ triEdge[2] = 0.08; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
  real Re = 13.8487; // case 2
  //real Re = 32.78; // case 3
- real Sc = 1;
+ real Sc = 1000;
  real We = 115.66;
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.8;
+ real cfl = 1.0;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.init();
+  s1.initHeatTransfer();
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -253,10 +253,9 @@ int main(int argc, char **argv)
   return 0;
  }
  // Point's distribution
- Laplace3D d1(m1);
- d1.init();
- d1.assemble();
+ Laplace3D d1(m1,s1.getDt());
  d1.setBC();
+ d1.assemble();
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -272,7 +271,7 @@ int main(int argc, char **argv)
  save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
- int nReMesh = 3;
+ int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -290,12 +289,16 @@ int main(int argc, char **argv)
    s1.movePoints();
    s1.assemble();
    s1.matMount();
+   s1.matMountC();
    s1.setUnCoupledBC();
+   s1.setUnCoupledCBC();
    s1.setRHS();
+   s1.setCRHS();
    s1.setGravity("Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
+   s1.unCoupledC();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
@@ -316,9 +319,9 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,s1.getDt());
-  d2.assemble();
+  Laplace3D d2(m1,d1,s1.getDt());
   d2.setBC();
+  d2.assemble();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -336,7 +339,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(0.33);
+  m1.remove3dMeshPointsByDiffusion(0.5);
   m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
@@ -345,7 +348,7 @@ int main(int argc, char **argv)
   // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  m1.removePointsByCurvature();
+  //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   //m1.removePointsByLength();

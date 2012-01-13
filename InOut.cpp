@@ -211,17 +211,7 @@ void InOut::saveSol( const char* _dir,const char* _filename, int _iter )
 
  UVWPC_file.close();
 
- /* --------- copying to file sim-last.bin --------- */
- ifstream inFile( filenameUVWPC,ios::binary ); 
-
- string last = (string) _dir + "sim-last" + ".bin";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */
+ copyLastFile(_dir,filenameUVWPC,_filename);
 
  cout << "solution No. " << _iter << " saved in binary" << endl;
  
@@ -289,17 +279,7 @@ void InOut::saveSolTXT( const char* _dir,const char* _filename, int _iter )
 
  UVWPC_file.close();
 
- /* --------- copying to file sim-last.bin --------- */
- ifstream inFile( filenameUVWPC ); 
-
- string last = (string) _dir + "sim-last" + ".bin";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */
+ copyLastFile(_dir,filenameUVWPC,_filename);
 
  cout << "solution No. " << _iter << " saved in ascii" << endl;
  
@@ -500,17 +480,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file sim-last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + "sim-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "solution No. " << _iter << " saved in VTK" << endl;
 
@@ -629,17 +599,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
@@ -758,17 +718,7 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
@@ -876,17 +826,7 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
@@ -1154,17 +1094,7 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
 
    vonKarmanFile.close();
 
-   /* ----------- copying to file vk?.last ----------- */
-   ifstream inFile( filename,ios::binary ); 
-
-   string fileCopy = (string) _dir + (string) _filename + str2 + "." + "last";
-   const char* filenameCopy = fileCopy.c_str();
-   ofstream outFile( filenameCopy,ios::binary ); 
-
-   outFile << inFile.rdbuf();
-   inFile.close();
-   outFile.close();
-   /* ------------------------------------------------ */
+   copyLastFile(_dir,filename,_filename);
 
    count++;
   }
@@ -2005,17 +1935,9 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  vtkFile.close();
 
- /* --------- copying to file last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "TRI-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ string aux = (string) _filename + "TRI";
+ const char* filenameAux = aux.c_str();
+ copyLastFile(_dir,filename,filenameAux);
 
  cout << "surface mesh saved in VTK" << endl;
 
@@ -2092,17 +2014,9 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "TRI-last" + ".vtk";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ string aux = (string) _filename + "TRI";
+ const char* filenameAux = aux.c_str();
+ copyLastFile(_dir,filename,filenameAux);
 
  cout << "surface mesh No. " << _iter << " saved in VTK" << endl;
 
@@ -2565,17 +2479,7 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
 
  vtkFile.close();
 
- /* --------- copying to file chordal.dat --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + (string) _filename + "-last" + ".dat";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "chordal pressure No. " << _iter << " saved in dat" << endl;
 
@@ -2951,17 +2855,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 
  mshFile.close();
 
- /* --------- copying to file sim-last.vtk --------- */
- ifstream inFile( filename,ios::binary ); 
-
- string last = (string) _dir + "newMesh-last" + ".msh";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary ); 
-
- outFile << inFile.rdbuf();
- inFile.close();
- outFile.close();
- /* ------------------------------------------------ */ 
+ copyLastFile(_dir,filename,_filename);
 
  cout << "mesh No. " << _iter << " saved in MSH" << endl;
 
@@ -2969,420 +2863,13 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 
 void InOut::saveBubbleInfo(const char* _dir)
 {
- // oscillating velocity
- string fileAux = (string) _dir + "velocity" + ".dat";
- const char* filenameVel = fileAux.c_str();
-
- ifstream testFileVel( filenameVel );
- ofstream fileVel( filenameVel,ios::app );
- if( testFileVel )
- {
-  testFileVel.close();
-  cout << "appending on file velocity.dat" << endl;
- }
- else
- {
-  cout << "Creating file velocity.dat" << endl;
-  fileVel << "#time" << setw(29) << "velocity U" 
-                     << setw(18) << "velocity V" 
-					 << setw(18) << "velocity W"
-					 << setw(6) << "iter" 
-					 << endl;
- }
-
- real aux;
- int dim = surface->Dim();
- clVector xSurface(dim);
- clVector ySurface(dim);
- clVector zSurface(dim);
- clVector uSolSurface(dim);
- clVector vSolSurface(dim);
- clVector wSolSurface(dim);
- for( int i=0;i<dim;i++ )
- {
-  aux = surface->Get(i);
-  xSurface.Set(i,X->Get(aux));
-  ySurface.Set(i,Y->Get(aux));
-  zSurface.Set(i,Z->Get(aux));
-  uSolSurface.Set(i,uSol->Get(aux));
-  vSolSurface.Set(i,vSol->Get(aux));
-  wSolSurface.Set(i,wSol->Get(aux));
- }
- clVector xSurfaceAux = xSurface==xSurface.Max();
- clVector xSurfaceMax = xSurfaceAux.Find(); // retorna o vertice de maior X
- clVector ySurfaceAux = ySurface==ySurface.Max();
- clVector ySurfaceMax = ySurfaceAux.Find(); // retorna o vertice de maior Y
- clVector zSurfaceAux = zSurface==zSurface.Max();
- clVector zSurfaceMax = zSurfaceAux.Find(); // retorna o vertice de maior Z
-
- // retorna o valor de maior Y da interface 
- real pointX = uSolSurface.Get((int) xSurfaceMax.Get(0));
- real pointY = vSolSurface.Get((int) ySurfaceMax.Get(0));
- real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
-
- fileVel << setprecision(10) << scientific; 
- fileVel << setw(10) << simTime << " " 
-         << setw(17) << pointX << " " 
-		 << setw(17) << pointY << " " 
-		 << setw(17) << pointZ << " " 
-		 << setw(5) << setprecision(0) << fixed << iter 
-		 << endl;
-
- fileVel.close();
-
- // oscillating diameter
- fileAux = (string) _dir + "diameter" + ".dat";
- const char* filenameD = fileAux.c_str();
-
- ifstream testFileD( filenameD );
- ofstream fileD( filenameD,ios::app );
- if( testFileD )
- {
-  testFileD.close();
-  cout << "appending on file diameter.dat" << endl;
- }
- else
- {
-  cout << "Creating file diameter.dat" << endl;
-  fileD << "#time" << setw(29) << "diameter X" 
-                   << setw(18) << "diameter Y" 
-				   << setw(18) << "diameter Z"
-				   << setw(18) << "X max"
-				   << setw(18) << "X min"
-				   << setw(18) << "X mid"
-				   << setw(18) << "Y max"
-				   << setw(18) << "Y min"
-				   << setw(18) << "Y mid"
-				   << setw(18) << "Z max"
-				   << setw(18) << "Z min"
-				   << setw(18) << "Z mid"
-				   << setw(6) << "iter" 
-				   << endl;
- }
- 
- // pega o 1o. valor da interface
- real xMax = xSurface.Get(0); 
- real yMax = ySurface.Get(0); 
- real zMax = zSurface.Get(0); 
- real xMin = xSurface.Get(0); 
- real yMin = ySurface.Get(0); 
- real zMin = zSurface.Get(0); 
- for( int i=1;i<dim;i++ )
- {
-  if( xSurface.Get(i) > xMax )
-   xMax = xSurface.Get(i);
-  if( ySurface.Get(i) > yMax )
-   yMax = ySurface.Get(i);
-  if( zSurface.Get(i) > zMax )
-   zMax = zSurface.Get(i);
-  if( xSurface.Get(i) < xMin )
-   xMin = xSurface.Get(i);
-  if( ySurface.Get(i) < yMin )
-   yMin = ySurface.Get(i);
-  if( zSurface.Get(i) < zMin )
-   zMin = zSurface.Get(i);
- }
-
- // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
- // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
- // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
-
- fileD << setprecision(10) << scientific; 
- fileD << setw(10) << simTime << " " 
-       << setw(17) << diameterX << " " 
-	   << setw(17) << diameterY << " " 
-	   << setw(17) << diameterZ << " " 
-	   << setw(17) << xMin << " " 
-	   << setw(17) << xMax << " " 
-	   << setw(17) << (xMax-xMin)*0.5 << " " 
-	   << setw(17) << yMin << " " 
-	   << setw(17) << yMax << " " 
-	   << setw(17) << (yMax-yMin)*0.5 << " " 
-	   << setw(17) << zMin << " " 
-	   << setw(17) << zMax << " " 
-	   << setw(17) << (zMax-zMin)*0.5 << " " 
-	   << setw(5) << setprecision(0) << fixed << iter 
-	   << endl;
- fileD.close();
- 
- // kappa
- fileAux = (string) _dir + "kappa" + ".dat";
- const char* filenameKappa = fileAux.c_str();
-
- ifstream testFileKappa( filenameKappa );
- ofstream fileKappa( filenameKappa,ios::app );
- if( testFileKappa )
- {
-  testFileKappa.close();
-  cout << "appending on file kappa.dat" << endl;
- }
- else
- {
-  cout << "Creating file kappa.dat" << endl;
-  fileKappa << "#time" << setw(29) << "kappa" 
-			    	   << setw(18) << "analytic" 
-			    	   << setw(18) << "error" 
-			    	   << setw(18) << "stand deviat" 
-			    	   << setw(14) << "averag edge" 
-					   << setw(14) << "edge/radius" 
-					   << setw(14) << "area" 
-					   << setw(14) << "volume" 
-					   << setw(15) << "averag neigh" 
-			    	   << setw(13) << "num points" 
-			    	   << setw(6) << "iter" 
-					   << endl;
- }
-
- real surfacePoints = surface->Dim();
- real sumKappa = 0;
- real sumKappaSquare = 0;
- real sumPressure = 0;
- real sumPressureSquare = 0;
- for( int i=0;i<surfacePoints;i++ )
- {
-  int node = surface->Get(i);
-  sumKappa += kappa->Get(node);
-  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
-  sumPressure += pSol->Get(node);
-  sumPressureSquare += pSol->Get(node)*pSol->Get(node);
- }
- real kappaAverage = sumKappa/surfacePoints;
- real pressureAverage = sumPressure/surface->Dim();
-
- real radius = (diameterX+diameterY+diameterZ)/6.0;
- real kappaAnalytic = 2.0/radius; 
- real pressureAnalytic = sigma/radius; 
-
- real sumKappaSD = 0;
- real sumKappaError = 0;
- real sumPressureSD = 0;
- real sumPressureError = 0;
- real sumNeighbours = 0;
- for( int i=0;i<surfacePoints;i++ )
- {
-  int node = surface->Get(i);
-  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
-                   (kappa->Get(node)-kappaAnalytic);
-  sumKappaSD += (kappa->Get(node)-kappaAverage)*
-                (kappa->Get(node)-kappaAverage);
-  sumPressureError += (pSol->Get(node)-pressureAnalytic)*
-                      (pSol->Get(node)-pressureAnalytic);
-  sumPressureSD += (pSol->Get(node)-pressureAverage)*
-                   (pSol->Get(node)-pressureAverage);
-  sumNeighbours += neighbourPoint->at(i).size();
- }
-
- real kappaError = sqrt( sumKappaError/sumKappaSquare );
- real kappaSD = sqrt( sumKappaSD/surfacePoints );
-
- real pressureError = sqrt( sumPressureError/sumPressureSquare );
- real pressureSD = sqrt( sumPressureSD/surfacePoints );
-
- real averageNeigh = sumNeighbours/surfacePoints;
-
- m->meshStats();
- averageTriEdge = m->getAverageTriEdge();
-
- fileKappa << setprecision(10) << scientific; 
- fileKappa << setw(10) << simTime << " " 
-           << setw(17) << kappaAverage << " " 
-           << setw(17) << kappaAnalytic << " " 
-           << setw(17) << kappaError << " " 
-           << setw(17) << kappaSD << " " 
-	       << setprecision(3) << fixed
-           << setw(13) << averageTriEdge[2] << " " 
-	       << setprecision(4) << fixed
-           << setw(13) << averageTriEdge[2]/radius << " " 
-	       << setprecision(3) << fixed
-           << setw(14) << surfaceArea[2] << " " 
-           << setw(14) << surfaceVolume[2] << " " 
-           << setw(14) << averageNeigh << " " 
-	       << setprecision(0) << fixed
-		   << setw(12) << surfacePoints << " " 
-		   << setw(5) << iter << endl;
- fileKappa.close();
- 
- // pressure 
- fileAux = (string) _dir + "pressure" + ".dat";
- const char* filenamePressure = fileAux.c_str();
-
- ifstream testFilePressure( filenamePressure);
- ofstream filePressure( filenamePressure,ios::app );
- if( testFilePressure )
- {
-  testFilePressure.close();
-  cout << "appending on file pressure.dat" << endl;
- }
- else
- {
-  cout << "Creating file pressure.dat" << endl;
-  filePressure << "#time" << setw(29) << "pressure" 
-			       	      << setw(18) << "analytic" 
-			       	      << setw(18) << "error" 
-			    	      << setw(18) << "Stand Deviat" 
-						  << setw(14) << "averag edge" 
-						  << setw(14) << "edge/radius" 
-						  << setw(14) << "area" 
-						  << setw(14) << "volume" 
-						  << setw(15) << "averag neigh" 
-						  << setw(13) << "num points" 
-			    	      << setw(6) << "iter" 
-					      << endl;
- }
-
-
-
- filePressure << setprecision(10) << scientific; 
- filePressure << setw(10) << simTime << " " 
-              << setw(17) << pressureAverage << " " 
-              << setw(17) << pressureAnalytic << " " 
-			  << setw(17) << pressureError << " " 
-			  << setw(17) << pressureSD << " " 
-			  << setprecision(3) << fixed
-			  << setw(13) << averageTriEdge[2] << " " 
-			  << setprecision(4) << fixed
-			  << setw(13) << averageTriEdge[2]/radius << " " 
-			  << setprecision(3) << fixed
-              << setw(14) << surfaceArea[2] << " " 
-              << setw(14) << surfaceVolume[2] << " " 
-			  << setw(14) << averageNeigh << " " 
-			  << setprecision(0) << fixed
-			  << setw(12) << surfacePoints << " " 
-			  << setw(5) << iter << endl;
- filePressure.close();
-
- // bubble volume
- fileAux = (string) _dir + "volume" + ".dat";
- const char* filenameVol = fileAux.c_str();
-
- ifstream testFileVol( filenameVol );
- ofstream fileVol( filenameVol,ios::app );
- if( testFileVol )
- {
-  testFileVol.close();
-  cout << "appending on file volume.dat" << endl;
- }
- else
- {
-  cout << "Creating file volume.dat" << endl;
-  fileVol << "#time" << setw(29) << "volume" 
-                     << setw(18) << "vel centroid X" 
-                     << setw(18) << "vel centroid Y" 
-                     << setw(18) << "vel centroid Z" 
-                     << setw(18) << "centroid X" 
-                     << setw(18) << "centroid Y" 
-                     << setw(18) << "centroid Z" 
-					 << setw(6)  << "iter" 
-					 << endl;
- }
-
- real velX,velY,velZ;
- real posX,posY,posZ;
- real volume=0;
- real sumVolume=0;
- real sumXVelVolume=0;
- real sumYVelVolume=0;
- real sumZVelVolume=0;
- real sumXPosVolume=0;
- real sumYPosVolume=0;
- real sumZPosVolume=0;
- for( list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it )
- {
-  int v1 = IEN->Get(*it,0);
-  int v2 = IEN->Get(*it,1);
-  int v3 = IEN->Get(*it,2);
-  int v4 = IEN->Get(*it,3);
-
-  velX = ( uSol->Get(v1)+
-	       uSol->Get(v2)+
-		   uSol->Get(v3)+
-		   uSol->Get(v4) )/4.0;
-
-  velY = ( vSol->Get(v1)+
-           vSol->Get(v2)+
-           vSol->Get(v3)+
-	 	   vSol->Get(v4) )/4.0;
-
-  velZ = ( wSol->Get(v1)+
-           wSol->Get(v2)+
-           wSol->Get(v3)+
-	 	   wSol->Get(v4) )/4.0;
-
-  posX = ( X->Get(v1)+
-	       X->Get(v2)+
-		   X->Get(v3)+
-		   X->Get(v4) )/4.0;
-
-  posY = ( Y->Get(v1)+
-	       Y->Get(v2)+
-		   Y->Get(v3)+
-		   Y->Get(v4) )/4.0;
-
-  posZ = ( Z->Get(v1)+
-	       Z->Get(v2)+
-		   Z->Get(v3)+
-		   Z->Get(v4) )/4.0;
-
-  volume = m->getVolume(*it);
-
-  sumXVelVolume += velX * volume;
-  sumYVelVolume += velY * volume;
-  sumZVelVolume += velZ * volume;
-  sumXPosVolume += posX * volume;
-  sumYPosVolume += posY * volume;
-  sumZPosVolume += posZ * volume;
-  sumVolume += volume;
- }
-
- fileVol << setprecision(10) << scientific; 
- fileVol << setw(10) << simTime << " " 
-         << setw(17) << sumVolume << " " 
-	     << setw(17) << sumXVelVolume/sumVolume << " " 
-	     << setw(17) << sumYVelVolume/sumVolume << " " 
-	     << setw(17) << sumZVelVolume/sumVolume << " " 
-	     << setw(17) << sumXPosVolume/sumVolume << " " 
-	     << setw(17) << sumYPosVolume/sumVolume << " " 
-	     << setw(17) << sumZPosVolume/sumVolume << " " 
-	     << setw(5) << setprecision(0) << fixed << iter 
-		 << endl;
- fileVol.close();
- 
- // time step
- fileAux = (string) _dir + "time" + ".dat";
- const char* filenameTime = fileAux.c_str();
-
- ifstream testFileTime( filenameTime );
- ofstream fileTime( filenameTime,ios::app );
- if( testFileTime )
- {
-  testFileTime.close();
-  cout << "appending on file volume.dat" << endl;
- }
- else
- {
-  cout << "Creating file volume.dat" << endl;
-  fileTime << "#time" << setw(30) << "lagrangian" 
-                      << setw(17) << "semi-lagrangian" 
-                      << setw(18) << "gravity"
-                      << setw(18) << "surface tension"
-                      << setw(6) << "cfl" 
-			   		  << setw(7)  << "iter" 
-			  		  << endl;
- }
-
- fileTime << setprecision(10) << scientific; 
- fileTime << setw(16) << simTime << " " 
-         << setw(17) << s->getDtLagrangian() << " " 
-         << setw(17) << s->getDtSemiLagrangian() << " " 
-         << setw(17) << s->getDtGravity() << " " 
-         << setw(17) << s->getDtSurfaceTension() << " " 
-         << setw(5) << setprecision(2) << fixed << s->getCfl() << " " 
-	     << setw(6) << setprecision(0) << fixed << iter 
-		 << endl;
- fileTime.close();
+ saveOscillatingError(_dir);    // oscillating velocity and diameter
+ saveKappaError(_dir);          // kappa
+ //saveKappaErrorCylinder(_dir);  // kappa cylinder
+ //saveKappaErrorTorus(_dir);     // kappa torus
+ savePressureError(_dir);       // pressure 
+ saveVolumeError(_dir);         // bubble volume
+ saveTimeError(_dir);           // time step
 }
 
 /*
@@ -3613,8 +3100,8 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  const char* filename = file.c_str();
 
  // xVert da malha nova
- int np1 = 100;
- int np2 = 100;
+ int np1 = 40;
+ int np2 = 40;
  int nTotal = np1*np2;
  clVector xVert(nTotal);
  clVector yVert(nTotal);
@@ -3623,7 +3110,7 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  real plane1_i,plane1_f,plane2_i,plane2_f;
  real dp1,dp2; // mesh space in 2 directions: plane1 and plane2
  if( (strcmp(_filename,"XY") == 0) ||
-     (strcmp(_filename,"XY") == 0)  )
+     (strcmp(_filename,"YX") == 0)  )
  {
   // structured mesh points generator
   real xi = X->Min();
@@ -3806,8 +3293,24 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  // concatenando nomes para o nome do arquivo final
  file = (string) _dir + (string) _filename + "pressure-" + str + ".dat";
  const char* filenameP = file.c_str();
+ 
+ // saving in DAT format
+ ifstream testFileP( filenameP );
+ ofstream pFile( filenameP,ios::app );
+ if( testFileP )
+ {
+  testFileP.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  pFile << "#x-position" << setw(17) << "z-position" 
+				         << setw(16) << "pressure"
+				         << setw(16) << "iteration"
+				         << endl;
+ }
 
- ofstream pFile( filenameP ); 
  // interpolacao linear em numVerts
  clVector pLin(nTotal);
  pLin = interpLin*(*pSol);
@@ -3817,6 +3320,7 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  {
   pFile << setw(10) << setprecision(10) << scientific 
         << xVert.Get(i) << " " 
+        << zVert.Get(i) << " " 
 		<< pLin.Get(i) << " "
 		<< setprecision(0) << fixed
 		<< _iter << endl;
@@ -3873,18 +3377,663 @@ void InOut::bubbleWallDistance( const char* _dir,const char* _filename, int _ite
 
  dist.close();
 
- /* ---- copiando para arquivo sim-last.vtk ---- */
- ifstream inFile( filename );            
+ copyLastFile(_dir,filename,_filename);
 
- string last = (string) _dir + (string) _filename + ".last";
- const char* filenameCopy = last.c_str();
- ofstream outFile( filenameCopy,ios::binary );
+ cout << "Drop-Wall distance No. " << _iter << " saved in dat" << endl;
+} // fecha metodo bubbleWallDistance
+
+void InOut::saveKappaError(const char* _dir)
+{
+ // kappa
+ string fileAux = (string) _dir + "kappa" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename);
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file kappa.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file kappa.dat" << endl;
+  file << "#time" << setw(29) << "kappa" 
+		    	  << setw(18) << "analytic" 
+		    	  << setw(18) << "error" 
+		    	  << setw(18) << "stand deviat" 
+		    	  << setw(14) << "averag edge" 
+				  << setw(14) << "edge/radius" 
+				  << setw(14) << "area" 
+				  << setw(14) << "volume" 
+				  << setw(15) << "averag neigh" 
+		    	  << setw(13) << "num points" 
+		    	  << setw(6) << "iter" 
+				  << endl;
+ }
+
+ real surfacePoints = surface->Dim();
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappa += kappa->Get(node);
+  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+ }
+ real kappaAverage = sumKappa/surfacePoints;
+ 
+ real xMax = -1E-10; 
+ real yMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real yMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) > yMax )
+	yMax = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) < yMin )
+	yMin = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+
+ // retorna o valor do maior diametro em X na interface 
+ real diameterX = xMax - xMin; 
+ // retorna o valor do maior diametro em Y na interface 
+ real diameterY = yMax - yMin; 
+ // retorna o valor do maior diametro em Z na interface 
+ real diameterZ = zMax - zMin; 
+
+ real radius = (diameterX+diameterY+diameterZ)/6.0;
+
+ // sphere
+ real kappaAnalytic = 2.0/radius; 
+ 
+ // cylinder
+ //clVector kappaAnalytic = getCylinderAnalyticCurvature();
+
+ // torus
+ //clVector kappaAnalytic = getTorusAnalyticCurvature();
+
+ real sumKappaSD = 0;
+ real sumKappaError = 0;
+ real sumNeighbours = 0;
+ int countK = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
+                   (kappa->Get(node)-kappaAnalytic);
+  sumKappaSD += (kappa->Get(node)-kappaAverage)*
+                (kappa->Get(node)-kappaAverage);
+  sumNeighbours += neighbourPoint->at(i).size();
+  countK++;
+ }
+
+ real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ real kappaSD = sqrt( sumKappaSD/surfacePoints );
+
+ real averageNeigh = sumNeighbours/surfacePoints;
+
+ m->meshStats();
+ averageTriEdge = m->getAverageTriEdge();
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << kappaAverage << " " 
+      << setw(17) << kappaAnalytic << " " 
+      << setw(17) << kappaError << " " 
+      << setw(17) << kappaSD << " " 
+	  << setprecision(3) << fixed
+      << setw(13) << averageTriEdge[2] << " " 
+	  << setprecision(4) << fixed
+      << setw(13) << averageTriEdge[2]/radius << " " 
+	  << setprecision(3) << fixed
+      << setw(14) << surfaceArea[2] << " " 
+      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << averageNeigh << " " 
+	  << setprecision(0) << fixed
+	  << setw(12) << surfacePoints << " " 
+	  << setw(5) << iter << endl;
+ file.close();
+}
+
+void InOut::saveKappaErrorCylinder(const char* _dir)
+{
+ // kappa
+ string fileAux = (string) _dir + "kappa" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename);
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file kappa.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file kappa.dat" << endl;
+  file << "#time" << setw(29) << "kappa" 
+		    	  << setw(18) << "analytic" 
+		    	  << setw(18) << "error" 
+		    	  << setw(18) << "stand deviat" 
+		    	  << setw(14) << "averag edge" 
+				  << setw(14) << "edge/radius" 
+				  << setw(14) << "area" 
+				  << setw(14) << "volume" 
+				  << setw(15) << "averag neigh" 
+		    	  << setw(13) << "num points" 
+		    	  << setw(6) << "iter" 
+				  << endl;
+ }
+
+ int countK = 0;
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int node = surface->Get(i);
+  
+  // k=1/R
+  if( (Y->Get(node)<0.75) && 
+	  (Y->Get(node)>-0.75) )
+  {
+   sumKappa += kappa->Get(node);
+   sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+   countK++;
+  }
+ }
+ real kappaAverage = sumKappa/countK;
+ 
+ /* ------------ Radius calculation ------------ */
+ real xMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+ real diameterX = xMax - xMin; 
+ real diameterZ = zMax - zMin; 
+ real radius = (diameterX+diameterZ)/4.0;
+ /* -------------------------------------------- */
+
+ /* -------------- Kappa Analytic -------------- */
+ real kappaAnalytic = 1.0/radius;
+ /* -------------------------------------------- */
+
+ real sumKappaSD = 0;
+ real sumKappaError = 0;
+ real sumNeighbours = 0;
+ countK = 0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int node = surface->Get(i);
+  
+  // k=1/R
+  if( (Y->Get(node)<0.75) && 
+	  (Y->Get(node)>-0.75) )
+  {
+   sumKappaError += (kappa->Get(node)-kappaAnalytic)*
+                    (kappa->Get(node)-kappaAnalytic);
+   sumKappaSD += (kappa->Get(node)-kappaAverage)*
+                 (kappa->Get(node)-kappaAverage);
+   sumNeighbours += neighbourPoint->at(i).size();
+   countK++;
+  }
+ }
+
+ real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ real kappaSD = sqrt( sumKappaSD/countK );
+
+ real averageNeigh = sumNeighbours/countK;
+
+ m->meshStats();
+ averageTriEdge = m->getAverageTriEdge();
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << kappaAverage << " " 
+      << setw(17) << kappaAnalytic << " " 
+      << setw(17) << kappaError << " " 
+      << setw(17) << kappaSD << " " 
+	  << setprecision(3) << fixed
+      << setw(13) << averageTriEdge[2] << " " 
+	  << setprecision(4) << fixed
+      << setw(13) << averageTriEdge[2]/radius << " " 
+	  << setprecision(3) << fixed
+      << setw(14) << surfaceArea[2] << " " 
+      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << averageNeigh << " " 
+	  << setprecision(0) << fixed
+	  << setw(12) << countK << " " 
+	  << setw(5) << iter << endl;
+ file.close();
+}
+
+void InOut::savePressureError(const char* _dir)
+{
+ string fileAux = (string) _dir + "pressure" + ".dat";
+ const char* filenamePressure = fileAux.c_str();
+
+ ifstream testFilePressure( filenamePressure);
+ ofstream filePressure( filenamePressure,ios::app );
+ if( testFilePressure )
+ {
+  testFilePressure.close();
+  cout << "appending on file pressure.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file pressure.dat" << endl;
+  filePressure << "#time" << setw(29) << "pressure-in" 
+			       	      << setw(18) << "pressure-out" 
+			       	      << setw(18) << "dpressure" 
+			       	      << setw(18) << "analytic" 
+						  << setw(14) << "area" 
+						  << setw(14) << "volume" 
+						  << setw(13) << "num points" 
+			    	      << setw(6) << "iter" 
+					      << endl;
+ }
+
+ real xMax = -1E-10; 
+ real yMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real yMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) > yMax )
+	yMax = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) < yMin )
+	yMin = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+
+ // retorna o valor do maior diametro em X na interface 
+ real diameterX = xMax - xMin; 
+ // retorna o valor do maior diametro em Y na interface 
+ real diameterY = yMax - yMin; 
+ // retorna o valor do maior diametro em Z na interface 
+ real diameterZ = zMax - zMin; 
+
+ int surfacePoints = surface->Dim();
+
+ real radius = (diameterX+diameterY+diameterZ)/6.0;
+
+ real pressureAnalytic = 2*sigma/radius; 
+
+ real sumPressureIn = 0;
+ //real sumPressureSquareIn = 0;
+ int countIn = 0;
+ real sumPressureOut = 0;
+ //real sumPressureSquareOut = 0;
+ int countOut = 0;
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( heaviside->Get(i) > 0.5 )
+  {
+   sumPressureIn += pSol->Get(i);
+   //sumPressureSquareIn += pSol->Get(i)*pSol->Get(i);
+   countIn++;
+  }
+  if( heaviside->Get(i) < 0.5 )
+  {
+   sumPressureOut += pSol->Get(i);
+   //sumPressureSquareOut += pSol->Get(i)*pSol->Get(i);
+   countOut++;
+  }
+ }
+
+ real averagePIn = sumPressureIn/countIn;
+ real averagePOut = sumPressureOut/countOut;
+
+ real dp = averagePIn-averagePOut;
+
+ filePressure << setprecision(10) << scientific; 
+ filePressure << setw(10) << simTime << " " 
+              << setw(17) << averagePIn << " " 
+              << setw(17) << averagePOut << " " 
+              << setw(17) << dp << " " 
+              << setw(17) << pressureAnalytic << " " 
+              << setw(14) << surfaceArea[2] << " " 
+              << setw(14) << surfaceVolume[2] << " " 
+			  << setprecision(0) << fixed
+			  << setw(12) << surfacePoints << " " 
+			  << setw(5) << iter << endl;
+ filePressure.close();
+}
+
+void InOut::saveVolumeError(const char* _dir)
+{
+ string fileAux = (string) _dir + "volume" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file volume.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file volume.dat" << endl;
+  file << "#time" << setw(29) << "volume" 
+                  << setw(18) << "vel centroid X" 
+                  << setw(18) << "vel centroid Y" 
+                  << setw(18) << "vel centroid Z" 
+                  << setw(18) << "centroid X" 
+                  << setw(18) << "centroid Y" 
+                  << setw(18) << "centroid Z" 
+	         	  << setw(6)  << "iter" 
+				  << endl;
+ }
+
+ real velX,velY,velZ;
+ real posX,posY,posZ;
+ real volume=0;
+ real sumVolume=0;
+ real sumXVelVolume=0;
+ real sumYVelVolume=0;
+ real sumZVelVolume=0;
+ real sumXPosVolume=0;
+ real sumYPosVolume=0;
+ real sumZPosVolume=0;
+ for( list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it )
+ {
+  int v1 = IEN->Get(*it,0);
+  int v2 = IEN->Get(*it,1);
+  int v3 = IEN->Get(*it,2);
+  int v4 = IEN->Get(*it,3);
+
+  velX = ( uSol->Get(v1)+
+	       uSol->Get(v2)+
+		   uSol->Get(v3)+
+		   uSol->Get(v4) )/4.0;
+
+  velY = ( vSol->Get(v1)+
+           vSol->Get(v2)+
+           vSol->Get(v3)+
+	 	   vSol->Get(v4) )/4.0;
+
+  velZ = ( wSol->Get(v1)+
+           wSol->Get(v2)+
+           wSol->Get(v3)+
+	 	   wSol->Get(v4) )/4.0;
+
+  posX = ( X->Get(v1)+
+	       X->Get(v2)+
+		   X->Get(v3)+
+		   X->Get(v4) )/4.0;
+
+  posY = ( Y->Get(v1)+
+	       Y->Get(v2)+
+		   Y->Get(v3)+
+		   Y->Get(v4) )/4.0;
+
+  posZ = ( Z->Get(v1)+
+	       Z->Get(v2)+
+		   Z->Get(v3)+
+		   Z->Get(v4) )/4.0;
+
+  volume = m->getVolume(*it);
+
+  sumXVelVolume += velX * volume;
+  sumYVelVolume += velY * volume;
+  sumZVelVolume += velZ * volume;
+  sumXPosVolume += posX * volume;
+  sumYPosVolume += posY * volume;
+  sumZPosVolume += posZ * volume;
+  sumVolume += volume;
+ }
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << sumVolume << " " 
+	  << setw(17) << sumXVelVolume/sumVolume << " " 
+	  << setw(17) << sumYVelVolume/sumVolume << " " 
+	  << setw(17) << sumZVelVolume/sumVolume << " " 
+	  << setw(17) << sumXPosVolume/sumVolume << " " 
+	  << setw(17) << sumYPosVolume/sumVolume << " " 
+	  << setw(17) << sumZPosVolume/sumVolume << " " 
+	  << setw(5) << setprecision(0) << fixed << iter 
+	  << endl;
+ file.close();
+}
+
+void InOut::saveOscillatingError(const char* _dir)
+{
+ // oscillating velocity
+ string fileAux = (string) _dir + "velocity" + ".dat";
+ const char* filenameVel = fileAux.c_str();
+
+ ifstream testFileVel( filenameVel );
+ ofstream fileVel( filenameVel,ios::app );
+ if( testFileVel )
+ {
+  testFileVel.close();
+  cout << "appending on file velocity.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file velocity.dat" << endl;
+  fileVel << "#time" << setw(29) << "vel Umax xMax" 
+                     << setw(18) << "vel Umax xMin" 
+                     << setw(18) << "vel Vmax vMax" 
+                     << setw(18) << "vel Vmax vMin" 
+                     << setw(18) << "vel Wmax zMax" 
+                     << setw(18) << "vel Wmax zMin" 
+					 << setw(6) << "iter" 
+					 << endl;
+ }
+ 
+ real xMax,uMax = -1E-10;
+ real yMax,vMax = -1E-10; 
+ real zMax,wMax = -1E-10; 
+ real xMin,uMin = 1E10; 
+ real yMin,vMin = 1E10; 
+ real zMin,wMin = 1E10; 
+
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+   {
+	xMax = surfMesh->X.Get(i);
+	uMax = uSol->Get(xMax);
+   }
+   if( surfMesh->Y.Get(i) > yMax )
+   {
+	yMax = surfMesh->Y.Get(i);
+	vMax = vSol->Get(yMax);
+   }
+   if( surfMesh->Z.Get(i) > zMax )
+   {
+	zMax = surfMesh->Z.Get(i);
+	wMax = wSol->Get(zMax);
+   }
+   if( surfMesh->X.Get(i) < xMin )
+   {
+	xMin = surfMesh->X.Get(i);
+	uMin = uSol->Get(xMin);
+   }
+   if( surfMesh->Y.Get(i) < yMin )
+   {
+	yMin = surfMesh->Y.Get(i);
+	vMin = vSol->Get(yMin);
+   }
+   if( surfMesh->Z.Get(i) < zMin )
+   {
+	zMin = surfMesh->Z.Get(i);
+	wMin = wSol->Get(zMin);
+   }
+  }
+ }
+
+ fileVel << setprecision(10) << scientific; 
+ fileVel << setw(10) << simTime << " " 
+         << setw(17) << uMax << " " 
+         << setw(17) << uMin << " " 
+		 << setw(17) << vMax << " " 
+		 << setw(17) << vMin << " " 
+		 << setw(17) << wMax << " " 
+		 << setw(17) << wMin << " " 
+		 << setw(5) << setprecision(0) << fixed << iter 
+		 << endl;
+
+ fileVel.close();
+
+ // diameter
+ fileAux = (string) _dir + "diameter" + ".dat";
+ const char* filenameD = fileAux.c_str();
+
+ ifstream testFileD( filenameD );
+ ofstream fileD( filenameD,ios::app );
+ if( testFileD )
+ {
+  testFileD.close();
+  cout << "appending on file diameter.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file diameter.dat" << endl;
+  fileD << "#time" << setw(29) << "diameter X" 
+                   << setw(18) << "diameter Y" 
+				   << setw(18) << "diameter Z"
+				   << setw(18) << "X max"
+				   << setw(18) << "X min"
+				   << setw(18) << "X mid"
+				   << setw(18) << "Y max"
+				   << setw(18) << "Y min"
+				   << setw(18) << "Y mid"
+				   << setw(18) << "Z max"
+				   << setw(18) << "Z min"
+				   << setw(18) << "Z mid"
+				   << setw(6) << "iter" 
+				   << endl;
+ }
+
+ // retorna o valor do maior diametro em X na interface 
+ real diameterX = xMax - xMin; 
+ // retorna o valor do maior diametro em Y na interface 
+ real diameterY = yMax - yMin; 
+ // retorna o valor do maior diametro em Z na interface 
+ real diameterZ = zMax - zMin; 
+
+ fileD << setprecision(10) << scientific; 
+ fileD << setw(10) << simTime << " " 
+       << setw(17) << diameterX << " " 
+	   << setw(17) << diameterY << " " 
+	   << setw(17) << diameterZ << " " 
+	   << setw(17) << xMin << " " 
+	   << setw(17) << xMax << " " 
+	   << setw(17) << (xMax-xMin)*0.5 << " " 
+	   << setw(17) << yMin << " " 
+	   << setw(17) << yMax << " " 
+	   << setw(17) << (yMax-yMin)*0.5 << " " 
+	   << setw(17) << zMin << " " 
+	   << setw(17) << zMax << " " 
+	   << setw(17) << (zMax-zMin)*0.5 << " " 
+	   << setw(5) << setprecision(0) << fixed << iter 
+	   << endl;
+ fileD.close();
+}
+
+void InOut::saveTimeError(const char* _dir)
+{
+ string fileAux = (string) _dir + "time" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file volume.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file volume.dat" << endl;
+  file << "#time" << setw(30) << "lagrangian" 
+                  << setw(17) << "semi-lagrangian" 
+                  << setw(18) << "gravity"
+                  << setw(18) << "surface tension"
+                  << setw(6) << "cfl" 
+		   		  << setw(7)  << "iter" 
+		  		  << endl;
+ }
+
+ file << setprecision(10) << scientific; 
+ file << setw(16) << simTime << " " 
+          << setw(17) << s->getDtLagrangian() << " " 
+          << setw(17) << s->getDtSemiLagrangian() << " " 
+          << setw(17) << s->getDtGravity() << " " 
+          << setw(17) << s->getDtSurfaceTension() << " " 
+          << setw(5) << setprecision(2) << fixed << s->getCfl() << " " 
+	      << setw(6) << setprecision(0) << fixed << iter 
+	 	  << endl;
+ file.close();
+}
+
+/* 
+ * copying to file filename-last.ext 
+ * */
+void InOut::copyLastFile(const char* _dir,
+                         const char* _filename,
+						 const char* _name)
+{
+ string aux = (string) _filename;
+ string ext(aux.end()-3,aux.end()); // get file extension
+ 
+ ifstream inFile( _filename,ios::binary ); 
+
+ string last = (string) _dir + 
+               (string) _name + "-last." + 
+			   (string) ext;
+
+ const char* filename = last.c_str();
+ ofstream outFile( filename,ios::binary ); 
 
  outFile << inFile.rdbuf();
  inFile.close();
  outFile.close();
- /* -------------------------------------------- */
-
- cout << "Drop-Wall distance No. " << _iter << " saved in dat" << endl;
-} // fecha metodo bubbleWallDistance
+}
 

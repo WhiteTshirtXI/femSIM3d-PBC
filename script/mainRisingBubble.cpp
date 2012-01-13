@@ -30,31 +30,34 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.10; // bubble
+ triEdge[2] = 0.08; // bubble
 
  int iter = 1;
- //real Re = 6.53; // case 1
- real Re = 13.8487; // case 2
+ real Re = 6.53; // case 1
+ //real Re = 13.8487; // case 2
  //real Re = 32.78; // case 3
  real Sc = 1;
- real We = 115.66;
+ real We = 116;
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.1; // smooth - fujiwara
- real c4 = 0.1; // smooth surface - fujiwara
+ real c3 = 0.01; // smooth - fujiwara
+ real c4 = 0.01; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
  real sigma = 0.078;
 
  real mu_in = 0.0000178;
- real mu_out = 1.28;
+
+ real mu_out = 2.73;
+ //real mu_out = 1.28;
+ //real mu_out = 0.54;
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.8;
+ real cfl = 1.0;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -272,7 +275,7 @@ int main(int argc, char **argv)
  save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
- int nReMesh = 3;
+ int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )

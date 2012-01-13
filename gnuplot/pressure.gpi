@@ -1,0 +1,23 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+#set title "Cross-sectional Pressure among phases" 
+set xlabel "x-coordinate"
+set ylabel "y-coordinate"
+set xrange [-1.5:1.5]
+set yrange [-1.5:1.5]
+set zrange [-0.1:22]
+set key right top
+set key box linestyle 1
+unset grid
+
+set terminal postscript enhanced
+set output '~/Desktop/pressure.ps'
+
+fileObj1 = "~/projects/python/femSIM3d/staticDroplet3/dat/XZpressure-970.dat"
+
+splot fileObj1 using 1:2:3 title '1024 points' with lines
+

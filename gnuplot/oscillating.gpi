@@ -9,18 +9,22 @@ set xlabel "time"
 set ylabel "amplitude"
 set label
 set xrange [0.0:1.0]
-set yrange [0.985:1.015]
+set yrange [0.987:1.013]
 unset grid
+set key at 0.95,1
+set key box linestyle 1
 
-#set terminal pdf
-#set output '~/Desktop/oscillating.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced
+# set output '~/Desktop/oscillating.ps'
+#-------------------------------------------------- 
 
-fileObj1 = "~/macpro/femSIM3d/python/femSIM3d/oscillating1/dat/diameter.dat"
-fileObj2 = "~/macpro/femSIM3d/python/femSIM3d/oscillating4HD/dat/diameter.dat"
-fileObj3 = "~/macpro/femSIM3d/python/femSIM3d/osc1/dat/diameter.dat"
-fileObj4 = "~/macpro/femSIM3d/python/femSIM3d/osc2/dat/diameter.dat"
+fileObj1 = "./dat/diameter.dat"
 fileObjAnalytic = "../../validations/osc3d"
 
-plot fileObj3 using 1:($4-0.0004) every 4 title 'osc1' with points ,\
-     fileObj4 using 1:($4-0.0004) every 4 title 'osc2' with points ,\
- 	 fileObjAnalytic using 1:2 title 'analytic' with lines 
+f(x) = 1.01
+g(x) = 0.99
+
+plot fileObj1 using 1:($4-0.0004) every 18 title 'numeric' with points ls 2,\
+ 	 fileObjAnalytic using 1:2 title 'analytic' with lines ls 1,\
+	 f(x) notitle 'y=1.01' linestyle 1,g(x) notitle 'y=0.99' linestyle 1

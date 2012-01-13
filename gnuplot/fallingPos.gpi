@@ -8,16 +8,19 @@ set title "Falling Drop"
 set xlabel "time"
 set ylabel "z"
 set label
-set xrange [0.0:2.5]
-set yrange [0.5:3.5]
+set xrange [0.0:0.8]
+set yrange [0.0:3.5]
 unset grid
 
-set terminal pdf
-set output '~/Desktop/falling.pdf'
+#--------------------------------------------------
+# set terminal pdf
+# set output '~/Desktop/falling.pdf'
+#-------------------------------------------------- 
 
-f(x)=3.50005-0.46*x*x
+gravity = 9.81
+f(x)=3.5-(1.0/2.0)*gravity/1.0*x*x
 
 fileObj = "../dat/volume.dat"
 
-plot fileObj using 1:($8) every 8 title 'numeric' with points ,\
+plot fileObj using 1:($8) every 1 title 'numeric' with points ,\
  	 f(x) title 'analytic' with lines 

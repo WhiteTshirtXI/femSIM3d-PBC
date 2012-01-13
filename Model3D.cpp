@@ -2843,9 +2843,6 @@ void Model3D::removePointsByInterfaceDistance()
  // number of removed 3d mesh points by interface distance
  fill(rpi.begin(),rpi.end(),0);
 
- clVector surfaceAux = heaviside==0.5;
- clVector surface = surfaceAux.Find();
-
  /*     
   *                l*3^(1/3)
   *   height = h = --------- = l*0.86602

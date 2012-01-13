@@ -26,15 +26,13 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
- triEdge[1] = 2.0; // wall
- triEdge[2] = 0.05; // bubble 1 
+ triEdge[1] = 1.0; // wall
+ triEdge[2] = 0.08; // bubble 1 
 
  // static bubble test (Fabricio's thesis (2005))
- real Re = 10;
- real Sc = 1;
- real We = 1;
- real Fr = 1.0;
- real c1 = 1.0;  // lagrangian
+ real Re = 100;
+ real We = 5;
+ real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // velocity
  real c3 = 0.0;  // coordinates - fujiwara
  real c4 = 0.0;  // surface coordinates - fujiwara
@@ -44,14 +42,14 @@ int main(int argc, char **argv)
  real sigma = 1.0;
 
  real mu_in = 1.0;
- real mu_out = 0.1;
+ real mu_out = 0.01;
 
  real rho_in = 1.0;
- real rho_out = 0.01;
+ real rho_out = 0.001;
 
- real cfl = 0.8;
+ real cfl = 1.0;
 
- string meshFile = "sphere.msh";
+ string meshFile = "static1.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -89,9 +87,7 @@ int main(int argc, char **argv)
  s1(m1);
 
  s1.setRe(Re);
- s1.setSc(Sc);
  s1.setWe(We);
- s1.setFr(Fr);
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);

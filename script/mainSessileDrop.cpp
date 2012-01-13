@@ -25,32 +25,30 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(3);
- triEdge[0] = 0.1; // none
- triEdge[1] = 1.0; // wall
- triEdge[2] = 0.1; // bubble 1 
+ triEdge[0] = 0.1;  // none
+ triEdge[1] = 0.95; // wall
+ triEdge[2] = 0.06; // bubble 1 
 
- // static bubble test (Fabricio's thesis (2005))
  int iter = 1;
- real Re = 2;
- real Sc = 1;
- real We = 100;
+ real Re = 20;
+ real We = 200;
  real Fr = 1.0;
- real c1 = 0.0;  // lagrangian
- real c2 = 0.0;  // velocity
- real c3 = 0.2;  // coordinates - fujiwara
- real c4 = 0.2;  // surface coordinates - fujiwara
+ real c1 = 0.0;   // lagrangian
+ real c2 = 1.0;   // velocity
+ real c3 = 0.05;  // coordinates - fujiwara
+ real c4 = 0.01;  // surface coordinates - fujiwara
  real alpha = 1;
  real beta = 1;
 
- real sigma = 0.01;
+ real sigma = 1;
 
- real mu_in = 0.01;
- real mu_out = 1.0;
+ real mu_in = 1.0;
+ real mu_out = 0.9;
 
  real rho_in = 1.0;
- real rho_out = 0.01;
+ real rho_out = 0.001;
 
- real cfl = 0.8;
+ real cfl = 1.0;
 
  string meshFile = "sessile.msh";
 
@@ -96,7 +94,6 @@ int main(int argc, char **argv)
   s1(m1);
 
   s1.setRe(Re);
-  s1.setSc(Sc);
   s1.setWe(We);
   s1.setFr(Fr);
   s1.setC1(c1);
@@ -311,9 +308,9 @@ int main(int argc, char **argv)
   //m1.insert3dMeshPointsByDiffusion(2.0);
   //m1.remove3dMeshPointsByDiffusion(0.33);
   //m1.removePointByVolume(0.005);
-  //m1.removePointsByInterfaceDistance();
+  m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.delete3DPoints();
+  m1.delete3DPoints();
 
   // surface operations
   m1.insertPointsByLength();

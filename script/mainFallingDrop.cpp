@@ -32,22 +32,22 @@ int main(int argc, char **argv)
  int iter = 1;
  real Re = 1000;
  real Sc = 1;
- real We = 1;
- real Fr = 1;
+ real We = 10;
+ real Fr = 0.318;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.1; // smooth - fujiwara
- real c4 = 0.2; // smooth surface - fujiwara
+ real c3 = 0.01; // smooth - fujiwara
+ real c4 = 0.02; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
- real sigma = 1.0;
+ real sigma = 1;
 
  real mu_in = 1.0;
  real mu_out = 0.01;
 
  real rho_in = 1.0;
- real rho_out = 0.01;
+ real rho_out = 0.001;
 
  real cfl = 0.5;
 

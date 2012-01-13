@@ -1,0 +1,34 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+set title "Kappa Error- Convergence Order" 
+set xlabel "surface edge length"
+set ylabel "kappa error[%]"
+unset grid
+
+#set terminal pdf
+#set output '~/Desktop/kappaError.pdf'
+#set terminal postscript enhanced
+#set output '~/Desktop/plot.ps'
+
+set log xy
+
+fileObj = '../dat/pressure.dat'
+
+Xmin=0.01
+Xmax=0.1
+Ymin=0.1
+Ymax=0.3
+set xrange [Xmin:Xmax]
+set yrange [Ymin:Ymax]
+
+f(x)=x
+g(x)=x*x
+
+plot fileObj using 6:4 title 'numeric' with lines,\
+     f(x) with lines,\
+	 g(x) with lines
+

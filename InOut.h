@@ -172,7 +172,16 @@ class InOut
   void chordalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPlane(const char* _dir,const char* _filename, int _iter);
+
+  /* Save bubble error data */
   void saveBubbleInfo(const char* _dir);
+  void saveKappaError(const char* _dir);
+  void saveKappaErrorCylinder(const char* _dir);
+  void savePressureError(const char* _dir);
+  void saveVolumeError(const char* _dir);
+  void saveOscillatingError(const char* _dir);
+  void saveTimeError(const char* _dir);
+  void copyLastFile(const char* _dir,const char* _filename,const char* _name);
 
   /* VTK Building Tools  */
   void vtkHeader(ofstream& _file);

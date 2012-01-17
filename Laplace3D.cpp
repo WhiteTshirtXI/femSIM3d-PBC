@@ -13,20 +13,6 @@ Laplace3D::Laplace3D( Model3D &_m )
 {
  getModel3DAttrib(_m);
 
- cout << " ----> dt not defined! Set dt=0.01 for Laplace3D <----" << endl;
- dt = 0.01;
-
- setSolver( new PCGSolver() );
-
- allocateMemoryToAttrib();
-}
-
-Laplace3D::Laplace3D( Model3D &_m, real _dt )  
-{
- getModel3DAttrib(_m);
-
- dt = _dt;
-
  setSolver( new PCGSolver() );
 
  allocateMemoryToAttrib();
@@ -35,23 +21,6 @@ Laplace3D::Laplace3D( Model3D &_m, real _dt )
 Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )  
 {
  getModel3DAttrib(_m);
-
- cout << " ----> dt not defined! Set dt=0.01 for Laplace3D <----" << endl;
- dt = 0.01;
-
- setSolver( new PCGSolver() );
-
- allocateMemoryToAttrib();
-
- //cSolOld = *_d.getCSol();
- cSolOld = *_m.getEdgeSize();
-}
-
-Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d, real _dt )  
-{
- getModel3DAttrib(_m);
-
- dt = _dt;
 
  setSolver( new PCGSolver() );
 
@@ -109,19 +78,23 @@ void Laplace3D::assemble()
 
 void Laplace3D::setCRHS()
 {
- vcc = ( (1.0/dt) * McLumped ) * convC;
+ vcc = McLumped * convC;
 }
 
 void Laplace3D::matMountC()
 {
- real k=30;
+ //real k=10;     //   /\     less diffusion
+ //real k=7;      //  /||\
+ //real k=6;      //   ||     moderate diffusion 
+ real k=3;        //  \||/
+ //real k=1;      //   \/     more diffusion
  for( int i=0;i<numVerts;i++ )
  {
   real sumMc = Mc.SumLine(i);
   McLumped.Set( i,sumMc );
   invMcLumped.Set( i,1.0/sumMc );
  }
- matc =( (1.0/dt) * McLumped )+ (k * Kc);
+ matc = McLumped + (k * Kc);
 
 }
 
@@ -140,16 +113,18 @@ void Laplace3D::setBC()
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   if( heaviside->Get(i) < 0.5 ) // outside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)]/3.3;
+   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   real aux = triEdge[vertIdRegion->Get(i)]/factor;
    convC.Set(i,aux);
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)]*10;
+   real aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }

@@ -4,20 +4,25 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set title "Falling Drop" 
+#set title "Falling Drop" 
 set xlabel "time"
 set ylabel "z-velocity"
 set label
-set xrange [0.0:2.5]
+set xrange [0.0:0.8]
 #set yrange [0.5:3.5]
 unset grid
 
-set terminal pdf
-set output '~/Desktop/fallingVel.pdf'
+set key at 0.7,-1
+set key box linestyle 1
 
-g(x)=0-(9.81/10)*x
+set terminal postscript enhanced
+set output '~/Desktop/fallingVel.ps'
+
+corr = 0.9
+gravity = 9.81
+g(x)=0-gravity*x
 
 fileObj = "../dat/volume.dat"
 
-plot fileObj using 1:($5) every 8 title 'numeric' with points ,\
- 	 g(x) title 'analytic' with lines 
+plot fileObj using 1:($5) every 20 title 'numeric' with points ,\
+ 	 g(x) title 'v(x)=0-9.81*x' with lines 

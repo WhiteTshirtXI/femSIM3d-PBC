@@ -4,23 +4,25 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set title "Falling Drop" 
-set xlabel "time"
-set ylabel "z"
+#set title "Falling Drop" 
+set xlabel "nondimensional time"
+set ylabel "z-coordinate"
 set label
 set xrange [0.0:0.8]
 set yrange [0.0:3.5]
 unset grid
 
-#--------------------------------------------------
-# set terminal pdf
-# set output '~/Desktop/falling.pdf'
-#-------------------------------------------------- 
+set key at 0.4,1.5
+set key box linestyle 1
 
+set terminal postscript enhanced
+set output '~/Desktop/falling.ps'
+
+corr = 0.9
 gravity = 9.81
-f(x)=3.5-(1.0/2.0)*gravity/1.0*x*x
+f(x)=3.5-(1.0/2.0)*corr*gravity/1.0*x*x
 
 fileObj = "../dat/volume.dat"
 
-plot fileObj using 1:($8) every 1 title 'numeric' with points ,\
- 	 f(x) title 'analytic' with lines 
+plot fileObj using 1:($8) every 20 title 'numeric' with points,\
+ 	 f(x) title 'z(x)=3.5-0.5*gravity*x^2' with lines 

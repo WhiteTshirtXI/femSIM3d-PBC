@@ -3100,8 +3100,8 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  const char* filename = file.c_str();
 
  // xVert da malha nova
- int np1 = 40;
- int np2 = 40;
+ int np1 = 80;
+ int np2 = 80;
  int nTotal = np1*np2;
  clVector xVert(nTotal);
  clVector yVert(nTotal);

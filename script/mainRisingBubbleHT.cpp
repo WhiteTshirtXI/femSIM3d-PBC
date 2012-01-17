@@ -253,7 +253,7 @@ int main(int argc, char **argv)
   return 0;
  }
  // Point's distribution
- Laplace3D d1(m1,s1.getDt());
+ Laplace3D d1(m1);
  d1.setBC();
  d1.assemble();
  d1.matMountC();
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1,s1.getDt());
+  Laplace3D d2(m1,d1);
   d2.setBC();
   d2.assemble();
   d2.matMountC();
@@ -338,9 +338,9 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion(2.0);
-  m1.remove3dMeshPointsByDiffusion(0.5);
-  m1.removePointByVolume(0.005);
+  //m1.insert3dMeshPointsByDiffusion();
+  m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();

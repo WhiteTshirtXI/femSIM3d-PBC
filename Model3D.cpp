@@ -2914,7 +2914,7 @@ void Model3D::remove3dMeshPointsByDistance()
  * given by the class Laplace3D.
  *
  * */
-void Model3D::insert3dMeshPointsByDiffusion(real _factor)
+void Model3D::insert3dMeshPointsByDiffusion()
 {
  // number of inserted points of 3d mesh
  fill(ipd.begin(),ipd.end(),0);
@@ -2954,7 +2954,7 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > _factor*edgeSize.Get(v1) && 
+  if( length > edgeSize.Get(v1) && 
 	  hSum < 0.5 && 
 	  minVert > surfMesh.numVerts )
   {
@@ -2991,7 +2991,7 @@ void Model3D::insert3dMeshPointsByDiffusion(real _factor)
  * given by the class Laplace3D.
  *
  * */
-void Model3D::remove3dMeshPointsByDiffusion(real _factor)
+void Model3D::remove3dMeshPointsByDiffusion()
 {
  // number of removed points of 3d mesh
  fill(rpd.begin(),rpd.end(),0);
@@ -3013,21 +3013,24 @@ void Model3D::remove3dMeshPointsByDiffusion(real _factor)
 
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
+  real size = (edgeSize.Get(v1)+edgeSize.Get(v2))/2.0;
+
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < _factor*edgeSize.Get(v1) &&
+  if( length < size &&
 	  (hSum > 1.5 || hSum < 0.5 ) )
-  //if( length < _factor*edgeSize.Get(v1) && hSum != 1.0 )
   {
    if( v1 > surfMesh.numVerts )
    {
 	mark3DPointForDeletion(v1);
 	rpd[vertID]++;
+	break;
    }
-   else
+   else if( v2 > surfMesh.numVerts )
    {
 	mark3DPointForDeletion(v2);
 	rpd[vertID]++;
+	break;
    }
   }
  }
@@ -7420,9 +7423,17 @@ real Model3D::getSurfaceVolume(int _region)
 	              yCentroid*yNormalElemUnit +
 	              zCentroid*zNormalElemUnit ) * area;
 
-   //sumCentroidX += (xCentroid*xCentroid)*xNormalElemUnit*area;
-   //sumCentroidY += (yCentroid*yCentroid)*yNormalElemUnit*area;
-   //sumCentroidZ += (zCentroid*zCentroid)*zNormalElemUnit*area;
+//--------------------------------------------------
+//    sumCentroidX += ( xCentroid*xCentroid + 
+// 	                 yCentroid*yCentroid +
+// 	                 zCentroid*zCentroid ) * xNormalElemUnit * area;
+//    sumCentroidY += ( xCentroid*xCentroid + 
+// 	                 yCentroid*yCentroid +
+// 	                 zCentroid*zCentroid ) * yNormalElemUnit * area;
+//    sumCentroidZ += ( xCentroid*xCentroid + 
+// 	                 yCentroid*yCentroid +
+// 	                 zCentroid*zCentroid ) * zNormalElemUnit * area;
+//-------------------------------------------------- 
   }
  }
  real vol = (1.0/3.0)*sumVolume;

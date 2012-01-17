@@ -4,27 +4,31 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set title "Oscillating drop" 
-set xlabel "time"
-set ylabel "amplitude"
+#set title "Oscillating drop" 
+set xlabel "time" font "Times,18"
+set ylabel "amplitude" font "Times,18"
 set label
-set xrange [0.0:1.0]
-set yrange [0.987:1.013]
+set xrange [0.0:1.0] 
+set yrange [0.988:1.012] 
 unset grid
 set key at 0.95,1
 set key box linestyle 1
 
 #--------------------------------------------------
 # set terminal postscript enhanced
-# set output '~/Desktop/oscillating.ps'
+# set output '| ps2pdf - ~/Desktop/oscillating.pdf'
 #-------------------------------------------------- 
 
-fileObj1 = "./dat/diameter.dat"
+fileObj1 = "~/macpro/python/femSIM3d/osc9/dat/diameter.dat"
+fileObj2 = "~/macpro/python/femSIM3d/osc1/dat/diameter.dat"
 fileObjAnalytic = "../../validations/osc3d"
 
 f(x) = 1.01
 g(x) = 0.99
 
-plot fileObj1 using 1:($4-0.0004) every 18 title 'numeric' with points ls 2,\
+plot fileObj1 using 1:($4-0.0004) every 18 title 'coarse grid' \
+     with points ls 2,\
+     fileObj2 using 1:($4-0.0004) every 18 title 'refined grid'  \
+	 with points ls 3,\
  	 fileObjAnalytic using 1:2 title 'analytic' with lines ls 1,\
 	 f(x) notitle 'y=1.01' linestyle 1,g(x) notitle 'y=0.99' linestyle 1

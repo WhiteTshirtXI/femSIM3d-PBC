@@ -5,19 +5,21 @@ unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
 #set title "Cross-sectional Pressure among phases" 
-set xlabel "x-coordinate"
-set ylabel "y-coordinate"
+set xlabel "x-coordinate" 
+set ylabel "y-coordinate" 
+set zlabel "pressure" offset 3,0 rotate by 90
 set xrange [-1.5:1.5]
 set yrange [-1.5:1.5]
 set zrange [-0.1:22]
-set key right top
-set key box linestyle 1
 unset grid
 
-set terminal postscript enhanced
-set output '~/Desktop/pressure.ps'
+set key at 1.0,1.5,20
+set key box linestyle 1
 
-fileObj1 = "~/projects/python/femSIM3d/staticDroplet3/dat/XZpressure-970.dat"
+set terminal postscript enhanced
+set output '~/Desktop/pressure3d.ps'
+
+fileObj1 = "~/projects/python/femSIM3d/staticDroplet1/dat/XZpressure-780.dat"
 
 splot fileObj1 using 1:2:3 title '1024 points' with lines
 

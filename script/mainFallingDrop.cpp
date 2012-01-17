@@ -33,7 +33,7 @@ int main(int argc, char **argv)
  real Re = 1000;
  real Sc = 1;
  real We = 10;
- real Fr = 0.318;
+ real Fr = 0.315;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
  real c3 = 0.01; // smooth - fujiwara
@@ -313,8 +313,8 @@ int main(int argc, char **argv)
   //m1.setNormalAndKappa();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion(2.0);
-  //m1.remove3dMeshPointsByDiffusion(0.33);
+  //m1.insert3dMeshPointsByDiffusion();
+  //m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

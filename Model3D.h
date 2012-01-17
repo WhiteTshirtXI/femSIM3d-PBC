@@ -96,8 +96,8 @@ class Model3D
   void delete3DPoints();
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();
-  void remove3dMeshPointsByDiffusion(real _factor);
-  void insert3dMeshPointsByDiffusion(real _factor);
+  void remove3dMeshPointsByDiffusion();
+  void insert3dMeshPointsByDiffusion();
   void removePointByVolume(real _factor);
   void removePointByVolumeIn(real _factor);
   void removePointByVolumeOut(real _factor);

@@ -41,8 +41,8 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.01; // smooth - fujiwara
- real c4 = 0.01; // smooth surface - fujiwara
+ real c3 = 0.05; // smooth - fujiwara
+ real c4 = 0.05; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -340,8 +340,8 @@ int main(int argc, char **argv)
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume(0.005);
-  //m1.removePointsByInterfaceDistance();
+  m1.removePointByVolume();
+  m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 

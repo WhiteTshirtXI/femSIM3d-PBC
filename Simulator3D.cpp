@@ -1390,7 +1390,7 @@ void Simulator3D::stepALEVel()
  //setInterfaceVel();
 
  setALEVelBC();
- for( int i=0;i<30;i++ )
+ for( int i=0;i<20;i++ )
  {
   // smoothing - velocidade
   MeshSmooth e2(*m,dt); // criando objeto MeshSmooth

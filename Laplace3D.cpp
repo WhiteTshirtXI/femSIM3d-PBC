@@ -121,14 +121,14 @@ void Laplace3D::setBC()
   if( heaviside->Get(i) < 0.5 ) 
   {
    real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 3*radius )
+   if( interfaceDistance->Get(i) < 4*radius )
    {
 	real aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.4);
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.3);
 	convC.Set(i,aux);
    }
   }

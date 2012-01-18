@@ -2844,17 +2844,20 @@ void Model3D::removePointsByInterfaceDistance()
  fill(rpi.begin(),rpi.end(),0);
 
  /*     
-  *                l*3^(1/3)
-  *   height = h = --------- = l*0.86602
-  *                    2
+  *                l*sqrt(6)
+  *   height = h = ---------- = l*0.8164
+  *                    3
   * */
- real h = triEdge[2]*0.86602; 
+
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+
+ real h = triEdgeMin*0.8164; 
  for( int i=0;i<numVerts;i++ )
  {
   int vertID = vertIdRegion.Get(i);
   real d = interfaceDistance.Get(i);
   //if( d>0 && d<0.4*triEdge[2] ) // mainBubble.cpp
-  if( d>0 && d<h*1.2 && heaviside.Get(i) < 0.5 ) // hiRe
+  if( d>0 && d<h*1.0 && heaviside.Get(i) < 0.5 ) // hiRe
   {
 //--------------------------------------------------
 //    cout << "--- " << color(none,red,black) << "removing vertex by distance: "
@@ -3642,7 +3645,7 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  * deleted.
  *
  * */
-void Model3D::removePointByVolume(real _factor)
+void Model3D::removePointByVolume()
 {
  real vSum;
  real vertSum;
@@ -3656,7 +3659,7 @@ void Model3D::removePointByVolume(real _factor)
 
  // set tetVol ---> wall,bubble1, bubble2 etc.
  for( int v=0;v<(int) triEdge.size();v++ )
-  tetVol[v] = _factor*triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
+  tetVol[v] = triEdgeMin*triEdgeMin*triEdgeMin*sqrt(2.0)/12.0;
 
  for( int elem=0;elem<numElems;elem++ )
  {
@@ -3670,7 +3673,7 @@ void Model3D::removePointByVolume(real _factor)
 
   int elemID = elemIdRegion.Get(elem);
 
-  real maxVol = max(5.0E-06,tetVol[elemIdRegion.Get(elem)]);
+  real maxVol = max(1.0E-06,0.01*tetVol[elemIdRegion.Get(elem)]);
 
   int count=0;
   if( hSum != 2.0 && 

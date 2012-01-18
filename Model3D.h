@@ -98,9 +98,7 @@ class Model3D
   void remove3dMeshPointsByDistance();
   void remove3dMeshPointsByDiffusion();
   void insert3dMeshPointsByDiffusion();
-  void removePointByVolume(real _factor);
-  void removePointByVolumeIn(real _factor);
-  void removePointByVolumeOut(real _factor);
+  void removePointByVolume();
 
   void breakup();
   clVector triangleQuality(int _v);

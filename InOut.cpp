@@ -2978,7 +2978,7 @@ void InOut::printMeshReport()
        << "total number of " << color(none,red,black)
        << "removed" << resetColor() 
        << " surface mesh points:  " << color(none,red,black)
-	   << rsp[nb]+rspn[nb]+rspc[nb]+rpv[nb]+csp[nb] << resetColor() << endl;
+	   << rsp[nb]+rspn[nb]+rspc[nb]+csp[nb] << resetColor() << endl;
   cout << "       |" << color(none,yellow,black) 
        << "inserted" << resetColor()
  	   << " 3D mesh points by diffusion:         " << ipd[nb] << endl;

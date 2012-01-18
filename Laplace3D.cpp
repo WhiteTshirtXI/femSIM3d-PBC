@@ -83,11 +83,11 @@ void Laplace3D::setCRHS()
 
 void Laplace3D::matMountC()
 {
- //real k=10;     //   /\     less diffusion
- //real k=7;      //  /||\
- //real k=6;      //   ||     moderate diffusion 
- real k=3;        //  \||/
- //real k=1;      //   \/     more diffusion
+ //real k=5;     //   /\     more diffusion
+ //real k=4;      //  /||\
+ //real k=3;      //   ||     moderate diffusion 
+ //real k=1;        //  \||/
+ real k=0.7;      //   \/     less diffusion
  for( int i=0;i<numVerts;i++ )
  {
   real sumMc = Mc.SumLine(i);
@@ -116,11 +116,21 @@ void Laplace3D::setBC()
  real minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  if( heaviside->Get(i) < 0.5 ) // outside mesh
+  real radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
   {
    real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   real aux = triEdge[vertIdRegion->Get(i)]/factor;
-   convC.Set(i,aux);
+   if( interfaceDistance->Get(i) < 3*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.4);
+	convC.Set(i,aux);
+   }
   }
   else                         // inside mesh
   {
@@ -128,7 +138,6 @@ void Laplace3D::setBC()
    convC.Set(i,aux);
   }
  }
-
 }
 
 

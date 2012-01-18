@@ -2616,8 +2616,8 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.6*triEdge[elemID] ) //&& 
-	  //curv1 < 60 && curv2 < 60 && curv3 < 60 && curv4 < 60 ) 
+	  //edgeLength < 0.4*triEdge[elemID] ) //&& 
+	  edgeLength < 0.5*triEdge[elemID] ) //&& 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1

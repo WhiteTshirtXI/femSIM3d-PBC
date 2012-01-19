@@ -19,6 +19,8 @@ set key box linestyle 7
 #set output 'teste.pdf'
 
 # -------------------------------------------------------------------------- #
+#           -- Experimental data from Bhaga and Weber (1981) --              #
+# -------------------------------------------------------------------------- #
 #        rho.v.D              D=0.0261m                                      #
 #  Re = ---------             rho=1350kg/m^3                                 #  
 #          mu                 g=9.81m/s^2                                    #
@@ -26,31 +28,44 @@ set key box linestyle 7
 #  U = U*.sqrt(gD)                                                           #
 #  U = U*.0.5060                                                             #
 #                                                                            #
-#  -- Experimental data from Bhaga and Weber (1981) --                       #
-#  Eo   M           R     Mu(kg/ms)  Vel(m/s)  Shape                         # 
-#  116  848         2.47  2.73       0.19137   oblate ellipsoidal            #
-#  116  266         3.57                       oblate ellipsoidal            #
-#  116  41.1        7.16  1.28       0.26010   oblate ellipsoidal            #
-#  116  5.51        13.3                       oblate ellipsoidal            #
-#  116  1.31        20.4  0.54       0.31264   oblate ellipsoidal            #
-#  116  0.103       42.2                       oblate ellipsoidal            #
-#  115  4.63x10^-3  42.2                       spherical cap (closed wake)   #
-#  114  8.60x10^-4  151                        spherical cap (open wake)     #
+#  Eo   M           N          R     Mu(kg/ms)  Vel(m/s)  Shape              # 
+#  116  848         42.895     2.47  2.7222     0.19137   oe                 #
+#  116  266         76.602     3.57  2.0370     0.20639   oe                 #
+#  116  41.1        194.879    7.16  1.2771     0.25952   oe                 #
+#  116  5.51        532.244    13.3  0.7728     0.29170   oe                 #
+#  116  1.31        1091.569   20.4  0.5396     0.31243   oe                 #
+#  116  0.103       3892.856   42.2  0.2857     0.34224   oe                 #
+#  115  4.63x10^-3  18124.092  94.0  0.1324     0.35330   sc                 #
+#  114  8.60x10^-4  41505.729  151   0.0875     0.37504   sc                 #
+#                                                                            #
+# oe - oblate ellipsoidal                                                    #
+# scc - spherical cap (closed wake)                                          #
+# sco - spherical cap (open wake)                                            #
 # ------------------------------------------------------------------------   #
 
 g=9.81
 D=0.0261
-mu=2.73
-#mu=1.28
-#mu=0.54
+mu=2.7222
+#mu=2.0370
+#mu=1.2771
+#mu=0.7728
+#mu=0.5396
+#mu=0.2857
+#mu=0.1324
+#mu=0.0875
 rho=1350
 v_star=system("tail -n1 ../dat/volume.dat | awk '{print $5}'")
 
 Re(x)=rho*v_star*sqrt(g*D)*D/mu
 
-if (mu==2.73) v_exp(x)=0.19137;
-if (mu==1.28) v_exp(x)=0.26010;
-if (mu==0.54) v_exp(x)=0.31264;
+if (mu==2.7222) v_exp(x)=0.19137;
+if (mu==2.0370) v_exp(x)=0.20639;
+if (mu==1.2771) v_exp(x)=0.25952;
+if (mu==0.7728) v_exp(x)=0.29170;
+if (mu==0.5396) v_exp(x)=0.31243;
+if (mu==0.2857) v_exp(x)=0.34224;
+if (mu==0.1324) v_exp(x)=0.35330;
+if (mu==0.0875) v_exp(x)=0.37504;
 
 fileObj = "../dat/volume.dat"
 plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar' with lines,\

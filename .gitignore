@@ -1,9 +1,12 @@
 *.o
 *.dat
 *.swp
+.DS_Store
 2bubbles
 bubble
 step
+sphere
+cylinder
 diskNuC
 diskNuZ
 diskNuCte
@@ -17,3 +20,5 @@ curvatureAndPressure
 fallingDrop
 sessileDrop
 staticTorus
+risingBubble
+risingBubbleHT

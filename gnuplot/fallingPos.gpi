@@ -15,14 +15,15 @@ unset grid
 set key at 0.4,1.5
 set key box linestyle 1
 
-set terminal postscript enhanced
-set output '~/Desktop/falling.ps'
+#--------------------------------------------------
+# set terminal postscript enhanced
+# set output '| ps2pdf ~/Desktop/falling.pdf'
+#-------------------------------------------------- 
 
-corr = 0.9
 gravity = 9.81
-f(x)=3.5-(1.0/2.0)*corr*gravity/1.0*x*x
+f(x)=3.5-(1.0/2.0)*gravity/1.0*x*x
 
 fileObj = "../dat/volume.dat"
 
-plot fileObj using 1:($8) every 20 title 'numeric' with points,\
+plot fileObj using 1:($5) every 20 title 'numeric' with points,\
  	 f(x) title 'z(x)=3.5-0.5*gravity*x^2' with lines 

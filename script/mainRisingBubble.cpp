@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.08; // bubble
+ triEdge[2] = 0.1; // bubble
 
  int iter = 1;
  real Re = 6.53; // case 1
@@ -257,6 +257,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
+ d1.setk(0.7);
  d1.init();
  d1.assemble();
  d1.setBC();

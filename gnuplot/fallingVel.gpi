@@ -15,10 +15,14 @@ unset grid
 set key at 0.7,-1
 set key box linestyle 1
 
-set terminal postscript enhanced
-set output '~/Desktop/fallingVel.ps'
+#--------------------------------------------------
+# set terminal postscript enhanced
+# set output '| ps2pdf ~/Desktop/fallingVel.pdf'
+#-------------------------------------------------- 
 
-corr = 0.9
+#
+# Eq.: v = g*t
+#
 gravity = 9.81
 g(x)=0-gravity*x
 

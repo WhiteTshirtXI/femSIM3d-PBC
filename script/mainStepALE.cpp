@@ -115,6 +115,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
+ d1.setk(0.7);
  d1.init();
  d1.assemble();
  d1.setBC();

@@ -228,6 +228,8 @@ class Model3D
   void setCloser();
   void setInterfaceDistance();
   clVector getNormalAndKappa(int _node,list<int> _myList);
+  //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
+  //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
   void setNormalAndKappa();
 
   // get and set methods

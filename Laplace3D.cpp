@@ -16,6 +16,8 @@ Laplace3D::Laplace3D( Model3D &_m )
  setSolver( new PCGSolver() );
 
  allocateMemoryToAttrib();
+
+ k = 0.1;
 }
 
 Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )  
@@ -26,7 +28,7 @@ Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )
 
  allocateMemoryToAttrib();
 
- //cSolOld = *_d.getCSol();
+ k = _d.getk();
  cSolOld = *_m.getEdgeSize();
 }
 
@@ -83,11 +85,12 @@ void Laplace3D::setCRHS()
 
 void Laplace3D::matMountC()
 {
- //real k=5;     //   /\     more diffusion
- //real k=4;      //  /||\
- //real k=3;      //   ||     moderate diffusion 
- //real k=1;        //  \||/
- real k=0.7;      //   \/     less diffusion
+ /* k=5;       /\     more diffusion
+  * k=4;      /||\
+  * k=3;       ||     moderate diffusion 
+  * k=1;      \||/
+  * k=0.7;     \/     less diffusion
+  * */
  for( int i=0;i<numVerts;i++ )
  {
   real sumMc = Mc.SumLine(i);
@@ -413,3 +416,6 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
  cout << "chordal edge No. " << _iter << " saved in dat" << endl;
 
 } // fecha metodo chordalEdge
+
+void Laplace3D::setk(real _k){k = _k;}
+real Laplace3D::getk(){return k;}

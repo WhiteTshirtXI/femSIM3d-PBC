@@ -182,12 +182,7 @@ erase:
 	@rm -f ./dat/edge.*
 
 deepclean: 
-	@rm -f diskNuC diskNuZ diskNuCte diskSurf step stepALE 
-	@rm -f sphere cylinder torus curvatureSphere curvatureCylinder \
-           curvatureTorus curvatureAndPressureSphere \
-	       curvatureAndPressureCylinder curvatureAndPressureTorus\
-		   sessileDrop oscillatingDrop fallingDrop risingBubble \
-		   2bubbles micro risingBubbleHT
+	@find . -type f -perm -o+rx -exec rm {} \;
 	@rm -f libtest*
 	@rm -f core
 	@find ${FEMLIB_DIR} -name "*.o" -exec rm {} \;

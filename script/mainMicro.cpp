@@ -254,6 +254,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
+ d1.setk(0.7);
  d1.init();
  d1.assemble();
  d1.setBC();
@@ -337,7 +338,7 @@ int main(int argc, char **argv)
   // 3D operations
   m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  m1.removePointByVolume(0.005);
+  m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();

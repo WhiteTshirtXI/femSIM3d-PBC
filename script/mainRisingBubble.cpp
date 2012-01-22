@@ -33,16 +33,17 @@ int main(int argc, char **argv)
  triEdge[2] = 0.1; // bubble
 
  int iter = 1;
- real Re = 6.53; // case 1
+ //real Re = 6.53; // case 1
  //real Re = 13.8487; // case 2
  //real Re = 32.78; // case 3
+ real Re = 203.729549896; // case 4
  real Sc = 1;
  real We = 116;
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.05; // smooth - fujiwara
- real c4 = 0.05; // smooth surface - fujiwara
+ real c3 = 1.00; // smooth - fujiwara
+ real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -50,14 +51,15 @@ int main(int argc, char **argv)
 
  real mu_in = 0.0000178;
 
- real mu_out = 2.73;
+ //real mu_out = 2.73;
  //real mu_out = 1.28;
  //real mu_out = 0.54;
+ real mu_out = 0.0875134907735;
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 1.0;
+ real cfl = 0.8;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -257,7 +259,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
- d1.setk(0.7);
+ d1.setk(0.2);
  d1.init();
  d1.assemble();
  d1.setBC();
@@ -341,9 +343,9 @@ int main(int argc, char **argv)
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  m1.removePointByVolume();
-  m1.removePointsByInterfaceDistance();
-  //m1.remove3dMeshPointsByDistance();
+  //m1.removePointByVolume();
+  //m1.removePointsByInterfaceDistance();
+  m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 
   // surface operations
@@ -352,7 +354,7 @@ int main(int argc, char **argv)
   m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
-  //m1.removePointsByLength();
+  m1.removePointsByLength();
   m1.flipTriangleEdge();
   m1.removePointsByNeighbourCheck();
   /* **************************************** */

@@ -104,6 +104,15 @@ void MeshSmooth::stepSmooth()
  *
  * Notes on Mesh Smoothing
  * Nicolas Bray
+ *
+ * OBS.: Theoretically uSmooth = (xSum/distSum)/dt, but I removed the dt
+ * because the {u,v}Smooth velocities were too high and the
+ * Simulator3D->dt based on the ALE velocity was decreasing too much for
+ * values of order E-4. Now the parameter C3 on the scripts main may be
+ * equal to 1 (in the past the max value was 0.01, that is in the same
+ * scale of Simulator3D->dt, thus removing dt form the {u,v}Smooth we
+ * can regularize the max ALE velocity.
+ *
  * */
 // calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSmoothFujiwara()
@@ -139,15 +148,18 @@ void MeshSmooth::stepSmoothFujiwara()
    ySum += ( Y->Get(*vert)-Y->Get(*it) )*dist;
    zSum += ( Z->Get(*vert)-Z->Get(*it) )*dist;
   }
-  aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+  aux = (1.0/distSum)*xSum; // USmooth
+  //aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
   //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
   uSmooth.Set(*it,aux);
 
-  aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
+  aux = (1.0/distSum)*ySum; // VSmooth
+  //aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
   //aux = (2.0/distSum)*ySum/dt; // velocidade VSmooth
   vSmooth.Set(*it,aux);
 
-  aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
+  aux = (1.0/distSum)*zSum; //  WSmooth
+  //aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
   //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
   wSmooth.Set(*it,aux);
  }

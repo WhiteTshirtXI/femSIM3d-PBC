@@ -1157,7 +1157,7 @@ void Model3D::insertPointsByLength()
   real vertID = surfMesh.vertIdRegion.Get(mapEdgeTri.Get(edge,1)); 
   //real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5)); 
 
-  if( edgeLength > 1.4*triEdge[vertID] )
+  if( edgeLength > 1.3*triEdge[vertID] )
   {
    insertPoint(edge);
 
@@ -1192,7 +1192,7 @@ void Model3D::removePointsByCurvature()
   int surfaceNode = surface.Get(i);
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 65 )
+  if( curv > 60 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1260,12 +1260,14 @@ void Model3D::insertPointsByCurvature()
   real curv1 = fabs(surfMesh.curvature.Get(v1));
   real curv2 = fabs(surfMesh.curvature.Get(v2));
   real vertID = surfMesh.vertIdRegion.Get(v1); 
+  real length = mapEdgeTri.Get(i,0);
 
-  if( curv1 > 70 || curv2 > 70 )
+  if( curv1*length > 1.5 || curv2*length > 1.2  )
   {
    cout << "----------- Inserting by curvature..." << endl;
    insertPoint(i);
 
+   saveVTKSurface("./vtk/","insertCurv",ispc[vertID]);
    ispc[vertID]++;
   }
  }
@@ -1932,9 +1934,10 @@ void Model3D::flipTriangleEdge()
    * - sum of circumcenters of old triangles > sum of circumcenters of
    *   new triangles
    * */
-  if( q1+q2 < q3+q4 && // quality sum
-	(curv1 < 60 && curv2 < 60) && // curvature
-	(curv3_1 < 60 && curv3_2 < 60) && // curvature
+  if( surfMesh.Marker.Get(v1) == 0.5 && 
+	q1+q2 < q3+q4 && // quality sum
+	//(curv1 < 50 && curv2 < 50) && // curvature
+	//(curv3_1 < 60 && curv3_2 < 60) && // curvature
 	area1+area2  > area3+area4 && // area sum
 	dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
 	c1+c2 > c3+c4 ) // circum radius
@@ -2616,8 +2619,8 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  //edgeLength < 0.4*triEdge[elemID] ) //&& 
-	  edgeLength < 0.5*triEdge[elemID] ) //&& 
+	  edgeLength < 0.4*triEdge[elemID] ) //&& 
+	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
    int v1 = mapEdgeTri.Get(edge,1); // v1
@@ -2851,7 +2854,7 @@ void Model3D::removePointsByInterfaceDistance()
 
  real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
 
- real h = triEdgeMin*0.8164; 
+ real h = triEdgeMin*0.8864; 
  for( int i=0;i<numVerts;i++ )
  {
   int vertID = vertIdRegion.Get(i);
@@ -2898,17 +2901,22 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge[2] )
 	//-------------------------------------------------- 
-	if( d>0 && d<0.6*triEdge[2] )
+	if( d>0 && d<1.0*triEdge[2] )
 	//if( d>0 && d<2.0*triEdge[2] )
 	{
-	 cout << "- " << color(none,blue,black) 
-	      << "removing dense vertex cluster: "
-	      << resetColor() << i << " " << heaviside.Get(i) << endl;
+	//--------------------------------------------------
+	//  cout << "- " << color(none,blue,black) 
+	//       << "removing dense vertex cluster: "
+	//       << resetColor() << i << " " << heaviside.Get(i) << endl;
+	//-------------------------------------------------- 
 	 mark3DPointForDeletion(i);
+	 rpdist[vertID]++;
 	}
    }
   }
-  cout << "  removed by distance: " << rpdist[vertID] << endl;
+//--------------------------------------------------
+//   cout << "  removed by distance: " << rpdist[vertID] << endl;
+//-------------------------------------------------- 
  }
 }
 
@@ -3020,20 +3028,17 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < size &&
-	  (hSum > 1.5 || hSum < 0.5 ) )
+  if( length < size )
   {
    if( v1 > surfMesh.numVerts )
    {
 	mark3DPointForDeletion(v1);
 	rpd[vertID]++;
-	break;
    }
    else if( v2 > surfMesh.numVerts )
    {
 	mark3DPointForDeletion(v2);
 	rpd[vertID]++;
-	break;
    }
   }
  }
@@ -3351,7 +3356,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*(nb-1)+1] = yIn;
   in.regionlist[5*(nb-1)+2] = zIn;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = 4*triEdge[nb]*
+  in.regionlist[5*(nb-1)+4] = 3*triEdge[nb]*
                               triEdge[nb]*
 							  triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];
@@ -3885,10 +3890,10 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
- //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
@@ -5873,6 +5878,7 @@ void Model3D::setInOutElem()
  inElem.resize (0);
  outElem.resize (0);
  elemIdRegion.Dim(numElems); 
+ vertIdRegion.Dim(numElems); 
  for(int i=0;i<IEN.DimI();i++ )
  {
   int v1 = IEN.Get(i,0);
@@ -5885,17 +5891,25 @@ void Model3D::setInOutElem()
 
   if( hsum > 1.5 )
   {
+   vertIdRegion.Set(v1,2.0);
+   vertIdRegion.Set(v2,2.0);
+   vertIdRegion.Set(v3,2.0);
+   vertIdRegion.Set(v4,2.0);
    elemIdRegion.Set(i,2.0);
    inElem.push_back(i);
   }
   else
   {
+   vertIdRegion.Set(v1,1.0);
+   vertIdRegion.Set(v2,1.0);
+   vertIdRegion.Set(v3,1.0);
+   vertIdRegion.Set(v4,1.0);
    elemIdRegion.Set(i,1.0);
    outElem.push_back(i);
   }
  }
 }
-	   
+
 // cria matrizes de mapeamentos de vizinhos opostos ao vertice em
 // questao. Este metodo funciona com Semi-Lagrangian pois permite a
 // procura de elementos considerando o vertice em questao. Uma descricao

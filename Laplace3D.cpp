@@ -137,7 +137,7 @@ void Laplace3D::setBC()
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)];
+   real aux = triEdge[vertIdRegion->Get(i)]*0.01;
    convC.Set(i,aux);
   }
  }

@@ -1192,7 +1192,7 @@ void Model3D::removePointsByCurvature()
   int surfaceNode = surface.Get(i);
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 60 )
+  if( curv > 50 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -3678,7 +3678,7 @@ void Model3D::removePointByVolume()
 
   int elemID = elemIdRegion.Get(elem);
 
-  real maxVol = max(1.0E-06,0.01*tetVol[elemIdRegion.Get(elem)]);
+  real maxVol = max(1.0E-05,0.01*tetVol[elemIdRegion.Get(elem)]);
 
   int count=0;
   if( hSum != 2.0 && 
@@ -3890,10 +3890,10 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | re-meshing 3D points... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- //tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 

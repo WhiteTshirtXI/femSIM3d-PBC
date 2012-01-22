@@ -2243,9 +2243,9 @@ void Simulator3D::setDtLagrangianNorberto()
   real length = vectorLength(x,y,z);
 
   // bubble.py - 146 iterations
-  real xVel = fabs(uSolOld.Get(v1)) - fabs(uSolOld.Get(v2));
-  real yVel = fabs(vSolOld.Get(v1)) - fabs(vSolOld.Get(v2));
-  real zVel = fabs(wSolOld.Get(v1)) - fabs(wSolOld.Get(v2));
+  real xVel = fabs(uALE.Get(v1)) - fabs(uALE.Get(v2));
+  real yVel = fabs(vALE.Get(v1)) - fabs(vALE.Get(v2));
+  real zVel = fabs(wALE.Get(v1)) - fabs(wALE.Get(v2));
 
   real vel = vectorLength(xVel,yVel,zVel);
   //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),

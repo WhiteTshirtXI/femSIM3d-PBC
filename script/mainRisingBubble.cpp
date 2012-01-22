@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.1; // bubble
+ triEdge[2] = 0.08; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
-  m1.remove3dMeshPointsByDistance();
+  //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 
   // surface operations

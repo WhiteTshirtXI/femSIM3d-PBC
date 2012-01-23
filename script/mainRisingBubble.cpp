@@ -351,7 +351,7 @@ int main(int argc, char **argv)
   // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  //m1.removePointsByCurvature();
+  m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   m1.removePointsByLength();

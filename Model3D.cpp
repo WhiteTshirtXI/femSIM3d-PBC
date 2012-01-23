@@ -1180,20 +1180,28 @@ void Model3D::insertPointsByLength()
  *              |            /
  *            2 o ----------o 
  *      ------------------------------------------------
+ *
+ *  OBS.: Maximum curvature that a edge can handle. (empiric)
+ *
+ *  edgeLength = 0.08 ---> curvature < 60
+ *  edgeLength = 0.10 ---> curvature < 50
+ *
+ *  edgeLength*curv < 5.0
  * */
 void Model3D::removePointsByCurvature()
 {
  // number of removed surface points by Curvature
  fill(rspc.begin(),rspc.end(),0);
 
- for( int i=0;i<surface.Dim();i++ )
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
   // edge length
-  int surfaceNode = surface.Get(i);
+  int surfaceNode = i;
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
+  real edgeLength = triEdge[vertID];
   // Still don't know about the curv value!!!
-  if( curv > 75 )
+  if( vertID > 1 && edgeLength*curv > 5.0 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1240,6 +1248,9 @@ void Model3D::removePointsByCurvature()
 
    // updating surface neighbour points
    setNeighbourSurfacePoint();
+
+   // updating curvature value
+   setNormalAndKappa();
 
    saveVTKSurface("./vtk/","remCurv",rspc[vertID]);
    rspc[vertID]++;
@@ -1944,10 +1955,12 @@ void Model3D::flipTriangleEdge()
 	area1+area2  > area3+area4 && // area sum
     neighbourSurfaceElem.at( v1 ).size() > 3 &&  
     neighbourSurfaceElem.at( v2 ).size() > 3 &&  
-	dotProd(normalElem1.Get(0),normalElem1.Get(1),
-	        normalElem1.Get(2),
-	        normalElem2.Get(0),normalElem2.Get(1),
-			normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
+	//--------------------------------------------------
+	// dotProd(normalElem1.Get(0),normalElem1.Get(1),
+	//         normalElem1.Get(2),
+	//         normalElem2.Get(0),normalElem2.Get(1),
+	// 		normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
+	//-------------------------------------------------- 
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -2255,8 +2268,15 @@ void Model3D::insertPoint(int _edge)
  real P3elem1y = surfMesh.Y.Get(v3elem1);
  real P3elem1z = surfMesh.Z.Get(v3elem1);
 
- clVector coordAdd = considerCurvature(v1,v2);
+//--------------------------------------------------
+//  clVector coordAdd1 = considerCurvature(v1,v2);
+//  clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+//  real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+//  real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+//  real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+//-------------------------------------------------- 
 
+ clVector coordAdd = considerCurvature(v1,v2);
  real XvAdd = coordAdd.Get(0);
  real YvAdd = coordAdd.Get(1);
  real ZvAdd = coordAdd.Get(2);
@@ -2616,9 +2636,13 @@ void Model3D::contractEdgeByLength()
   //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
   //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
   //real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  int elem1 = mapEdgeTri.Get(edge,5);
+  int elem2 = mapEdgeTri.Get(edge,6);
   int v3elem1 = mapEdgeTri.Get(edge,3);
   int v3elem2 = mapEdgeTri.Get(edge,4);
   real edgeLength = mapEdgeTri.Get(edge,0);
+  clVector normalElem1 = getNormalElem(elem1);
+  clVector normalElem2 = getNormalElem(elem2);
 
   // verifying the length of each surface edge
   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
@@ -2631,6 +2655,12 @@ void Model3D::contractEdgeByLength()
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
 	  edgeLength < 0.4*triEdge[elemID] && 
+	//--------------------------------------------------
+	//   dotProd(normalElem1.Get(0),normalElem1.Get(1),
+	//           normalElem1.Get(2),
+	//           normalElem2.Get(0),normalElem2.Get(1),
+	// 	  	  normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
+	//-------------------------------------------------- 
       neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
       neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
 	  //edgeLength < 0.3*triEdge[elemID] ) //&& 

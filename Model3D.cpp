@@ -1192,7 +1192,8 @@ void Model3D::removePointsByCurvature()
   int surfaceNode = surface.Get(i);
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  if( curv > 50 )
+  // Still don't know about the curv value!!!
+  if( curv > 75 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1939,7 +1940,7 @@ void Model3D::flipTriangleEdge()
 	//(curv1 < 50 && curv2 < 50) && // curvature
 	//(curv3_1 < 60 && curv3_2 < 60) && // curvature
 	area1+area2  > area3+area4 && // area sum
-	dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+	//dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -3356,7 +3357,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*(nb-1)+1] = yIn;
   in.regionlist[5*(nb-1)+2] = zIn;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = 3*triEdge[nb]*
+  in.regionlist[5*(nb-1)+4] = 2*triEdge[nb]*
                               triEdge[nb]*
 							  triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];

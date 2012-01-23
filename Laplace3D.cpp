@@ -109,7 +109,7 @@ void Laplace3D::setBC()
  {
    idbcc.AddItem(i);
 
-   real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+   real aux = triEdge[surfMesh->vertIdRegion.Get(i)]*0.8;
    cc.Set(i,aux);
 
    convC.Set(i,aux);
@@ -137,7 +137,7 @@ void Laplace3D::setBC()
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)]*0.01;
+   real aux = triEdge[vertIdRegion->Get(i)]*0.1;
    convC.Set(i,aux);
   }
  }

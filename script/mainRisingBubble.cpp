@@ -59,7 +59,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.8;
+ real cfl = 0.7;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
- d1.setk(0.2);
+ d1.setk(0.1);
  d1.init();
  d1.assemble();
  d1.setBC();

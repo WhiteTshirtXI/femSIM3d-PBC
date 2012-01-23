@@ -231,6 +231,7 @@ class Model3D
   //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
   //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
   void setNormalAndKappa();
+  clVector getNormalElem(int _elem);
 
   // get and set methods
   clVector* getX();

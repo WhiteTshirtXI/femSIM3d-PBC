@@ -1881,6 +1881,7 @@ void Model3D::flipTriangleEdge()
   real q1 = 3.4641*inRadius1/h1;
   real c1 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
 	                        P3elem1x,P3elem1y,P3elem1z);
+  clVector normalElem1 = getNormalElem(elem1);
 
   // elem2
   real semiPerimeter2 = 0.5*(length12+length13_2+length23_2);
@@ -1894,6 +1895,7 @@ void Model3D::flipTriangleEdge()
   real q2 = 3.4641*inRadius2/h2;
   real c2 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
 	                        P3elem2x,P3elem2y,P3elem2z);
+  clVector normalElem2 = getNormalElem(elem2);
 
   // elem3
   real semiPerimeter3 = 0.5*(length3_1_3_2+length13_1+length13_2);
@@ -1940,7 +1942,12 @@ void Model3D::flipTriangleEdge()
 	//(curv1 < 50 && curv2 < 50) && // curvature
 	//(curv3_1 < 60 && curv3_2 < 60) && // curvature
 	area1+area2  > area3+area4 && // area sum
-	//dotProd(v1x,v1y,v1z,v2x,v2y,v2z) < 0.0 && // angle between planes > 90
+    neighbourSurfaceElem.at( v1 ).size() > 3 &&  
+    neighbourSurfaceElem.at( v2 ).size() > 3 &&  
+	dotProd(normalElem1.Get(0),normalElem1.Get(1),
+	        normalElem1.Get(2),
+	        normalElem2.Get(0),normalElem2.Get(1),
+			normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -2604,10 +2611,13 @@ void Model3D::contractEdgeByLength()
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
+
   //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
   //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
   //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
   //real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  int v3elem1 = mapEdgeTri.Get(edge,3);
+  int v3elem2 = mapEdgeTri.Get(edge,4);
   real edgeLength = mapEdgeTri.Get(edge,0);
 
   // verifying the length of each surface edge
@@ -2620,7 +2630,9 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.4*triEdge[elemID] ) //&& 
+	  edgeLength < 0.4*triEdge[elemID] && 
+      neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
+      neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
 	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
   {
    // int length = mapEdgeTri.Get(edge,0); // length
@@ -8715,3 +8727,48 @@ void Model3D::applyBubbleVolumeCorrection()
 //  return vec;
 // } // fecha metodo getNormalAndKappaByDesbrun
 //-------------------------------------------------- 
+
+clVector Model3D::getNormalElem(int _elem)
+{
+ int v1 = surfMesh.IEN.Get(_elem,0);
+ real p1x = surfMesh.X.Get(v1);
+ real p1y = surfMesh.Y.Get(v1);
+ real p1z = surfMesh.Z.Get(v1);
+
+ int v2 = surfMesh.IEN.Get(_elem,1);
+ real p2x = surfMesh.X.Get(v2);
+ real p2y = surfMesh.Y.Get(v2);
+ real p2z = surfMesh.Z.Get(v2);
+
+ int v3 = surfMesh.IEN.Get(_elem,2);
+ real p3x = surfMesh.X.Get(v3);
+ real p3y = surfMesh.Y.Get(v3);
+ real p3z = surfMesh.Z.Get(v3);
+ 
+ // distance from point 1 to 2
+ real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+
+ // distance from point 2 to 3
+ real b = distance(p2x,p2y,p2z,p3x,p3y,p3z);
+
+ /*               
+  *               v3
+  *               o 
+  *              / \
+  *             /   \
+  *            /     \
+  *           o ----- o 
+  *         v1         v2
+  *
+  * */
+ real v1x = (p2x-p1x)/a;
+ real v1y = (p2y-p1y)/a;
+ real v1z = (p2z-p1z)/a;
+
+ real v2x = (p3x-p2x)/b;
+ real v2y = (p3y-p2y)/b;
+ real v2z = (p3z-p2z)/b;
+
+ // normal to each triangular face
+ return crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+} // fecha metodo getNormalElem

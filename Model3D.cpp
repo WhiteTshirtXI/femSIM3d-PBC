@@ -1193,15 +1193,46 @@ void Model3D::removePointsByCurvature()
  // number of removed surface points by Curvature
  fill(rspc.begin(),rspc.end(),0);
 
- for( int i=0;i<surfMesh.numVerts;i++ )
+ for( int surfaceNode=0;surfaceNode<surfMesh.numVerts;surfaceNode++ )
  {
+  // Checking the largest neighbour edge of surfaceNode
+  // maxEdgeLength is then compared to surfaceNode's curvature
+  real maxEdgeLength = 0;
+  int listSize = neighbourPoint.at(surfaceNode).size();
+  list<int> plist = neighbourPoint.at(surfaceNode);
+  list<int>::iterator vert=plist.begin();
+  for( int i=0;i<listSize-1;i++ )
+  {
+   real P0x = surfMesh.X.Get(surfaceNode);
+   real P0y = surfMesh.Y.Get(surfaceNode);
+   real P0z = surfMesh.Z.Get(surfaceNode);
+
+   int v1 = *vert;++vert;
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+
+   if( edgeLength > maxEdgeLength )
+	maxEdgeLength = edgeLength;
+  }
+
+  // Still don't know about the curv value!!!
   // edge length
-  int surfaceNode = i;
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
-  real edgeLength = triEdge[vertID];
-  // Still don't know about the curv value!!!
-  if( vertID > 1 && edgeLength*curv > 5.0 )
+
+  // if the mesh is highly distorted (Re=160) and there are no
+  // tetrahedron elements enough inside the sphere, then (I don't know
+  // why) the surface mesh is sucked in, thus forming strange vertex
+  // with curvature smaller then -30, thus this can be avoided using the
+  // IF below.
+  if( vertID > 1 && 
+	  (maxEdgeLength*curv > 4.5 || surfMesh.curvature.Get(surfaceNode) < -30) )
+//--------------------------------------------------
+//   if( vertID > 1 && maxEdgeLength*curv > 4.5 )
+//-------------------------------------------------- 
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1257,6 +1288,78 @@ void Model3D::removePointsByCurvature()
   }
  }
 }
+
+//--------------------------------------------------
+// void Model3D::removePointsByCurvature()
+// {
+//  // number of removed surface points by Curvature
+//  fill(rspc.begin(),rspc.end(),0);
+// 
+//  for( int i=0;i<surfMesh.numVerts;i++ )
+//  {
+//   // edge length
+//   int surfaceNode = i;
+//   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
+//   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
+//   real edgeLength = triEdge[vertID];
+//   // Still don't know about the curv value!!!
+//   if( vertID > 1 && edgeLength*curv > 4.5 )
+//   {
+//    cout << "----------------- " << color(none,red,black) 
+// 	    << "removing vertex with curvature (" 
+// 		<< resetColor() << curv
+// 		<< color(none,red,black) 
+// 		<< ") at (" 
+// 		<< resetColor()
+// 		<< surfMesh.vertIdRegion.Get(surfaceNode)
+// 		<< color(none,red,black) 
+// 		<< "): "
+// 		<< resetColor() << surfaceNode << endl;
+//    //saveVTKSurface("./vtk/","deleteBefore",surfaceNode);
+// 
+//    // delete surfaceNode from surface, xSurface, ySurface, zSurface vectors
+//    // surface is not used to add/remove/flip elements before the remeshing
+//    // but it's used on removePointsByInterfaceDistance
+//    // to be implemented 
+// 
+//    // marking the desired elements for deletion
+//    list<int> plist = neighbourSurfaceElem.at(surfaceNode);
+//    for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+// 	markSurfElemForDeletion(*mele);
+// 
+//    // deleting elements
+//    deleteSurfaceElements();
+// 
+//    // after the deletion process it's mandatory to create new elements
+//    // to fill the space left by the deleting process
+//    //surfaceTriangulator(surfaceNode);
+//    surfaceTriangulatorEarClipping(surfaceNode);
+//    //surfaceTriangulatorQualityEarClipping(surfaceNode);
+// 
+//    // deleting X,Y and Z coordinate; deleting the point maker funcition
+//    deleteSurfacePoint(surfaceNode);
+// 
+//    // update surface
+//    setSurface();
+// 
+//    // updating edge matrix
+//    setMapEdgeTri();
+// 
+//    // updating surface neighbour elems
+//    setNeighbourSurfaceElem();
+// 
+//    // updating surface neighbour points
+//    setNeighbourSurfacePoint();
+// 
+//    // updating curvature value
+//    setNormalAndKappa();
+// 
+//    saveVTKSurface("./vtk/","remCurv",rspc[vertID]);
+//    rspc[vertID]++;
+//   }
+//  }
+// }
+//-------------------------------------------------- 
 
 void Model3D::insertPointsByCurvature()
 {
@@ -1327,8 +1430,20 @@ void Model3D::insertPointsByInterfaceDistance()
  }
 }
 
-// triangulate the interface using triangles with sorted vertices.
-// this methods does not work for conncave polyhedrons
+/* triangulate the interface using triangles with sorted vertices.
+ * This method picks the first vertex of the neighbourPoint list and
+ * connect it to each pair of vertex to mesh locally the empty space.
+ * Ex. neighbourPoint = 0 1 2 3 4 5 0
+ *     tri1 = 0 1 2
+ *     tri2 = 0 2 3
+ *     tri3 = 0 3 4
+ *     tri4 = 0 4 5
+ *
+ * _v is the removed vertex located in the center of the polyhedron
+ * neighbourPoint
+ *
+ * OBS: this methods does not work for conncave polyhedrons
+ * */
 void Model3D::surfaceTriangulator(int _v)
 {
  int listSize = neighbourPoint.at(_v).size();
@@ -1336,7 +1451,7 @@ void Model3D::surfaceTriangulator(int _v)
  list<int>::iterator point=plist.begin();
  int vert0 = *point;++point;
 
- for( int i=0;i<listSize-2;i++ )
+ for( int i=0;i<listSize-3;i++ )
  {
   int vert1 = *point;++point;
   int vert2 = *point;
@@ -1350,6 +1465,17 @@ void Model3D::surfaceTriangulator(int _v)
  }
 }
 
+/*
+ * This Method mesh an empty space (where _v is the removed vertex)
+ * using the ear clipping technique which uses every 3 consective
+ * vertices, thus forming the triangulation.
+ * Ex.: neighbourPoint = 0 1 2 3 4 5 0
+ *      tri1 = 0 1 2
+ *      tri2 = 2 3 4
+ *      tri3 = 4 5 0
+ *      tri4 = 0 2 4
+ *
+ * */
 void Model3D::surfaceTriangulatorEarClipping(int _v)
 {
  int vert1,vert2,vert3;
@@ -1440,102 +1566,31 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
  */
 clVector Model3D::triangleQuality(int _v)
 {
- // adding 2nd element to end of the list, but comparing if it is
- // already there
- // 0 1 2 3 0 --> polyhedron
- // 0 1 2 3 0 1 --> after adding this point
- // Doing so we can get all the triangles combinations:
- // 0 1 2, 1 2 3, 2 3 0, 3 0 1
- list<int> plist2 = neighbourPoint.at(_v);
- list<int>::iterator mele2=plist2.begin();
- ++mele2;
- int v2=*mele2;
- neighbourPoint.at(_v).push_back(v2);
-
-// I think it is not necessary to check the following (03.02.2011)
-// if and only if we remove the added vertex (v2) in the end of this
-// method
-//--------------------------------------------------
-//  mele2=plist2.end();--mele2;
-//  if( v2 != *mele2  )
-//-------------------------------------------------- 
-
  int listSize = neighbourPoint.at(_v).size();
  list<int> plist = neighbourPoint.at(_v);
  list<int>::iterator point=plist.begin();
  int vert1,vert2,vert3;
  real qMax = 0; 
- clVector vertexMax(3);
+ clVector bestTri(3);
 
-//--------------------------------------------------
-//  for( int j=0;j<listSize;j++ )
-//  {
-//   cout << *point << " ";
-//   ++point;
-//  }
-//  cout << endl;
-//  point=plist.begin();
-//-------------------------------------------------- 
-
- for( int i=0;i<listSize-2;i++ )
+ for( int i=0;i<listSize-1;i++ )
  {
   vert1 = *point;++point;
   vert2 = *point;++point;
   vert3 = *point;--point;
 
-  real P0x = surfMesh.X.Get(vert1);
-  real P0y = surfMesh.Y.Get(vert1);
-  real P0z = surfMesh.Z.Get(vert1);
-
-  real P1x = surfMesh.X.Get(vert2);
-  real P1y = surfMesh.Y.Get(vert2);
-  real P1z = surfMesh.Z.Get(vert2);
-
-  real P2x = surfMesh.X.Get(vert3);
-  real P2y = surfMesh.Y.Get(vert3);
-  real P2z = surfMesh.Z.Get(vert3);
-
-  // Triangle quality measure;
-  real length12 = distance(P0x,P0y,P0z,P1x,P1y,P1z);
-  real length13 = distance(P0x,P0y,P0z,P2x,P2y,P2z);
-  real length23 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
-
-  real semiPerimeter = 0.5*(length12+length13+length23);
-  real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
-  real inRadius = area/semiPerimeter;
-
-  /* Triangle quality measure;
-   *
-   *        6          r(t)       r -> in-radius
-   * q = -------- * --------- 
-   *      sqrt(3)      h(t)       h -> longest edge length
-   *
-   * Frey,P.,Borouchaki,H.:Surfacemeshevaluation.In:Intl. Mesh-ing
-   * Roundtable, pp. 363:374 (1997)
-   * */
-
-  real h = length12;
-  if( h<length13 )
-   h = length13;
-  if( h<length23 )
-   h = length23;
-
-  real q = 3.4641*inRadius/h;
-  //cout << "triangle: " << i << " " << "quality: " << q << endl;
+  real q = triangleQualityMeasure(vert1,vert2,vert3);
 
   if( qMax<q )
   {
    qMax = q; 
-   vertexMax.Set(0,vert1);
-   vertexMax.Set(1,vert2);
-   vertexMax.Set(2,vert3);
+   bestTri.Set(0,vert1);
+   bestTri.Set(1,vert2);
+   bestTri.Set(2,vert3);
   }
  }
- // removing the 2nd vertex inserted on the neighbourPoint list on the 
- // beginning of this method
- neighbourPoint.at(_v).pop_back();
 
- return vertexMax;
+ return bestTri;
 }
 
 /*  Triangulator for the interface points after the deletion process.
@@ -1549,16 +1604,16 @@ clVector Model3D::triangleQuality(int _v)
  *  */
 void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
 {
- int listSize = neighbourPoint.at(_v).size();
  int vert1,vert2,vert3;
+ int listSize = neighbourPoint.at(_v).size();
 
  while( listSize>4 )
  {
-  clVector vertex = triangleQuality(_v);
+  clVector bestTri = triangleQuality(_v);
 
-  vert1 = vertex.Get(0);
-  vert2 = vertex.Get(1);
-  vert3 = vertex.Get(2);
+  vert1 = bestTri.Get(0);
+  vert2 = bestTri.Get(1);
+  vert3 = bestTri.Get(2);
   //cout << "chosen: " << vert1 << " " << vert2 << " " << vert3 << endl;
   neighbourPoint.at(_v).remove(vert2); // removing 2nd vertice
   listSize--;
@@ -1569,9 +1624,14 @@ void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
   surfMesh.IEN.Set(elem,0,vert1);
   surfMesh.IEN.Set(elem,1,vert2);
   surfMesh.IEN.Set(elem,2,vert3);
-  surfMesh.numElems++;
 
-  cout << vert1 << " " << vert2 << " " << vert3 << endl;
+  // add new elemIdRegion
+  list<int> plist2 = neighbourSurfaceElem.at(_v);
+  list<int>::iterator mele=plist2.begin();
+  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
+  mele = plist2.end();
+
+  surfMesh.numElems++;
  }
  // adding last remaning element
  list<int> plist = neighbourPoint.at(_v);
@@ -1586,9 +1646,14 @@ void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
  surfMesh.IEN.Set(elem,0,vert1);
  surfMesh.IEN.Set(elem,1,vert2);
  surfMesh.IEN.Set(elem,2,vert3);
+
+  // add new elemIdRegion
+ list<int> plist2 = neighbourSurfaceElem.at(_v);
+ list<int>::iterator mele=plist2.begin();
+ surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
+ mele = plist2.end();
+
  surfMesh.numElems++;
- cout << vert1 << " " << vert2 << " " << vert3 << endl;
- cout << "=========================================" << endl;
 }
 
 void Model3D::deleteSurfacePoint(int _v)
@@ -1858,87 +1923,37 @@ void Model3D::flipTriangleEdge()
   real P3elem2y = surfMesh.Y.Get(v3elem2);
   real P3elem2z = surfMesh.Z.Get(v3elem2);
 
-  real v1x = P3elem1x-P1x;
-  real v1y = P3elem1y-P1y;
-  real v1z = P3elem1z-P1z;
-
-  real v2x = P3elem2x-P1x;
-  real v2y = P3elem2y-P1y;
-  real v2z = P3elem2z-P1z;
-
-  // v1 ---- v2
-  real length12 = mapEdgeTri.Get(edge,0);
-  // v1 ---- v3_1
-  real length13_1 = distance(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z);
-  // v1 ---- v3_2
-  real length13_2 = distance(P1x,P1y,P1z,P3elem2x,P3elem2y,P3elem2z);
-  // v2 ---- v3_1
-  real length23_1 = distance(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z);
-  // v2 ---- v3_2
-  real length23_2 = distance(P2x,P2y,P2z,P3elem2x,P3elem2y,P3elem2z);
-  // v3_1 ---- v3_2
-  real length3_1_3_2 = distance(P3elem1x,P3elem1y,P3elem1z,
-	P3elem2x,P3elem2y,P3elem2z);
-
   // elem1
-  real semiPerimeter1 = 0.5*(length12+length13_1+length23_1);
   real area1 = getAreaVert(v1,v2,v3elem1);
-  real inRadius1 = area1/semiPerimeter1;
-  real h1 = length12;
-  if( h1<length13_1 )
-   h1 = length13_1;
-  if( h1<length23_1 )
-   h1 = length23_1;
-  real q1 = 3.4641*inRadius1/h1;
+  real q1 = triangleQualityMeasure(v1,v2,v3elem1);
   real c1 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
 	                        P3elem1x,P3elem1y,P3elem1z);
   clVector normalElem1 = getNormalElem(elem1);
 
   // elem2
-  real semiPerimeter2 = 0.5*(length12+length13_2+length23_2);
   real area2 = getAreaVert(v1,v2,v3elem2);
-  real inRadius2 = area2/semiPerimeter2;
-  real h2 = length12;
-  if( h2<length13_2 )
-   h2 = length13_2;
-  if( h2<length23_2 )
-   h2 = length23_2;
-  real q2 = 3.4641*inRadius2/h2;
+  real q2 = triangleQualityMeasure(v1,v2,v3elem2);
   real c2 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
 	                        P3elem2x,P3elem2y,P3elem2z);
   clVector normalElem2 = getNormalElem(elem2);
 
   // elem3
-  real semiPerimeter3 = 0.5*(length3_1_3_2+length13_1+length13_2);
   real area3 = getAreaVert(v1,v3elem1,v3elem2);
-  real inRadius3 = area3/semiPerimeter3;
-  real h3 = length3_1_3_2;
-  if( h3<length13_1 )
-   h3 = length13_1;
-  if( h3<length13_2 )
-   h3 = length13_2;
-  real q3 = 3.4641*inRadius3/h3;
+  real q3 = triangleQualityMeasure(v1,v3elem1,v3elem2);
   real c3 = getCircumRadius(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z,
 	                        P3elem2x,P3elem2y,P3elem2z);
 
   // elem4
-  real semiPerimeter4 = 0.5*(length3_1_3_2+length23_1+length23_2);
   real area4 = getAreaVert(v2,v3elem1,v3elem2);
-  real inRadius4 = area4/semiPerimeter4;
-  real h4 = length3_1_3_2;
-  if( h4<length23_1 )
-   h4 = length23_1;
-  if( h4<length23_2 )
-   h4 = length23_2;
-  real q4 = 3.4641*inRadius4/h4;
+  real q4 = triangleQualityMeasure(v2,v3elem1,v3elem2);
   real c4 = getCircumRadius(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z,
 	                        P3elem2x,P3elem2y,P3elem2z);
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  real curv1 = fabs(surfMesh.curvature.Get(v1));
-  real curv2 = fabs(surfMesh.curvature.Get(v2));
-  real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
-  real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
+  //real curv1 = fabs(surfMesh.curvature.Get(v1));
+  //real curv2 = fabs(surfMesh.curvature.Get(v2));
+  //real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
+  //real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
 
   /* FLIPPING requirements:
    * - sum of quality of old triangles < sum of quality of new triangles
@@ -2267,6 +2282,11 @@ void Model3D::insertPoint(int _edge)
  real P3elem1x = surfMesh.X.Get(v3elem1);
  real P3elem1y = surfMesh.Y.Get(v3elem1);
  real P3elem1z = surfMesh.Z.Get(v3elem1);
+ 
+ // add point in the middle of a edge (not consider curvature)
+ real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+ real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+ real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
 
 //--------------------------------------------------
 //  clVector coordAdd1 = considerCurvature(v1,v2);
@@ -2276,10 +2296,12 @@ void Model3D::insertPoint(int _edge)
 //  real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
 //-------------------------------------------------- 
 
- clVector coordAdd = considerCurvature(v1,v2);
- real XvAdd = coordAdd.Get(0);
- real YvAdd = coordAdd.Get(1);
- real ZvAdd = coordAdd.Get(2);
+//--------------------------------------------------
+//  clVector coordAdd = considerCurvature(v1,v2);
+//  real XvAdd = coordAdd.Get(0);
+//  real YvAdd = coordAdd.Get(1);
+//  real ZvAdd = coordAdd.Get(2);
+//-------------------------------------------------- 
 
 //--------------------------------------------------
 //  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
@@ -2745,30 +2767,40 @@ void Model3D::removePointsByLength()
    {
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength1=0;
-	list<int> plist = neighbourPoint.at(v1);
-	for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	int listSize1 = neighbourPoint.at(v1).size();
+	list<int> plist1 = neighbourPoint.at(v1);
+	list<int>::iterator vert1=plist1.begin();
+	for( int i=0;i<listSize1-1;i++ )
 	{
-	 // node to be removed
-	 int vert1 = v1;
-	 // oposite node
-	 int vert2 = *mele;
-	 sumLength1 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
-	                             (Y.Get(vert1)-Y.Get(vert2)),
-								 (Z.Get(vert1)-Z.Get(vert2)) );
+	 real P0x = surfMesh.X.Get(v1);
+	 real P0y = surfMesh.Y.Get(v1);
+	 real P0z = surfMesh.Z.Get(v1);
+
+	 int v = *vert1;++vert1;
+	 real P1x = surfMesh.X.Get(v);
+	 real P1y = surfMesh.Y.Get(v);
+	 real P1z = surfMesh.Z.Get(v);
+
+     sumLength1 += distance(P0x,P0y,P0z,P1x,P1y,P1z);
 	}
 
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength2=0;
-	plist = neighbourPoint.at(v2);
-	for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	int listSize2 = neighbourPoint.at(v2).size();
+	list<int> plist2 = neighbourPoint.at(v2);
+	list<int>::iterator vert2=plist2.begin();
+	for( int i=0;i<listSize2-1;i++ )
 	{
-	 // node to be removed
-	 int vert1 = v1;
-	 // oposite node
-	 int vert2 = *mele;
-	 sumLength2 += vectorLength( (X.Get(vert1)-X.Get(vert2)),
-	                             (Y.Get(vert1)-Y.Get(vert2)),
-								 (Z.Get(vert1)-Z.Get(vert2)) );
+	 real P0x = surfMesh.X.Get(v2);
+	 real P0y = surfMesh.Y.Get(v2);
+	 real P0z = surfMesh.Z.Get(v2);
+
+	 int v = *vert2;++vert2;
+	 real P2x = surfMesh.X.Get(v);
+	 real P2y = surfMesh.Y.Get(v);
+	 real P2z = surfMesh.Z.Get(v);
+
+     sumLength2 += distance(P0x,P0y,P0z,P2x,P2y,P2z);
 	}
 
 	// check which node has the smallest length sum and proceed
@@ -3064,8 +3096,6 @@ void Model3D::remove3dMeshPointsByDiffusion()
   real y2=Y.Get(v2);
   real z2=Z.Get(v2);
   real length = distance(x1,y1,z1,x2,y2,z2);
-
-  real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   real size = (edgeSize.Get(v1)+edgeSize.Get(v2))/2.0;
 
@@ -7534,51 +7564,10 @@ void Model3D::removePointsByNeighbourCheck()
    * creates these problematic local mesh. Such a point should be
    * removed to avoid mesh problems.
    * */
-  if( neighbourSurfaceElem.at( i ).size() < 3 )
+  int elemListSize = neighbourSurfaceElem.at( i ).size();
+
+  if( elemListSize < 4 )
   {
-   // marking the desired elements for deletion
-   list<int> plist = neighbourSurfaceElem.at(i);
-   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	markSurfElemForDeletion(*mele);
-
-   cout << "----------------- " << color(none,red,black) 
-	    << "removing fake triangle: " << resetColor() 
-		<< i << endl;
-
-   // deleting elements
-   deleteSurfaceElements();
-   deleteSurfacePoint(i);
-
-   // updating surface, xSurface, ySurface and zSurface
-   setSurface();
-
-   // updating edge matrix
-   setMapEdgeTri();
-
-   // updating surface neighbour elems
-   setNeighbourSurfaceElem();
-
-   // updating surface neighbour points
-   setNeighbourSurfacePoint();
-
-   rspn[vertID]++;
-  }
-  /*
-   * This if removes a surface point when the number of its neighbours
-   * are equal or lower than 4. Usually these points demage the mesh
-   * quality and breaks the simulation flow. 
-   * */
-  if( neighbourPoint.at( i ).size() <= 4 )
-  {
-   cout << "----------------- " << color(none,red,black) 
-	<< "removing low-quality point cluster: " << resetColor() 
-	<< i << endl;
-
-   // delete v1 from surface, xSurface, ySurface, zSurface vectors
-   // surface is not used to add/remove/flip elements before the remeshing
-   // but it's used on removePointsByInterfaceDistance
-   // to be implemented 
-
    // marking the desired elements for deletion
    list<int> plist = neighbourSurfaceElem.at(i);
    for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
@@ -7591,7 +7580,7 @@ void Model3D::removePointsByNeighbourCheck()
    // to fill the space left by the deleting process
    //surfaceTriangulator(v1);
    surfaceTriangulatorEarClipping(i);
-   //surfaceTriangulatorQualityEarClipping(v1);
+   //surfaceTriangulatorQualityEarClipping(i);
 
    // deleting X,Y and Z coordinate; deleting the point maker funcition
    deleteSurfacePoint(i);
@@ -7608,9 +7597,30 @@ void Model3D::removePointsByNeighbourCheck()
    // updating surface neighbour points
    setNeighbourSurfacePoint();
 
-   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+   if( elemListSize < 3 )
+   {
+	cout << "----------------- " << color(none,red,black) 
+	     << "removing fake triangle: " << resetColor() 
+		 << i << endl;
+	saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+	rspn[vertID]++;
+   }
 
-   rspn[vertID]++;
+   /*
+	* This if removes a surface point when the number of its neighbours
+	* are equal. Usually these points demage the mesh
+	* quality and breaks the simulation flow. 
+	* */
+   if( elemListSize == 3 )
+   {
+	cout << "----------------- " << color(none,red,black) 
+	     << "removing low-quality point cluster: " << resetColor() 
+		 << i << endl;
+
+	saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+	rspn[vertID]++;
+
+   }
   }
  }
 }
@@ -8802,3 +8812,47 @@ clVector Model3D::getNormalElem(int _elem)
  // normal to each triangular face
  return crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
 } // fecha metodo getNormalElem
+
+real Model3D::triangleQualityMeasure(int _v1,int _v2, int _v3)
+{
+ real P0x = surfMesh.X.Get(_v1);
+ real P0y = surfMesh.Y.Get(_v1);
+ real P0z = surfMesh.Z.Get(_v1);
+
+ real P1x = surfMesh.X.Get(_v2);
+ real P1y = surfMesh.Y.Get(_v2);
+ real P1z = surfMesh.Z.Get(_v2);
+
+ real P2x = surfMesh.X.Get(_v3);
+ real P2y = surfMesh.Y.Get(_v3);
+ real P2z = surfMesh.Z.Get(_v3);
+
+ // Triangle quality measure;
+ real length12 = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+ real length13 = distance(P0x,P0y,P0z,P2x,P2y,P2z);
+ real length23 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
+
+ real semiPerimeter = 0.5*(length12+length13+length23);
+ real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+ real inRadius = area/semiPerimeter;
+
+ /* Triangle quality measure;
+  *
+  *        6          r(t)       r -> in-radius
+  * q = -------- * --------- 
+  *      sqrt(3)      h(t)       h -> longest edge length
+  *
+  * Frey,P.,Borouchaki,H.:Surfacemeshevaluation.In:Intl. Mesh-ing
+  * Roundtable, pp. 363:374 (1997)
+  * */
+
+ real h = length12;
+ if( h<length13 )
+  h = length13;
+ if( h<length23 )
+  h = length23;
+
+ // triangle measure quality q = 3.4641*inRadius/h;
+ return 3.4641*inRadius/h;
+}
+

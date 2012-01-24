@@ -90,6 +90,7 @@ class Model3D
   void flipTriangleEdge();
   void contractEdgeByLength();
   int findEdge(int _v1,int _v2);
+  real triangleQualityMeasure(int _v1,int _v2, int _v3);
 
   // 3D points treatment
   void mark3DPointForDeletion(int _vert);

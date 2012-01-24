@@ -184,17 +184,27 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
   ySum = 0.0;
   zSum = 0.0;
   distSum = 0.0;
+
+  int listSize = neighbourPoint->at(surfaceNode).size();
   list<int> plist = neighbourPoint->at(surfaceNode);
-  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  list<int>::iterator vert=plist.begin();
+  for( int i=0;i<listSize-1;i++ )
   {
-   real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
-	                     X->Get(surfaceNode),
-						 Y->Get(surfaceNode),
-						 Z->Get(surfaceNode) );
-   distSum += dist;   
-   xSum += ( X->Get(*vert)-X->Get(surfaceNode) )*dist;
-   ySum += ( Y->Get(*vert)-Y->Get(surfaceNode) )*dist;
-   zSum += ( Z->Get(*vert)-Z->Get(surfaceNode) )*dist;
+   real P0x = surfMesh->X.Get(surfaceNode);
+   real P0y = surfMesh->Y.Get(surfaceNode);
+   real P0z = surfMesh->Z.Get(surfaceNode);
+
+   int v1 = *vert;++vert;
+   real P1x = surfMesh->X.Get(v1);
+   real P1y = surfMesh->Y.Get(v1);
+   real P1z = surfMesh->Z.Get(v1);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+
+   distSum += edgeLength;   
+   xSum += ( P1x-P0x )*edgeLength;
+   ySum += ( P1y-P0y )*edgeLength;
+   zSum += ( P1z-P0z )*edgeLength;
   }
   aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
   //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth

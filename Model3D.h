@@ -75,7 +75,7 @@ class Model3D
   void removePointsByCurvature();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
-  void removePointsByNeighbourCheck();
+  void removePointByNeighbourCheck(int _node);
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
   void surfaceTriangulatorEarClipping(int _v);

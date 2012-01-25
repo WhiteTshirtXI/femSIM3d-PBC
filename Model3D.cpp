@@ -1157,7 +1157,7 @@ void Model3D::insertPointsByLength()
   real vertID = surfMesh.vertIdRegion.Get(mapEdgeTri.Get(edge,1)); 
   //real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5)); 
 
-  if( edgeLength > 1.3*triEdge[vertID] )
+  if( edgeLength > 1.4*triEdge[vertID] )
   {
    insertPoint(edge);
 
@@ -1995,10 +1995,10 @@ void Model3D::flipTriangleEdge()
 	                        P3elem2x,P3elem2y,P3elem2z);
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  //real curv1 = fabs(surfMesh.curvature.Get(v1));
-  //real curv2 = fabs(surfMesh.curvature.Get(v2));
-  //real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
-  //real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
+  real curv1 = fabs(surfMesh.curvature.Get(v1));
+  real curv2 = fabs(surfMesh.curvature.Get(v2));
+  real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
+  real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
 
   /* FLIPPING requirements:
    * - sum of quality of old triangles < sum of quality of new triangles
@@ -2010,11 +2010,11 @@ void Model3D::flipTriangleEdge()
    * */
   if( surfMesh.Marker.Get(v1) == 0.5 && 
 	q1+q2 < q3+q4 && // quality sum
-	//(curv1 < 50 && curv2 < 50) && // curvature
-	//(curv3_1 < 60 && curv3_2 < 60) && // curvature
+	(curv1 < 40 && curv2 < 40) && // curvature
+	(curv3_1 < 40 && curv3_2 < 40) && // curvature
 	area1+area2  > area3+area4 && // area sum
-    neighbourSurfaceElem.at( v1 ).size() > 3 &&  
-    neighbourSurfaceElem.at( v2 ).size() > 3 &&  
+    //neighbourSurfaceElem.at( v1 ).size() > 3 &&  
+    //neighbourSurfaceElem.at( v2 ).size() > 3 &&  
 	//--------------------------------------------------
 	// dotProd(normalElem1.Get(0),normalElem1.Get(1),
 	//         normalElem1.Get(2),
@@ -2191,6 +2191,12 @@ void Model3D::flipTriangleEdge()
 //    neighbourPoint.at(v3elem2) = getNeighbourSurfacePoint(v3elem2);
 //-------------------------------------------------- 
 
+   // removing low quality elements
+   removePointByNeighbourCheck(v1);
+   removePointByNeighbourCheck(v2);
+   removePointByNeighbourCheck(v3elem1);
+   removePointByNeighbourCheck(v3elem2);
+
    saveVTKSurface("./vtk/","flipped",flip[elemID]);
    flip[elemID]++;
   }
@@ -2269,10 +2275,12 @@ void Model3D::insertPoint(int _edge)
   }
   /* -------------------- END of CHECKING --------------------- */
 
- // add point in the middle of a edge (not consider curvature)
- real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
- real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
- real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+//--------------------------------------------------
+//  // add point in the middle of a edge (not consider curvature)
+//  real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+//  real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+//  real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+//-------------------------------------------------- 
 
 //--------------------------------------------------
 //  clVector coordAdd1 = considerCurvature(v1,v2);
@@ -2282,12 +2290,10 @@ void Model3D::insertPoint(int _edge)
 //  real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
 //-------------------------------------------------- 
 
-//--------------------------------------------------
-//  clVector coordAdd = considerCurvature(v1,v2);
-//  real XvAdd = coordAdd.Get(0);
-//  real YvAdd = coordAdd.Get(1);
-//  real ZvAdd = coordAdd.Get(2);
-//-------------------------------------------------- 
+ clVector coordAdd = considerCurvature(v1,v2);
+ real XvAdd = coordAdd.Get(0);
+ real YvAdd = coordAdd.Get(1);
+ real ZvAdd = coordAdd.Get(2);
 
 //--------------------------------------------------
 //  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
@@ -2574,20 +2580,20 @@ void Model3D::contractEdgeByLength()
  // number of removed 3d mesh points by interface distance
  fill(csp.begin(),csp.end(),0);
 
+ fill(rpdist.begin(),rpdist.end(),0);
+
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
 
-  //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
-  //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
-  //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
-  //real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
+  real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
+  real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
+  real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
   int elem1 = mapEdgeTri.Get(edge,5);
   int elem2 = mapEdgeTri.Get(edge,6);
-  int v3elem1 = mapEdgeTri.Get(edge,3);
-  int v3elem2 = mapEdgeTri.Get(edge,4);
   real edgeLength = mapEdgeTri.Get(edge,0);
   clVector normalElem1 = getNormalElem(elem1);
   clVector normalElem2 = getNormalElem(elem2);
@@ -2602,24 +2608,24 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.4*triEdge[elemID] && 
+	  edgeLength < 0.6*triEdge[elemID] && 
 	//--------------------------------------------------
 	//   dotProd(normalElem1.Get(0),normalElem1.Get(1),
 	//           normalElem1.Get(2),
 	//           normalElem2.Get(0),normalElem2.Get(1),
-	// 	  	  normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
+	// 	  	  normalElem2.Get(2) ) > 0.0  // angle between planes > 90
 	//-------------------------------------------------- 
-      neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
-      neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
+	  (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
+      //neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
+      //neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
 	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
+	 )
   {
    // int length = mapEdgeTri.Get(edge,0); // length
-   int v1 = mapEdgeTri.Get(edge,1); // v1
-   int v2 = mapEdgeTri.Get(edge,2); // v2
-   //int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
-   //int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
-   int elem1 = mapEdgeTri.Get(edge,5); // elem1
-   int elem2 = mapEdgeTri.Get(edge,6); // elem2
+   int v1 = mapEdgeTri.Get(edge,1); 
+   int v2 = mapEdgeTri.Get(edge,2); 
+   int v3elem1 = mapEdgeTri.Get(edge,3);
+   int v3elem2 = mapEdgeTri.Get(edge,4);
 
    real P1x = surfMesh.X.Get(v1);
    real P1y = surfMesh.Y.Get(v1);
@@ -2648,6 +2654,7 @@ void Model3D::contractEdgeByLength()
 	 if( surfMesh.IEN.Get(i,j)==v2 )
 	  surfMesh.IEN.Set(i,j,v1);
 
+   // delete v2 because v1 is always lower then v2
    deleteSurfacePoint(v2);
 
    // update surface
@@ -2661,6 +2668,11 @@ void Model3D::contractEdgeByLength()
 
    // updating surface neighbour points
    setNeighbourSurfacePoint();
+
+   // removing low quality elements
+   removePointByNeighbourCheck(v1);
+   removePointByNeighbourCheck(v3elem1);
+   removePointByNeighbourCheck(v3elem2);
 
    cout << "----------------- " << color(none,blue,black) 
 	    << "contracting edge at (" << resetColor()
@@ -7477,80 +7489,6 @@ real Model3D::getSurfaceRadius(int _region)
  return radius;
 }
 
-void Model3D::removePointsByNeighbourCheck()
-{
- fill(rspn.begin(),rspn.end(),0);
-
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  int vertID = surfMesh.vertIdRegion.Get(i);
-  /* 
-   * This if checks whether the point on the surface has only 3 surface
-   * elements. This is caused by the re-meshing process that sometimes
-   * creates these problematic local mesh. Such a point should be
-   * removed to avoid mesh problems.
-   * */
-  int elemListSize = neighbourSurfaceElem.at( i ).size();
-
-  if( elemListSize < 4 )
-  {
-   // marking the desired elements for deletion
-   list<int> plist = neighbourSurfaceElem.at(i);
-   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	markSurfElemForDeletion(*mele);
-
-   // deleting elements
-   deleteSurfaceElements();
-
-   // after the deletion process it's mandatory to create new elements
-   // to fill the space left by the deleting process
-   //surfaceTriangulator(v1);
-   surfaceTriangulatorEarClipping(i);
-   //surfaceTriangulatorQualityEarClipping(i);
-
-   // deleting X,Y and Z coordinate; deleting the point maker funcition
-   deleteSurfacePoint(i);
-
-   // update surface
-   setSurface();
-
-   // updating edge matrix
-   setMapEdgeTri();
-
-   // updating surface neighbour elems
-   setNeighbourSurfaceElem();
-
-   // updating surface neighbour points
-   setNeighbourSurfacePoint();
-
-   if( elemListSize < 3 )
-   {
-	cout << "----------------- " << color(none,red,black) 
-	     << "removing fake triangle: " << resetColor() 
-		 << i << endl;
-	saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
-	rspn[vertID]++;
-   }
-
-   /*
-	* This if removes a surface point when the number of its neighbours
-	* are equal. Usually these points demage the mesh
-	* quality and breaks the simulation flow. 
-	* */
-   if( elemListSize == 3 )
-   {
-	cout << "----------------- " << color(none,red,black) 
-	     << "removing low-quality point cluster: " << resetColor() 
-		 << i << endl;
-
-	saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
-	rspn[vertID]++;
-
-   }
-  }
- }
-}
-
 void Model3D::setSingleElement()
 {
  numVerts = 4;
@@ -8903,95 +8841,150 @@ void Model3D::checkAngleBetweenPlanes()
 						normalElem2.Get(1),
 						normalElem2.Get(2) );
 
-  if( (180*theta/3.1415) > 135 )
+  if( (180*theta/3.1415) > 170 )
   {
+   cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;
+   cout << "v2: " << mapEdgeTri.Get(edge,2) << endl;
+   cout << "elem1:        " << elem1 << endl; 
+   cout << "    centroid: " << centroidTRIElem1.Get(0) << " " 
+	                        << centroidTRIElem1.Get(1) << " "
+	                        << centroidTRIElem1.Get(2) << endl;
+   cout << "    normal:   " << centroidTRIElem1.Get(0)+normalElem1.Get(0) << " " 
+	                        << centroidTRIElem1.Get(1)+normalElem1.Get(1) << " "
+	                        << centroidTRIElem1.Get(2)+normalElem1.Get(2) << endl;
+   cout << "elem2:        " << elem2 << endl; 
+   cout << "    centroid: " << centroidTRIElem2.Get(0) << " " 
+	                        << centroidTRIElem2.Get(1) << " "
+						    << centroidTRIElem2.Get(2) << endl;
+   cout << "    normal:   " << centroidTRIElem2.Get(0)+normalElem2.Get(0) << " " 
+	                        << centroidTRIElem2.Get(1)+normalElem2.Get(1) << " "
+						    << centroidTRIElem2.Get(2)+normalElem2.Get(2) << endl;
+   cout << "  theta: " << 180*theta/3.14159 << endl;
+   cout << " --------------- " << endl;
+
 //--------------------------------------------------
-//    cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;
-//    cout << "v2: " << mapEdgeTri.Get(edge,2) << endl;
-//    cout << "elem1:        " << elem1 << endl; 
-//    cout << "    centroid: " << centroidTRIElem1.Get(0) << " " 
-// 	                        << centroidTRIElem1.Get(1) << " "
-// 	                        << centroidTRIElem1.Get(2) << endl;
-//    cout << "    normal:   " << centroidTRIElem1.Get(0)+normalElem1.Get(0) << " " 
-// 	                        << centroidTRIElem1.Get(1)+normalElem1.Get(1) << " "
-// 	                        << centroidTRIElem1.Get(2)+normalElem1.Get(2) << endl;
-//    cout << "elem2:        " << elem2 << endl; 
-//    cout << "    centroid: " << centroidTRIElem2.Get(0) << " " 
-// 	                        << centroidTRIElem2.Get(1) << " "
-// 						    << centroidTRIElem2.Get(2) << endl;
-//    cout << "    normal:   " << centroidTRIElem2.Get(0)+normalElem2.Get(0) << " " 
-// 	                        << centroidTRIElem2.Get(1)+normalElem2.Get(1) << " "
-// 						    << centroidTRIElem2.Get(2)+normalElem2.Get(2) << endl;
-//    cout << "  theta: " << 180*theta/3.14159 << endl;
-//    cout << " --------------- " << endl;
+//    int surfaceNode = v1;
+//    if( surfMesh.curvature.Get(v1) < surfMesh.curvature.Get(v2) )
+// 	surfaceNode = v2;
+//    int vertID = surfMesh.vertIdRegion.Get(surfaceNode);
+// 
+//    // marking the desired elements for deletion
+//    list<int> plist = neighbourSurfaceElem.at(surfaceNode);
+//    for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+// 	markSurfElemForDeletion(*mele);
+// 
+//    // deleting elements
+//    deleteSurfaceElements();
+// 
+//    // after the deletion process it's mandatory to create new elements
+//    // to fill the space left by the deleting process
+//    //surfaceTriangulator(surfaceNode);
+//    surfaceTriangulatorEarClipping(surfaceNode);
+//    //surfaceTriangulatorQualityEarClipping(surfaceNode);
+// 
+//    // deleting X,Y and Z coordinate; deleting the point maker funcition
+//    deleteSurfacePoint(surfaceNode);
+// 
+//    // update surface
+//    setSurface();
+// 
+//    // updating edge matrix
+//    setMapEdgeTri();
+// 
+//    // updating surface neighbour elems
+//    setNeighbourSurfaceElem();
+// 
+//    // updating surface neighbour points
+//    setNeighbourSurfacePoint();
+// 
+//    // updating curvature value
+//    setNormalAndKappa();
+// 
+//    cout << "----------------- " << color(none,blue,black) 
+// 	    << "curvature edge contraction at (" << resetColor()
+// 		<< surfMesh.elemIdRegion.Get(elem1)
+// 		<< color(none,blue,black) 
+// 		<< "): " << resetColor() 
+// 		<< v2 << color(none,blue,black) 
+// 		<< " --> " << resetColor()
+// 		<< v1 << color(none,blue,black) 
+// 	    << "  angle (" << resetColor()
+// 		<< (180*theta/3.1415)
+// 		<< color(none,blue,black) 
+// 		<< ") " << resetColor() << endl;
+// 
+//    saveVTKSurface("./vtk/","remAngle",rspc[vertID]);
+//    rspc[vertID]++;
 //-------------------------------------------------- 
+  }
+ }
+}
 
-   int vertID = surfMesh.vertIdRegion.Get(v1);
+void Model3D::removePointByNeighbourCheck(int _node)
+{
+ int vertID = surfMesh.vertIdRegion.Get(_node);
+ /* 
+  * This if checks whether the point on the surface has only 3 surface
+  * elements. This is caused by the re-meshing process that sometimes
+  * creates these problematic local mesh. Such a point should be
+  * removed to avoid mesh problems.
+  * */
+ int elemListSize = neighbourSurfaceElem.at( _node ).size();
 
-   // int length = mapEdgeTri.Get(edge,0); // length
-   int v1 = mapEdgeTri.Get(edge,1); // v1
-   int v2 = mapEdgeTri.Get(edge,2); // v2
-   //int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
-   //int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
-   int elem1 = mapEdgeTri.Get(edge,5); // elem1
-   int elem2 = mapEdgeTri.Get(edge,6); // elem2
+ if( elemListSize < 4 )
+ {
+  // marking the desired elements for deletion
+  list<int> plist = neighbourSurfaceElem.at(_node);
+  for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+   markSurfElemForDeletion(*mele);
 
-   real P1x = surfMesh.X.Get(v1);
-   real P1y = surfMesh.Y.Get(v1);
-   real P1z = surfMesh.Z.Get(v1);
+  // deleting elements
+  deleteSurfaceElements();
 
-   real P2x = surfMesh.X.Get(v2);
-   real P2y = surfMesh.Y.Get(v2);
-   real P2z = surfMesh.Z.Get(v2);
+  // after the deletion process it's mandatory to create new elements
+  // to fill the space left by the deleting process
+  //surfaceTriangulator(_node);
+  surfaceTriangulatorEarClipping(_node);
+  //surfaceTriangulatorQualityEarClipping(_node);
 
-   markSurfElemForDeletion(elem1);
-   markSurfElemForDeletion(elem2);
-   deleteSurfaceElements();
+  // deleting X,Y and Z coordinate; deleting the point maker funcition
+  deleteSurfacePoint(_node);
 
-   // moving point to the middle of the edge
-   clVector mid = midPoint(P1x,P1y,P1z,P2x,P2y,P2z);
-   surfMesh.X.Set(v1, mid.Get(0) );
-   surfMesh.Y.Set(v1, mid.Get(1) );
-   surfMesh.Z.Set(v1, mid.Get(2) );
-   X.Set(v1, mid.Get(0) );
-   Y.Set(v1, mid.Get(1) );
-   Z.Set(v1, mid.Get(2) );
+  // update surface
+  setSurface();
 
-   // changing surfMesh.IEN from v2 to v1
-   for( int i=0;i<surfMesh.IEN.DimI();i++ )
-	for( int j=0;j<surfMesh.IEN.DimJ();j++ )
-	 if( surfMesh.IEN.Get(i,j)==v2 )
-	  surfMesh.IEN.Set(i,j,v1);
+  // updating edge matrix
+  setMapEdgeTri();
 
-   deleteSurfacePoint(v2);
+  // updating surface neighbour elems
+  setNeighbourSurfaceElem();
 
-   // update surface
-   setSurface();
+  // updating surface neighbour points
+  setNeighbourSurfacePoint();
 
-   // updating edge matrix
-   setMapEdgeTri();
+  if( elemListSize < 3 )
+  {
+   cout << "----------------- " << color(none,red,black) 
+	<< "removing fake triangle: " << resetColor() 
+	<< _node << endl;
+   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+   rspn[vertID]++;
+  }
 
-   // updating surface neighbour elems
-   setNeighbourSurfaceElem();
+  /*
+   * This if removes a surface point when the number of its neighbours
+   * are equal. Usually these points demage the mesh
+   * quality and breaks the simulation flow. 
+   * */
+  if( elemListSize == 3 )
+  {
+   cout << "----------------- " << color(none,red,black) 
+	<< "removing low-quality point cluster: " << resetColor() 
+	<< _node << endl;
 
-   // updating surface neighbour points
-   setNeighbourSurfacePoint();
+   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+   rspn[vertID]++;
 
-   cout << "----------------- " << color(none,blue,black) 
-	    << "curvature edge contraction at (" << resetColor()
-		<< surfMesh.elemIdRegion.Get(elem1)
-		<< color(none,blue,black) 
-		<< "): " << resetColor() 
-		<< v2 << color(none,blue,black) 
-		<< " --> " << resetColor()
-		<< v1 << color(none,blue,black) 
-	    << "  angle (" << resetColor()
-		<< (180*theta/3.1415)
-		<< color(none,blue,black) 
-		<< ") " << resetColor() << endl;
-
-   saveVTKSurface("./vtk/","remAngle",rspc[vertID]);
-   rspc[vertID]++;
   }
  }
 }

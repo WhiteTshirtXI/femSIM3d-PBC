@@ -30,15 +30,16 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.08; // bubble
+ triEdge[2] = 0.1; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
  //real Re = 13.8487; // case 2
- real Re = 32.78; // case 3
- //real Re = 203.729549896; // case 4
+ //real Re = 32.78; // case 3
+ real Re = 134.625; // case 7
+ //real Re = 203.729549896; // case 8 (extream)
  real Sc = 1;
- real We = 116;
+ real We = 115;
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
@@ -53,13 +54,14 @@ int main(int argc, char **argv)
 
  //real mu_out = 2.73;
  //real mu_out = 1.28;
- real mu_out = 0.54;
- //real mu_out = 0.0875134907735;
+ //real mu_out = 0.54;
+ real mu_out = 0.1324;
+ //real mu_out = 0.0875134907735; // extream
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.7;
+ real cfl = 0.8;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -351,8 +353,9 @@ int main(int argc, char **argv)
   // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  m1.removePointsByCurvature();
+  //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
+  m1.checkAngleBetweenPlanes();
   m1.contractEdgeByLength();
   m1.removePointsByLength();
   m1.flipTriangleEdge();

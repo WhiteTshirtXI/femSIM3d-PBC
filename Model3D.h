@@ -91,6 +91,7 @@ class Model3D
   void contractEdgeByLength();
   int findEdge(int _v1,int _v2);
   real triangleQualityMeasure(int _v1,int _v2, int _v3);
+  void checkAngleBetweenPlanes();
 
   // 3D points treatment
   void mark3DPointForDeletion(int _vert);
@@ -233,6 +234,7 @@ class Model3D
   //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
   void setNormalAndKappa();
   clVector getNormalElem(int _elem);
+  clVector getNormalElem(int _v1,int _v2,int _v3);
 
   // get and set methods
   clVector* getX();

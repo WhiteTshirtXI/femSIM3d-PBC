@@ -1912,6 +1912,21 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  vtkFile << endl;
  vtkFile << endl;
 
+ vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELL_DATA " << numTri << endl;
+ vtkFile << "NORMALS " << "cell_normal_test" << " double" << endl;
+ for( int i=0;i<surfMesh->numElems;i++ )
+ {
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   vtkFile << m->getNormalElem(i).Get(0) << " " 
+           << m->getNormalElem(i).Get(1) << " " 
+	   	   << m->getNormalElem(i).Get(2) << endl;
+ };
+ vtkFile << endl;
+
+ //vtkSurfaceCellHeader(vtkFile);
+ //vtkSurfaceCellNormalVector(vtkFile,"cell_normal_test");
+
  vtkSurfaceScalarHeader(vtkFile);
  vtkSurfaceScalar(vtkFile,"pressure",*pc);
  vtkSurfaceScalar(vtkFile,"concentration",*cc);
@@ -1927,9 +1942,9 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  if( edgeSize->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
- vtkSurfaceVector(vtkFile,"normal",surfMesh->xNormal,
-                                   surfMesh->yNormal,
-								   surfMesh->zNormal);
+  vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
+	                                      surfMesh->yNormal,
+						     			  surfMesh->zNormal);
 
  vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
 
@@ -1982,6 +1997,22 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkFile << endl;
  vtkFile << endl;
 
+ vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELL_DATA " << numTri << endl;
+ vtkFile << "NORMALS " << "cell_normal_test" << " double" << endl;
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numElems;i++ )
+ {
+  if( surfMesh->elemIdRegion.Get(i) > 1 )
+   vtkFile << m->getNormalElem(i).Get(0) << " " 
+           << m->getNormalElem(i).Get(1) << " " 
+	   	   << m->getNormalElem(i).Get(2) << endl;
+ };
+ vtkFile << endl;
+
+ //vtkSurfaceCellHeader(vtkFile);
+ //vtkSurfaceCellNormalVector(vtkFile,"cell_normal_test");
+
  vtkSurfaceScalarHeader(vtkFile);
  vtkSurfaceScalar(vtkFile,"pressure",*pSol);
  vtkSurfaceScalar(vtkFile,"concentration",*cSol);
@@ -2004,9 +2035,9 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
   vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
   vtkSurfaceVector(vtkFile,"surface_force",*fint);
-  vtkSurfaceVector(vtkFile,"normal",surfMesh->xNormal,
-	                                surfMesh->yNormal,
-									surfMesh->zNormal);
+  vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
+	                                      surfMesh->yNormal,
+						     			  surfMesh->zNormal);
  }
 
  vtkSurfaceScalar(vtkFile,"viscosity",*mu);
@@ -2645,6 +2676,11 @@ void InOut::vtkSurfaceScalarHeader(ofstream& _file)
  _file << "POINT_DATA " << surfMesh->numVerts << endl;
 }
 
+void InOut::vtkSurfaceCellHeader(ofstream& _file)
+{
+ _file << "CELL_DATA " << surfMesh->numElems << endl;
+}
+
 void InOut::vtkScalar(ofstream& _file,string _name,clVector &_scalar)
 {
  _file << "SCALARS " << _name << " double" << endl;
@@ -2731,6 +2767,53 @@ void InOut::vtkSurfaceVector(ofstream& _file,string _name,
                              clVector &_vx,clVector &_vy,clVector &_vz)
 {
  _file << "VECTORS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _vx.Get(i) << " " 
+        << _vy.Get(i) << " " 
+		<< _vz.Get(i) << endl;
+ _file << endl;
+}
+
+void InOut::vtkSurfaceNormalVector(ofstream& _file,string _name,clVector &_v)
+{
+ _file << "NORMALS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _v.Get(i) << " " 
+        << _v.Get(i+numNodes) << " " 
+		<< _v.Get(i+numNodes*2) << endl;
+ _file << endl;
+}
+
+void InOut::vtkSurfaceNormalVector(ofstream& _file,string _name,
+                             clVector &_vx,clVector &_vy,clVector &_vz)
+{
+ _file << "NORMALS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  _file << _vx.Get(i) << " " 
+        << _vy.Get(i) << " " 
+		<< _vz.Get(i) << endl;
+ _file << endl;
+}
+
+void InOut::vtkSurfaceCellNormalVector(ofstream& _file,string _name)
+                                  
+{
+ _file << "NORMALS " << _name << " double" << endl;
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numElems;i++ )
+  _file << m->getNormalElem(i).Get(0) << " " 
+        << m->getNormalElem(i).Get(1) << " " 
+		<< m->getNormalElem(i).Get(2) << endl;
+ _file << endl;
+}
+
+void InOut::vtkSurfaceCellNormalVector(ofstream& _file,string _name,
+                             clVector &_vx,clVector &_vy,clVector &_vz)
+{
+ _file << "NORMALS " << _name << " double" << endl;
  _file << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
   _file << _vx.Get(i) << " " 
@@ -2864,7 +2947,7 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 void InOut::saveBubbleInfo(const char* _dir)
 {
  saveOscillatingError(_dir);    // oscillating velocity and diameter
- saveKappaError(_dir);          // kappa
+ saveKappaErrorSphere(_dir);       // kappa sphere
  //saveKappaErrorCylinder(_dir);  // kappa cylinder
  //saveKappaErrorTorus(_dir);     // kappa torus
  savePressureError(_dir);       // pressure 
@@ -3382,7 +3465,7 @@ void InOut::bubbleWallDistance( const char* _dir,const char* _filename, int _ite
  cout << "Drop-Wall distance No. " << _iter << " saved in dat" << endl;
 } // fecha metodo bubbleWallDistance
 
-void InOut::saveKappaError(const char* _dir)
+void InOut::saveKappaErrorSphere(const char* _dir)
 {
  // kappa
  string fileAux = (string) _dir + "kappa" + ".dat";
@@ -3460,12 +3543,6 @@ void InOut::saveKappaError(const char* _dir)
  // sphere
  real kappaAnalytic = 2.0/radius; 
  
- // cylinder
- //clVector kappaAnalytic = getCylinderAnalyticCurvature();
-
- // torus
- //clVector kappaAnalytic = getTorusAnalyticCurvature();
-
  real sumKappaSD = 0;
  real sumKappaError = 0;
  real sumNeighbours = 0;
@@ -3630,6 +3707,165 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << countK << " " 
+	  << setw(5) << iter << endl;
+ file.close();
+}
+
+void InOut::saveKappaErrorTorus(const char* _dir)
+{
+ // kappa
+ string fileAux = (string) _dir + "kappa" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename);
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file kappa.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file kappa.dat" << endl;
+  file << "#time" << setw(29) << "kappa" 
+		    	  << setw(18) << "analytic" 
+		    	  << setw(18) << "error" 
+		    	  << setw(18) << "stand deviat" 
+		    	  << setw(14) << "averag edge" 
+				  << setw(14) << "edge/radius" 
+				  << setw(14) << "area" 
+				  << setw(14) << "volume" 
+				  << setw(15) << "averag neigh" 
+		    	  << setw(13) << "num points" 
+		    	  << setw(6) << "iter" 
+				  << endl;
+ }
+
+ real surfacePoints = surface->Dim();
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappa += kappa->Get(node);
+  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+ }
+ real kappaAverage = sumKappa/surfacePoints;
+
+
+/*  TORUS
+ *
+ *
+ *
+ *
+ *
+ *                           @@@@@@@                            
+ *                  @@@@$##*!!!===!!!*##$@@@@                   
+ *             @@@$$#*!=;;:~~-~~-~~~:~:;==!*#$$@@@              
+ *          $@$$$#*!=;:~~~-~-----~~~~~~:::;=!!*#$$$@$           
+ *        $$$$$##*=;~~~-----~~~~:::::::::~::;=!**#$$$$$         
+ *      *$$$$$#*!=:~~------~~~~~::::::::::::::;!**#$$$$$#       
+ *     *#$$$$$#*=:~--,,,--             ~:::::::=!*##$$$$#*     -----
+ *    !*#$$$$$#*=~-,,,                     ~:~::!*#$$$$$#*!       |
+ *   ;!*#$$$$$#*=,.                           ~~!*#$$$$$#*!;      |
+ *  -;!*#$$$$$$#!,              x              ~*#$$$$$$#*!;,     |
+ *  ~:;==**#$$$@@@$          (center)         #@@@$$$#**!=;~,    D1
+ *  ~~~:;=!*###$$@@@@                       @@@@$$###*!=;:~-,     |
+ *   ~~~::;=!***#$$$@@@@@@             @@@@@@$$$#***!=;:~~--      |
+ *   :~~~~~::;=!!**###$$$$@@@@@@@@@@@@@$$$$###**!!=;;:~~---,      |
+ *    ::~~~~~~~:;;==!!****#############****!!==;;;:~~-----,    -----     
+ *      ::~~~~-~~~~::;;=====!!!!!!!!!=====;;:::~---------      
+ *       :::~~~~~~~-----~~:::::::::::::~~~-------------,        
+ *         :::::~~~~~-~------------------------------,          
+ *            :::::~~~~~~~~-----------------------,             
+ *               :::::::~~~~~~~~~~~~~-----------                
+ *                    :::::::~~~~~~~~~~~~~-   
+ *
+ *
+ *   |------------------------- D2 -------------------------|
+ *
+ *
+ * */
+
+ 
+ real xMax = -1E-10; 
+ real yMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real yMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) > yMax )
+	yMax = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) < yMin )
+	yMin = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+
+ // radius 1 = D1/2
+ real D1 = zMax - zMin; 
+ real radius1 = D1/2.0;
+ real xCenter1 = (xMax+xMin)/2.0;
+ real yCenter1 = (yMax+yMin)/2.0; 
+ real zCenter1 = (zMax+zMin)/2.0; 
+ 
+ // radius 2 = D2/2
+ real xCenter2 = (xMax+xMin)/2.0;
+ real yCenter2 = (yMax+yMin)/2.0; 
+
+ real sumKappaSD = 0;
+ real sumKappaError = 0;
+ real sumNeighbours = 0;
+ int countK = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  real kappaAnalytic = (1.0/radius1) + 
+                        distance(xCenter2,yCenter2,
+	                             surfMesh->X.Get(node),surfMesh->Y.Get(node));
+  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
+                   (kappa->Get(node)-kappaAnalytic);
+  sumKappaSD += (kappa->Get(node)-kappaAverage)*
+                (kappa->Get(node)-kappaAverage);
+  sumNeighbours += neighbourPoint->at(i).size();
+  countK++;
+ }
+
+ real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ real kappaSD = sqrt( sumKappaSD/surfacePoints );
+
+ real averageNeigh = sumNeighbours/surfacePoints;
+
+ m->meshStats();
+ averageTriEdge = m->getAverageTriEdge();
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << kappaAverage << " " 
+      << setw(17) << "spec for each point" << " " 
+      << setw(17) << kappaError << " " 
+      << setw(17) << kappaSD << " " 
+	  << setprecision(3) << fixed
+      << setw(13) << averageTriEdge[2] << " " 
+	  << setprecision(4) << fixed
+      << setw(13) << averageTriEdge[2]/radius1 << " " 
+	  << setprecision(3) << fixed
+      << setw(14) << surfaceArea[2] << " " 
+      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << averageNeigh << " " 
+	  << setprecision(0) << fixed
+	  << setw(12) << surfacePoints << " " 
 	  << setw(5) << iter << endl;
  file.close();
 }

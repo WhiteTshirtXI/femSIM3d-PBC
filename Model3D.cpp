@@ -1229,7 +1229,7 @@ void Model3D::removePointsByCurvature()
   // with curvature smaller then -30, thus this can be avoided using the
   // IF below.
   if( vertID > 1 && 
-	  (maxEdgeLength*curv > 4.5 || surfMesh.curvature.Get(surfaceNode) < -30) )
+	  (maxEdgeLength*curv > 4.0 || surfMesh.curvature.Get(surfaceNode) < -30) )
 //--------------------------------------------------
 //   if( vertID > 1 && maxEdgeLength*curv > 4.5 )
 //-------------------------------------------------- 
@@ -1377,7 +1377,7 @@ void Model3D::insertPointsByCurvature()
   real vertID = surfMesh.vertIdRegion.Get(v1); 
   real length = mapEdgeTri.Get(i,0);
 
-  if( curv1*length > 1.5 || curv2*length > 1.2  )
+  if( curv1*length > 2.5 || curv2*length > 2.5  )
   {
    cout << "----------- Inserting by curvature..." << endl;
    insertPoint(i);
@@ -1668,6 +1668,9 @@ void Model3D::deleteSurfacePoint(int _v)
  surfMesh.X.Delete(_v);
  surfMesh.Y.Delete(_v);
  surfMesh.Z.Delete(_v);
+ surfMesh.xNormal.Delete(_v);
+ surfMesh.yNormal.Delete(_v);
+ surfMesh.zNormal.Delete(_v);
  surfMesh.vertIdRegion.Delete(_v);
  surfMesh.Marker.Delete(_v);
  surfMesh.numVerts--;
@@ -1696,6 +1699,9 @@ void Model3D::deleteSurfaceElements()
   {
    surfMesh.IEN.DelLine(i);
    surfMesh.elemIdRegion.Delete(i);
+   //surfMesh.xNormalElem.Delete(i);
+   //surfMesh.yNormalElem.Delete(i);
+   //surfMesh.zNormalElem.Delete(i);
    surfMesh.numElems--;
    i--; // should go back to verify the next element as well
   }
@@ -1719,8 +1725,8 @@ void Model3D::deleteSurfaceElements()
  * Exemplo:
  *
  * test = [ 0  1 ]   -->   [ 0  1 ]
- *        [ 3  1 ]   -->   [ 1  3 ]
- *        [ 2  0 ]   -->   [ 3  2 ]
+ *        [ 2  0 ]   -->   [ 1  3 ]
+ *        [ 1  3 ]   -->   [ 3  2 ]
  *        [ 3  2 ]   -->   [ 2  0 ]                               
  */
 list<int> Model3D::setPolyhedron(list<int> _myList)
@@ -1738,7 +1744,7 @@ list<int> Model3D::setPolyhedron(list<int> _myList)
   }
 
 //--------------------------------------------------
-//   cout << "-------- " << _v << endl;
+//   cout << "-------- " << endl;
 //   test.Display();
 //   cout << endl;
 //-------------------------------------------------- 
@@ -1775,14 +1781,33 @@ list<int> Model3D::setPolyhedron(list<int> _myList)
 	}
 	if( vSwap2 == node2 )
 	{
-	 test.Set(k+1,0,vSwap2);
-	 test.Set(k+1,1,vSwap1);
-	 test.Set(z,0,v3);
-	 test.Set(z,1,v2);
-	 break;
+	//--------------------------------------------------
+	//  test.Set(k+1,0,vSwap2);
+	//  test.Set(k+1,1,vSwap1);
+	//  test.Set(z,0,v3);
+	//  test.Set(z,1,v2);
+	//  break;
+	//-------------------------------------------------- 
+
+	 cerr << endl;
+	 cerr << endl;
+	 cerr << color(blink,red,black);
+	 cerr << "              *----------------------------------------*" << endl;
+	 cerr << "                       The orientation is wrong!        " << endl;
+	 cerr << "              *----------------------------------------*" << endl;
+	 cerr << resetColor();
+	 cerr << endl;
+	 cerr << endl;
+	 exit(1);
 	}
    }
   }
+//--------------------------------------------------
+//   cout << endl;
+//   cout << endl;
+//   test.Display();
+//   cout << "-------- " << endl;
+//-------------------------------------------------- 
 
   /* 
    * old neighbourPoint = [ 0 1 3 1 2 0 3 2 ] 
@@ -1818,6 +1843,12 @@ void Model3D::setNeighbourSurfaceElem()
    neighbourSurfaceElem.at( (int)surfMesh.IEN.Get(elem,vert) ).push_back(elem);
 }
 
+/*
+ *
+ * Orientation is always: v1 - v2 - v3
+ *
+ *
+ * */
 list<int> Model3D::getNeighbourSurfacePoint(int _node)
 {
  int node = _node;
@@ -1907,6 +1938,20 @@ void Model3D::flipTriangleEdge()
   int elem2 = mapEdgeTri.Get(edge,6); // elem2
   int elemID = surfMesh.elemIdRegion.Get(elem1);
 
+  // Checking the orientation of the mapEdgeTri Matrix.
+  clVector normalSurfMesh = getNormalElem(elem1);
+  clVector normalToCompare = getNormalElem(v1,v3elem1,v2);
+  if( dotProd( normalSurfMesh.Get(0),
+	           normalSurfMesh.Get(1),
+			   normalSurfMesh.Get(2),
+               normalToCompare.Get(0),
+			   normalToCompare.Get(1),
+			   normalToCompare.Get(2) ) < 0 )
+  {
+   swap(v1,v2);
+  }
+  /* -------------------- END of CHECKING --------------------- */
+
   real P1x = surfMesh.X.Get(v1);
   real P1y = surfMesh.Y.Get(v1);
   real P1z = surfMesh.Z.Get(v1);
@@ -1987,66 +2032,6 @@ void Model3D::flipTriangleEdge()
 	<< color(none,green,black) 
 	<< " --> " << resetColor()
 	<< v3elem1 << " " << v3elem2 << endl;
-
-   /* checking the orientation Define a oriented vector from one of the
-	* old elements (before adding point), then compare to the new 1st
-	* element (with the added point) and check the orientation between
-	* both vectors. If the orientation is ok, proceed normaly, otherwise
-	* swap v1 and v2 and proceed until the end.
-	* */
-   int v1elemOld1 = surfMesh.IEN.Get(elem1,0);
-   int v2elemOld1 = surfMesh.IEN.Get(elem1,1);
-   int v3elemOld1 = surfMesh.IEN.Get(elem1,2);
-
-   real x1Elem1 = surfMesh.X.Get(v1elemOld1);
-   real y1Elem1 = surfMesh.Y.Get(v1elemOld1);
-   real z1Elem1 = surfMesh.Z.Get(v1elemOld1);
-
-   real x2Elem1 = surfMesh.X.Get(v2elemOld1);
-   real y2Elem1 = surfMesh.Y.Get(v2elemOld1);
-   real z2Elem1 = surfMesh.Z.Get(v2elemOld1);
-
-   real x3Elem1 = surfMesh.X.Get(v3elemOld1);
-   real y3Elem1 = surfMesh.Y.Get(v3elemOld1);
-   real z3Elem1 = surfMesh.Z.Get(v3elemOld1);
-
-   real vec1x = x2Elem1-x1Elem1;
-   real vec1y = y2Elem1-y1Elem1;
-   real vec1z = z2Elem1-z1Elem1;
-
-   real vec2x = x3Elem1-x2Elem1;
-   real vec2y = y3Elem1-y2Elem1;
-   real vec2z = z3Elem1-z2Elem1;
-
-   // standard normal vector
-   // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
-   clVector cross1 = crossProd(vec1x,vec1y,vec1z,vec2x,vec2y,vec2z);
-   real vecX = cross1.Get(0);
-   real vecY = cross1.Get(1);
-   real vecZ = cross1.Get(2);
-
-   // orienation of NEW elements
-   real va1x = P3elem1x-P1x;
-   real va1y = P3elem1y-P1y;
-   real va1z = P3elem1z-P1z;
-
-   real va2x = P3elem2x-P3elem1x;
-   real va2y = P3elem2y-P3elem1y;
-   real va2z = P3elem2z-P3elem1z;
-
-   // normal vector
-   // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
-   clVector cross2 = crossProd(va1x,va1y,va1z,va2x,va2y,va2z);
-   real x2t = cross2.Get(0);
-   real y2t = cross2.Get(1);
-   real z2t = cross2.Get(2);
-
-   real prodEsc = vecX*x2t + vecY*y2t + vecZ*z2t;
-
-   // swap if wrong orientation
-   if( prodEsc < 0 )
-	swap(v1,v2);
-   /* -------------------- END of CHECKING --------------------- */
 
    surfMesh.IEN.Set(elem1,0,v1);
    surfMesh.IEN.Set(elem1,1,v3elem1);
@@ -2270,19 +2255,20 @@ void Model3D::insertPoint(int _edge)
  int elem1 = mapEdgeTri.Get(_edge,5);
  int elem2 = mapEdgeTri.Get(_edge,6);
 
- // points
- real P1x = surfMesh.X.Get(v1);
- real P1y = surfMesh.Y.Get(v1);
- real P1z = surfMesh.Z.Get(v1);
+ // Checking the orientation of the mapEdgeTri Matrix.
+ clVector normalSurfMesh = getNormalElem(elem1);
+ clVector normalToCompare = getNormalElem(v1,v2,v3elem1);
+ if( dotProd( normalSurfMesh.Get(0),
+	           normalSurfMesh.Get(1),
+			   normalSurfMesh.Get(2),
+               normalToCompare.Get(0),
+			   normalToCompare.Get(1),
+			   normalToCompare.Get(2) ) < 0 )
+  {
+   swap(v1,v2);
+  }
+  /* -------------------- END of CHECKING --------------------- */
 
- //real P2x = surfMesh.X.Get(v2);
- //real P2y = surfMesh.Y.Get(v2);
- //real P2z = surfMesh.Z.Get(v2);
-
- real P3elem1x = surfMesh.X.Get(v3elem1);
- real P3elem1y = surfMesh.Y.Get(v3elem1);
- real P3elem1z = surfMesh.Z.Get(v3elem1);
- 
  // add point in the middle of a edge (not consider curvature)
  real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
  real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
@@ -2340,66 +2326,6 @@ void Model3D::insertPoint(int _edge)
  // incremeting the number of points
  surfMesh.numVerts++;
  numVerts++;
-
- /* checking the orientation Define a oriented vector from one of the
-  * old elements (before adding point), then compare to the new 1st
-  * element (with the added point) and check the orientation between
-  * both vectors. If the orientation is ok, proceed normaly, otherwise
-  * swap v1 and v2 and proceed until the end.
-  * */
- // reference vertices
- int v1elemOld1 = surfMesh.IEN.Get(elem1,0);
- int v2elemOld1 = surfMesh.IEN.Get(elem1,1);
- int v3elemOld1 = surfMesh.IEN.Get(elem1,2);
-
- real x1Elem1 = surfMesh.X.Get(v1elemOld1);
- real y1Elem1 = surfMesh.Y.Get(v1elemOld1);
- real z1Elem1 = surfMesh.Z.Get(v1elemOld1);
-
- real x2Elem1 = surfMesh.X.Get(v2elemOld1);
- real y2Elem1 = surfMesh.Y.Get(v2elemOld1);
- real z2Elem1 = surfMesh.Z.Get(v2elemOld1);
-
- real x3Elem1 = surfMesh.X.Get(v3elemOld1);
- real y3Elem1 = surfMesh.Y.Get(v3elemOld1);
- real z3Elem1 = surfMesh.Z.Get(v3elemOld1);
-
- real vec1x = x2Elem1-x1Elem1;
- real vec1y = y2Elem1-y1Elem1;
- real vec1z = z2Elem1-z1Elem1;
-
- real vec2x = x3Elem1-x2Elem1;
- real vec2y = y3Elem1-y2Elem1;
- real vec2z = z3Elem1-z2Elem1;
-
- // standard normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross1 = crossProd(vec1x,vec1y,vec1z,vec2x,vec2y,vec2z);
- real vecX = cross1.Get(0);
- real vecY = cross1.Get(1);
- real vecZ = cross1.Get(2);
-
- real va1x = XvAdd-P1x;
- real va1y = YvAdd-P1y;
- real va1z = ZvAdd-P1z;
-
- real va2x = P3elem1x-XvAdd;
- real va2y = P3elem1y-YvAdd;
- real va2z = P3elem1z-ZvAdd;
-
- // normal vector
- // produto vetorial: surfaceNode -> v1 X surfaceNode -> v2
- clVector cross2 = crossProd(va1x,va1y,va1z,va2x,va2y,va2z);
- real x2t = cross2.Get(0);
- real y2t = cross2.Get(1);
- real z2t = cross2.Get(2);
-
- real prodEsc = vecX*x2t + vecY*y2t + vecZ*z2t;
-
- // swap if wrong orientation
- if( prodEsc < 0 )
-  swap(v1,v2);
- /* -------------------- END of CHECKING --------------------- */
 
 
  /* by adding 1 point on the edge it is necessary to divide the
@@ -8795,10 +8721,10 @@ clVector Model3D::getNormalElem(int _elem)
   *               v3
   *               o 
   *              / \
-  *             /   \
+  *             /   \ b
   *            /     \
   *           o ----- o 
-  *         v1         v2
+  *         v1    a    v2
   *
   * */
  real v1x = (p2x-p1x)/a;
@@ -8809,8 +8735,56 @@ clVector Model3D::getNormalElem(int _elem)
  real v2y = (p3y-p2y)/b;
  real v2z = (p3z-p2z)/b;
 
- // normal to each triangular face
- return crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ clVector normal = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ real length = vectorLength(normal.Get(0),normal.Get(1),normal.Get(2));
+
+ // unit normal to each triangular face
+ return normal/length;
+} // fecha metodo getNormalElem
+
+clVector Model3D::getNormalElem(int _v1,int _v2,int _v3)
+{
+ real p1x = surfMesh.X.Get(_v1);
+ real p1y = surfMesh.Y.Get(_v1);
+ real p1z = surfMesh.Z.Get(_v1);
+
+ real p2x = surfMesh.X.Get(_v2);
+ real p2y = surfMesh.Y.Get(_v2);
+ real p2z = surfMesh.Z.Get(_v2);
+
+ real p3x = surfMesh.X.Get(_v3);
+ real p3y = surfMesh.Y.Get(_v3);
+ real p3z = surfMesh.Z.Get(_v3);
+ 
+ // distance from point 1 to 2
+ real a = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+
+ // distance from point 2 to 3
+ real b = distance(p2x,p2y,p2z,p3x,p3y,p3z);
+
+ /*               
+  *               v3
+  *               o 
+  *              / \
+  *             /   \ b
+  *            /     \
+  *           o ----- o 
+  *         v1    a    v2
+  *
+  * */
+ real v1x = (p2x-p1x)/a;
+ real v1y = (p2y-p1y)/a;
+ real v1z = (p2z-p1z)/a;
+
+ real v2x = (p3x-p2x)/b;
+ real v2y = (p3y-p2y)/b;
+ real v2z = (p3z-p2z)/b;
+
+ clVector normal = crossProd(v1x,v1y,v1z,v2x,v2y,v2z);
+ real length = vectorLength(normal.Get(0),normal.Get(1),normal.Get(2));
+
+ // unit normal to each triangular face
+ return normal/length;
 } // fecha metodo getNormalElem
 
 real Model3D::triangleQualityMeasure(int _v1,int _v2, int _v3)
@@ -8856,3 +8830,168 @@ real Model3D::triangleQualityMeasure(int _v1,int _v2, int _v3)
  return 3.4641*inRadius/h;
 }
 
+/*
+ * Loop over all the surface edges, checking the angle between normal
+ * vectors of both planes sharing the edge.
+ *         
+ *         ^
+ *         |
+ *         | N1
+ *         |
+ *    x ------- o
+ *    v1        |   N2
+ *              | ----->     theta = 90
+ *              |
+ *              |
+ *              x v2
+ *
+ * theta --> 0, the planes are NOT collapsing
+ * theta --> 180, the planes are about to collapse
+ *
+ * */
+void Model3D::checkAngleBetweenPlanes()
+{
+ // number of removed surface points by Curvature
+ fill(rspc.begin(),rspc.end(),0);
+
+ // surfMesh.elemIdRegion == 1 --> wall
+ // surfMesh.elemIdRegion == 2 --> bubble 1
+ // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
+ for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
+ {
+  real v1 = mapEdgeTri.Get(edge,1);
+  real v2 = mapEdgeTri.Get(edge,2);
+  real v3elem1 = mapEdgeTri.Get(edge,3);
+  real v3elem2 = mapEdgeTri.Get(edge,4);
+  int elem1 = mapEdgeTri.Get(edge,5);
+  int elem2 = mapEdgeTri.Get(edge,6);
+
+  // elem1
+  clVector normalElem1 = getNormalElem(elem1);
+  normalElem1 = normalElem1/20;
+  // centroid 
+  clVector centroidTRIElem1 = centroidTRI3D(surfMesh.X.Get(v1),
+                                            surfMesh.Y.Get(v1),
+                                            surfMesh.Z.Get(v1),
+                                            surfMesh.X.Get(v2),
+                                            surfMesh.Y.Get(v2),
+                                            surfMesh.Z.Get(v2),
+                                            surfMesh.X.Get(v3elem1),
+                                            surfMesh.Y.Get(v3elem1),
+                                            surfMesh.Z.Get(v3elem1) );
+
+  // elem2
+  clVector normalElem2 = getNormalElem(elem2);
+  normalElem2 = normalElem2/20;
+  // centroid 
+  clVector centroidTRIElem2 = centroidTRI3D(surfMesh.X.Get(v1),
+                                            surfMesh.Y.Get(v1),
+                                            surfMesh.Z.Get(v1),
+                                            surfMesh.X.Get(v2),
+                                            surfMesh.Y.Get(v2),
+                                            surfMesh.Z.Get(v2),
+                                            surfMesh.X.Get(v3elem2),
+                                            surfMesh.Y.Get(v3elem2),
+                                            surfMesh.Z.Get(v3elem2) );
+
+
+
+  real theta = angle3D( normalElem1.Get(0),
+	                    normalElem1.Get(1),
+						normalElem1.Get(2),
+	                    normalElem2.Get(0),
+						normalElem2.Get(1),
+						normalElem2.Get(2) );
+
+  if( (180*theta/3.1415) > 135 )
+  {
+//--------------------------------------------------
+//    cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;
+//    cout << "v2: " << mapEdgeTri.Get(edge,2) << endl;
+//    cout << "elem1:        " << elem1 << endl; 
+//    cout << "    centroid: " << centroidTRIElem1.Get(0) << " " 
+// 	                        << centroidTRIElem1.Get(1) << " "
+// 	                        << centroidTRIElem1.Get(2) << endl;
+//    cout << "    normal:   " << centroidTRIElem1.Get(0)+normalElem1.Get(0) << " " 
+// 	                        << centroidTRIElem1.Get(1)+normalElem1.Get(1) << " "
+// 	                        << centroidTRIElem1.Get(2)+normalElem1.Get(2) << endl;
+//    cout << "elem2:        " << elem2 << endl; 
+//    cout << "    centroid: " << centroidTRIElem2.Get(0) << " " 
+// 	                        << centroidTRIElem2.Get(1) << " "
+// 						    << centroidTRIElem2.Get(2) << endl;
+//    cout << "    normal:   " << centroidTRIElem2.Get(0)+normalElem2.Get(0) << " " 
+// 	                        << centroidTRIElem2.Get(1)+normalElem2.Get(1) << " "
+// 						    << centroidTRIElem2.Get(2)+normalElem2.Get(2) << endl;
+//    cout << "  theta: " << 180*theta/3.14159 << endl;
+//    cout << " --------------- " << endl;
+//-------------------------------------------------- 
+
+   int vertID = surfMesh.vertIdRegion.Get(v1);
+
+   // int length = mapEdgeTri.Get(edge,0); // length
+   int v1 = mapEdgeTri.Get(edge,1); // v1
+   int v2 = mapEdgeTri.Get(edge,2); // v2
+   //int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
+   //int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
+   int elem1 = mapEdgeTri.Get(edge,5); // elem1
+   int elem2 = mapEdgeTri.Get(edge,6); // elem2
+
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+
+   real P2x = surfMesh.X.Get(v2);
+   real P2y = surfMesh.Y.Get(v2);
+   real P2z = surfMesh.Z.Get(v2);
+
+   markSurfElemForDeletion(elem1);
+   markSurfElemForDeletion(elem2);
+   deleteSurfaceElements();
+
+   // moving point to the middle of the edge
+   clVector mid = midPoint(P1x,P1y,P1z,P2x,P2y,P2z);
+   surfMesh.X.Set(v1, mid.Get(0) );
+   surfMesh.Y.Set(v1, mid.Get(1) );
+   surfMesh.Z.Set(v1, mid.Get(2) );
+   X.Set(v1, mid.Get(0) );
+   Y.Set(v1, mid.Get(1) );
+   Z.Set(v1, mid.Get(2) );
+
+   // changing surfMesh.IEN from v2 to v1
+   for( int i=0;i<surfMesh.IEN.DimI();i++ )
+	for( int j=0;j<surfMesh.IEN.DimJ();j++ )
+	 if( surfMesh.IEN.Get(i,j)==v2 )
+	  surfMesh.IEN.Set(i,j,v1);
+
+   deleteSurfacePoint(v2);
+
+   // update surface
+   setSurface();
+
+   // updating edge matrix
+   setMapEdgeTri();
+
+   // updating surface neighbour elems
+   setNeighbourSurfaceElem();
+
+   // updating surface neighbour points
+   setNeighbourSurfacePoint();
+
+   cout << "----------------- " << color(none,blue,black) 
+	    << "curvature edge contraction at (" << resetColor()
+		<< surfMesh.elemIdRegion.Get(elem1)
+		<< color(none,blue,black) 
+		<< "): " << resetColor() 
+		<< v2 << color(none,blue,black) 
+		<< " --> " << resetColor()
+		<< v1 << color(none,blue,black) 
+	    << "  angle (" << resetColor()
+		<< (180*theta/3.1415)
+		<< color(none,blue,black) 
+		<< ") " << resetColor() << endl;
+
+   saveVTKSurface("./vtk/","remAngle",rspc[vertID]);
+   rspc[vertID]++;
+  }
+ }
+}

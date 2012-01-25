@@ -175,8 +175,9 @@ class InOut
 
   /* Save bubble error data */
   void saveBubbleInfo(const char* _dir);
-  void saveKappaError(const char* _dir);
+  void saveKappaErrorSphere(const char* _dir);
   void saveKappaErrorCylinder(const char* _dir);
+  void saveKappaErrorTorus(const char* _dir);
   void savePressureError(const char* _dir);
   void saveVolumeError(const char* _dir);
   void saveOscillatingError(const char* _dir);
@@ -192,6 +193,7 @@ class InOut
   void vtkCellType(ofstream& _file);
   void vtkScalarHeader(ofstream& _file);
   void vtkSurfaceScalarHeader(ofstream& _file);
+  void vtkSurfaceCellHeader(ofstream& _file);
   void vtkScalar(ofstream& _file,string _name,clVector &_scalar);
   void vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar);
   void vtkSurfaceScalar(ofstream& _file,string _name,clVector &_scalar);
@@ -200,6 +202,11 @@ class InOut
   void vtkVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_v);
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
+  void vtkSurfaceNormalVector(ofstream& _file,string _name,clVector &_v);
+  void vtkSurfaceNormalVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
+  void vtkSurfaceCellNormalVector(ofstream& _file,string _name);
+  void vtkSurfaceCellNormalVector(ofstream& _file,string _name,
+                                  clVector &_vx,clVector &_vy,clVector &_vz);
   void printMeshReport();
   void printSimulationReport();
   void bubbleWallDistance( const char* _dir,const char* _filename, int _iter );

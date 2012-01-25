@@ -35,8 +35,8 @@ int main(int argc, char **argv)
  int iter = 1;
  //real Re = 6.53; // case 1
  //real Re = 13.8487; // case 2
- //real Re = 32.78; // case 3
- real Re = 134.625; // case 7
+ real Re = 32.78; // case 3
+ //real Re = 134.625; // case 7
  //real Re = 203.729549896; // case 8 (extream)
  real Sc = 1;
  real We = 115;
@@ -54,8 +54,8 @@ int main(int argc, char **argv)
 
  //real mu_out = 2.73;
  //real mu_out = 1.28;
- //real mu_out = 0.54;
- real mu_out = 0.1324;
+ real mu_out = 0.54;
+ //real mu_out = 0.1324;
  //real mu_out = 0.0875134907735; // extream
 
  real rho_in = 1.225;
@@ -355,11 +355,10 @@ int main(int argc, char **argv)
   //m1.insertPointsByCurvature();
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
-  m1.checkAngleBetweenPlanes();
   m1.contractEdgeByLength();
-  m1.removePointsByLength();
+  //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.removePointsByNeighbourCheck();
+  m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

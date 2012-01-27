@@ -229,6 +229,7 @@ private:
   vector<real> averageTriEdge;
   // mesh indexes
   vector<int> isp,ispc,rsp,rspn,rspc,ip,ipd,rp,rpi,rpd,rpdist,rpv,csp,flip; 
+  vector<int> spc,spp;
   vector<int> idMaxVolume,idMinVolume,intet;
   vector<real> maxVolume,minVolume;
   vector<int> idMaxArea,idMinArea;

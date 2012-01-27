@@ -73,7 +73,9 @@ class Model3D
   void insertPointsByLength();
   void insertPointsByCurvature();
   void removePointsByCurvature();
+  void smoothPoint(int _node);
   void smoothPointsByCurvature();
+  void checkAngleBetweenPlanes();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
   void removePointByNeighbourCheck(int _node);
@@ -92,7 +94,6 @@ class Model3D
   void contractEdgeByLength();
   int findEdge(int _v1,int _v2);
   real triangleQualityMeasure(int _v1,int _v2, int _v3);
-  void checkAngleBetweenPlanes();
 
   // 3D points treatment
   void mark3DPointForDeletion(int _vert);
@@ -148,6 +149,8 @@ class Model3D
   vector<int> getRSPN();
   vector<int> getRSPC();
   vector<int> getFLIP();
+  vector<int> getSPC();
+  vector<int> getSPP();
   vector<int> getINTET();
   vector<real> getMinArea();
   vector<real> getMaxArea();
@@ -363,6 +366,8 @@ class Model3D
   vector<int> rspc;        // rspc: num of removed surface points by curv
   vector<int> csp;         // csp: num of contracted surface points
   vector<int> flip;        // flip: flipping operations
+  vector<int> spc;         // spc: smoothing operations
+  vector<int> spp;         // spp: smoothing operations
 
   vector<int> ip;          // ip: num of inserted 3d mesh points
   vector<int> ipd;         // ipd: by diffusion 

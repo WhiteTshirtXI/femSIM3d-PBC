@@ -48,6 +48,8 @@ InOut::InOut( Model3D &_m )
  rspn = m->getRSPN();
  rspc = m->getRSPC();
  flip = m->getFLIP();
+ spc = m->getSPC();
+ spp = m->getSPP();
  intet = m->getINTET();
  maxArea = m->getMaxArea();
  minArea = m->getMinArea();
@@ -111,6 +113,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  rspn = m->getRSPN();
  rspc = m->getRSPC();
  flip = m->getFLIP();
+ spc = m->getSPC();
+ spp = m->getSPP();
  intet = m->getINTET();
  maxArea = m->getMaxArea();
  minArea = m->getMinArea();
@@ -2183,6 +2187,8 @@ void InOut::saveMeshInfo(const char* _dir)
                    << setw(6) << "rpv" 
                    << setw(6) << "csp" 
                    << setw(7) << "flip" 
+                   << setw(6) << "spc" 
+                   << setw(6) << "spp" 
                    << setw(8) << "intet" 
 		 		   << setw(20) << "maxVolume"
 		 		   << setw(20) << "minVolume"
@@ -2208,6 +2214,8 @@ void InOut::saveMeshInfo(const char* _dir)
 						   	      << setw(5)  << rpv[2] << " "
 						   	      << setw(5)  << csp[2] << " "
 						   	      << setw(6)  << flip[2] << " "
+						   	      << setw(5)  << spc[2] << " "
+						   	      << setw(5)  << spp[2] << " "
 						   	      << setw(7)  << intet[2] << " "
 						   	      << setw(19) << maxVolume[2] << " "
 						   	      << setw(19) << minVolume[2] << " "
@@ -3048,6 +3056,14 @@ void InOut::printMeshReport()
        << "flipped" << resetColor() 
  	   << " operations at surface:                " 
  	   << flip[nb] << endl; 
+  cout << "       |" << color(none,magenta,black) 
+       << "smoothed" << resetColor() 
+ 	   << " points by curvature:                 " 
+ 	   << spc[nb] << endl; 
+  cout << "       |" << color(none,magenta,black) 
+       << "smoothed" << resetColor() 
+ 	   << " points by angle between planes:      " 
+ 	   << spp[nb] << endl; 
   cout << "       |" << color(none,cyan,black) 
        << "contracted" << resetColor() 
  	   << " surface points by lenght:          " 

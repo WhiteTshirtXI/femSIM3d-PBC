@@ -73,6 +73,7 @@ class Model3D
   void insertPointsByLength();
   void insertPointsByCurvature();
   void removePointsByCurvature();
+  void smoothPointsByCurvature();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
   void removePointByNeighbourCheck(int _node);

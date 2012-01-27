@@ -1228,11 +1228,14 @@ void Model3D::removePointsByCurvature()
   // why) the surface mesh is sucked in, thus forming strange vertex
   // with curvature smaller then -30, thus this can be avoided using the
   // IF below.
-  if( vertID > 1 && 
-	  (maxEdgeLength*curv > 4.0 || surfMesh.curvature.Get(surfaceNode) < -30) )
 //--------------------------------------------------
-//   if( vertID > 1 && maxEdgeLength*curv > 4.5 )
+//   if( vertID > 1 && 
+// 	  (maxEdgeLength*curv > 4.0 || surfMesh.curvature.Get(surfaceNode) < -30) )
 //-------------------------------------------------- 
+//--------------------------------------------------
+//   if( vertID > 1 && maxEdgeLength*curv > 4.0 )
+//-------------------------------------------------- 
+  if( vertID > 1 && curv > 80 )
   {
    cout << "----------------- " << color(none,red,black) 
 	    << "removing vertex with curvature (" 
@@ -1969,30 +1972,46 @@ void Model3D::flipTriangleEdge()
   real P3elem2z = surfMesh.Z.Get(v3elem2);
 
   // elem1
-  real area1 = getAreaVert(v1,v2,v3elem1);
-  real q1 = triangleQualityMeasure(v1,v2,v3elem1);
-  real c1 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
-	                        P3elem1x,P3elem1y,P3elem1z);
+  real area1 = getAreaVert(v1,v3elem1,v2);
+  real q1 = triangleQualityMeasure(v1,v3elem1,v2);
+  real c1 = getCircumRadius(P1x,P1y,P1z,
+	                        P3elem1x,P3elem1y,P3elem1z,
+							P2x,P2y,P2z);
   clVector normalElem1 = getNormalElem(elem1);
 
   // elem2
-  real area2 = getAreaVert(v1,v2,v3elem2);
-  real q2 = triangleQualityMeasure(v1,v2,v3elem2);
-  real c2 = getCircumRadius(P1x,P1y,P1z,P2x,P2y,P2z,
-	                        P3elem2x,P3elem2y,P3elem2z);
+  real area2 = getAreaVert(v2,v3elem2,v1);
+  real q2 = triangleQualityMeasure(v2,v3elem2,v1);
+  real c2 = getCircumRadius(P2x,P2y,P2z,
+	                        P3elem2x,P3elem2y,P3elem2z,
+							P1x,P1y,P1z);
   clVector normalElem2 = getNormalElem(elem2);
 
-  // elem3
+  // elem3 (new elem1)
   real area3 = getAreaVert(v1,v3elem1,v3elem2);
   real q3 = triangleQualityMeasure(v1,v3elem1,v3elem2);
-  real c3 = getCircumRadius(P1x,P1y,P1z,P3elem1x,P3elem1y,P3elem1z,
+  real c3 = getCircumRadius(P1x,P1y,P1z,
+	                        P3elem1x,P3elem1y,P3elem1z,
 	                        P3elem2x,P3elem2y,P3elem2z);
+  clVector normalElem3 = getNormalElem(v1,v3elem1,v3elem2);
 
-  // elem4
-  real area4 = getAreaVert(v2,v3elem1,v3elem2);
-  real q4 = triangleQualityMeasure(v2,v3elem1,v3elem2);
-  real c4 = getCircumRadius(P2x,P2y,P2z,P3elem1x,P3elem1y,P3elem1z,
-	                        P3elem2x,P3elem2y,P3elem2z);
+  // elem4 (new elem2)
+  real area4 = getAreaVert(v2,v3elem2,v3elem1);
+  real q4 = triangleQualityMeasure(v2,v3elem2,v3elem1);
+  real c4 = getCircumRadius(P2x,P2y,P2z,
+	                        P3elem2x,P3elem2y,P3elem2z,
+	                        P3elem1x,P3elem1y,P3elem1z);
+  clVector normalElem4 = getNormalElem(v2,v3elem2,v3elem1);
+
+  real angleOld = angle3D(normalElem1.Get(0),normalElem1.Get(1),
+	                      normalElem1.Get(2),
+						  normalElem2.Get(0),normalElem2.Get(1),
+						  normalElem2.Get(2) );
+
+  real angleNew = angle3D(normalElem3.Get(0),normalElem3.Get(1),
+	                      normalElem3.Get(2),
+						  normalElem4.Get(0),normalElem4.Get(1),
+						  normalElem4.Get(2) );
 
   // this works, but is not consistent!!! CHANGE IT SOON!
   real curv1 = fabs(surfMesh.curvature.Get(v1));
@@ -2010,17 +2029,14 @@ void Model3D::flipTriangleEdge()
    * */
   if( surfMesh.Marker.Get(v1) == 0.5 && 
 	q1+q2 < q3+q4 && // quality sum
-	(curv1 < 40 && curv2 < 40) && // curvature
-	(curv3_1 < 40 && curv3_2 < 40) && // curvature
+	//--------------------------------------------------
+	// (curv1 < 40 && curv2 < 40) && // curvature
+	// (curv3_1 < 40 && curv3_2 < 40) && // curvature
+	//-------------------------------------------------- 
 	area1+area2  > area3+area4 && // area sum
+	//angleNew < angleOld &&
     //neighbourSurfaceElem.at( v1 ).size() > 3 &&  
     //neighbourSurfaceElem.at( v2 ).size() > 3 &&  
-	//--------------------------------------------------
-	// dotProd(normalElem1.Get(0),normalElem1.Get(1),
-	//         normalElem1.Get(2),
-	//         normalElem2.Get(0),normalElem2.Get(1),
-	// 		normalElem2.Get(2) ) > 0.0 && // angle between planes > 90
-	//-------------------------------------------------- 
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "----------------- " << color(none,green,black) 
@@ -2033,10 +2049,12 @@ void Model3D::flipTriangleEdge()
 	<< " --> " << resetColor()
 	<< v3elem1 << " " << v3elem2 << endl;
 
+   // new elem1
    surfMesh.IEN.Set(elem1,0,v1);
    surfMesh.IEN.Set(elem1,1,v3elem1);
    surfMesh.IEN.Set(elem1,2,v3elem2);
 
+   // new elem2
    surfMesh.IEN.Set(elem2,0,v2);
    surfMesh.IEN.Set(elem2,1,v3elem2);
    surfMesh.IEN.Set(elem2,2,v3elem1);
@@ -2598,6 +2616,12 @@ void Model3D::contractEdgeByLength()
   clVector normalElem1 = getNormalElem(elem1);
   clVector normalElem2 = getNormalElem(elem2);
 
+  // radii
+  real angle = angle3D(normalElem1.Get(0),normalElem1.Get(1),
+	                   normalElem1.Get(2),
+					   normalElem2.Get(0),normalElem2.Get(1),
+					   normalElem2.Get(2) );
+
   // verifying the length of each surface edge
   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
 
@@ -2608,13 +2632,8 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.6*triEdge[elemID] && 
-	//--------------------------------------------------
-	//   dotProd(normalElem1.Get(0),normalElem1.Get(1),
-	//           normalElem1.Get(2),
-	//           normalElem2.Get(0),normalElem2.Get(1),
-	// 	  	  normalElem2.Get(2) ) > 0.0  // angle between planes > 90
-	//-------------------------------------------------- 
+	  edgeLength < 0.4*triEdge[elemID] &&
+	  angle > 0.0 &&
 	  (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
       //neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
       //neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
@@ -2701,7 +2720,7 @@ void Model3D::removePointsByLength()
    int vertID = surfMesh.vertIdRegion.Get(v1);
 
    // verifying the length of each surface edge
-   if( mapEdgeTri.Get(i,0) < 0.2*triEdge[vertID] ) //&&
+   if( mapEdgeTri.Get(i,0) < 0.1*triEdge[vertID] ) //&&
    {
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength1=0;
@@ -3367,7 +3386,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*(nb-1)+1] = yIn;
   in.regionlist[5*(nb-1)+2] = zIn;
   in.regionlist[5*(nb-1)+3] = nb;
-  in.regionlist[5*(nb-1)+4] = 2*triEdge[nb]*
+  in.regionlist[5*(nb-1)+4] = 4*triEdge[nb]*
                               triEdge[nb]*
 							  triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*(nb-1)+4] = tetVol[nb];
@@ -8841,7 +8860,7 @@ void Model3D::checkAngleBetweenPlanes()
 						normalElem2.Get(1),
 						normalElem2.Get(2) );
 
-  if( (180*theta/3.1415) > 170 )
+  if( (180*theta/3.1415) > 140 )
   {
    cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;
    cout << "v2: " << mapEdgeTri.Get(edge,2) << endl;
@@ -8862,60 +8881,59 @@ void Model3D::checkAngleBetweenPlanes()
    cout << "  theta: " << 180*theta/3.14159 << endl;
    cout << " --------------- " << endl;
 
-//--------------------------------------------------
-//    int surfaceNode = v1;
-//    if( surfMesh.curvature.Get(v1) < surfMesh.curvature.Get(v2) )
-// 	surfaceNode = v2;
-//    int vertID = surfMesh.vertIdRegion.Get(surfaceNode);
-// 
-//    // marking the desired elements for deletion
-//    list<int> plist = neighbourSurfaceElem.at(surfaceNode);
-//    for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-// 	markSurfElemForDeletion(*mele);
-// 
-//    // deleting elements
-//    deleteSurfaceElements();
-// 
-//    // after the deletion process it's mandatory to create new elements
-//    // to fill the space left by the deleting process
-//    //surfaceTriangulator(surfaceNode);
-//    surfaceTriangulatorEarClipping(surfaceNode);
-//    //surfaceTriangulatorQualityEarClipping(surfaceNode);
-// 
-//    // deleting X,Y and Z coordinate; deleting the point maker funcition
-//    deleteSurfacePoint(surfaceNode);
-// 
-//    // update surface
-//    setSurface();
-// 
-//    // updating edge matrix
-//    setMapEdgeTri();
-// 
-//    // updating surface neighbour elems
-//    setNeighbourSurfaceElem();
-// 
-//    // updating surface neighbour points
-//    setNeighbourSurfacePoint();
-// 
-//    // updating curvature value
-//    setNormalAndKappa();
-// 
-//    cout << "----------------- " << color(none,blue,black) 
-// 	    << "curvature edge contraction at (" << resetColor()
-// 		<< surfMesh.elemIdRegion.Get(elem1)
-// 		<< color(none,blue,black) 
-// 		<< "): " << resetColor() 
-// 		<< v2 << color(none,blue,black) 
-// 		<< " --> " << resetColor()
-// 		<< v1 << color(none,blue,black) 
-// 	    << "  angle (" << resetColor()
-// 		<< (180*theta/3.1415)
-// 		<< color(none,blue,black) 
-// 		<< ") " << resetColor() << endl;
-// 
-//    saveVTKSurface("./vtk/","remAngle",rspc[vertID]);
-//    rspc[vertID]++;
-//-------------------------------------------------- 
+   int surfaceNode = v3elem1;
+   if( surfMesh.curvature.Get(v3elem2) < surfMesh.curvature.Get(v3elem1) )
+	surfaceNode = v3elem2;
+
+   int vertID = surfMesh.vertIdRegion.Get(surfaceNode);
+
+   // marking the desired elements for deletion
+   list<int> plist = neighbourSurfaceElem.at(surfaceNode);
+   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+	markSurfElemForDeletion(*mele);
+
+   // deleting elements
+   deleteSurfaceElements();
+
+   // after the deletion process it's mandatory to create new elements
+   // to fill the space left by the deleting process
+   //surfaceTriangulator(surfaceNode);
+   surfaceTriangulatorEarClipping(surfaceNode);
+   //surfaceTriangulatorQualityEarClipping(surfaceNode);
+
+   // deleting X,Y and Z coordinate; deleting the point maker funcition
+   deleteSurfacePoint(surfaceNode);
+
+   // update surface
+   setSurface();
+
+   // updating edge matrix
+   setMapEdgeTri();
+
+   // updating surface neighbour elems
+   setNeighbourSurfaceElem();
+
+   // updating surface neighbour points
+   setNeighbourSurfacePoint();
+
+   // updating curvature value
+   setNormalAndKappa();
+
+   cout << "----------------- " << color(none,blue,black) 
+	    << "curvature edge contraction at (" << resetColor()
+		<< surfMesh.elemIdRegion.Get(elem1)
+		<< color(none,blue,black) 
+		<< "): " << resetColor() 
+		<< v2 << color(none,blue,black) 
+		<< " --> " << resetColor()
+		<< v1 << color(none,blue,black) 
+	    << "  angle (" << resetColor()
+		<< (180*theta/3.1415)
+		<< color(none,blue,black) 
+		<< ") " << resetColor() << endl;
+
+   saveVTKSurface("./vtk/","remAngle",rspc[vertID]);
+   rspc[vertID]++;
   }
  }
 }
@@ -8988,3 +9006,73 @@ void Model3D::removePointByNeighbourCheck(int _node)
   }
  }
 }
+
+void Model3D::smoothPointsByCurvature()
+{
+ // number of removed surface points by Curvature
+ fill(rspc.begin(),rspc.end(),0);
+
+ for( int surfaceNode=0;surfaceNode<surfMesh.numVerts;surfaceNode++ )
+ {
+  real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
+  real curv = fabs(surfMesh.curvature.Get(surfaceNode));
+
+  if( vertID > 1 && curv > 50 )
+  {
+   cout << "----------------- " << color(none,red,black) 
+	<< "removing vertex with curvature (" 
+	<< resetColor() << curv
+	<< color(none,red,black) 
+	<< ") at (" 
+	<< resetColor()
+	<< surfMesh.vertIdRegion.Get(surfaceNode)
+	<< color(none,red,black) 
+	<< "): "
+	 << resetColor() << surfaceNode << endl;
+
+   real aux;
+   real xSum = 0.0;
+   real ySum = 0.0;
+   real zSum = 0.0;
+   real distSum = 0.0;
+
+   int listSize = neighbourPoint.at(surfaceNode).size();
+   list<int> plist = neighbourPoint.at(surfaceNode);
+   list<int>::iterator vert=plist.begin();
+   for( int i=0;i<listSize-1;i++ )
+   {
+	real P0x = surfMesh.X.Get(surfaceNode);
+	real P0y = surfMesh.Y.Get(surfaceNode);
+	real P0z = surfMesh.Z.Get(surfaceNode);
+
+	int v1 = *vert;++vert;
+	real P1x = surfMesh.X.Get(v1);
+	real P1y = surfMesh.Y.Get(v1);
+	real P1z = surfMesh.Z.Get(v1);
+
+	real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+
+	distSum += edgeLength;   
+	xSum += ( P1x-P0x )*edgeLength;
+	ySum += ( P1y-P0y )*edgeLength;
+	zSum += ( P1z-P0z )*edgeLength;
+   }
+   aux = X.Get(surfaceNode) + (1.0/distSum)*xSum; 
+   //cout << "X: " << X.Get(surfaceNode) << " " << aux << endl;
+   X.Set(surfaceNode,aux);
+   surfMesh.X.Set(surfaceNode,aux);
+
+   aux = Y.Get(surfaceNode) + (1.0/distSum)*ySum; 
+   Y.Set(surfaceNode,aux);
+   surfMesh.Y.Set(surfaceNode,aux);
+
+   aux = Z.Get(surfaceNode) + (1.0/distSum)*zSum; 
+   Z.Set(surfaceNode,aux);
+   surfMesh.Z.Set(surfaceNode,aux);
+
+   saveVTKSurface("./vtk/","remCurv",rspc[vertID]);
+   rspc[vertID]++;
+  }
+ }
+}
+

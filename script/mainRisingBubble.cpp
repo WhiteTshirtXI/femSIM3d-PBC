@@ -30,7 +30,7 @@ int main(int argc, char **argv)
  triEdge.resize(3);
  triEdge[0] = 0.1; // none
  triEdge[1] = 1.1; // wall
- triEdge[2] = 0.1; // bubble
+ triEdge[2] = 0.09; // bubble
 
  int iter = 1;
  //real Re = 6.53; // case 1
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   m1.removePointsByLength();
   m1.flipTriangleEdge();
-  //m1.checkAngleBetweenPlanes();
+  m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

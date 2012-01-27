@@ -2637,7 +2637,7 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.4*triEdge[elemID] //&&
+	  edgeLength < 0.3*triEdge[elemID] //&&
 	  //angle > 0.0 &&
 	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
       //neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
@@ -2705,6 +2705,10 @@ void Model3D::contractEdgeByLength()
    setNeighbourSurfacePoint();
 
    // removing low quality elements
+   if( v3elem1 > v2 )
+	v3elem1 = v3elem1-1;
+   if( v3elem2 > v2 )
+	v3elem2 = v3elem2-1;
    removePointByNeighbourCheck(v1);
    removePointByNeighbourCheck(v3elem1);
    removePointByNeighbourCheck(v3elem2);
@@ -3372,6 +3376,8 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  in.numberofregions = surfMesh.elemIdRegion.Max(); 
  in.regionlist = new REAL[in.numberofregions*5];
 
+ setNeighbourSurfaceElem();
+
  // fora e dentro das bolhas
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
@@ -3381,18 +3387,20 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   int node;
   //real curv = fabs(surfMesh.curvature.Get(node));
   // find the first vertex with region == nb
+  //for( int i=0;i<surfMesh.numVerts;i++ )
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
   {
+   clVector myVec = getNormalAndKappa(i,getNeighbourSurfacePoint(i));
+   real curv = fabs(myVec.Get(0));
   //for( int i=0;i<surfMesh.numVerts;i++ )
-   //if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
-   if( surfMesh.vertIdRegion.Get(i) == nb )
+   if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
+   //if( surfMesh.vertIdRegion.Get(i) == nb )
    {
 	node = i;
 	break;
    }
   }
 
-  setNeighbourSurfaceElem();
   clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
   real xIn = surfMesh.X.Get(node)-0.1*triEdge[nb]*myVec.Get(1);
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
@@ -9007,7 +9015,28 @@ void Model3D::smoothPointsByCurvature()
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
 
-  if( vertID > 1 && curv > 30 )
+  real maxEdgeLength = 0;
+  int listSize = neighbourPoint.at(surfaceNode).size();
+  list<int> plist = neighbourPoint.at(surfaceNode);
+  list<int>::iterator vert=plist.begin();
+  for( int i=0;i<listSize-1;i++ )
+  {
+   real P0x = surfMesh.X.Get(surfaceNode);
+   real P0y = surfMesh.Y.Get(surfaceNode);
+   real P0z = surfMesh.Z.Get(surfaceNode);
+
+   int v1 = *vert;++vert;
+   real P1x = surfMesh.X.Get(v1);
+   real P1y = surfMesh.Y.Get(v1);
+   real P1z = surfMesh.Z.Get(v1);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+
+   if( edgeLength > maxEdgeLength )
+	maxEdgeLength = edgeLength;
+  }
+
+  if( vertID > 1 && maxEdgeLength*curv > 3.5 )
   {
    cout << "----------------- " << color(none,magenta,black) 
 	<< "smoothing vertex with curvature (" 
@@ -9019,12 +9048,6 @@ void Model3D::smoothPointsByCurvature()
 	<< color(none,magenta,black) 
 	<< "): "
 	 << resetColor() << surfaceNode << endl;
-
-   real aux;
-   real xSum = 0.0;
-   real ySum = 0.0;
-   real zSum = 0.0;
-   real distSum = 0.0;
 
    smoothPoint(surfaceNode);
 

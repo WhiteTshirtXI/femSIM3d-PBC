@@ -1165,7 +1165,9 @@ void Model3D::insertPointsByLength()
 
   if( edgeLength > 1.4*triEdge[vertID] )
   {
-   insertPoint(edge);
+   //insertSurfacePoint(edge,"flat");
+   insertSurfacePoint(edge,"curvature");
+   //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","inserted",isp[vertID]);
    isp[vertID]++;
@@ -1385,11 +1387,14 @@ void Model3D::insertPointsByCurvature()
   real curv2 = fabs(surfMesh.curvature.Get(v2));
   real vertID = surfMesh.vertIdRegion.Get(v1); 
   real length = mapEdgeTri.Get(i,0);
+  //real erro = max(curv1,curv2);
 
   if( curv1*length > 2.5 || curv2*length > 2.5  )
   {
    cout << "----------- Inserting by curvature..." << endl;
-   insertPoint(i);
+   //insertSurfacePoint(i,"flat");
+   insertSurfacePoint(i,"curvature");
+   //insertSurfacePoint(i,"bi-curvature");
 
    saveVTKSurface("./vtk/","insertCurv",ispc[vertID]);
    ispc[vertID]++;
@@ -1435,7 +1440,11 @@ void Model3D::insertPointsByInterfaceDistance()
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) < 1.0*aux && 
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
 	  edgeLength > 4*dy )
-   insertPoint(i);
+  {
+   //insertSurfacePoint(i,"flat");
+   insertSurfacePoint(i,"curvature");
+   //insertSurfacePoint(i,"bi-curvature");
+  }
  }
 }
 
@@ -2009,21 +2018,23 @@ void Model3D::flipTriangleEdge()
 	                        P3elem1x,P3elem1y,P3elem1z);
   clVector normalElem4 = getNormalElem(v2,v3elem2,v3elem1);
 
-  real angleOld = angle3D(normalElem1.Get(0),normalElem1.Get(1),
-	                      normalElem1.Get(2),
-						  normalElem2.Get(0),normalElem2.Get(1),
-						  normalElem2.Get(2) );
-
-  real angleNew = angle3D(normalElem3.Get(0),normalElem3.Get(1),
-	                      normalElem3.Get(2),
-						  normalElem4.Get(0),normalElem4.Get(1),
-						  normalElem4.Get(2) );
+//--------------------------------------------------
+//   real angleOld = angle3D(normalElem1.Get(0),normalElem1.Get(1),
+// 	                      normalElem1.Get(2),
+// 						  normalElem2.Get(0),normalElem2.Get(1),
+// 						  normalElem2.Get(2) );
+// 
+//   real angleNew = angle3D(normalElem3.Get(0),normalElem3.Get(1),
+// 	                      normalElem3.Get(2),
+// 						  normalElem4.Get(0),normalElem4.Get(1),
+// 						  normalElem4.Get(2) );
+//-------------------------------------------------- 
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  real curv1 = fabs(surfMesh.curvature.Get(v1));
-  real curv2 = fabs(surfMesh.curvature.Get(v2));
-  real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
-  real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
+  //real curv1 = fabs(surfMesh.curvature.Get(v1));
+  //real curv2 = fabs(surfMesh.curvature.Get(v2));
+  //real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
+  //real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
 
   /* FLIPPING requirements:
    * - sum of quality of old triangles < sum of quality of new triangles
@@ -2045,7 +2056,7 @@ void Model3D::flipTriangleEdge()
     neighbourSurfaceElem.at( v2 ).size() > 3 &&  
 	c1+c2 > c3+c4 ) // circum radius
   {
-   cout << "----------------- " << color(none,green,black) 
+   cout << "------------- " << color(none,green,black) 
 	<< "flipping edge at (" << resetColor()
 	<< surfMesh.elemIdRegion.Get(elem1)
 	<< color(none,green,black) 
@@ -2262,11 +2273,11 @@ void Model3D::flipTriangleEdge()
   *        v1       vAdd      v2         v1                 v2
   *       
   * */
-void Model3D::insertPoint(int _edge)
+void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
 
- cout << "----------------- " << color(none,yellow,black) 
+ cout << "------------- " << color(none,yellow,black) 
       << "inserting vertex at (" << resetColor()
 	  << surfMesh.elemIdRegion.Get(mapEdgeTri.Get(_edge,5)) 
 	  << color(none,yellow,black) 
@@ -2299,25 +2310,33 @@ void Model3D::insertPoint(int _edge)
   }
   /* -------------------- END of CHECKING --------------------- */
 
-//--------------------------------------------------
-//  // add point in the middle of a edge (not consider curvature)
-//  real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-//  real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-//  real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-//-------------------------------------------------- 
+ real XvAdd = 0.0;
+ real YvAdd = 0.0;
+ real ZvAdd = 0.0;
+ if( strcmp( _mode,"flat") == 0 ) 
+ {
+  // add point in the middle of a edge (not consider curvature)
+  XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+  YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+  ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+ }
 
-//--------------------------------------------------
-//  clVector coordAdd1 = considerCurvature(v1,v2);
-//  clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
-//  real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
-//  real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
-//  real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
-//-------------------------------------------------- 
+ if( strcmp( _mode,"bi-curvature") == 0 ) 
+ {
+  clVector coordAdd1 = considerCurvature(v1,v2);
+  clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+  XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+  YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+  ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+ }
 
- clVector coordAdd = considerCurvature(v1,v2);
- real XvAdd = coordAdd.Get(0);
- real YvAdd = coordAdd.Get(1);
- real ZvAdd = coordAdd.Get(2);
+ if( strcmp( _mode,"curvature") == 0 ) 
+ {
+  clVector coordAdd = considerCurvature(v1,v2);
+  XvAdd = coordAdd.Get(0);
+  YvAdd = coordAdd.Get(1);
+  ZvAdd = coordAdd.Get(2);
+ }
 
 //--------------------------------------------------
 //  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
@@ -2621,11 +2640,13 @@ void Model3D::contractEdgeByLength()
   clVector normalElem1 = getNormalElem(elem1);
   clVector normalElem2 = getNormalElem(elem2);
 
-  // radii
-  real angle = angle3D(normalElem1.Get(0),normalElem1.Get(1),
-	                   normalElem1.Get(2),
-					   normalElem2.Get(0),normalElem2.Get(1),
-					   normalElem2.Get(2) );
+//--------------------------------------------------
+//   // radii
+//   real angle = angle3D(normalElem1.Get(0),normalElem1.Get(1),
+// 	                   normalElem1.Get(2),
+// 					   normalElem2.Get(0),normalElem2.Get(1),
+// 					   normalElem2.Get(2) );
+//-------------------------------------------------- 
 
   // verifying the length of each surface edge
   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
@@ -2713,7 +2734,7 @@ void Model3D::contractEdgeByLength()
    removePointByNeighbourCheck(v3elem1);
    removePointByNeighbourCheck(v3elem2);
 
-   cout << "----------------- " << color(none,blue,black) 
+   cout << "------------- " << color(none,blue,black) 
 	    << "contracting edge at (" << resetColor()
 		<< surfMesh.elemIdRegion.Get(elem1)
 		<< color(none,blue,black) 
@@ -2783,7 +2804,7 @@ void Model3D::removePointsByLength()
 	// check which node has the smallest length sum and proceed
 	if( sumLength1 < sumLength2 )
 	{
-	 cout << "----------------- " << color(none,red,black) 
+	 cout << "------------- " << color(none,red,black) 
 	      << "removing vertex at (" 
 	      << resetColor()
 	      << surfMesh.vertIdRegion.Get(v1)
@@ -2831,7 +2852,7 @@ void Model3D::removePointsByLength()
 	}
 	else // if the 2nd. node has the smallest edge length sum
 	{
-	 cout << "----------------- " << color(none,red,black) 
+	 cout << "------------ " << color(none,red,black) 
 	      << "removing vertex at(" 
 	      << resetColor()
 	      << surfMesh.vertIdRegion.Get(v2)
@@ -8889,7 +8910,7 @@ void Model3D::checkAngleBetweenPlanes()
 						normalElem2.Get(1),
 						normalElem2.Get(2) );
 
-  if( (180*theta/3.1415) > 140 )
+  if( (180*theta/3.1415) > 120 )
   {
 //--------------------------------------------------
 //    cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;
@@ -8912,19 +8933,15 @@ void Model3D::checkAngleBetweenPlanes()
 //    cout << " --------------- " << endl;
 //-------------------------------------------------- 
 
-   cout << "----------------- " << color(none,magenta,black) 
-	    << "smoothing vertex with high angle plane (" 
+   cout << "------------- " << color(none,magenta,black) 
+	    << "smooth vertex high angle plane (" 
 		<< resetColor() << 180*theta/3.14159
-		<< color(none,magenta,black) 
-		<< ") at (" 
-		<< resetColor()
-		<< surfMesh.vertIdRegion.Get(v3elem1)
-		<< color(none,magenta,black) 
-		<< ") and (" 
-		<< resetColor()
-		<< surfMesh.vertIdRegion.Get(v3elem2)
-		<< color(none,magenta,black) 
-		<< "): "
+		<< color(none,magenta,black) << ") at (" 
+		<< resetColor() << surfMesh.vertIdRegion.Get(v3elem1)
+		<< color(none,magenta,black) << "): " 
+		<< resetColor() << v3elem1 
+		<< color(none,magenta,black) << " and " 
+		<< resetColor() << v3elem2 
 		<< resetColor() << endl;
 
    smoothPoint(v3elem1);
@@ -8980,7 +8997,7 @@ void Model3D::removePointByNeighbourCheck(int _node)
 
   if( elemListSize < 3 )
   {
-   cout << "----------------- " << color(none,red,black) 
+   cout << "------------- " << color(none,red,black) 
 	<< "removing fake triangle: " << resetColor() 
 	<< _node << endl;
    saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
@@ -8994,7 +9011,7 @@ void Model3D::removePointByNeighbourCheck(int _node)
    * */
   if( elemListSize == 3 )
   {
-   cout << "----------------- " << color(none,red,black) 
+   cout << "------------- " << color(none,red,black) 
 	<< "removing low-quality point cluster: " << resetColor() 
 	<< _node << endl;
 
@@ -9036,9 +9053,10 @@ void Model3D::smoothPointsByCurvature()
 	maxEdgeLength = edgeLength;
   }
 
-  if( vertID > 1 && maxEdgeLength*curv > 3.5 )
+  //if( vertID > 1 && maxEdgeLength*curv > 3.5 )
+  if( vertID > 1 && curv > 55 )
   {
-   cout << "----------------- " << color(none,magenta,black) 
+   cout << "------------- " << color(none,magenta,black) 
 	<< "smoothing vertex with curvature (" 
 	<< resetColor() << curv
 	<< color(none,magenta,black) 

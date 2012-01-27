@@ -1875,12 +1875,12 @@ list<int> Model3D::getNeighbourSurfacePoint(int _node)
    myList.push_back(v2);
    myList.push_back(v3);
   }
-  if( v2 == node )
+  else if( v2 == node )
   {
    myList.push_back(v3);
    myList.push_back(v1);
   }
-  if( v3 == node )
+  else
   {
    myList.push_back(v1);
    myList.push_back(v2);
@@ -1947,7 +1947,7 @@ void Model3D::flipTriangleEdge()
   int elem2 = mapEdgeTri.Get(edge,6); // elem2
   int elemID = surfMesh.elemIdRegion.Get(elem1);
 
-  // Checking the orientation of the mapEdgeTri Matrix.
+  /* --- Checking the orientation of the mapEdgeTri Matrix ---- */
   clVector normalSurfMesh = getNormalElem(elem1);
   clVector normalToCompare = getNormalElem(v1,v3elem1,v2);
   if( dotProd( normalSurfMesh.Get(0),
@@ -2285,7 +2285,7 @@ void Model3D::insertPoint(int _edge)
  int elem1 = mapEdgeTri.Get(_edge,5);
  int elem2 = mapEdgeTri.Get(_edge,6);
 
- // Checking the orientation of the mapEdgeTri Matrix.
+ /* --- Checking the orientation of the mapEdgeTri Matrix ---- */
  clVector normalSurfMesh = getNormalElem(elem1);
  clVector normalToCompare = getNormalElem(v1,v2,v3elem1);
  if( dotProd( normalSurfMesh.Get(0),
@@ -2611,11 +2611,10 @@ void Model3D::contractEdgeByLength()
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
-
-  real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
-  real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
-  real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
-  real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
+  //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
+  //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
+  //real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
   int elem1 = mapEdgeTri.Get(edge,5);
   int elem2 = mapEdgeTri.Get(edge,6);
   real edgeLength = mapEdgeTri.Get(edge,0);
@@ -2638,9 +2637,9 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.4*triEdge[elemID] &&
-	  angle > 0.0 &&
-	  (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
+	  edgeLength < 0.4*triEdge[elemID] //&&
+	  //angle > 0.0 &&
+	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
       //neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
       //neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
 	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
@@ -2651,6 +2650,17 @@ void Model3D::contractEdgeByLength()
    int v2 = mapEdgeTri.Get(edge,2); 
    int v3elem1 = mapEdgeTri.Get(edge,3);
    int v3elem2 = mapEdgeTri.Get(edge,4);
+
+//--------------------------------------------------
+//    cout << " ----------------- " << endl;
+//    cout << "v1: " << v1 << endl;
+//    cout << "v2: " << v2 << endl;
+//    cout << "v3elem1: " << v3elem1 << endl;
+//    cout << "v3elem2: " << v3elem2 << endl;
+//    cout << "elem1: " << elem1 << endl;
+//    cout << "elem2: " << elem2 << endl;
+//    cout << " ----------------- " << endl;
+//-------------------------------------------------- 
 
    real P1x = surfMesh.X.Get(v1);
    real P1y = surfMesh.Y.Get(v1);
@@ -2726,7 +2736,7 @@ void Model3D::removePointsByLength()
    int vertID = surfMesh.vertIdRegion.Get(v1);
 
    // verifying the length of each surface edge
-   if( mapEdgeTri.Get(i,0) < 0.1*triEdge[vertID] ) //&&
+   if( mapEdgeTri.Get(i,0) < 0.2*triEdge[vertID] ) //&&
    {
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength1=0;
@@ -8897,15 +8907,15 @@ void Model3D::checkAngleBetweenPlanes()
    cout << "----------------- " << color(none,magenta,black) 
 	    << "smoothing vertex with high angle plane (" 
 		<< resetColor() << 180*theta/3.14159
-		<< color(none,red,black) 
+		<< color(none,magenta,black) 
 		<< ") at (" 
 		<< resetColor()
 		<< surfMesh.vertIdRegion.Get(v3elem1)
-		<< color(none,red,black) 
+		<< color(none,magenta,black) 
 		<< ") and (" 
 		<< resetColor()
 		<< surfMesh.vertIdRegion.Get(v3elem2)
-		<< color(none,red,black) 
+		<< color(none,magenta,black) 
 		<< "): "
 		<< resetColor() << endl;
 
@@ -8997,16 +9007,16 @@ void Model3D::smoothPointsByCurvature()
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
   real curv = fabs(surfMesh.curvature.Get(surfaceNode));
 
-  if( vertID > 1 && curv > 50 )
+  if( vertID > 1 && curv > 30 )
   {
    cout << "----------------- " << color(none,magenta,black) 
 	<< "smoothing vertex with curvature (" 
 	<< resetColor() << curv
-	<< color(none,red,black) 
+	<< color(none,magenta,black) 
 	<< ") at (" 
 	<< resetColor()
 	<< surfMesh.vertIdRegion.Get(surfaceNode)
-	<< color(none,red,black) 
+	<< color(none,magenta,black) 
 	<< "): "
 	 << resetColor() << surfaceNode << endl;
 

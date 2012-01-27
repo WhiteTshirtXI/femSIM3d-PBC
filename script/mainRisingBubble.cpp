@@ -294,8 +294,8 @@ int main(int argc, char **argv)
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   s1.setDt(0.01);
-   //s1.setDtALETwoPhase();
+   //s1.setDt(0.01);
+   s1.setDtALETwoPhase();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
-  m1.remove3dMeshPointsByDistance();
+  //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 
   // surface operations
@@ -359,8 +359,9 @@ int main(int argc, char **argv)
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
-  m1.removePointsByLength();
+  //m1.removePointsByLength();
   m1.flipTriangleEdge();
+
   m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

@@ -26,6 +26,9 @@ Model3D::Model3D()
  
  // number of surfaces + 1
  int numSurface = 3;
+ oper.resize(numSurface);
+ opersurf.resize(numSurface);
+
  isp.resize(numSurface);
  ispc.resize(numSurface);
  rsp.resize(numSurface);
@@ -60,6 +63,8 @@ Model3D::Model3D()
  intet.resize(numSurface);
  for( int v=0;v<numSurface;v++ )
  {
+  oper[v]=0;
+  opersurf[v]=0;
   isp[v]=0;
   ispc[v]=0;
   rsp[v]=0;
@@ -108,6 +113,9 @@ Model3D::Model3D(const Model3D &_mRight)
   minEdge = _mRight.minEdge;
   minEdgeTri = _mRight.minEdgeTri;
   averageTriEdge = _mRight.averageTriEdge;
+  oper = _mRight.oper;
+  opersurf = _mRight.opersurf;
+
   isp = _mRight.isp;
   ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
@@ -1149,9 +1157,6 @@ int Model3D::findEdge(int _v1,int _v2)
 
 void Model3D::insertPointsByLength()
 {
- // number of inserted surface points
- fill(isp.begin(),isp.end(),0);
-
  // surfMesh.elemIdRegion == 0 --> none
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
@@ -1169,8 +1174,9 @@ void Model3D::insertPointsByLength()
    insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
-   saveVTKSurface("./vtk/","inserted",isp[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    isp[vertID]++;
+   opersurf[vertID]++;
   }
  }
 }
@@ -1198,9 +1204,6 @@ void Model3D::insertPointsByLength()
  * */
 void Model3D::removePointsByCurvature()
 {
- // number of removed surface points by Curvature
- fill(rspc.begin(),rspc.end(),0);
-
  for( int surfaceNode=0;surfaceNode<surfMesh.numVerts;surfaceNode++ )
  {
   // Checking the largest neighbour edge of surfaceNode
@@ -1262,40 +1265,14 @@ void Model3D::removePointsByCurvature()
    // but it's used on removePointsByInterfaceDistance
    // to be implemented 
 
-   // marking the desired elements for deletion
-   list<int> plist = neighbourSurfaceElem.at(surfaceNode);
-   for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	markSurfElemForDeletion(*mele);
-
-   // deleting elements
-   deleteSurfaceElements();
-
-   // after the deletion process it's mandatory to create new elements
-   // to fill the space left by the deleting process
-   //surfaceTriangulator(surfaceNode);
-   surfaceTriangulatorEarClipping(surfaceNode);
-   //surfaceTriangulatorQualityEarClipping(surfaceNode);
-
-   // deleting X,Y and Z coordinate; deleting the point maker funcition
-   deleteSurfacePoint(surfaceNode);
-
-   // update surface
-   setSurface();
-
-   // updating edge matrix
-   setMapEdgeTri();
-
-   // updating surface neighbour elems
-   setNeighbourSurfaceElem();
-
-   // updating surface neighbour points
-   setNeighbourSurfacePoint();
+   removeSurfacePoint(surfaceNode);
 
    // updating curvature value
    setNormalAndKappa();
 
-   saveVTKSurface("./vtk/","remCurv",rspc[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    rspc[vertID]++;
+   opersurf[vertID]++;
   }
  }
 }
@@ -1374,9 +1351,6 @@ void Model3D::removePointsByCurvature()
 
 void Model3D::insertPointsByCurvature()
 {
- // number of inserted surface points
- fill(ispc.begin(),ispc.end(),0);
-
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   // edge length
@@ -1396,8 +1370,9 @@ void Model3D::insertPointsByCurvature()
    insertSurfacePoint(i,"curvature");
    //insertSurfacePoint(i,"bi-curvature");
 
-   saveVTKSurface("./vtk/","insertCurv",ispc[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    ispc[vertID]++;
+   opersurf[vertID]++;
   }
  }
 }
@@ -1944,7 +1919,6 @@ void Model3D::flipTriangleEdge()
   * Roundtable, pp. 363:374 (1997)
   * */
 
- fill(flip.begin(),flip.end(),0);
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
   real edge = i;
@@ -2030,6 +2004,59 @@ void Model3D::flipTriangleEdge()
 // 						  normalElem4.Get(2) );
 //-------------------------------------------------- 
 
+  /*                   v1              
+   *                 . o            
+   *                "  |  " .    y  
+   *     v3elem2   "   |     " . 
+   *             o"  x |         " .
+   *                   |             " .
+   *                   o --------------- o  v2
+   *                 v3elem1
+   *                 
+   *                 x: normal to the future plane
+   *                 y: vector v1-v2
+   *
+   *  OBS.: need to check with the angle between x and y allows the
+   *  flipping
+   *
+   *
+   * */
+//--------------------------------------------------
+//   real v12x = P2x-P1x;
+//   real v12y = P2y-P1y;
+//   real v12z = P2z-P1z;
+// 
+//   real v13elem1x = P3elem1x-P1x;
+//   real v13elem1y = P3elem1y-P1y;
+//   real v13elem1z = P3elem1z-P1z;
+// 
+//   real v13elem2x = P3elem2x-P1x;
+//   real v13elem2y = P3elem2y-P1y;
+//   real v13elem2z = P3elem2z-P1z;
+// 
+//   real angle1 = angle3D(v12x,v12y,v12z,
+// 	                    v13elem1x,v13elem1y,v13elem1z);
+//   real angle2 = angle3D(v12x,v12y,v12z,
+// 	                    v13elem2x,v13elem2y,v13elem2z);
+// 
+//   real v21x = P1x-P2x;
+//   real v21y = P1y-P2y;
+//   real v21z = P1z-P2z;
+// 
+//   real v23elem1x = P3elem1x-P2x;
+//   real v23elem1y = P3elem1y-P2y;
+//   real v23elem1z = P3elem1z-P2z;
+// 
+//   real v23elem2x = P3elem2x-P2x;
+//   real v23elem2y = P3elem2y-P2y;
+//   real v23elem2z = P3elem2z-P2z;
+// 
+//   real angle3 = dotProd(v21x,v21y,v21z,
+// 	                    v23elem1x,v23elem1y,v23elem1z);
+//   real angle4 = dotProd(v21x,v21y,v21z,
+// 	                    v23elem2x,v23elem2y,v23elem2z);
+//-------------------------------------------------- 
+
   // this works, but is not consistent!!! CHANGE IT SOON!
   //real curv1 = fabs(surfMesh.curvature.Get(v1));
   //real curv2 = fabs(surfMesh.curvature.Get(v2));
@@ -2052,8 +2079,8 @@ void Model3D::flipTriangleEdge()
 	//-------------------------------------------------- 
 	area1+area2  > area3+area4 && // area sum
 	//angleNew < angleOld &&
-    neighbourSurfaceElem.at( v1 ).size() > 3 &&  
-    neighbourSurfaceElem.at( v2 ).size() > 3 &&  
+    neighbourSurfaceElem.at( v1 ).size() > 4 &&  
+    neighbourSurfaceElem.at( v2 ).size() > 4 &&  
 	c1+c2 > c3+c4 ) // circum radius
   {
    cout << "------------- " << color(none,green,black) 
@@ -2226,14 +2253,15 @@ void Model3D::flipTriangleEdge()
 //    neighbourPoint.at(v3elem2) = getNeighbourSurfacePoint(v3elem2);
 //-------------------------------------------------- 
 
+   saveVTKSurface("./vtk/","surface",opersurf[elemID]);
+   flip[elemID]++;
+   opersurf[elemID]++;
+
    // removing low quality elements
    removePointByNeighbourCheck(v1);
    removePointByNeighbourCheck(v2);
    removePointByNeighbourCheck(v3elem1);
    removePointByNeighbourCheck(v3elem2);
-
-   saveVTKSurface("./vtk/","flipped",flip[elemID]);
-   flip[elemID]++;
   }
  }
 }
@@ -2594,6 +2622,45 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 //-------------------------------------------------- 
 }
 
+void Model3D::removeSurfacePoint(int _node)
+{
+ //saveVTKSurface("./vtk/","deleteBefore",v1);
+
+ // delete v1 from surface, xSurface, ySurface, zSurface vectors
+ // surface is not used to add/remove/flip elements before the remeshing
+ // but it's used on removePointsByInterfaceDistance
+ // to be implemented 
+
+ // marking the desired elements for deletion
+ list<int> plist = neighbourSurfaceElem.at(_node);
+ for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
+  markSurfElemForDeletion(*mele);
+
+ // deleting elements
+ deleteSurfaceElements();
+
+ // after the deletion process it's mandatory to create new elements
+ // to fill the space left by the deleting process
+ //surfaceTriangulator(_node);
+ surfaceTriangulatorEarClipping(_node);
+ //surfaceTriangulatorQualityEarClipping(_node);
+
+ // deleting X,Y and Z coordinate; deleting the point maker funcition
+ deleteSurfacePoint(_node);
+
+ // update surface
+ setSurface();
+
+ // updating edge matrix
+ setMapEdgeTri();
+
+ // updating surface neighbour elems
+ setNeighbourSurfaceElem();
+
+ // updating surface neighbour points
+ setNeighbourSurfacePoint();
+}
+
 
 /* Method to contract edge (v1 and v2).
  *
@@ -2620,16 +2687,13 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  * */
 void Model3D::contractEdgeByLength()
 {
- // number of removed 3d mesh points by interface distance
- fill(csp.begin(),csp.end(),0);
-
- fill(rpdist.begin(),rpdist.end(),0);
-
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
  for( int edge=0;edge<mapEdgeTri.DimI();edge++ )
  {
+  int v3elem1 = mapEdgeTri.Get(edge,3);
+  int v3elem2 = mapEdgeTri.Get(edge,4);
   //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
   //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
   //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
@@ -2658,11 +2722,11 @@ void Model3D::contractEdgeByLength()
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
   if( elemID > 1 && 
-	  edgeLength < 0.3*triEdge[elemID] //&&
+	  edgeLength < 0.5*triEdge[elemID] &&
 	  //angle > 0.0 &&
 	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
-      //neighbourSurfaceElem.at( v3elem1 ).size() > 3 &&  
-      //neighbourSurfaceElem.at( v3elem2 ).size() > 3 )  
+	  neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
+	  neighbourSurfaceElem.at( v3elem2 ).size() > 4   
 	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
 	 )
   {
@@ -2742,17 +2806,15 @@ void Model3D::contractEdgeByLength()
 		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
-   saveVTKSurface("./vtk/","contract",csp[elemID]);
+   saveVTKSurface("./vtk/","surface",opersurf[elemID]);
    csp[elemID]++;
+   opersurf[elemID]++;
   }
  }
 }
 
 void Model3D::removePointsByLength()
 {
- // number of removed surface points
- fill(rsp.begin(),rsp.end(),0);
-
   for( int i=0;i<mapEdgeTri.DimI();i++ )
   {
    // edge vertices
@@ -2811,44 +2873,12 @@ void Model3D::removePointsByLength()
 	      << color(none,red,black) 
 	      << "): "
 	   << resetColor() << v1 << endl;
-	 //saveVTKSurface("./vtk/","deleteBefore",v1);
 
-	 // delete v1 from surface, xSurface, ySurface, zSurface vectors
-	 // surface is not used to add/remove/flip elements before the remeshing
-	 // but it's used on removePointsByInterfaceDistance
-	 // to be implemented 
+	 removeSurfacePoint(v1);
 
-	 // marking the desired elements for deletion
-	 list<int> plist = neighbourSurfaceElem.at(v1);
-	 for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	  markSurfElemForDeletion(*mele);
-
-	 // deleting elements
-	 deleteSurfaceElements();
-
-	 // after the deletion process it's mandatory to create new elements
-	 // to fill the space left by the deleting process
-	 //surfaceTriangulator(v1);
-	 surfaceTriangulatorEarClipping(v1);
-	 //surfaceTriangulatorQualityEarClipping(v1);
-
-	 // deleting X,Y and Z coordinate; deleting the point maker funcition
-	 deleteSurfacePoint(v1);
-
-	 // update surface
-	 setSurface();
-
-	 // updating edge matrix
-	 setMapEdgeTri();
-
-	 // updating surface neighbour elems
-	 setNeighbourSurfaceElem();
-
-	 // updating surface neighbour points
-	 setNeighbourSurfacePoint();
-
-	 saveVTKSurface("./vtk/","removed",rsp[vertID]);
+	 saveVTKSurface("./vtk/","surface",opersurf[vertID]);
 	 rsp[vertID]++;
+	 opersurf[vertID]++;
 	}
 	else // if the 2nd. node has the smallest edge length sum
 	{
@@ -2859,44 +2889,12 @@ void Model3D::removePointsByLength()
 	      << color(none,red,black) 
 	      << "): "
 	   << resetColor() << v2 << endl;
-	 //saveVTKSurface("./vtk/","deleteBefore",v2);
 
-	 // delete v2 from surface, xSurface, ySurface, zSurface vectors
-	 // surface is not used to add/remove/flip elements before the remeshing
-	 // but it's used on removePointsByInterfaceDistance
-	 // to be implemented 
+	 removeSurfacePoint(v2);
 
-	 // marking the desired elements for deletion
-	 list<int> plist = neighbourSurfaceElem.at(v2);
-	 for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-	  markSurfElemForDeletion(*mele);
-
-	 // deleting elements
-	 deleteSurfaceElements();
-
-	 // after the deletion process it's mandatory to create new elements
-	 // to fill the space left by the deleting process
-	 //surfaceTriangulator(v2);
-	 surfaceTriangulatorEarClipping(v2);
-	 //surfaceTriangulatorQualityEarClipping(v2);
-
-	 // deleting X,Y and Z coordinate; deleting the point maker funcition
-	 deleteSurfacePoint(v2);
-
-	 // update surface
-	 setSurface();
-
-	 // updating edge matrix
-	 setMapEdgeTri();
-
-	 // updating surface neighbour elems
-	 setNeighbourSurfaceElem();
-
-	 // updating surface neighbour points
-	 setNeighbourSurfacePoint();
-
-	 saveVTKSurface("./vtk/","removed",rsp[vertID]);
+	 saveVTKSurface("./vtk/","surface",opersurf[vertID]);
 	 rsp[vertID]++;
+	 opersurf[vertID]++;
 	}
    }
   }
@@ -2916,9 +2914,6 @@ void Model3D::removePointsByLength()
  * */
 void Model3D::removePointsByInterfaceDistance()
 {
- // number of removed 3d mesh points by interface distance
- fill(rpi.begin(),rpi.end(),0);
-
  /*     
   *                l*sqrt(6)
   *   height = h = ---------- = l*0.8164
@@ -2956,8 +2951,6 @@ void Model3D::removePointsByInterfaceDistance()
  * */
 void Model3D::remove3dMeshPointsByDistance()
 {
- fill(rpdist.begin(),rpdist.end(),0);
-
  for( int i=surfMesh.numVerts;i<numVerts;i++ )
  {
   int vertID = vertIdRegion.Get(i);
@@ -3000,9 +2993,6 @@ void Model3D::remove3dMeshPointsByDistance()
  * */
 void Model3D::insert3dMeshPointsByDiffusion()
 {
- // number of inserted points of 3d mesh
- fill(ipd.begin(),ipd.end(),0);
-
  /*
   * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
   * mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
@@ -3077,9 +3067,6 @@ void Model3D::insert3dMeshPointsByDiffusion()
  * */
 void Model3D::remove3dMeshPointsByDiffusion()
 {
- // number of removed points of 3d mesh
- fill(rpd.begin(),rpd.end(),0);
-
  for( int e=0;e<mapEdge.DimI();e++ )
  {
   int v1 = mapEdge.Get(e,4);
@@ -3673,7 +3660,6 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
 {
  bool flag = false;
- fill(badtet.begin(),badtet.end(),0);
 
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
@@ -3731,7 +3717,6 @@ void Model3D::removePointByVolume()
  real vertSum;
  int v[NUMGLE];
  int vert=0;
- fill(rpv.begin(),rpv.end(),0);
 
  tetVol.clear();
  tetVol.resize(triEdge.size()); // number of surfaces + 1
@@ -6463,6 +6448,39 @@ void Model3D::setSurfaceConfig()
  setSurfaceVolume();
  setSurfaceArea();
  setSurfaceRadius();
+
+ // total number of operations
+ fill(oper.begin(),oper.end(),0);
+ // total number of operations
+ fill(opersurf.begin(),opersurf.end(),0);
+ // number of removed surface points by volume
+ fill(rpv.begin(),rpv.end(),0);
+ // number of tet with 4 vertices on the surface
+ fill(badtet.begin(),badtet.end(),0);
+ // number of removed points of 3d mesh
+ fill(rpd.begin(),rpd.end(),0);
+ // number of inserted points of 3d mesh
+ fill(ipd.begin(),ipd.end(),0);
+ // number of removed 3d mesh points by distance
+ fill(rpdist.begin(),rpdist.end(),0);
+ // number of removed 3d mesh points by interface distance
+ fill(rpi.begin(),rpi.end(),0);
+ // number of removed 3d mesh points by interface distance
+ fill(csp.begin(),csp.end(),0);
+ // number of flip operations 
+ fill(flip.begin(),flip.end(),0);
+ // number of inserted surface points
+ fill(ispc.begin(),ispc.end(),0);
+ // number of removed surface points by Curvature
+ fill(rspc.begin(),rspc.end(),0);
+ // number of inserted surface points
+ fill(isp.begin(),isp.end(),0);
+ // number of removed surface points by Curvature
+ fill(spc.begin(),spc.end(),0);
+ // number of removed surface points by Curvature
+ fill(spp.begin(),spp.end(),0);
+ // number of removed surface points
+ fill(rsp.begin(),rsp.end(),0);
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -6796,6 +6814,8 @@ vector<real> Model3D::getMinArea(){return minArea;}
 vector<real> Model3D::getMaxArea(){return maxArea;}
 vector<int> Model3D::getIdMinArea(){return idMinArea;}
 vector<int> Model3D::getIdMaxArea(){return idMaxArea;}
+vector<int> Model3D::getOPER(){return oper;}
+vector<int> Model3D::getOPERSURF(){return opersurf;}
 vector<int> Model3D::getIP(){return ip;}
 vector<int> Model3D::getIPD(){return ipd;}
 vector<int> Model3D::getRP(){return rp;}
@@ -6841,6 +6861,9 @@ void Model3D::operator=(Model3D &_mRight)
   minArea = _mRight.minArea;
   idMaxArea = _mRight.idMaxArea;
   idMinArea = _mRight.idMinArea;
+
+  oper = _mRight.oper;                    
+  opersurf = _mRight.opersurf;                    
 
   ip = _mRight.ip;                    
   ipd = _mRight.ipd;                    
@@ -8857,9 +8880,6 @@ real Model3D::triangleQualityMeasure(int _v1,int _v2, int _v3)
  * */
 void Model3D::checkAngleBetweenPlanes()
 {
- // number of removed surface points by Curvature
- fill(spp.begin(),spp.end(),0);
-
  // surfMesh.elemIdRegion == 1 --> wall
  // surfMesh.elemIdRegion == 2 --> bubble 1
  // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
@@ -8947,8 +8967,73 @@ void Model3D::checkAngleBetweenPlanes()
    smoothPoint(v3elem1);
    smoothPoint(v3elem2);
 
-   saveVTKSurface("./vtk/","smoothPlane",spp[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    spp[vertID]++;
+   opersurf[vertID]++;
+  }
+ }
+}
+
+/* 
+ * This if checks whether the point on the surface has only 3 surface
+ * elements. This is caused by the re-meshing process that sometimes
+ * creates these problematic local mesh. Such a point should be
+ * removed to avoid mesh problems.
+ * */
+void Model3D::removePointByNeighbourCheck()
+{
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  int vertID = surfMesh.vertIdRegion.Get(i);
+  int elemListSize = neighbourSurfaceElem.at( i ).size();
+
+  if( elemListSize < 3 )
+  {
+   removeSurfacePoint(i);
+   cout << "------------- " << color(none,red,black) 
+	<< "removing fake triangle: " << resetColor() 
+	<< i << endl;
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   rspn[vertID]++;
+   opersurf[vertID]++;
+  }
+
+  /*
+   * This if removes a surface point when the number of its neighbours
+   * are equal. Usually these points demage the mesh
+   * quality and breaks the simulation flow. 
+   * */
+  if( elemListSize == 3 )
+  {
+   removeSurfacePoint(i);
+
+   cout << "------------- " << color(none,red,black) 
+	<< "removing low-quality point cluster: " << resetColor() 
+	<< i << endl;
+
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   rspn[vertID]++;
+   opersurf[vertID]++;
+  }
+
+  if( elemListSize == 4 && surfMesh.curvature.Get(i) > 50 )
+  {
+   removeSurfacePoint(i);
+
+   cout << "------------- " << color(none,magenta,black) 
+	    << "removing low-quality triangle with curvature (" 
+		<< resetColor() << surfMesh.curvature.Get(i)
+		<< color(none,magenta,black) 
+		<< ") at (" 
+		<< resetColor()
+		<< surfMesh.vertIdRegion.Get(i)
+		<< color(none,magenta,black) 
+		<< "): "
+		 << resetColor() << i << endl;
+
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   rspn[vertID]++;
+   opersurf[vertID]++;
   }
  }
 }
@@ -8966,42 +9051,16 @@ void Model3D::removePointByNeighbourCheck(int _node)
 
  if( elemListSize < 4 )
  {
-  // marking the desired elements for deletion
-  list<int> plist = neighbourSurfaceElem.at(_node);
-  for( list<int>::iterator mele=plist.begin(); mele != plist.end();++mele )
-   markSurfElemForDeletion(*mele);
-
-  // deleting elements
-  deleteSurfaceElements();
-
-  // after the deletion process it's mandatory to create new elements
-  // to fill the space left by the deleting process
-  //surfaceTriangulator(_node);
-  surfaceTriangulatorEarClipping(_node);
-  //surfaceTriangulatorQualityEarClipping(_node);
-
-  // deleting X,Y and Z coordinate; deleting the point maker funcition
-  deleteSurfacePoint(_node);
-
-  // update surface
-  setSurface();
-
-  // updating edge matrix
-  setMapEdgeTri();
-
-  // updating surface neighbour elems
-  setNeighbourSurfaceElem();
-
-  // updating surface neighbour points
-  setNeighbourSurfacePoint();
+  removeSurfacePoint(_node);
 
   if( elemListSize < 3 )
   {
    cout << "------------- " << color(none,red,black) 
 	<< "removing fake triangle: " << resetColor() 
 	<< _node << endl;
-   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    rspn[vertID]++;
+   opersurf[vertID]++;
   }
 
   /*
@@ -9015,18 +9074,15 @@ void Model3D::removePointByNeighbourCheck(int _node)
 	<< "removing low-quality point cluster: " << resetColor() 
 	<< _node << endl;
 
-   saveVTKSurface("./vtk/","removedBad",rspn[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    rspn[vertID]++;
-
+   opersurf[vertID]++;
   }
  }
 }
 
 void Model3D::smoothPointsByCurvature()
 {
- // number of removed surface points by Curvature
- fill(spc.begin(),spc.end(),0);
-
  for( int surfaceNode=0;surfaceNode<surfMesh.numVerts;surfaceNode++ )
  {
   real vertID = surfMesh.vertIdRegion.Get(surfaceNode); 
@@ -9054,7 +9110,7 @@ void Model3D::smoothPointsByCurvature()
   }
 
   //if( vertID > 1 && maxEdgeLength*curv > 3.5 )
-  if( vertID > 1 && curv > 55 )
+  if( vertID > 1 && curv > 65 )
   {
    cout << "------------- " << color(none,magenta,black) 
 	<< "smoothing vertex with curvature (" 
@@ -9069,8 +9125,9 @@ void Model3D::smoothPointsByCurvature()
 
    smoothPoint(surfaceNode);
 
-   saveVTKSurface("./vtk/","smoothCurv",spc[vertID]);
+   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    spc[vertID]++;
+   opersurf[vertID]++;
   }
  }
 }

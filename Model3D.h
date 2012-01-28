@@ -78,6 +78,7 @@ class Model3D
   void checkAngleBetweenPlanes();
   void insertPointsByInterfaceDistance();
   void removePointsByLength();
+  void removePointByNeighbourCheck();
   void removePointByNeighbourCheck(int _node);
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
@@ -87,6 +88,7 @@ class Model3D
   void markSurfElemForDeletion(int _elem);
   void deleteSurfaceElements();
   void insertSurfacePoint(int _edge,const char* _mode);
+  void removeSurfacePoint(int _node);
   clVector considerCurvature(int _v1,int _v2);
   void insertPointsBetweenBubblesByPosition();
   list<int> setPolyhedron(list<int> _myList);
@@ -143,6 +145,10 @@ class Model3D
   Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
   void convertTetgenToModel3D(tetgenio &_tetmesh);
   void convertModel3DtoTetgen(tetgenio &_tetmesh);
+
+  vector<int> getOPER();
+  vector<int> getOPERSURF();
+
   vector<int> getISP();
   vector<int> getISPC();
   vector<int> getRSP();
@@ -359,6 +365,7 @@ class Model3D
   real minEdge;
   real minEdgeTri;
 
+  vector<int> oper,opersurf; // oper: num of operations of time step
   vector<int> isp;         // isp: num of inserted surface points by length
   vector<int> ispc;        // ispc: num of inserted surface points by curv
   vector<int> rsp;         // rsp: num of removed surface points by length

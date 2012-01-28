@@ -4189,7 +4189,7 @@ void Model3D::setNuCDiskBC()
  }
 }
 
-void Model3D::setNuCFiniteDiskBC()
+void Model3D::setFiniteDiskBC()
 {
  real omega,aux;
  rMax = Y.Max();
@@ -4234,6 +4234,16 @@ void Model3D::setNuCFiniteDiskBC()
    wc.Set(i,aux);
   }
 
+//--------------------------------------------------
+//   if( Z.Get(i) == Z.Min() && 
+// 	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<rMax/4.0*rMax/4.0) )
+//   {
+//    idbcw.AddItem(i);
+// 
+//    wc.Set(i,0.0); 
+//   }
+//-------------------------------------------------- 
+
   // casca do cilindro
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
 	( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
@@ -4247,10 +4257,11 @@ void Model3D::setNuCFiniteDiskBC()
    wc.Set(i,0.0); 
   }
  }
+
  for( int i=0;i<numVerts;i++ )
  {
   if( Z.Get(i) == Z.Min() && 
-	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<=rMax/4.0*rMax/4.0) )
+	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>=rMax/4.0*rMax/4.0) )
   {
    idbcp.AddItem(i);
    aux = 0.0;

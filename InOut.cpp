@@ -1098,7 +1098,17 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
 
    vonKarmanFile.close();
 
-   copyLastFile(_dir,filename,_filename);
+   /* ----------- copying to file vk?.last ----------- */
+   ifstream inFile( filename,ios::binary ); 
+
+   string fileCopy = (string) _dir + (string) _filename + str2 + "." + "last";
+   const char* filenameCopy = fileCopy.c_str();
+   ofstream outFile( filenameCopy,ios::binary ); 
+
+   outFile << inFile.rdbuf();
+   inFile.close();
+   outFile.close();
+   /* ------------------------------------------------ */
 
    count++;
   }
@@ -3832,9 +3842,9 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  // radius 1 = D1/2
  real D1 = zMax - zMin; 
  real radius1 = D1/2.0;
- real xCenter1 = (xMax+xMin)/2.0;
- real yCenter1 = (yMax+yMin)/2.0; 
- real zCenter1 = (zMax+zMin)/2.0; 
+ //real xCenter1 = (xMax+xMin)/2.0;
+ //real yCenter1 = (yMax+yMin)/2.0; 
+ //real zCenter1 = (zMax+zMin)/2.0; 
  
  // radius 2 = D2/2
  real xCenter2 = (xMax+xMin)/2.0;

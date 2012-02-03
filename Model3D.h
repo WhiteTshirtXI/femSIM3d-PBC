@@ -145,6 +145,7 @@ class Model3D
   Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
   void convertTetgenToModel3D(tetgenio &_tetmesh);
   void convertModel3DtoTetgen(tetgenio &_tetmesh);
+  void clearMeshIndexes();
 
   vector<int> getOPER();
   vector<int> getOPERSURF();

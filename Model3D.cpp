@@ -1165,10 +1165,11 @@ void Model3D::insertPointsByLength()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(edge,0);
-  real vertID = surfMesh.vertIdRegion.Get(mapEdgeTri.Get(edge,1)); 
-  //real elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5)); 
+  real v1 = mapEdgeTri.Get(edge,1);
+  real vertID = surfMesh.vertIdRegion.Get(v1); 
 
-  if( edgeLength > 1.4*triEdge[vertID] )
+  if( vertID > 1 &&
+	  edgeLength > 1.4*triEdge[vertID] ) 
   {
    //insertSurfacePoint(edge,"flat");
    insertSurfacePoint(edge,"curvature");
@@ -2395,11 +2396,6 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.vertIdRegion.AddItem(surfMesh.vertIdRegion.Get(v1));
  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1)); 
 
- // curvature is approx. the average between vertices
- real curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))/2.0;
- surfMesh.curvature.AddItem(curv);
- curvature.AddItem(vAdd,curv);
-
  // incremeting the number of points
  surfMesh.numVerts++;
  numVerts++;
@@ -2616,9 +2612,17 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 //  // update vAdd
 //  neighbourPoint.push_back( getNeighbourSurfacePoint(vAdd) );
 //-------------------------------------------------- 
+
+ // curvature is approx. the average between vertices
+ real curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
+ surfMesh.curvature.AddItem(curv);
+ curvature.AddItem(vAdd,curv);
+
 //--------------------------------------------------
 //  clVector myVec = getNormalAndKappa(vAdd,getNeighbourSurfacePoint(vAdd));
-//  cout << "calculated curv: " << myVec.Get(0) << endl;
+//  surfMesh.curvature.AddItem(myVec.Get(0));
+//  curvature.AddItem(vAdd,myVec.Get(0));
+//  //cout << "calculated curv: " << myVec.Get(0) << endl;
 //-------------------------------------------------- 
 }
 
@@ -2717,7 +2721,7 @@ void Model3D::contractEdgeByLength()
 
   //real erro1 = curv1*edgeLength;
   //real erro2 = curv2*edgeLength;
-  //real erro = max(erro1,erro2);
+  //real curv = min(curv1,curv2);
   //real erroS = 4.0*triEdge[elemID];
   
   //if( elemID > 1 && erro < 0.5*erroS )//&&
@@ -2727,7 +2731,6 @@ void Model3D::contractEdgeByLength()
 	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
 	  neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
 	  neighbourSurfaceElem.at( v3elem2 ).size() > 4   
-	  //edgeLength < 0.3*triEdge[elemID] ) //&& 
 	 )
   {
    // int length = mapEdgeTri.Get(edge,0); // length
@@ -3003,9 +3006,9 @@ void Model3D::insert3dMeshPointsByDiffusion()
   * */
  for( int e=0;e<mapEdge.DimI();e++ )
  {
-  int XvAdd = mapEdge.Get(e,1);
-  int YvAdd = mapEdge.Get(e,2);
-  int ZvAdd = mapEdge.Get(e,3);
+  real XvAdd = mapEdge.Get(e,1);
+  real YvAdd = mapEdge.Get(e,2);
+  real ZvAdd = mapEdge.Get(e,3);
 
   int v1 = mapEdge.Get(e,4);
   int v2 = mapEdge.Get(e,5);
@@ -3351,7 +3354,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  }
 
  // adicionando pontos que nao sao da interface e do convex-hull
- for( int i=surfMesh.numVerts;i<numVerts;i++ )
+ for( int i=surfMesh.numVerts;i<_tetmesh.numberofpoints;i++ )
  {
   in.pointlist[3*i+0] = X.Get(i);
   in.pointlist[3*i+1] = Y.Get(i);
@@ -3588,7 +3591,7 @@ Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_tetmesh)
 void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 {
  numElems = _tetmesh.numberoftetrahedra;
- numNodes = _tetmesh.numberofpoints+out.numberoftetrahedra;
+ numNodes = _tetmesh.numberofpoints+_tetmesh.numberoftetrahedra;
  numVerts = _tetmesh.numberofpoints;
  
  // varre lista de elementos e passa para estrutura IEN
@@ -3611,9 +3614,9 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,0.0);
-	//edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
-	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
-	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
+	//edgeSize.Set(vertice,triEdge[_tetmesh.tetrahedronattributelist[i]]);
+	vertIdRegion.Set(vertice,_tetmesh.tetrahedronattributelist[i]);
+	elemIdRegion.Set(i,_tetmesh.tetrahedronattributelist[i]);
    }
   }
   // set:
@@ -3625,9 +3628,9 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 	int vertice = _tetmesh.tetrahedronlist[i*4+j];
 	IEN.Set(i,j,vertice);
 	heaviside.Set(vertice,1.0);
-	//edgeSize.Set(vertice,triEdge[out.tetrahedronattributelist[i]]);
-	vertIdRegion.Set(vertice,out.tetrahedronattributelist[i]);
-	elemIdRegion.Set(i,out.tetrahedronattributelist[i]);
+	//edgeSize.Set(vertice,triEdge[_tetmesh.tetrahedronattributelist[i]]);
+	vertIdRegion.Set(vertice,_tetmesh.tetrahedronattributelist[i]);
+	elemIdRegion.Set(i,_tetmesh.tetrahedronattributelist[i]);
    }
   }
  }
@@ -3644,12 +3647,12 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   if( _tetmesh.pointmarkerlist[i] == 10 ||
 	  _tetmesh.pointmarkerlist[i] == 22 )
    heaviside.Set(i,0.5);
+ }
 
-  for( int i=0;i<surfMesh.numVerts;i++ )
-  {
-   vertIdRegion.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
-   //edgeSize.Set(i,triEdge[surfMesh.vertIdRegion.Get(i)]);
-  }
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  vertIdRegion.Set(i,surfMesh.vertIdRegion.Get(i));
+  //edgeSize.Set(i,surfMesh.vertIdRegion.Get(i));
  }
 }
 
@@ -4234,6 +4237,7 @@ void Model3D::setFiniteDiskBC()
    wc.Set(i,aux);
   }
 
+  // free-surface boundary condition
 //--------------------------------------------------
 //   if( Z.Get(i) == Z.Min() && 
 // 	 (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)<rMax/4.0*rMax/4.0) )
@@ -6460,38 +6464,6 @@ void Model3D::setSurfaceConfig()
  setSurfaceArea();
  setSurfaceRadius();
 
- // total number of operations
- fill(oper.begin(),oper.end(),0);
- // total number of operations
- fill(opersurf.begin(),opersurf.end(),0);
- // number of removed surface points by volume
- fill(rpv.begin(),rpv.end(),0);
- // number of tet with 4 vertices on the surface
- fill(badtet.begin(),badtet.end(),0);
- // number of removed points of 3d mesh
- fill(rpd.begin(),rpd.end(),0);
- // number of inserted points of 3d mesh
- fill(ipd.begin(),ipd.end(),0);
- // number of removed 3d mesh points by distance
- fill(rpdist.begin(),rpdist.end(),0);
- // number of removed 3d mesh points by interface distance
- fill(rpi.begin(),rpi.end(),0);
- // number of removed 3d mesh points by interface distance
- fill(csp.begin(),csp.end(),0);
- // number of flip operations 
- fill(flip.begin(),flip.end(),0);
- // number of inserted surface points
- fill(ispc.begin(),ispc.end(),0);
- // number of removed surface points by Curvature
- fill(rspc.begin(),rspc.end(),0);
- // number of inserted surface points
- fill(isp.begin(),isp.end(),0);
- // number of removed surface points by Curvature
- fill(spc.begin(),spc.end(),0);
- // number of removed surface points by Curvature
- fill(spp.begin(),spp.end(),0);
- // number of removed surface points
- fill(rsp.begin(),rsp.end(),0);
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -9184,3 +9156,40 @@ void Model3D::smoothPoint(int _node)
  Z.Set(_node,aux);
  surfMesh.Z.Set(_node,aux);
 }
+
+void Model3D::clearMeshIndexes()
+{
+ // total number of operations
+ fill(oper.begin(),oper.end(),0);
+ // total number of operations
+ fill(opersurf.begin(),opersurf.end(),0);
+ // number of removed surface points by volume
+ fill(rpv.begin(),rpv.end(),0);
+ // number of tet with 4 vertices on the surface
+ fill(badtet.begin(),badtet.end(),0);
+ // number of removed points of 3d mesh
+ fill(rpd.begin(),rpd.end(),0);
+ // number of inserted points of 3d mesh
+ fill(ipd.begin(),ipd.end(),0);
+ // number of removed 3d mesh points by distance
+ fill(rpdist.begin(),rpdist.end(),0);
+ // number of removed 3d mesh points by interface distance
+ fill(rpi.begin(),rpi.end(),0);
+ // number of removed 3d mesh points by interface distance
+ fill(csp.begin(),csp.end(),0);
+ // number of flip operations 
+ fill(flip.begin(),flip.end(),0);
+ // number of inserted surface points
+ fill(ispc.begin(),ispc.end(),0);
+ // number of removed surface points by Curvature
+ fill(rspc.begin(),rspc.end(),0);
+ // number of inserted surface points
+ fill(isp.begin(),isp.end(),0);
+ // number of removed surface points by Curvature
+ fill(spc.begin(),spc.end(),0);
+ // number of removed surface points by Curvature
+ fill(spp.begin(),spp.end(),0);
+ // number of removed surface points
+ fill(rsp.begin(),rsp.end(),0);
+}
+

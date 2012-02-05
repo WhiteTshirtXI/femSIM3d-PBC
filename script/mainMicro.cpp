@@ -33,7 +33,15 @@ int main(int argc, char **argv)
  triEdge[3] = 0.09; // bubble 3
  //triEdge[5] = 0.022; // bubble 4
 
- // bogdan's thesis 2010 - case 2
+ /* 
+  * bogdan's thesis 2010 - Film thickness
+  * Air-Ethanol
+  * Circular channels
+  * Tube radius: 0.3 - 1.3mm
+  *
+  * Reference: Han and Shikazono
+  *
+  * */
  int iter = 1;
  real Re = 10;
  real Sc = 1;
@@ -255,20 +263,18 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
-//--------------------------------------------------
-//  // Point's distribution
-//  Laplace3D d1(m1);
-//  d1.setk(0.1);
-//  d1.init();
-//  d1.assemble();
-//  d1.setBC();
-//  d1.matMountC();
-//  d1.setUnCoupledCBC(); 
-//  d1.setCRHS();
-//  d1.unCoupledC();
-//  //d1.saveVTK("./vtk/","edge");
-//  d1.setModel3DEdgeSize();
-//-------------------------------------------------- 
+ // Point's distribution
+ Laplace3D d1(m1);
+ d1.setk(0.1);
+ d1.init();
+ d1.assemble();
+ d1.setBC();
+ d1.matMountC();
+ d1.setUnCoupledCBC(); 
+ d1.setCRHS();
+ d1.unCoupledC();
+ //d1.saveVTK("./vtk/","edge");
+ d1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -322,18 +328,16 @@ int main(int argc, char **argv)
 
    iter++;
   }
-//--------------------------------------------------
-//   Laplace3D d2(m1,d1);
-//   d2.assemble();
-//   d2.setBC();
-//   d2.matMountC();
-//   d2.setUnCoupledCBC(); 
-//   d2.setCRHS();
-//   d2.unCoupledC();
-//   d2.saveVTK(vtkFolder,"edge",iter-1);
-//   d2.saveChordalEdge(datFolder,"edge",iter-1);
-//   d2.setModel3DEdgeSize();
-//-------------------------------------------------- 
+  Laplace3D d2(m1,d1);
+  d2.assemble();
+  d2.setBC();
+  d2.matMountC();
+  d2.setUnCoupledCBC(); 
+  d2.setCRHS();
+  d2.unCoupledC();
+  d2.saveVTK(vtkFolder,"edge",iter-1);
+  d2.saveChordalEdge(datFolder,"edge",iter-1);
+  d2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);

@@ -2598,6 +2598,12 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
  clVector one(numVerts);one.SetAll(1.0);
  mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
+ for (list<int>::iterator it=boundaryVert->begin(); 
+                          it!=boundaryVert->end(); 
+						  ++it)
+  mu.Set(*it,0.0); // zero viscosity at wall
+
+
 //--------------------------------------------------
 //  mu.Dim(numNodes);
 //  mu.SetAll(mu_inAdimen);
@@ -2623,6 +2629,11 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
 
  clVector one(numVerts);one.SetAll(1.0);
  rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
+
+ for (list<int>::iterator it=boundaryVert->begin(); 
+                          it!=boundaryVert->end(); 
+						  ++it)
+  rho.Set(*it,0.0); // zero density at wall
 
 //--------------------------------------------------
 //  rho.Dim(numNodes);

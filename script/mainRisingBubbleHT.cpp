@@ -68,7 +68,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/rising/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;

@@ -2811,7 +2811,7 @@ void InOut::printMeshReport()
  cout << endl;
  for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
-  cout << "      zone (" << nb << ")" << endl;
+  cout << "      surface (" << nb << ")" << endl;
   cout << "       |radius (initRadius):                          "
        << surfaceRadius[nb] << " (" << initSurfaceRadius[nb] << ")" << endl;
   cout << "       |area (initArea):                              "

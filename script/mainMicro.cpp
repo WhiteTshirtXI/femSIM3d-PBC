@@ -9,9 +9,9 @@
 #include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
+#include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
-#include "TElement.h"
 #include "Laplace3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
@@ -22,16 +22,16 @@
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //PetscInitializeNoArguments();
 
  // set each bubble length
  vector< real > triEdge;
- triEdge.resize(6);
- triEdge[0] = 0.1;   // none
- triEdge[1] = 0.24;   // wall
- triEdge[2] = 0.09;   // bubble 1 
- triEdge[3] = 0.09;   // bubble 2 
- triEdge[4] = 0.022; // bubble 3
- triEdge[5] = 0.022; // bubble 4
+ triEdge.resize(4);
+ triEdge[0] = 0.22;   // wall
+ triEdge[1] = 0.09;   // bubble 1 
+ triEdge[2] = 0.09;   // bubble 2 
+ triEdge[3] = 0.09; // bubble 3
+ //triEdge[5] = 0.022; // bubble 4
 
  // bogdan's thesis 2010 - case 2
  int iter = 1;
@@ -40,8 +40,8 @@ int main(int argc, char **argv)
  real We = 2;
  real Fr = 1.0;
  real c1 = 0.0; // lagrangian
- real c2 = 0.0; // smooth vel
- real c3 = 0.1; // smooth - fujiwara
+ real c2 = 1.0; // smooth vel
+ real c3 = 1.0; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -57,11 +57,13 @@ int main(int argc, char **argv)
  real cfl = 0.8;
 
  //string meshFile = "micro.msh";
- string meshFile = "2micros.msh";
+ //string meshFile = "2micros.msh";
+ string meshFile = "3micros.msh";
  //string meshFile = "4micros.msh";
 
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  //Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/micro/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -83,6 +85,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   const char *mesh1 = mesh;
+
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
@@ -145,9 +148,9 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
@@ -187,9 +190,9 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -228,9 +231,9 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -248,22 +251,24 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
+  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
- // Point's distribution
- Laplace3D d1(m1);
- d1.setk(0.7);
- d1.init();
- d1.assemble();
- d1.setBC();
- d1.matMountC();
- d1.setUnCoupledCBC(); 
- d1.setCRHS();
- d1.unCoupledC();
- //d1.saveVTK("./vtk/","edge");
- d1.setModel3DEdgeSize();
+//--------------------------------------------------
+//  // Point's distribution
+//  Laplace3D d1(m1);
+//  d1.setk(0.1);
+//  d1.init();
+//  d1.assemble();
+//  d1.setBC();
+//  d1.matMountC();
+//  d1.setUnCoupledCBC(); 
+//  d1.setCRHS();
+//  d1.unCoupledC();
+//  //d1.saveVTK("./vtk/","edge");
+//  d1.setModel3DEdgeSize();
+//-------------------------------------------------- 
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -301,7 +306,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKHalf(vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -317,16 +322,18 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
-  d2.assemble();
-  d2.setBC();
-  d2.matMountC();
-  d2.setUnCoupledCBC(); 
-  d2.setCRHS();
-  d2.unCoupledC();
-  d2.saveVTK("./vtk/","edge",iter-1);
-  d2.saveChordalEdge(datFolder,"edge",iter-1);
-  d2.setModel3DEdgeSize();
+//--------------------------------------------------
+//   Laplace3D d2(m1,d1);
+//   d2.assemble();
+//   d2.setBC();
+//   d2.matMountC();
+//   d2.setUnCoupledCBC(); 
+//   d2.setCRHS();
+//   d2.unCoupledC();
+//   d2.saveVTK(vtkFolder,"edge",iter-1);
+//   d2.saveChordalEdge(datFolder,"edge",iter-1);
+//   d2.setModel3DEdgeSize();
+//-------------------------------------------------- 
 
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
@@ -336,26 +343,31 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion();
+  //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  m1.removePointByVolume();
+  //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 
+  m1.smoothPointsByCurvature();
+
   // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  m1.removePointsByCurvature();
+  //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.removePointsByNeighbourCheck();
+
+  m1.removePointByNeighbourCheck();
+  m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
@@ -376,7 +388,7 @@ int main(int argc, char **argv)
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);

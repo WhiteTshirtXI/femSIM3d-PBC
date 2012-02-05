@@ -120,6 +120,7 @@ class Model3D
   void setInitSurfaceVolume();
   void setSurfaceVolume();
   real getSurfaceVolume(int _region);
+  real getSurfaceVolumeTET(int _region);
 
   // Area calculation
   void setInitSurfaceArea();
@@ -145,7 +146,6 @@ class Model3D
   Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
   void convertTetgenToModel3D(tetgenio &_tetmesh);
   void convertModel3DtoTetgen(tetgenio &_tetmesh);
-  void clearMeshIndexes();
 
   vector<int> getOPER();
   vector<int> getOPERSURF();
@@ -308,7 +308,6 @@ class Model3D
   real getXCenter();
   real getYCenter();
   real getZCenter();
-  real getBubbleRadius();
   vector< list<int> >* getNeighbourElem();
   vector< list<int> >* getNeighbourVert();
   vector< list<int> >* getNeighbourFace();
@@ -324,6 +323,10 @@ class Model3D
   vector<real> getTriEdge();
   void setTetVol(vector< real > _tetVol);
   vector<real> getTetVol();
+  vector<real> getInitSurfaceRadius();
+  vector<real> getInitSurfaceArea();
+  vector<real> getInitSurfaceVolume();
+  vector<real> getSurfaceRadius();
   vector<real> getSurfaceArea();
   vector<real> getSurfaceVolume();
   void setSingleElement();
@@ -359,10 +362,8 @@ class Model3D
   int numElems;                   // numero total de elementos da malha
   int numNodes;                   // numero total de nos da malha
   int dVerts;                     // delta vertices (v_new-v_old)
-  int numTriangles;
   real rMax;                      // tamanho max do raio do disco
   real xCenter,yCenter,zCenter;
-  real bubbleRadius;
   real minEdge;
   real minEdgeTri;
 

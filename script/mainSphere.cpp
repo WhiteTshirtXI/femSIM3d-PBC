@@ -24,10 +24,9 @@ int main(int argc, char **argv)
  
  // set each bubble length
  vector< real > triEdge;
- triEdge.resize(3);
- triEdge[0] = 0.1; // none
- triEdge[1] = 1.0; // wall
- triEdge[2] = 0.08; // bubble 1 
+ triEdge.resize(2);
+ triEdge[0] = 1.0; // wall
+ triEdge[1] = 0.08; // bubble 1 
 
  // static bubble test (Fabricio's thesis (2005))
  real Re = 100;
@@ -136,7 +135,7 @@ int main(int argc, char **argv)
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
-  save.saveVTKTest(vtkFolder,"simCutPlane",i);
+  save.saveVTKHalf(vtkFolder,"simCutPlane",i);
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveSol(binFolder,"sim",i);
   save.saveBubbleInfo(datFolder);

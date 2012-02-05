@@ -224,7 +224,7 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
+  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKHalf(vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);

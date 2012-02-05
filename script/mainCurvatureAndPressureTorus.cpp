@@ -111,10 +111,9 @@ int main(int argc, char **argv)
 
   // set each bubble length
   vector< real > triEdge;
-  triEdge.resize(3);
-  triEdge[0] = 0.1; // none
-  triEdge[1] = 0.6; // wall
-  triEdge[2] = 0.90-0.01*i*2; // bubble 1 
+  triEdge.resize(2);
+  triEdge[0] = 0.6;           // wall
+  triEdge[1] = 0.90-0.01*i*2; // bubble 1 
 
   Model3D m1;
   Simulator3D s1;
@@ -174,7 +173,7 @@ int main(int argc, char **argv)
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
-  save.saveVTKTest(vtkFolder,"simCutPlane",i);
+  save.saveVTKHalf(vtkFolder,"simCutPlane",i);
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveBubbleInfo(datFolder);
 

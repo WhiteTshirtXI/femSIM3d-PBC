@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 //   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveVTKTest(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);

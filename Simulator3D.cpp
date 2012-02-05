@@ -361,7 +361,7 @@ void Simulator3D::assemble()
 
   real muValue=0;
   real rhoValue=0;
-  if( elemIdRegion->Get(mele) == 1.0 ) // out
+  if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;

@@ -23,9 +23,8 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 0.1; // none
- triEdge[1] = 0.3; // wall 
+ triEdge.resize(1);
+ triEdge[0] = 0.3; // wall 
 
  int iter = 1;
  real Re = 10000;

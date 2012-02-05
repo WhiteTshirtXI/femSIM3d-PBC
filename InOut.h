@@ -115,10 +115,8 @@ class InOut
   void saveVTK( const char* _dir,const char* _filename, int _iter );
   void saveMSH( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
-  void saveVTKTest( const char* _dir,const char* _filename, int _iter );
   void saveVTKQuarter( const char* _dir,const char* _filename, int _iter );
   void saveVTKHalf( const char* _dir,const char* _filename, int _iter );
-  void saveVTKPlane2Bubbles(const char* _dir,const char* _filename, int _iter);
   void saveVTU( const char* _dir,const char* _filename, int _iter );
 
   /**
@@ -234,7 +232,8 @@ private:
   vector<real> maxVolume,minVolume;
   vector<int> idMaxArea,idMinArea;
   vector<real> maxArea,minArea;
-  vector<real> surfaceVolume,surfaceArea;
+  vector<real> initSurfaceVolume,initSurfaceArea,initSurfaceRadius;
+  vector<real> surfaceVolume,surfaceArea,surfaceRadius;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,dt,cfl,alpha,beta,simTime;

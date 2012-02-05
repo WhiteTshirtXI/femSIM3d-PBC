@@ -40,6 +40,12 @@ InOut::InOut( Model3D &_m )
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
+ initSurfaceRadius = m->getInitSurfaceRadius();
+ initSurfaceArea = m->getInitSurfaceArea();
+ initSurfaceVolume = m->getInitSurfaceVolume();
+ surfaceRadius = m->getSurfaceRadius();
+ surfaceArea = m->getSurfaceArea();
+ surfaceVolume = m->getSurfaceVolume();
 
  // surface mesh indexes:
  isp = m->getISP();
@@ -70,7 +76,6 @@ InOut::InOut( Model3D &_m )
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
  idMinVolume = m->getIdMinVolume();
- surfaceVolume = m->getSurfaceVolume();
 }
 
 InOut::InOut( Model3D &_m, Simulator3D &_s )
@@ -120,7 +125,12 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ initSurfaceRadius = m->getInitSurfaceRadius();
+ initSurfaceArea = m->getInitSurfaceArea();
+ initSurfaceVolume = m->getInitSurfaceVolume();
+ surfaceRadius = m->getSurfaceRadius();
  surfaceArea = m->getSurfaceArea();
+ surfaceVolume = m->getSurfaceVolume();
 
  // volumetric mesh indexes:
  ip = m->getIP();
@@ -135,7 +145,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  minVolume = m->getMinVolume();
  idMaxVolume = m->getIdMaxVolume();
  idMinVolume = m->getIdMinVolume();
- surfaceVolume = m->getSurfaceVolume();
 
  s = &_s;
  Re = s->getRe();
@@ -490,7 +499,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveVtk
 
-void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
+void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
@@ -507,8 +516,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
 
  // conta numero de elementos
- real plane1 = ( X->Max()+X->Min() )/2.0;
- real plane2 = ( Y->Max()+Y->Min() )/2.0;
+ real plane1 = ( Z->Max()+Z->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -518,10 +526,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
-      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
    count++;
  }
  
@@ -535,10 +541,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
-      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -557,10 +561,8 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) &&
-      (Y->Get( v1 ) <  plane2) && (Y->Get( v2 ) <  plane2) && 
-      (Y->Get( v3 ) <  plane2) && (Y->Get( v4 ) <  plane2) ) ) 
+    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
+	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
    vtkFile << "10 ";
  }
 
@@ -607,7 +609,7 @@ void InOut::saveVTKTest( const char* _dir,const char* _filename, int _iter )
 
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
-} // fecha metodo saveVtk
+} // fecha metodo saveVtkHalf
 
 void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 {
@@ -726,232 +728,7 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 
  cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
 
-} // fecha metodo saveVtkQuater
-
-void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
-{
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
- const char* filename = file.c_str();
-
- ofstream vtkFile( filename ); 
-
- vtkHeader(vtkFile,_iter);
- vtkCoords(vtkFile);
-
- // define plane
- clVector *coord = Z;
-
- // conta numero de elementos
- real plane1 = ( coord->Max()+coord->Min() )/2.0;
- int count = 0;
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
-	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
-   count++;
- }
- 
- vtkFile << "CELLS " << count << " " << 5*count << endl;
- vtkFile << setprecision(0) << fixed; 
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
-	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
-  {
-   vtkFile << "4 " << IEN->Get(i,0) << " "  
-            	   << IEN->Get(i,1) << " " 
-				   << IEN->Get(i,2) << " " 
-				   << IEN->Get(i,3) << endl;
-  }
- }
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << count << endl;
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (coord->Get( v1 ) <  plane1) && (coord->Get( v2 ) <  plane1) && 
-	  (coord->Get( v3 ) <  plane1) && (coord->Get( v4 ) <  plane1) )
-   vtkFile << "10 ";
- }
-
- vtkFile << endl;
- vtkFile << endl;
-
- vtkScalarHeader(vtkFile);
- vtkScalar(vtkFile,"pressure",*pSol);
- vtkScalar(vtkFile,"concentration",*cSol);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
-
- // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
-  vtkScalar(vtkFile,"concentration",*cSol);
-
- if( heaviside->Dim() > 0 )
-  vtkScalar(vtkFile,"heaviside",*heaviside);
-
- if( kappa->Dim() > 0 )
-  vtkScalar(vtkFile,"kappa",*kappa);
-
- if( interfaceDistance->Dim() > 0 )
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-
- if( hSmooth->Dim() > 0 )
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-
- if( gravity->Dim() > 0 )
-  vtkVector(vtkFile,"gravity",*gravity);
-
- if( fint->Dim() > 0 )
-  vtkVector(vtkFile,"surface_force",*fint);
-
- if( edgeSize->Dim() > 0 )
-  vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- vtkScalar(vtkFile,"viscosity",*mu);
- vtkScalar(vtkFile,"density",*rho);
-
- vtkFile.close();
-
- copyLastFile(_dir,filename,_filename);
-
- cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
-
-} // fecha metodo saveVtkHalf
-
-void InOut::saveVTKPlane2Bubbles( const char* _dir,const char* _filename, 
-                                  int _iter )
-{
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
- const char* filename = file.c_str();
-
- ofstream vtkFile( filename ); 
-
- vtkHeader(vtkFile,_iter);
- vtkCoords(vtkFile);
-
-
- // conta numero de elementos
- real plane1 = Z->Min() + ( Z->Max()-Z->Min() )/2.0;
- int count = 0;
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && 
-	  (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && 
-	  (Z->Get( v4 ) <  plane1) ) )
-   count++;
- }
- 
- vtkFile << "CELLS " << count << " " << 5*count << endl;
- vtkFile << setprecision(0) << fixed; 
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && 
-	  (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && 
-	  (Z->Get( v4 ) <  plane1) ) )
-  {
-   vtkFile << "4 " << IEN->Get(i,0) << " "  
-            	   << IEN->Get(i,1) << " " 
-				   << IEN->Get(i,2) << " " 
-				   << IEN->Get(i,3) << endl;
-  }
- }
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << count << endl;
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && 
-	  (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && 
-	  (Z->Get( v4 ) <  plane1) ) )
-   vtkFile << "10 ";
- }
-
- vtkFile << endl;
- vtkFile << endl;
-
- vtkScalarHeader(vtkFile);
- vtkScalar(vtkFile,"pressure",*pSol);
- vtkScalar(vtkFile,"concentration",*cSol);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
-
- // este if existe pois nem todos os metodos tem cc
- if( cSol->Dim() > 0 )
-  vtkScalar(vtkFile,"concentration",*cSol);
-
- if( heaviside->Dim() > 0 )
-  vtkScalar(vtkFile,"heaviside",*heaviside);
-
- if( kappa->Dim() > 0 )
-  vtkScalar(vtkFile,"kappa",*kappa);
-
- if( interfaceDistance->Dim() > 0 )
-  vtkScalar(vtkFile,"distance",*interfaceDistance);
-
- if( hSmooth->Dim() > 0 )
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
-
- if( gravity->Dim() > 0 )
-  vtkVector(vtkFile,"gravity",*gravity);
-
- if( fint->Dim() > 0 )
-  vtkVector(vtkFile,"surface_force",*fint);
-
- if( edgeSize->Dim() > 0 )
-  vtkScalar(vtkFile,"edgeSize",*edgeSize);
-
- vtkScalar(vtkFile,"viscosity",*mu);
- vtkScalar(vtkFile,"density",*rho);
-
- vtkFile.close();
-
- cout << "solution Cut-Plane No. " << _iter << " saved in VTK" << endl;
-
-} // fecha metodo saveVtkPlane2Bubbles
+} // fecha metodo saveVtkQuarter
 
 void InOut::matrixPrint( clMatrix &_m, const char* _filename )
 {
@@ -1905,14 +1682,14 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  int numTri = 0;
  for( int i=0;i<surfMesh->numElems;i++ )
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    numTri++;
 
  vtkFile << setprecision(0) << fixed; 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    vtkFile << "3 " << surfMesh->IEN.Get(i,0) << " "  
                    << surfMesh->IEN.Get(i,1) << " " 
                    << surfMesh->IEN.Get(i,2) << endl;
@@ -1931,7 +1708,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  vtkFile << "NORMALS " << "cell_normal_test" << " double" << endl;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    vtkFile << m->getNormalElem(i).Get(0) << " " 
            << m->getNormalElem(i).Get(1) << " " 
 	   	   << m->getNormalElem(i).Get(2) << endl;
@@ -1990,14 +1767,14 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  int numTri = 0;
  for( int i=0;i<surfMesh->numElems;i++ )
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    numTri++;
 
  vtkFile << setprecision(0) << fixed; 
  vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    vtkFile << "3 " << surfMesh->IEN.Get(i,0) << " "  
                    << surfMesh->IEN.Get(i,1) << " " 
                    << surfMesh->IEN.Get(i,2) << endl;
@@ -2017,7 +1794,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  vtkFile << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numElems;i++ )
  {
-  if( surfMesh->elemIdRegion.Get(i) > 1 )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
    vtkFile << m->getNormalElem(i).Get(0) << " " 
            << m->getNormalElem(i).Get(1) << " " 
 	   	   << m->getNormalElem(i).Get(2) << endl;
@@ -2170,73 +1947,81 @@ void InOut::saveMeshInfo(const char* _dir)
 
  cout << "meshing info saved" << endl;
 
- file = (string) _dir + "meshReport.dat";
- const char* filename2 = file.c_str();
-
- ifstream testFile2( filename2 );
- ofstream mesh2( filename2,ios::app );
- if( testFile2 )
+ for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
-  testFile2.close();
-  cout << "appending on file meshReport.dat" << endl;
+  stringstream ss;  //convertendo int --> string
+  string str;
+  ss << nb;
+  ss >> str;
+
+  file = (string) _dir + "meshReport" + str + ".dat";
+  const char* filename2 = file.c_str();
+
+  ifstream testFile2( filename2 );
+  ofstream mesh2( filename2,ios::app );
+  if( testFile2 )
+  {
+   testFile2.close();
+   cout << "appending on file meshReport" << nb << ".dat" << endl;
+  }
+  else
+  {
+   cout << "Creating file meshReport.dat" << endl;
+   mesh2 << "#time" << setw(16) << "isp" 
+					<< setw(7) << "ispc" 
+					<< setw(6) << "rsp" 
+					<< setw(7) << "rspn" 
+					<< setw(7) << "rspc" 
+					<< setw(5) << "ip" 
+					<< setw(6) << "ipd" 
+					<< setw(5) << "rp" 
+					<< setw(6) << "rpi" 
+					<< setw(6) << "rpd" 
+					<< setw(6) << "rpdist" 
+					<< setw(6) << "rpv" 
+					<< setw(6) << "csp" 
+					<< setw(7) << "flip" 
+					<< setw(6) << "spc" 
+					<< setw(6) << "spp" 
+					<< setw(8) << "intet" 
+					<< setw(20) << "maxVolume"
+					<< setw(20) << "minVolume"
+					<< setw(14) << "idMaxVolume"
+					<< setw(14) << "idMinVolume"
+					<< setw(7) << "iter"
+					<< endl;
+  }
+
+
+  mesh2 << setprecision(10) << scientific; 
+  mesh2 << setw(9) <<  time << " " << setw(4)  << isp[nb] << " " 
+ 								   << setw(6)  << ispc[nb] << " " 
+								   << setw(5)  << rsp[nb] << " "
+								   << setw(6)  << rspn[nb] << " "
+								   << setw(6)  << rspc[nb] << " "
+								   << setw(4)  << ip[nb] << " "
+								   << setw(5)  << ipd[nb] << " "
+								   << setw(4)  << rp[nb] << " "
+								   << setw(5)  << rpi[nb] << " "
+								   << setw(5)  << rpd[nb] << " "
+								   << setw(5)  << rpdist[nb] << " "
+								   << setw(5)  << rpv[nb] << " "
+								   << setw(5)  << csp[nb] << " "
+								   << setw(6)  << flip[nb] << " "
+								   << setw(5)  << spc[nb] << " "
+								   << setw(5)  << spp[nb] << " "
+								   << setw(7)  << intet[nb] << " "
+								   << setw(19) << maxVolume[nb] << " "
+								   << setw(19) << minVolume[nb] << " "
+								   << setw(13)  << idMaxVolume[nb] << " "
+								   << setw(13)  << idMinVolume[nb] << " "
+								   << setw(6)  << iter << " "
+								   << endl; 
+
+  mesh2.close();
+  cout << "mesh report surface (" << nb << ") saved" << endl;
  }
- else
- {
-  cout << "Creating file meshReport.dat" << endl;
-  mesh2 << "#time" << setw(16) << "isp" 
-                   << setw(7) << "ispc" 
-                   << setw(6) << "rsp" 
-                   << setw(7) << "rspn" 
-                   << setw(7) << "rspc" 
-                   << setw(5) << "ip" 
-                   << setw(6) << "ipd" 
-                   << setw(5) << "rp" 
-                   << setw(6) << "rpi" 
-                   << setw(6) << "rpd" 
-                   << setw(6) << "rpdist" 
-                   << setw(6) << "rpv" 
-                   << setw(6) << "csp" 
-                   << setw(7) << "flip" 
-                   << setw(6) << "spc" 
-                   << setw(6) << "spp" 
-                   << setw(8) << "intet" 
-		 		   << setw(20) << "maxVolume"
-		 		   << setw(20) << "minVolume"
-		 		   << setw(14) << "idMaxVolume"
-		 		   << setw(14) << "idMinVolume"
-		 		   << setw(7) << "iter"
-		 		   << endl;
- }
 
-
- mesh2 << setprecision(10) << scientific; 
- mesh2 << setw(9) <<  time << " " << setw(4)  << isp[2] << " " 
-                                  << setw(6)  << ispc[2] << " " 
-						   	      << setw(5)  << rsp[2] << " "
-						   	      << setw(6)  << rspn[2] << " "
-						   	      << setw(6)  << rspc[2] << " "
-						   	      << setw(4)  << ip[2] << " "
-						   	      << setw(5)  << ipd[2] << " "
-						   	      << setw(4)  << rp[2] << " "
-						   	      << setw(5)  << rpi[2] << " "
-						   	      << setw(5)  << rpd[2] << " "
-						   	      << setw(5)  << rpdist[2] << " "
-						   	      << setw(5)  << rpv[2] << " "
-						   	      << setw(5)  << csp[2] << " "
-						   	      << setw(6)  << flip[2] << " "
-						   	      << setw(5)  << spc[2] << " "
-						   	      << setw(5)  << spp[2] << " "
-						   	      << setw(7)  << intet[2] << " "
-						   	      << setw(19) << maxVolume[2] << " "
-						   	      << setw(19) << minVolume[2] << " "
-						   	      << setw(13)  << idMaxVolume[2] << " "
-						   	      << setw(13)  << idMinVolume[2] << " "
-								  << setw(6)  << iter << " "
-								  << endl; 
- 
- mesh2.close();
-
- cout << "mesh report saved" << endl;
 }
 
 void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
@@ -2853,10 +2638,10 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << surfMesh->elemIdRegion.Max() << endl;
+ mshFile << surfMesh->elemIdRegion.Max()+1 << endl;
  mshFile << "2 1 \"wall\""<< endl;
- for( int nb=2;nb<=surfMesh->elemIdRegion.Max();nb++ )
-   mshFile << "2 " << nb << " \"bubble" << nb-1 << "\""<< endl;
+ for( int nb=1;nb<=surfMesh->elemIdRegion.Max();nb++ )
+   mshFile << "2 " << nb+1 << " \"bubble" << nb << "\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -2881,8 +2666,8 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
   mshFile << i+1 
           << " 2" 
 		  << " 2" 
-		  << " " << surfMesh->elemIdRegion.Get(i) 
-		  << " 14" 
+		  << " " << surfMesh->elemIdRegion.Get(i) + 1 
+		  << " " << surfMesh->elemIdRegion.Get(i) + 1  // surface number Gmsh
 		  << " " << v1+1 
 		  << " " << v2+1 
 		  << " " << v3+1 
@@ -2916,10 +2701,10 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << surfMesh->elemIdRegion.Max() << endl;
+ mshFile << surfMesh->elemIdRegion.Max()+1 << endl;
  mshFile << "2 1 \"wall\""<< endl;
- for( int nb=2;nb<=surfMesh->elemIdRegion.Max();nb++ )
-   mshFile << "2 " << nb << " \"bubble" << nb-1 << "\""<< endl;
+ for( int nb=1;nb<=surfMesh->elemIdRegion.Max();nb++ )
+   mshFile << "2 " << nb+1 << " \"bubble" << nb << "\""<< endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -2944,8 +2729,8 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
   mshFile << i+1 
           << " 2" 
 		  << " 2" 
-		  << " " << surfMesh->elemIdRegion.Get(i) 
-		  << " 14" 
+		  << " " << surfMesh->elemIdRegion.Get(i) + 1 
+		  << " " << surfMesh->elemIdRegion.Get(i) + 1  // surface number Gmsh
 		  << " " << v1+1 
 		  << " " << v2+1 
 		  << " " << v3+1 
@@ -3024,9 +2809,15 @@ void InOut::printMeshReport()
       << m->getMinEdgeTri() << endl;
 
  cout << endl;
- for(int nb=1;nb<=elemIdRegion->Max();nb++ )
+ for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
   cout << "      zone (" << nb << ")" << endl;
+  cout << "       |radius (initRadius):                          "
+       << surfaceRadius[nb] << " (" << initSurfaceRadius[nb] << ")" << endl;
+  cout << "       |area (initArea):                              "
+       << surfaceArea[nb] << " (" << initSurfaceArea[nb] << ")" << endl;
+  cout << "       |volume (initVolume):                          "
+       << surfaceVolume[nb] << " (" << initSurfaceVolume[nb] << ")" << endl;
   cout << "       |average element edge length:                  " 
        << averageTriEdge[nb] << endl;
   cout << "       |desired tetrahedron volume:                   "   
@@ -3540,7 +3331,7 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  real zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
   {
    if( surfMesh->X.Get(i) > xMax )
 	xMax = surfMesh->X.Get(i);
@@ -3667,7 +3458,7 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
  real zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
   {
    if( surfMesh->X.Get(i) > xMax )
 	xMax = surfMesh->X.Get(i);
@@ -3822,7 +3613,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  real zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
   {
    if( surfMesh->X.Get(i) > xMax )
 	xMax = surfMesh->X.Get(i);
@@ -3930,7 +3721,7 @@ void InOut::savePressureError(const char* _dir)
  real zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
   {
    if( surfMesh->X.Get(i) > xMax )
 	xMax = surfMesh->X.Get(i);
@@ -4135,7 +3926,7 @@ void InOut::saveOscillatingError(const char* _dir)
 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->vertIdRegion.Get(i) == 2 )
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
   {
    if( surfMesh->X.Get(i) > xMax )
    {

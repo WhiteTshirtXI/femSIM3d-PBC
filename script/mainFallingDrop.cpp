@@ -24,10 +24,9 @@ int main(int argc, char **argv)
 
  // set each bubble length
  vector< real > triEdge;
- triEdge.resize(3);
- triEdge[0] = 0.2; // none
- triEdge[1] = 1.3; // wall
- triEdge[2] = 0.10; // bubble
+ triEdge.resize(2);
+ triEdge[0] = 1.3;  // wall
+ triEdge[1] = 0.10; // bubble
 
  int iter = 1;
  real Re = 1000;
@@ -248,7 +247,7 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",atoi(*(argv+2)));
+  saveEnd.saveVTKQuarter(vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
@@ -289,7 +288,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKTest(vtkFolder,"simCutPlane",iter);
+   save.saveVTKQuarter(vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -353,7 +352,7 @@ int main(int argc, char **argv)
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKTest(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveVTKQuarter(vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);

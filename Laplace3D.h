@@ -40,6 +40,7 @@ class Laplace3D
 
   void setCRHS();
   void setBC();
+  void setMicroBC();
   void setUnCoupledCBC();
   void unCoupledC();
   void setModel3DEdgeSize();

@@ -928,7 +928,11 @@ void Model3D::mesh2Dto3D()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
- tetrahedralize( (char*) "QYYCApq1.414q10a",&in,&out );
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
+ tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
+ //tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -1096,8 +1100,8 @@ void Model3D::insertPointsByLength()
   if( vertID > 0 &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   //insertSurfacePoint(edge,"flat");
-   insertSurfacePoint(edge,"curvature");
+   insertSurfacePoint(edge,"flat");
+   //insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -2955,16 +2959,18 @@ void Model3D::insert3dMeshPointsByDiffusion()
   real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > edgeSize.Get(v1) && 
-	  hSum < 0.5 && 
-	  minVert > surfMesh.numVerts )
+  if( length > 2.6*edgeSize.Get(v1) && 
+	  hSum != 1.0 ) // && 
+	  //minVert > surfMesh.numVerts )
   {
-   cout << v1 << " (" << edgeSize.Get(v1) << ") " 
-	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
-   cout << x1 << " " << y1 << " " << z1 << endl;
-   cout << x2 << " " << y2 << " " << z2 << endl;
-   cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
-   cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+//--------------------------------------------------
+//    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
+// 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
+//    cout << x1 << " " << y1 << " " << z1 << endl;
+//    cout << x2 << " " << y2 << " " << z2 << endl;
+//    cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
+//    cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+//-------------------------------------------------- 
    int vAdd = numVerts; // aditional vertice
 
    cout << "- " << color(none,blue,black) 
@@ -2975,9 +2981,9 @@ void Model3D::insert3dMeshPointsByDiffusion()
    Y.AddItem(vAdd,YvAdd);
    Z.AddItem(vAdd,ZvAdd);
    heaviside.AddItem(vAdd,heaviside.Get(v1));
-   vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
-   elemIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
-   edgeSize.AddItem(vAdd,edgeSize.Get(v1));
+   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
+   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
+   //edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
    numVerts++;
    dVerts++;
@@ -3886,7 +3892,8 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
@@ -9191,4 +9198,66 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  fill(idMaxArea.begin(),idMaxArea.end(),0);
  fill(idMinArea.begin(),idMinArea.end(),0);
  fill(intet.begin(),intet.end(),0);
+}
+
+void Model3D::remove3dMeshPointsByHeight()
+{
+ // number of removed 2d mesh points by interface distance
+ //fill(rph.begin(),rph.end(),0);
+
+ for( int elem=0;elem<surfMesh.numElems;elem++ )
+ {
+  int v1 = surfMesh.IEN.Get(elem,1);
+  int v2 = surfMesh.IEN.Get(elem,1);
+  int v3 = surfMesh.IEN.Get(elem,1);
+
+  // points
+  real P1x = surfMesh.X.Get(v1);
+  real P1y = surfMesh.Y.Get(v1);
+  real P1z = surfMesh.Z.Get(v1);
+  real P2x = surfMesh.X.Get(v2);
+  real P2y = surfMesh.Y.Get(v2);
+  real P2z = surfMesh.Z.Get(v2);
+  real P3x = surfMesh.X.Get(v3);
+  real P3y = surfMesh.Y.Get(v3);
+  real P3z = surfMesh.Z.Get(v3);
+
+  // centroid
+  real xMid = (P1x+P1y+P1z)/3.0;
+  real yMid = (P2x+P2y+P2z)/3.0;
+  real zMid = (P3x+P3y+P3z)/3.0;
+
+  int elemID = surfMesh.elemIdRegion.Get(elem);
+
+  if( heaviside.Get(v1) == 0.5 )
+  {
+
+   // list of neighbouring points
+   list<int> plist = neighbourVert.at(v1);
+   for(list<int>::iterator vert=plist.begin(); vert != plist.end();++vert )
+   {
+	real Pxvert = X.Get(*vert);
+	real Pyvert = Y.Get(*vert);
+	real Pzvert = Z.Get(*vert);
+
+	real height1 = distance(P1x,P1y,P1z,Pxvert,Pyvert,Pzvert);
+	real height2 = distance(P2x,P2y,P2z,Pxvert,Pyvert,Pzvert);
+	real height3 = distance(P3x,P3y,P3z,Pxvert,Pyvert,Pzvert);
+	real height4 = distance(xMid,yMid,zMid,Pxvert,Pyvert,Pzvert);
+
+	real minHeight = min(height1,height2);
+	minHeight = min(minHeight,height3);
+	minHeight = min(minHeight,height4);
+
+	if( heaviside.Get(*vert) != 0.5 && 
+	  //height3 < 0.3*triEdge[1] )
+	 minHeight < 0.3*triEdge[1] )
+	{
+	 mark3DPointForDeletion(*vert);
+	 cout << "-----> deleting (" << *vert <<  ")" << endl;
+	 //rph[vertID]++;
+	}
+   }
+  }
+ }
 }

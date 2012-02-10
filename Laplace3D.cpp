@@ -124,7 +124,7 @@ void Laplace3D::setBC()
   if( heaviside->Get(i) < 0.5 ) 
   {
    real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 4*radius )
+   if( interfaceDistance->Get(i) < 1.0*radius )
    {
 	real aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
@@ -138,6 +138,43 @@ void Laplace3D::setBC()
   else                         // inside mesh
   {
    real aux = triEdge[vertIdRegion->Get(i)]*0.1;
+   convC.Set(i,aux);
+  }
+ }
+}
+
+void Laplace3D::setMicroBC()
+{
+ cc.Dim(numVerts);
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( heaviside->Get(i) < 0.5 )
+  {
+  idbcc.AddItem(i);
+
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  cc.Set(i,aux);
+
+  convC.Set(i,aux);
+  }
+ }
+
+ //real xMid = (X->Min()+X->Max())*0.5;
+ real yMid = (Y->Min()+Y->Max())*0.5;
+ real zMid = (Z->Min()+Z->Max())*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real epslocal = 0.05*diameter;
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  //if( interfaceDistance->Get(i) < 0.005*diameter)
+  if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
+      (Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
+      (Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
+  {
+   real aux = triEdge[0]*50;
    convC.Set(i,aux);
   }
  }

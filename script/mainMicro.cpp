@@ -26,11 +26,9 @@ int main(int argc, char **argv)
 
  // set each bubble length
  vector< real > triEdge;
- triEdge.resize(4);
- triEdge[0] = 0.22;   // wall
- triEdge[1] = 0.09;   // bubble 1 
- triEdge[2] = 0.09;   // bubble 2 
- triEdge[3] = 0.09; // bubble 3
+ triEdge.resize(2);
+ triEdge[0] = 0.06;   // wall
+ triEdge[1] = 0.07;   // bubble 1 
  //triEdge[5] = 0.022; // bubble 4
 
  /* 
@@ -42,31 +40,30 @@ int main(int argc, char **argv)
   * Reference: Han and Shikazono
   *
   * */
- int iter = 1;
- real Re = 10;
+ int iter = 0;
+ real Re = 5.7624;
  real Sc = 1;
- real We = 2;
- real Fr = 1.0;
+ real We = 1.162;
+ //real We = 0.1162;
+ real Fr = 10.096;
  real c1 = 0.0; // lagrangian
  real c2 = 1.0; // smooth vel
  real c3 = 1.0; // smooth - fujiwara
- real c4 = 0.1; // smooth surface - fujiwara
+ real c4 = 0.1; // surface
  real alpha = 1;
- real beta = 1;
-
- real sigma = 0.1;
-
- real mu_in = 1;
- real mu_out = 10;
-
- real rho_in = 1;
- real rho_out = 100;
 
  real cfl = 0.8;
 
- //string meshFile = "micro.msh";
+ real sigma = 1.59;
+ //real sigma = 15.9;
+ real mu_in = 1.78E-05;
+ real mu_out = 320.7E-05;
+ real rho_in = 1.225;
+ real rho_out = 1849;
+
+ string meshFile = "micro.msh";
  //string meshFile = "2micros.msh";
- string meshFile = "3micros.msh";
+ //string meshFile = "3micros.msh";
  //string meshFile = "4micros.msh";
 
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
@@ -122,7 +119,6 @@ int main(int argc, char **argv)
   s1.setC3(c3);
   s1.setC4(c4);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
   s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
@@ -265,10 +261,10 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
- d1.setk(0.1);
+ d1.setk(0.7);
  d1.init();
  d1.assemble();
- d1.setBC();
+ d1.setMicroBC();
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -330,7 +326,8 @@ int main(int argc, char **argv)
   }
   Laplace3D d2(m1,d1);
   d2.assemble();
-  d2.setBC();
+  d2.setk(0.7);
+  d2.setMicroBC();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -347,11 +344,12 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
+  m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   m1.smoothPointsByCurvature();

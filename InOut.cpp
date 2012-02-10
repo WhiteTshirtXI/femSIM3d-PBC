@@ -628,8 +628,8 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 
 
  // conta numero de elementos
- real plane1 = ( X->Max()+X->Min() )/2.0;
- real plane2 = ( Y->Max()+Y->Min() )/2.0;
+ real plane1 = X->Min() + ( X->Max()-X->Min() )/2.5;
+ real plane2 = Y->Min() + ( Y->Max()-Y->Min() )/2.5;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -3301,6 +3301,7 @@ void InOut::saveKappaErrorSphere(const char* _dir)
   file << "#time" << setw(29) << "kappa" 
 		    	  << setw(18) << "analytic" 
 		    	  << setw(18) << "error" 
+		    	  << setw(18) << "errorRel" 
 		    	  << setw(18) << "stand deviat" 
 		    	  << setw(14) << "averag edge" 
 				  << setw(14) << "edge/radius" 
@@ -3311,17 +3312,6 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 		    	  << setw(6) << "iter" 
 				  << endl;
  }
-
- real surfacePoints = surface->Dim();
- real sumKappa = 0;
- real sumKappaSquare = 0;
- for( int i=0;i<surfacePoints;i++ )
- {
-  int node = surface->Get(i);
-  sumKappa += kappa->Get(node);
-  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
- }
- real kappaAverage = sumKappa/surfacePoints;
  
  real xMax = -1E-10; 
  real yMax = -1E-10; 
@@ -3359,9 +3349,20 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 
  // sphere
  real kappaAnalytic = 2.0/radius; 
- 
+
+ real surfacePoints = surface->Dim();
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surfacePoints;i++ )
+ {
+  int node = surface->Get(i);
+  sumKappa += kappa->Get(node);
+ }
+ real kappaAverage = sumKappa/surfacePoints;
+
  real sumKappaSD = 0;
  real sumKappaError = 0;
+ real sumKappaAnal= 0;
  real sumNeighbours = 0;
  int countK = 0;
  for( int i=0;i<surfacePoints;i++ )
@@ -3372,10 +3373,29 @@ void InOut::saveKappaErrorSphere(const char* _dir)
   sumKappaSD += (kappa->Get(node)-kappaAverage)*
                 (kappa->Get(node)-kappaAverage);
   sumNeighbours += neighbourPoint->at(i).size();
+  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
   countK++;
  }
 
+ /*  
+  *            (  sum( kappa[i] - kappa_a )^2    )
+  *  k_e = sqrt( -----------------------------   )
+  *            (        sum( kappa[i]^2 )        )
+  * */
  real kappaError = sqrt( sumKappaError/sumKappaSquare );
+
+ /*
+  *         kappaAverage-kappaAnalytic
+  *  k_r = ----------------------------
+  *               kappaAverage
+  * */
+ real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+
+ /* 
+  *             (  sum( kappa[i] - kappaAverage )  )
+  *  SD =  sqrt ( -------------------------------- )
+  *             (           number of i            )
+  * */
  real kappaSD = sqrt( sumKappaSD/surfacePoints );
 
  real averageNeigh = sumNeighbours/surfacePoints;
@@ -3388,14 +3408,15 @@ void InOut::saveKappaErrorSphere(const char* _dir)
       << setw(17) << kappaAverage << " " 
       << setw(17) << kappaAnalytic << " " 
       << setw(17) << kappaError << " " 
+      << setw(17) << kappaErrorRel << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[2] << " " 
+      << setw(13) << averageTriEdge[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[2]/radius << " " 
+      << setw(13) << averageTriEdge[1]/radius << " " 
 	  << setprecision(3) << fixed
-      << setw(14) << surfaceArea[2] << " " 
-      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << surfaceArea[1] << " " 
+      << setw(14) << surfaceVolume[1] << " " 
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << surfacePoints << " " 
@@ -3422,6 +3443,7 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   file << "#time" << setw(29) << "kappa" 
 		    	  << setw(18) << "analytic" 
 		    	  << setw(18) << "error" 
+		    	  << setw(18) << "errorRel" 
 		    	  << setw(18) << "stand deviat" 
 		    	  << setw(14) << "averag edge" 
 				  << setw(14) << "edge/radius" 
@@ -3433,24 +3455,6 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
 				  << endl;
  }
 
- int countK = 0;
- real sumKappa = 0;
- real sumKappaSquare = 0;
- for( int i=0;i<surface->Dim();i++ )
- {
-  int node = surface->Get(i);
-  
-  // k=1/R
-  if( (Y->Get(node)<0.75) && 
-	  (Y->Get(node)>-0.75) )
-  {
-   sumKappa += kappa->Get(node);
-   sumKappaSquare += kappa->Get(node)*kappa->Get(node);
-   countK++;
-  }
- }
- real kappaAverage = sumKappa/countK;
- 
  /* ------------ Radius calculation ------------ */
  real xMax = -1E-10; 
  real zMax = -1E-10; 
@@ -3479,6 +3483,25 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
  real kappaAnalytic = 1.0/radius;
  /* -------------------------------------------- */
 
+ int countK = 0;
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int node = surface->Get(i);
+  
+  // k=1/R
+  if( (Y->Get(node)<0.75) && 
+	  (Y->Get(node)>-0.75) )
+  {
+   sumKappa += kappa->Get(node);
+   sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+   countK++;
+  }
+ }
+ real kappaAverage = sumKappa/countK;
+ 
+
  real sumKappaSD = 0;
  real sumKappaError = 0;
  real sumNeighbours = 0;
@@ -3501,6 +3524,14 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
  }
 
  real kappaError = sqrt( sumKappaError/sumKappaSquare );
+
+ /*
+  *         kappaAverage-kappaAnalytic
+  *  k_r = ----------------------------
+  *               kappaAverage
+  * */
+ real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+
  real kappaSD = sqrt( sumKappaSD/countK );
 
  real averageNeigh = sumNeighbours/countK;
@@ -3513,14 +3544,15 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
       << setw(17) << kappaAverage << " " 
       << setw(17) << kappaAnalytic << " " 
       << setw(17) << kappaError << " " 
+      << setw(17) << kappaErrorRel << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[2] << " " 
+      << setw(13) << averageTriEdge[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[2]/radius << " " 
+      << setw(13) << averageTriEdge[1]/radius << " " 
 	  << setprecision(3) << fixed
-      << setw(14) << surfaceArea[2] << " " 
-      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << surfaceArea[1] << " " 
+      << setw(14) << surfaceVolume[1] << " " 
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << countK << " " 
@@ -3674,12 +3706,12 @@ void InOut::saveKappaErrorTorus(const char* _dir)
       << setw(17) << kappaError << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[2] << " " 
+      << setw(13) << averageTriEdge[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[2]/radius1 << " " 
+      << setw(13) << averageTriEdge[1]/radius1 << " " 
 	  << setprecision(3) << fixed
-      << setw(14) << surfaceArea[2] << " " 
-      << setw(14) << surfaceVolume[2] << " " 
+      << setw(14) << surfaceArea[1] << " " 
+      << setw(14) << surfaceVolume[1] << " " 
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << surfacePoints << " " 
@@ -3785,8 +3817,8 @@ void InOut::savePressureError(const char* _dir)
               << setw(17) << averagePOut << " " 
               << setw(17) << dp << " " 
               << setw(17) << pressureAnalytic << " " 
-              << setw(14) << surfaceArea[2] << " " 
-              << setw(14) << surfaceVolume[2] << " " 
+              << setw(14) << surfaceArea[1] << " " 
+              << setw(14) << surfaceVolume[1] << " " 
 			  << setprecision(0) << fixed
 			  << setw(12) << surfacePoints << " " 
 			  << setw(5) << iter << endl;

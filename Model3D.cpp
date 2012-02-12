@@ -7350,7 +7350,7 @@ void Model3D::setSurfaceRadius()
  *
  * OBS: The mesh needs to be oriented, otherwise the method doesn't work!
  * */
-real Model3D::getSurfaceVolumeTET(int _region)
+real Model3D::getSurfaceVolume(int _region)
 {
  real sumVolume = 0;
  //real sumCentroidX = 0;
@@ -7454,7 +7454,7 @@ real Model3D::getSurfaceVolumeTET(int _region)
  * return: volume of a surface
  *
  * */
-real Model3D::getSurfaceVolume(int _region)
+real Model3D::getSurfaceVolumeTET(int _region)
 {
  real sumVolume=0;
  for( list<int>::iterator it=inElem.begin(); it!=inElem.end(); ++it )

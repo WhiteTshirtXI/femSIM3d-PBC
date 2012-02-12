@@ -628,8 +628,8 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
 
 
  // conta numero de elementos
- real plane1 = X->Min() + ( X->Max()-X->Min() )/2.5;
- real plane2 = Y->Min() + ( Y->Max()-Y->Min() )/2.5;
+ real plane1 = X->Min() + ( X->Max()-X->Min() )/2.0;
+ real plane2 = Y->Min() + ( Y->Max()-Y->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -3362,7 +3362,6 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 
  real sumKappaSD = 0;
  real sumKappaError = 0;
- real sumKappaAnal= 0;
  real sumNeighbours = 0;
  int countK = 0;
  for( int i=0;i<surfacePoints;i++ )

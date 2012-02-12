@@ -29,7 +29,6 @@ int main(int argc, char **argv)
  triEdge.resize(2);
  triEdge[0] = 0.06;   // wall
  triEdge[1] = 0.07;   // bubble 1 
- //triEdge[5] = 0.022; // bubble 4
 
  /* 
   * bogdan's thesis 2010 - Film thickness
@@ -61,7 +60,8 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1849;
 
- string meshFile = "micro.msh";
+ string meshFile = "test.msh";
+ //string meshFile = "micro.msh";
  //string meshFile = "2micros.msh";
  //string meshFile = "3micros.msh";
  //string meshFile = "4micros.msh";

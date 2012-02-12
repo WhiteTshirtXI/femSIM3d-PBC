@@ -149,7 +149,10 @@ void Laplace3D::setMicroBC()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( heaviside->Get(i) < 0.5 )
+  if( surfMesh->Y.Get(i) == surfMesh->Y.Max() || 
+	  surfMesh->Y.Get(i) == surfMesh->Y.Min() || 
+      surfMesh->Z.Get(i) == surfMesh->Z.Max() || 
+	  surfMesh->Z.Get(i) == surfMesh->Z.Min() )
   {
   idbcc.AddItem(i);
 

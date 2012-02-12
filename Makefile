@@ -17,6 +17,7 @@ LIBS += -L. -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I${FEMLIB_DIR}
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
+FEM3D_DIR = .
 
 # Petsc new config
 include ${PETSC_DIR}/conf/variables
@@ -91,6 +92,9 @@ diskSurf: ${FEM3D_DIR}/script/mainDiskSurf.o $(obj)
 # --------<< benchmarks for sphere,cylinder and torus (two-phase) >>-------- #
 #                                                                            #
 sphere: ${FEM3D_DIR}/script/mainSphere.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+annular: ${FEM3D_DIR}/script/mainAnnular.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 cylinder: ${FEM3D_DIR}/script/mainCylinder.o $(obj)

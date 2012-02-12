@@ -195,6 +195,7 @@ class Model3D
   void setMicroWallBC();
   void setWallCouetteBC();
   void setWallAnnularBC();
+  void setWallInterfaceBC();
   void set2BubbleBC();
   void setStepBC();
   void setWallStepBC();
@@ -244,6 +245,7 @@ class Model3D
   clVector getNormalAndKappa(int _node,list<int> _myList);
   //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
   //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
+  void setNormalAndKappa2D();
   void setNormalAndKappa();
   clVector getNormalElem(int _elem);
   clVector getNormalElem(int _v1,int _v2,int _v3);

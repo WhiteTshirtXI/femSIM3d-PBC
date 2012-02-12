@@ -11,7 +11,7 @@
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "InOut.h"
-#include "TElement.h"
+#include "Laplace3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -21,6 +21,8 @@
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //PetscInitializeNoArguments();
+
  //
  // set each bubble length
  vector< real > triEdge;
@@ -36,7 +38,7 @@ int main(int argc, char **argv)
  real Fr = 1;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.05; // smooth - fujiwara
+ real c3 = 1.00; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/2bubbles/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -75,6 +77,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   const char *mesh1 = mesh;
+
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge(triEdge);
@@ -137,9 +140,9 @@ int main(int argc, char **argv)
 
   m1.readVTK(vtkFile);
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.readVTKHeaviside(vtkFile);
   m1.setOFace();
@@ -179,9 +182,9 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
@@ -220,12 +223,12 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
- m1.setMiniElement();
+  m1.setMiniElement();
 #else
- m1.setQuadElement();
+  m1.setQuadElement();
 #endif
   m1.setOFace();
-  m1.set2BubbleBC();
+  m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
   m1.setInitSurfaceRadius();
@@ -244,6 +247,18 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
+ // Point's distribution
+ Laplace3D d1(m1);
+ d1.setk(0.1);
+ d1.init();
+ d1.assemble();
+ d1.setBC();
+ d1.matMountC();
+ d1.setUnCoupledCBC(); 
+ d1.setCRHS();
+ d1.unCoupledC();
+ //d1.saveVTK(vtkFolder,"edge");
+ d1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -297,6 +312,17 @@ int main(int argc, char **argv)
 
    iter++;
   }
+  Laplace3D d2(m1,d1);
+  d2.assemble();
+  d2.setBC();
+  d2.matMountC();
+  d2.setUnCoupledCBC(); 
+  d2.setCRHS();
+  d2.unCoupledC();
+  d2.saveVTK(vtkFolder,"edge",iter-1);
+  d2.saveChordalEdge(datFolder,"edge",iter-1);
+  d2.setModel3DEdgeSize();
+
   Model3D mOld = m1; 
   m1.setTriEdge(triEdge);
 
@@ -306,21 +332,24 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
+  m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume(0.005);
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.delete3DPoints();
 
   // surface operations
+  m1.smoothPointsByCurvature();
+
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
-  m1.removePointsByCurvature();
+  //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
-  m1.removePointsByNeighbourCheck();
+
+  m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();
@@ -349,7 +378,6 @@ int main(int argc, char **argv)
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
-  saveEnd.saveSimTime(iter-1);
   saveEnd.saveMeshInfo(datFolder);
   saveEnd.printMeshReport();
  }
@@ -357,3 +385,4 @@ int main(int argc, char **argv)
  PetscFinalize();
  return 0;
 }
+

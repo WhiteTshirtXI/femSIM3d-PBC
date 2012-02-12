@@ -2898,8 +2898,8 @@ void Model3D::remove3dMeshPointsByDistance()
 	//     interfaceDistance.Get(j) > 3.0 &&
 	// 	d>0 && d<3.0*triEdge[2] )
 	//-------------------------------------------------- 
-	if( d>0 && d<1.0*triEdge[2] )
-	//if( d>0 && d<2.0*triEdge[2] )
+	if( d>0 && d<1.0*triEdge[1] )
+	//if( d>0 && d<2.0*triEdge[1] )
 	{
 	//--------------------------------------------------
 	//  cout << "- " << color(none,blue,black) 
@@ -2953,15 +2953,11 @@ void Model3D::insert3dMeshPointsByDiffusion()
 
   // minVert should be bigger then surfMesh.numVerts because we are
   // treating only 3D vertices after the surface mesh vertices.
-  int minVert = min(v1,v2);
-
-  // insert points only outside bubble/drop
-  real hSum = heaviside.Get(v1) + heaviside.Get(v2);
+  int maxVert = max(v1,v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
   if( length > 2.6*edgeSize.Get(v1) && 
-	  hSum != 1.0 ) // && 
-	  //minVert > surfMesh.numVerts )
+	  maxVert > surfMesh.numVerts )
   {
 //--------------------------------------------------
 //    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
@@ -4460,31 +4456,6 @@ void Model3D::setWallCouetteBC()
    idbcp.AddItem(*it);
 
    pc.Set(*it,0.0);
-  }
- }
-}
-
-void Model3D::setWallAnnularBC()
-{    
- for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
- {
-  if(Y.Get(*it) > Y.Min() || Y.Get(*it) < Y.Max() )
-  {
-   idbcv.AddItem(*it);
-
-   real aux = 0.0;
-   vc.Set(*it,aux);
-  }
-  else
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   real aux = 0.0;
-   uc.Set(*it,aux);
-   vc.Set(*it,aux);
-   wc.Set(*it,aux);
   }
  }
 }
@@ -7202,6 +7173,7 @@ void Model3D::setNormalAndKappa()
 //   }
 //-------------------------------------------------- 
  }
+ //setNormalAndKappa2D();
 } // fecha metodo setNormalAndKappa
 
 void Model3D::setCloser()
@@ -9257,6 +9229,143 @@ void Model3D::remove3dMeshPointsByHeight()
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;
 	 //rph[vertID]++;
 	}
+   }
+  }
+ }
+}
+
+void Model3D::setNormalAndKappa2D()
+{
+ vector< list<int> > neighbourLinePoint;  // 
+ neighbourLinePoint.clear();
+
+ for (list<int>::iterator vert=boundaryVert.begin(); vert!=boundaryVert.end(); ++vert)
+ {
+  // identifying which *vert is part of the interface
+  list<int> auxList; 
+  if( heaviside.Get(*vert) == 0.5 )
+  {
+   // neighPoint = all neighbour vertices of *vert
+   list<int> neighPoint = getNeighbourSurfacePoint(*vert);
+   auxList.push_back(*vert);
+
+   for (list<int>::iterator it=neighPoint.begin(); it!=neighPoint.end(); ++it)
+	if( heaviside.Get(*it) == 0.5 )
+	 auxList.push_back(*it);
+
+   neighbourLinePoint.push_back( auxList );
+  }
+ }
+
+ /*       v1           v0
+  *         o -------- o
+  *                     \
+  *                      \
+  *                       \
+  *                         o v2
+  * */
+ int vectorSize = neighbourLinePoint.size();
+ for( int i=0;i<vectorSize-1;i++ )
+ {
+  list<int> plist = neighbourLinePoint.at(i);
+  list<int>::iterator lineVert=plist.begin(); 
+
+  int v0 = *lineVert;++lineVert;
+  int v1 = *lineVert;++lineVert; 
+  int v2 = *lineVert;
+
+  cout << v0 << " " << v1 << " " << v2 << endl;
+
+  real P0x = surfMesh.X.Get(v0);
+  real P0y = surfMesh.Y.Get(v0);
+  //real P0z = surfMesh.Z.Get(v0);
+
+  real P1x = surfMesh.X.Get(v1);
+  real P1y = surfMesh.Y.Get(v1);
+  //real P1z = surfMesh.Z.Get(v1);
+
+  real P2x = surfMesh.X.Get(v2);
+  real P2y = surfMesh.Y.Get(v2);
+  //real P2z = surfMesh.Z.Get(v2);
+
+  // distance do ponto 0 ate ponto 1
+  real a = distance(P0x,P0y,P1x,P1y);
+
+  // distance do ponto 0 ate ponto 2
+  real b = distance(P0x,P0y,P2x,P2y);
+
+  // vetors
+  real x1Unit = (P1x-P0x)/a;
+  real y1Unit = (P1y-P0y)/a;
+
+  real x2Unit = (P2x-P0x)/b;
+  real y2Unit = (P2y-P0y)/b;
+
+  real fx = x1Unit+x2Unit;
+  real fy = y1Unit+y2Unit;
+
+  // 1/2 of length P0-P1 and P0-P2
+  real sumLength = (a+b)/2.0;
+
+  real xNormalUnit = surfMesh.xNormal.Get(v0);
+  real yNormalUnit = surfMesh.yNormal.Get(v0);
+
+  // intensidade da forca resultante
+  real force = sqrt( (fx*fx)+(fy*fy) );
+
+  // aplicando o teste para saber o sentido correto de aplicacao da
+  // pressao no noh.
+  if( (fx*xNormalUnit+fy*yNormalUnit) < 0.0 )
+   force = -force;
+
+  real pressure = force/sumLength;
+
+  surfMesh.curvature.Set(v0,pressure);
+ }
+} // fecha metodo getNormalAndKappa
+
+void Model3D::setWallAnnularBC()
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  real rMax = 0.5;
+
+  if( Z.Get(*it)==Z.Max() || Z.Get(*it)==Z.Min() ) 
+  {
+   // adding vapor phase in the wall boundary which is not set by
+   // default from the GMsh program
+   if( X.Get(*it)*X.Get(*it)+Y.Get(*it)*Y.Get(*it) < rMax*rMax - 0.001 ) 
+   {
+	heaviside.Set(*it,1.0);
+	vertIdRegion.Set(*it,1.0);
+   }
+  }
+
+  idbcu.AddItem(*it);
+  idbcv.AddItem(*it);
+  idbcw.AddItem(*it);
+
+  real aux = 0.0;
+  uc.Set(*it,aux);
+  vc.Set(*it,aux);
+  wc.Set(*it,aux);
+ }
+}
+
+void Model3D::setWallInterfaceBC()
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  real rMax = 0.5;
+
+  if( Z.Get(*it)==Z.Max() || Z.Get(*it)==Z.Min() ) 
+  {
+   // adding vapor phase in the wall boundary which is not set by
+   // default from the GMsh program
+   if( X.Get(*it)*X.Get(*it)+Y.Get(*it)*Y.Get(*it) < rMax*rMax - 0.001 ) 
+   {
+	heaviside.Set(*it,1.0);
+	vertIdRegion.Set(*it,1.0);
    }
   }
  }

@@ -1750,7 +1750,7 @@ void Simulator3D::unCoupled()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- //if( mu_in <= mu_out ) // BUBBLE
+ // uvw = uTilde + surface tension + gravity
  if( rho_in <= rho_out ) // BUBBLE
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
@@ -3175,7 +3175,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> auxstr; // float
  for( int nb=0;nb<nRegions;nb++ )
   fileP >> triEdge[nb];
-
+ 
 //--------------------------------------------------
 //  cout << dt << " " << cfl << " " << time << endl;
 //  cout << iter << endl;

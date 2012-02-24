@@ -196,6 +196,9 @@ class InOut
   void vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar);
   void vtkSurfaceScalar(ofstream& _file,string _name,clVector &_scalar);
   void vtkSurfaceScalar(ofstream& _file,string _name,clDMatrix &_scalar);
+  void vtkScalarCellHeader(ofstream& _file);
+  void vtkScalarCell(ofstream& _file,string _name,clVector &_scalar);
+  void vtkScalarCell(ofstream& _file,string _name,clDMatrix &_scalar);
   void vtkVector(ofstream& _file,string _name,clVector &_v);
   void vtkVector(ofstream& _file,string _name,clVector &_vx,clVector &_vy,clVector &_vz);
   void vtkSurfaceVector(ofstream& _file,string _name,clVector &_v);
@@ -221,7 +224,7 @@ private:
   clVector *interfaceDistance;
   vector<real> triEdge;
   clVector *heaviside,*edgeSize;
-  clVector *elemIdRegion;
+  clVector *elemIdRegion,*vertIdRegion;
   list<int> *inElem,*outElem;
   vector< list<int> >* neighbourPoint;
   vector<real> averageTriEdge;

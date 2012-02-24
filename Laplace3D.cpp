@@ -147,12 +147,16 @@ void Laplace3D::setMicroBC()
 {
  cc.Dim(numVerts);
  convC.Dim(numVerts);
+ convC.SetAll(triEdge[0]);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->Y.Get(i) == surfMesh->Y.Max() || 
-	  surfMesh->Y.Get(i) == surfMesh->Y.Min() || 
-      surfMesh->Z.Get(i) == surfMesh->Z.Max() || 
-	  surfMesh->Z.Get(i) == surfMesh->Z.Min() )
+  if( surfMesh->Marker.Get(i) < 0.5 )
+//--------------------------------------------------
+//   if( surfMesh->Y.Get(i) == surfMesh->Y.Max() || 
+// 	  surfMesh->Y.Get(i) == surfMesh->Y.Min() || 
+//       surfMesh->Z.Get(i) == surfMesh->Z.Max() || 
+// 	  surfMesh->Z.Get(i) == surfMesh->Z.Min() )
+//-------------------------------------------------- 
   {
   idbcc.AddItem(i);
 
@@ -160,6 +164,7 @@ void Laplace3D::setMicroBC()
   cc.Set(i,aux);
 
   convC.Set(i,aux);
+
   }
  }
 
@@ -169,7 +174,7 @@ void Laplace3D::setMicroBC()
  //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
  //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
  real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- real epslocal = 0.05*diameter;
+ real epslocal = 0.1*diameter;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   //if( interfaceDistance->Get(i) < 0.005*diameter)
@@ -177,12 +182,11 @@ void Laplace3D::setMicroBC()
       (Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
       (Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
   {
-   real aux = triEdge[0]*50;
+   real aux = triEdge[0]*10;
    convC.Set(i,aux);
   }
  }
 }
-
 
 void Laplace3D::setUnCoupledCBC()
 {
@@ -459,3 +463,4 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
 
 void Laplace3D::setk(real _k){k = _k;}
 real Laplace3D::getk(){return k;}
+

@@ -185,7 +185,10 @@ void Model3D::readVTKHeaviside( const char* filename )
 {
  char auxstr[255];
  real fl;
+ triEdge.clear();
  heaviside.Dim(numVerts);
+ vertIdRegion.Dim(numVerts);
+ elemIdRegion.Dim(numElems);
 
  ifstream vtkFile( filename,ios::in );
 
@@ -193,6 +196,31 @@ void Model3D::readVTKHeaviside( const char* filename )
  {
   cerr << "Esta faltando o arquivo de leitura de heaviside!" << endl;
   exit(1);
+ }
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"CHARACTERISTICLENGTH") != 0) )
+  vtkFile >> auxstr;
+
+ int nRegions = 0;
+ vtkFile >> auxstr; // 1
+ vtkFile >> nRegions;
+ vtkFile >> auxstr; // float
+ triEdge.resize(nRegions);
+ for( int nb=0;nb<nRegions;nb++ )
+  vtkFile >> triEdge[nb];
+ setTriEdge(triEdge);
+ 
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"elemId") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+
+ for( int i=0; i < numElems; i++ )
+ {
+  vtkFile >> fl;
+  elemIdRegion.Set(i,fl);
  }
 
  while( (! vtkFile.eof())&&(strcmp(auxstr,"heaviside") != 0) )
@@ -210,6 +238,20 @@ void Model3D::readVTKHeaviside( const char* filename )
    heaviside.Set(i,fl);
   }
  }
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"vertId") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+ vtkFile >> auxstr;
+
+ for( int i=0; i < numVerts; i++ )
+ {
+  vtkFile >> fl;
+  vertIdRegion.Set(i,fl);
+ }
+
  vtkFile.close();
 } // fim do metodo vtkRead
 
@@ -929,7 +971,7 @@ void Model3D::mesh2Dto3D()
  cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApqq",&in,&out ); // quality
  tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
@@ -2953,33 +2995,36 @@ void Model3D::insert3dMeshPointsByDiffusion()
 
   // minVert should be bigger then surfMesh.numVerts because we are
   // treating only 3D vertices after the surface mesh vertices.
+  int minVert = min(v1,v2);
   int maxVert = max(v1,v2);
+  real maxEdge = max(edgeSize.Get(v1),edgeSize.Get(v2));
+  //real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 2.6*edgeSize.Get(v1) && 
-	  maxVert > surfMesh.numVerts )
+  if( length > 3.0*maxEdge && 
+	  //ipd[vertID] < 200 &&
+	  minVert > surfMesh.numVerts )
   {
-//--------------------------------------------------
-//    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
-// 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
-//    cout << x1 << " " << y1 << " " << z1 << endl;
-//    cout << x2 << " " << y2 << " " << z2 << endl;
-//    cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
-//    cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
-//-------------------------------------------------- 
+   cout << v1 << " (" << edgeSize.Get(v1) << ") " 
+	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
+   cout << x1 << " " << y1 << " " << z1 << endl;
+   cout << x2 << " " << y2 << " " << z2 << endl;
+   cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
+   cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
    int vAdd = numVerts; // aditional vertice
 
    cout << "- " << color(none,blue,black) 
 	            << "inserting vertex: "
-				<< resetColor() << vAdd << " " << heaviside.Get(v1) << endl;
+				<< resetColor() << vAdd << " " 
+				<< heaviside.Get(maxVert) << endl;
 
    X.AddItem(vAdd,XvAdd);
    Y.AddItem(vAdd,YvAdd);
    Z.AddItem(vAdd,ZvAdd);
-   heaviside.AddItem(vAdd,heaviside.Get(v1));
-   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
-   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
-   //edgeSize.AddItem(vAdd,edgeSize.Get(v1));
+   heaviside.AddItem(vAdd,heaviside.Get(maxVert));
+   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
 
    numVerts++;
    dVerts++;
@@ -3011,22 +3056,19 @@ void Model3D::remove3dMeshPointsByDiffusion()
   real z2=Z.Get(v2);
   real length = distance(x1,y1,z1,x2,y2,z2);
 
-  real size = (edgeSize.Get(v1)+edgeSize.Get(v2))/2.0;
+  //int maxVert = max(v1,v2);
+  int minVert = min(v1,v2);
+
+  //real size = (edgeSize.Get(v1)+edgeSize.Get(v2))/2.0;
+  real size = min(edgeSize.Get(v1),edgeSize.Get(v2));
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < size )
+  if( length < 0.7*size && 
+	  minVert > surfMesh.numVerts )
   {
-   if( v1 > surfMesh.numVerts )
-   {
-	mark3DPointForDeletion(v1);
+	mark3DPointForDeletion(minVert);
 	rpd[vertID]++;
-   }
-   else if( v2 > surfMesh.numVerts )
-   {
-	mark3DPointForDeletion(v2);
-	rpd[vertID]++;
-   }
   }
  }
  //cout << "  removed by diffusion: " << rpd[vertID] << endl;
@@ -3355,7 +3397,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 4*triEdge[nb]*
+  in.regionlist[5*nb+4] = 14*triEdge[nb]*
                             triEdge[nb]*
 						    triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
@@ -3538,32 +3580,23 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
  //edgeSize.Dim(numVerts);
  for( int i=0;i<_tetmesh.numberoftetrahedra;i++ )
  {
+  elemIdRegion.Set(i,_tetmesh.tetrahedronattributelist[i]-1);
+
   // set:
   // heaviside = 0 outside bubble
   // elemIdRegion = out.tetrahedronattributelist[i]
-  if( _tetmesh.tetrahedronattributelist[i] == 1 ) // wall and out mesh
+  for( int j=0;j<4;j++ )
   {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = _tetmesh.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
+   int vertice = _tetmesh.tetrahedronlist[i*4+j];
+   IEN.Set(i,j,vertice);
+   vertIdRegion.Set(vertice,_tetmesh.tetrahedronattributelist[i]-1);
+   //edgeSize.Set(vertice,triEdge[_tetmesh.tetrahedronattributelist[i]-1]);
+
+   // setting heaviside
+   if( _tetmesh.tetrahedronattributelist[i] == 1 ) // wall and out mesh
 	heaviside.Set(vertice,0.0);
-	//edgeSize.Set(vertice,triEdge[_tetmesh.tetrahedronattributelist[i]-1]);
-	vertIdRegion.Set(vertice,_tetmesh.tetrahedronattributelist[i]-1);
-	elemIdRegion.Set(i,_tetmesh.tetrahedronattributelist[i]-1);
-   }
-  }
-  else // inner mesh
-  {
-   for( int j=0;j<4;j++ )
-   {
-	int vertice = _tetmesh.tetrahedronlist[i*4+j];
-	IEN.Set(i,j,vertice);
+   else
 	heaviside.Set(vertice,1.0);
-	//edgeSize.Set(vertice,triEdge[_tetmesh.tetrahedronattributelist[i]-1]);
-	vertIdRegion.Set(vertice,_tetmesh.tetrahedronattributelist[i]-1);
-	elemIdRegion.Set(i,_tetmesh.tetrahedronattributelist[i]-1);
-   }
   }
  }
 
@@ -3586,6 +3619,12 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   vertIdRegion.Set(i,surfMesh.vertIdRegion.Get(i));
   //edgeSize.Set(i,surfMesh.vertIdRegion.Get(i));
  }
+//--------------------------------------------------
+//  cout << vertIdRegion.Min() << endl;;
+//  cout << vertIdRegion.Max() << endl;;
+//  cout << elemIdRegion.Min() << endl;;
+//  cout << elemIdRegion.Max() << endl;;
+//-------------------------------------------------- 
 }
 
 /*
@@ -3888,9 +3927,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
+ //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
  //tetrahedralize( (char*) "QYYApa",&in,&out ); 
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
+ tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -4417,6 +4457,46 @@ void Model3D::setMicroWallBC()
    idbcp.AddItem(*it);
 
    pc.Set(*it,0.0);
+  }
+ }
+}
+
+void Model3D::setCircularWallBC()
+{    
+ real radius = 0.5;
+ for (list<int>::iterator it=boundaryVert.begin(); 
+                          it!=boundaryVert.end(); 
+						  ++it)
+ {
+  if( X.Get(*it) == X.Min() &&
+	 (Y.Get(*it)*Y.Get(*it)+Z.Get(*it)*Z.Get(*it) < 
+	  (radius*radius - 0.001) ) )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( X.Get(*it) == X.Max() &&
+	      (Y.Get(*it)*Y.Get(*it)+Z.Get(*it)*Z.Get(*it) < 
+		   (radius*radius - 0.001) ) )
+  {
+   idbcp.AddItem(*it);
+
+   pc.Set(*it,0.0);
+  }
+  else
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
  }
 }
@@ -7173,7 +7253,7 @@ void Model3D::setNormalAndKappa()
 //   }
 //-------------------------------------------------- 
  }
- //setNormalAndKappa2D();
+ setNormalAndKappa2D();
 } // fecha metodo setNormalAndKappa
 
 void Model3D::setCloser()
@@ -7457,9 +7537,9 @@ real Model3D::getSurfaceVolume(int _region)
 real Model3D::getSurfaceVolumeTET(int _region)
 {
  real sumVolume=0;
- for( list<int>::iterator it=inElem.begin(); it!=inElem.end(); ++it )
-  if( _region == elemIdRegion.Get(*it) )
-   sumVolume += getVolume(*it);
+ for( int i=0;i<numElems;i++ )
+  if( _region == elemIdRegion.Get(i) )
+   sumVolume += getVolume(i);
  return sumVolume;
 }
 
@@ -8281,7 +8361,6 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
 void Model3D::applyBubbleVolumeCorrection()
 {
- real TOL = 1E-03;
  // surfMesh.elemIdRegion == 0 --> wall
  // surfMesh.elemIdRegion == 1 --> bubble 1
  // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
@@ -8293,10 +8372,17 @@ void Model3D::applyBubbleVolumeCorrection()
   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
 
+  real error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
+  real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+  real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+
+  real TOL = initSurfaceVolume[nb]*0.0001;
+
   int count = 0;
   //while( fabs(dv) > 1E-06 )
   //while( fabs(da) > 1E-06 )
-  while( fabs(dv) > TOL && count < 30 )
+  //while( fabs(dv) > TOL && count < 30 )
+  while( fabs(errov) > TOL && count < 30 )
   {
    for( int i=0;i<surface.Dim();i++ )
    {
@@ -8305,20 +8391,20 @@ void Model3D::applyBubbleVolumeCorrection()
 	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
 	{
 	 aux = surfMesh.X.Get(surfaceNode) + 
-	       surfMesh.xNormal.Get(surfaceNode)*1E-01*dv;
-	       //surfMesh.xNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	       surfMesh.xNormal.Get(surfaceNode)*1E-02*errov;
+	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 X.Set(surfaceNode,aux);
 	 surfMesh.X.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Y.Get(surfaceNode) + 
-	       surfMesh.yNormal.Get(surfaceNode)*1E-01*dv;
-	       //surfMesh.yNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	       surfMesh.yNormal.Get(surfaceNode)*1E-02*errov;
+	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 Y.Set(surfaceNode,aux);
 	 surfMesh.Y.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Z.Get(surfaceNode) + 
-	       surfMesh.zNormal.Get(surfaceNode)*1E-01*dv;
-	       //surfMesh.zNormal.Get(surfaceNode)*1E-05*(dv/fabs(dv));
+	       surfMesh.zNormal.Get(surfaceNode)*1E-02*errov;
+	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 Z.Set(surfaceNode,aux);
 	 surfMesh.Z.Set(surfaceNode,aux);
 	}
@@ -8329,30 +8415,45 @@ void Model3D::applyBubbleVolumeCorrection()
    dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
    da = (initSurfaceArea[nb] - surfaceArea[nb]);
    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+   error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
+   erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+   errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
    count++;
+   //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
   }
   cout << endl;
   cout << setw(20) << color(none,red,black) 
                    << "|--------- VOLUME CORRECTION ---------|" << endl;
-  cout << setw(27) << color(none,white,black) << "initial volume: " 
+  cout << setw(33) << color(none,white,black) << "|initial: " 
                    << initSurfaceVolume[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "final volume: " << surfaceVolume[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "dv: " << dv << endl;
-  cout << setw(27) << color(none,white,black) << "initial area: " 
+  cout << setw(33) << color(none,white,black) 
+                   << "|final: " << surfaceVolume[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|dv: " << dv << endl;
+  cout << setw(26) << color(none,white,black) 
+                   << "volume |error: " << fabs(errov) << endl;
+  cout << setw(21) << color(none,red,black) 
+                   << "     ---------------------------- " << endl;
+  cout << setw(33) << color(none,white,black) << "|initial: " 
                    << initSurfaceArea[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "final area: " << surfaceArea[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "da: " << da << endl;
-  cout << setw(27) << color(none,white,black) << "initial radius: " 
+  cout << setw(33) << color(none,white,black) 
+                   << "|final: " << surfaceArea[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|da: " << da << endl;
+  cout << setw(26) << color(none,white,black) 
+                   << "  area |error: " << fabs(erroa) << endl;
+  cout << setw(21) << color(none,red,black) 
+                   << "     ---------------------------- " << endl;
+  cout << setw(33) << color(none,white,black) << "|initial: " 
                    << initSurfaceRadius[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "final radius: " << surfaceRadius[nb] << endl;
-  cout << setw(27) << color(none,white,black) 
-                   << "dr: " << dr << endl;
-  cout << setw(27) << color(none,white,black) 
+  cout << setw(33) << color(none,white,black) 
+                   << "|final: " << surfaceRadius[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|dr: " << dr << endl;
+  cout << setw(26) << color(none,white,black) 
+                   << " radius| error: " << fabs(error) << endl;
+  cout << endl;
+  cout << setw(28) << color(none,white,black) 
                    << "number of iterations: " << count << endl;
   cout << setw(20) << color(none,red,black) 
                    << "|-------------------------------------|" << endl;
@@ -9102,7 +9203,7 @@ void Model3D::setTriEdge(vector< real > _triEdge)
 {
  triEdge = _triEdge;
 
- // number of surfaces + 1
+ // number of surfaces 
  int numSurface = triEdge.size();
  oper.resize(numSurface);
  opersurf.resize(numSurface);
@@ -9222,8 +9323,8 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height4);
 
 	if( heaviside.Get(*vert) != 0.5 && 
-	  //height3 < 0.3*triEdge[1] )
-	 minHeight < 0.3*triEdge[1] )
+	 // height3 < 0.3*triEdge[elemID] )
+	 minHeight < 0.8*triEdge[elemID] )
 	{
 	 mark3DPointForDeletion(*vert);
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;

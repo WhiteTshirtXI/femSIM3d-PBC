@@ -37,6 +37,7 @@ InOut::InOut( Model3D &_m )
  inElem = m->getInElem();
  outElem = m->getOutElem();
  edgeSize = m->getEdgeSize();
+ vertIdRegion = m->getVertIdRegion();
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
@@ -107,6 +108,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  inElem = m->getInElem();
  outElem = m->getOutElem();
  edgeSize = m->getEdgeSize();
+ vertIdRegion = m->getVertIdRegion();
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriEdge = m->getAverageTriEdge();
@@ -186,7 +188,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  fint = s->getFint();
  mu = s->getMu();
  rho = s->getRho();
- hSmooth = s->getHSmooth();
+ //hSmooth = s->getHSmooth();
  gravity = s->getGravity();
  uSolOld = s->getUSolOld();
  vSolOld = s->getVSolOld();
@@ -456,6 +458,11 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkCoords(vtkFile);
  vtkCellArray(vtkFile);
  vtkCellType(vtkFile);
+
+ vtkScalarCellHeader(vtkFile);
+ if( elemIdRegion->Dim() > 0 )
+  vtkScalarCell(vtkFile,"elemId",*elemIdRegion);
+
  vtkScalarHeader(vtkFile);
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
@@ -476,8 +483,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  if( interfaceDistance->Dim() > 0 )
   vtkScalar(vtkFile,"distance",*interfaceDistance);
 
- if( hSmooth->Dim() > 0 )
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+ if( vertIdRegion->Dim() > 0 )
+  vtkScalar(vtkFile,"vertId",*vertIdRegion);
 
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
@@ -588,8 +595,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
  if( interfaceDistance->Dim() > 0 )
   vtkScalar(vtkFile,"distance",*interfaceDistance);
 
- if( hSmooth->Dim() > 0 )
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+ if( vertIdRegion->Dim() > 0 )
+  vtkScalar(vtkFile,"vertId",*vertIdRegion);
 
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
@@ -707,8 +714,8 @@ void InOut::saveVTKQuarter( const char* _dir,const char* _filename, int _iter )
  if( interfaceDistance->Dim() > 0 )
   vtkScalar(vtkFile,"distance",*interfaceDistance);
 
- if( hSmooth->Dim() > 0 )
-  vtkScalar(vtkFile,"hSmooth",*hSmooth);
+ if( vertIdRegion->Dim() > 0 )
+  vtkScalar(vtkFile,"vertId",*vertIdRegion);
 
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
@@ -2479,6 +2486,11 @@ void InOut::vtkSurfaceScalarHeader(ofstream& _file)
  _file << "POINT_DATA " << surfMesh->numVerts << endl;
 }
 
+void InOut::vtkScalarCellHeader(ofstream& _file)
+{
+ _file << "CELL_DATA " << numElems << endl;
+}
+
 void InOut::vtkSurfaceCellHeader(ofstream& _file)
 {
  _file << "CELL_DATA " << surfMesh->numElems << endl;
@@ -2503,6 +2515,30 @@ void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkScalarCell(ofstream& _file,string _name,clVector &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<numElems;i++ )
+  _file << _scalar.Get(i) << endl;
+
+ _file << endl;
+}
+
+void InOut::vtkScalarCell(ofstream& _file,string _name,clDMatrix &_scalar)
+{
+ _file << "SCALARS " << _name << " double" << endl;
+ _file << "LOOKUP_TABLE default"  << endl;
+
+ _file << setprecision(10) << scientific;
+ for( int i=0;i<numElems;i++ )
   _file << _scalar.Get(i) << endl;
 
  _file << endl;

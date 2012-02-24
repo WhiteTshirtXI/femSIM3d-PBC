@@ -193,6 +193,7 @@ class Model3D
   void setCubeBC();
   void setWallBC();
   void setMicroWallBC();
+  void setCircularWallBC();
   void setWallCouetteBC();
   void setWallAnnularBC();
   void setWallInterfaceBC();

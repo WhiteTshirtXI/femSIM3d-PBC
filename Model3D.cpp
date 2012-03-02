@@ -60,6 +60,7 @@ Model3D::Model3D(const Model3D &_mRight)
   rpi = _mRight.rpi;                   
   rpd = _mRight.rpd;                   
   rpdist = _mRight.rpdist; 
+  rph = _mRight.rph;                   
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
   maxVolume = _mRight.maxVolume;
@@ -1137,7 +1138,7 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(edge,0);
   real v1 = mapEdgeTri.Get(edge,1);
-  real v2 = mapEdgeTri.Get(edge,2);
+  //real v2 = mapEdgeTri.Get(edge,2);
   real vertID = surfMesh.vertIdRegion.Get(v1); 
 
   if( vertID > 0 &&
@@ -6777,6 +6778,7 @@ vector<int> Model3D::getRP(){return rp;}
 vector<int> Model3D::getRPI(){return rpi;}
 vector<int> Model3D::getRPD(){return rpd;}
 vector<int> Model3D::getRPDist(){return rpdist;}
+vector<int> Model3D::getRPH(){return rph;}
 vector<int> Model3D::getRPV(){return rpv;}
 vector<int> Model3D::getCSP(){return csp;}
 vector<real> Model3D::getMinVolume(){return minVolume;}
@@ -6824,6 +6826,7 @@ void Model3D::operator=(Model3D &_mRight)
   rpi = _mRight.rpi;                   
   rpd = _mRight.rpd;                   
   rpdist = _mRight.rpdist;                   
+  rph = _mRight.rph;                   
   rpv = _mRight.rpv;                   
   csp = _mRight.csp;                   
   maxVolume = _mRight.maxVolume;
@@ -8370,11 +8373,11 @@ void Model3D::applyBubbleVolumeCorrection()
  {
   real aux = 0;
 
-  real dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
+  //real dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
 
-  real error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
+  //real error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
   real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
   real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
 
@@ -8413,11 +8416,11 @@ void Model3D::applyBubbleVolumeCorrection()
    }
    surfaceVolume[nb] = getSurfaceVolume(nb);
    surfaceArea[nb] = getSurfaceArea(nb);
-   surfaceRadius[nb] = getSurfaceRadius(nb);
-   dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
+   //surfaceRadius[nb] = getSurfaceRadius(nb);
+   //dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
    da = (initSurfaceArea[nb] - surfaceArea[nb]);
    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-   error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
+   //error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
    erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
    errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
    count++;
@@ -8444,19 +8447,21 @@ void Model3D::applyBubbleVolumeCorrection()
                    << "|da: " << da << endl;
   cout << setw(26) << color(none,white,black) 
                    << "  area |error: " << fabs(erroa) << endl;
-  cout << setw(21) << color(none,red,black) 
-                   << "     ---------------------------- " << endl;
-  cout << setw(33) << color(none,white,black) << "|initial: " 
-                   << initSurfaceRadius[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|final: " << surfaceRadius[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|dr: " << dr << endl;
-  cout << setw(26) << color(none,white,black) 
-                   << " radius| error: " << fabs(error) << endl;
-  cout << endl;
-  cout << setw(28) << color(none,white,black) 
-                   << "number of iterations: " << count << endl;
+//--------------------------------------------------
+//   cout << setw(21) << color(none,red,black) 
+//                    << "     ---------------------------- " << endl;
+//   cout << setw(33) << color(none,white,black) << "|initial: " 
+//                    << initSurfaceRadius[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|final: " << surfaceRadius[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|dr: " << dr << endl;
+//   cout << setw(26) << color(none,white,black) 
+//                    << " radius| error: " << fabs(error) << endl;
+//   cout << endl;
+//   cout << setw(28) << color(none,white,black) 
+//                    << "number of iterations: " << count << endl;
+//-------------------------------------------------- 
   cout << setw(20) << color(none,red,black) 
                    << "|-------------------------------------|" << endl;
   cout << resetColor() << endl;
@@ -9229,6 +9234,7 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  rpv.resize(numSurface);
  rpd.resize(numSurface);
  rpdist.resize(numSurface);
+ rph.resize(numSurface);
  badtet.resize(numSurface);
 
  // set surface lengths
@@ -9262,6 +9268,7 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  fill(rpv.begin(),rpv.end(),0);
  fill(rpd.begin(),rpd.end(),0);
  fill(rpdist.begin(),rpdist.end(),0);
+ fill(rph.begin(),rph.end(),0);
 
  fill(badtet.begin(),badtet.end(),0);
  fill(averageTriEdge.begin(),averageTriEdge.end(),0);
@@ -9280,7 +9287,7 @@ void Model3D::setTriEdge(vector< real > _triEdge)
 void Model3D::remove3dMeshPointsByHeight()
 {
  // number of removed 2d mesh points by interface distance
- //fill(rph.begin(),rph.end(),0);
+ fill(rph.begin(),rph.end(),0);
 
  for( int elem=0;elem<surfMesh.numElems;elem++ )
  {
@@ -9304,7 +9311,7 @@ void Model3D::remove3dMeshPointsByHeight()
   real yMid = (P2x+P2y+P2z)/3.0;
   real zMid = (P3x+P3y+P3z)/3.0;
 
-  int elemID = surfMesh.elemIdRegion.Get(elem);
+  int vertID = surfMesh.vertIdRegion.Get(elem);
 
   if( heaviside.Get(v1) == 0.5 )
   {
@@ -9327,12 +9334,12 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height4);
 
 	if( heaviside.Get(*vert) != 0.5 && 
-	  //minHeight < 0.3*triEdge[elemID] )
-	 minHeight < 0.8*triEdge[elemID] )
+	  //minHeight < 0.3*triEdge[1] )
+	 minHeight < 0.4*triEdge[1] )
 	{
 	 mark3DPointForDeletion(*vert);
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;
-	 //rph[vertID]++;
+	 rph[vertID]++;
 	}
    }
   }
@@ -9478,7 +9485,7 @@ void Model3D::setWallAnnularBC()
    //idbcv.AddItem(i);
    //idbcw.AddItem(i);
 
-   real aux = 0.0;
+   //real aux = 0.0;
    //uc.Set(i,aux);
    //vc.Set(i,aux);
 

@@ -71,6 +71,7 @@ InOut::InOut( Model3D &_m )
  rpi = m->getRPI();
  rpd = m->getRPD();
  rpdist = m->getRPDist();
+ rph = m->getRPH();
  rpv = m->getRPV();
  csp = m->getCSP();
  maxVolume = m->getMaxVolume();
@@ -141,6 +142,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  rpi = m->getRPI();
  rpd = m->getRPD();
  rpdist = m->getRPDist();
+ rph = m->getRPH();
  rpv = m->getRPV();
  csp = m->getCSP();
  maxVolume = m->getMaxVolume();
@@ -1985,6 +1987,7 @@ void InOut::saveMeshInfo(const char* _dir)
 					<< setw(6) << "rpi" 
 					<< setw(6) << "rpd" 
 					<< setw(6) << "rpdist" 
+					<< setw(6) << "rph" 
 					<< setw(6) << "rpv" 
 					<< setw(6) << "csp" 
 					<< setw(7) << "flip" 
@@ -2012,6 +2015,7 @@ void InOut::saveMeshInfo(const char* _dir)
 								   << setw(5)  << rpi[nb] << " "
 								   << setw(5)  << rpd[nb] << " "
 								   << setw(5)  << rpdist[nb] << " "
+								   << setw(5)  << rph[nb] << " "
 								   << setw(5)  << rpv[nb] << " "
 								   << setw(5)  << csp[nb] << " "
 								   << setw(6)  << flip[nb] << " "
@@ -2926,6 +2930,9 @@ void InOut::printMeshReport()
        << " 3D mesh points by distance:           " << rpdist[nb] << endl;
   cout << "       |" << color(none,red,black) 
        << "removed" << resetColor() 
+       << " 3D mesh points by height:             " << rph[nb] << endl;
+  cout << "       |" << color(none,red,black) 
+       << "removed" << resetColor() 
        << " 3D mesh points by volume:             " << rpv[nb] << endl;
   cout << "       |" << color(none,red,black) 
        << "removed" << resetColor() 
@@ -2939,7 +2946,8 @@ void InOut::printMeshReport()
        << "total number of " << color(none,red,black)
        << "removed" << resetColor() 
        << " 3D mesh points:       " << color(none,red,black)
-	   << rp[nb]+rpd[nb]+rpi[nb]+rpv[nb]+rpdist[nb] << resetColor() << endl;
+	   << rp[nb]+rpd[nb]+rph[nb]+rpi[nb]+rpv[nb]+rpdist[nb] 
+	   << resetColor() << endl;
  }
  cout << endl;
 

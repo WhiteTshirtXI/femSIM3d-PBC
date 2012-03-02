@@ -172,6 +172,7 @@ class Model3D
   vector<int> getRPI();
   vector<int> getRPD();
   vector<int> getRPDist();
+  vector<int> getRPH();
   vector<int> getRPV();
   vector<int> getCSP();
   vector<real> getMinVolume();
@@ -393,6 +394,7 @@ class Model3D
   vector<int> rpv;         // rpv: by volume 
   vector<int> rpd;         // rpd: by diffusion 
   vector<int> rpdist;      // rpd: by distance 
+  vector<int> rph;         // rph: by height 
   vector<int> badtet;      // num of shit tetrahedrons
 
   vector<int> intet;       // csp: num of surface tetrahedrons 

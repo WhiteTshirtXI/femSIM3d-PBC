@@ -29,20 +29,20 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(2);
  triEdge[0] = 1.1; // wall
- triEdge[1] = 0.09; // bubble
+ triEdge[1] = 0.07; // bubble
 
  int iter = 1;
- //real Re = 6.53; // case 1
+ real Re = 6.53; // case 1
  //real Re = 13.8487; // case 2
  //real Re = 32.78; // case 3
- real Re = 134.625; // case 7
+ //real Re = 134.625; // case 7
  //real Re = 203.729549896; // case 8 (extream)
  real Sc = 1;
- real We = 115;
+ real We = 116;
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 1.00; // smooth - fujiwara
+ real c3 = 0.50; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -51,16 +51,16 @@ int main(int argc, char **argv)
 
  real mu_in = 0.0000178;
 
- //real mu_out = 2.73;
- //real mu_out = 1.28;
- //real mu_out = 0.54;
- real mu_out = 0.1324;
+ real mu_out = 2.73;
+ //real mu_out = 1.28; 
+ //real mu_out = 0.54; // case 3
+ //real mu_out = 0.1324; // case 7
  //real mu_out = 0.0875134907735; // extream
 
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.8;
+ real cfl = 0.4;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/rising/" + meshFile;
+ meshDir += "/gmsh/3d/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -293,7 +293,6 @@ int main(int argc, char **argv)
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   //s1.setDt(0.01);
    s1.setDtALETwoPhase();
    s1.movePoints();
    s1.assemble();
@@ -348,6 +347,7 @@ int main(int argc, char **argv)
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   // surface operations
@@ -361,6 +361,7 @@ int main(int argc, char **argv)
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
 
+  m1.removePointByNeighbourCheck();
   m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

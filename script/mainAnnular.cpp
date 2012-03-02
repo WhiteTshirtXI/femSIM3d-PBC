@@ -2,6 +2,19 @@
 // this is file main.cpp, created at 10-Jun-2007                       //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
+//                                                                     //
+// Obs.: Annular flow setup:                                           //
+//                                                                     //
+// Simulator3D: setAnnularALEVelBC()                                   //
+//              mu and rho not zero for Z.Max() and Z.Min()            //
+//              turn off applyBubbleVolumeCorrection()                 //
+//                                                                     //
+// Model3D: insertPointsByLength()                                     //
+//           - no insertion at the boundaries Z.Max() and Z.Min()      //
+//          setPolyhedron()                                            //
+//           - uncomment wSwap2 == node2 until break;                  //
+//          uncomment setNormalAndKappa2D()                            //
+//                                                                     //
 // =================================================================== //
 
 #include <cmath>
@@ -25,16 +38,16 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(2);
- triEdge[0] = 1.0; // wall
- triEdge[1] = 0.08; // bubble 1 
+ triEdge[0] = 0.1; // wall
+ triEdge[1] = 0.1; // bubble 1 
 
- // static bubble test (Fabricio's thesis (2005))
+ int iter = 1;
  real Re = 100;
  real We = 5;
  real c1 = 0.0;  // lagrangian
- real c2 = 0.0;  // velocity
- real c3 = 0.0;  // coordinates - fujiwara
- real c4 = 0.0;  // surface coordinates - fujiwara
+ real c2 = 1.0;  // velocity
+ real c3 = 1.0;  // coordinates - fujiwara
+ real c4 = 0.1;  // surface coordinates - fujiwara
  real alpha = 1;
  real beta = 1;
 
@@ -46,11 +59,13 @@ int main(int argc, char **argv)
  real rho_in = 1.0;
  real rho_out = 0.001;
 
- real cfl = 1.0;
+ real cfl = 0.5;
 
  string meshFile = "annular.msh";
+ //string meshFile = "annularSquare.msh";
 
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
@@ -68,10 +83,10 @@ int main(int argc, char **argv)
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
- m1.setTriEdge(triEdge);
- //m1.checkTriangleOrientation();
- m1.mesh2Dto3D();
  m1.setWallInterfaceBC();
+ m1.setTriEdge(triEdge);
+ m1.checkTriangleOrientation();
+ m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
@@ -112,9 +127,12 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
  save.printInfo(meshFile.c_str());
 
- int nIter = 1000;
- for( int i=1;i<nIter;i++ )
+ int nIter = 3000;
+ int nReMesh = 1;
+ for( int i=1;i<=nIter;i++ )
  {
+  for( int j=0;j<nReMesh;j++ )
+  {
   cout << color(none,magenta,black);
   cout << "____________________________________ Iteration: " 
        << i << endl << endl;
@@ -148,6 +166,63 @@ int main(int argc, char **argv)
   cout << "________________________________________ END of " 
        << i << endl << endl;;
   cout << resetColor();
+
+  iter++;
+ }
+  Model3D mOld = m1; 
+  m1.setTriEdge(triEdge);
+
+  /* *********** MESH TREATMENT ************* */
+  // set normal and kappa values
+  //m1.setNormalAndKappa();
+
+  // 3D operations
+  //m1.insert3dMeshPointsByDiffusion();
+  //m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume(0.005);
+  //m1.removePointsByInterfaceDistance();
+  //m1.remove3dMeshPointsByDistance();
+  //m1.delete3DPoints();
+
+  // surface operations
+  m1.insertPointsByLength();
+  //m1.insertPointsByCurvature();
+  //m1.removePointsByCurvature();
+  //m1.insertPointsByInterfaceDistance();
+  m1.contractEdgeByLength();
+  //m1.removePointsByLength();
+  //m1.flipTriangleEdge();
+  //m1.removePointByNeighbourCheck();
+  /* **************************************** */
+
+  //m1.mesh2Dto3DOriginal();
+  m1.mesh3DPoints();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setWallAnnularBC();
+
+  Simulator3D s2(m1,s1);
+  s2.applyLinearInterpolation(mOld);
+  s1 = s2;
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
+  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
+  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveSol(binFolder,"sim",iter-1);
+  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
+  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
+  saveEnd.saveMeshInfo(datFolder);
+  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

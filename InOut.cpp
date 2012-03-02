@@ -1878,26 +1878,26 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  }
 
  simTime = s->getTime();
- SurfaceMesh *interfaceMesh = m->getInterfaceMesh();
 
  real Ymax1=100;
  real Ymin1=-100;
  real Ymax2=-100;
  real Ymin2=100;
  
- for( int i=0;i<interfaceMesh->numVerts;i++ )
+ for( int i=0;i<surfMesh->numVerts;i++ )
  {
   // bubble 1 (Y<0)
-  if( Y->Get(i) < 0 && heaviside->Get(i)==0.5 )
+  if( surfMesh->Y.Get(i) < 0 && 
+	  heaviside->Get(i)==0.5 )
   {
-   if(Y->Get(i)>Ymin1) Ymin1=Y->Get(i);
-   if(Y->Get(i)<Ymax1) Ymax1=Y->Get(i);
+   if(surfMesh->Y.Get(i)>Ymin1) Ymin1=surfMesh->Y.Get(i);
+   if(surfMesh->Y.Get(i)<Ymax1) Ymax1=surfMesh->Y.Get(i);
   }
   // bubble 2 (Y>0)
-  if( Y->Get(i) > 0 && heaviside->Get(i)==0.5 )
+  if( surfMesh->Y.Get(i) > 0 && heaviside->Get(i)==0.5 )
   {
-   if(Y->Get(i)<Ymin2) Ymin2=Y->Get(i);
-   if(Y->Get(i)>Ymax2) Ymax2=Y->Get(i);
+   if(surfMesh->Y.Get(i)<Ymin2) Ymin2=surfMesh->Y.Get(i);
+   if(surfMesh->Y.Get(i)>Ymax2) Ymax2=surfMesh->Y.Get(i);
   }
  }
 

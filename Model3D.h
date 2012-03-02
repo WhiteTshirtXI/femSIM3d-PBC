@@ -135,6 +135,7 @@ class Model3D
 
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
+  clVector computeConvexRegionCentroid2D(real _zPlane);
 
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
@@ -246,10 +247,13 @@ class Model3D
   clVector getNormalAndKappa(int _node,list<int> _myList);
   //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
   //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
-  void setNormalAndKappa2D();
   void setNormalAndKappa();
   clVector getNormalElem(int _elem);
   clVector getNormalElem(int _v1,int _v2,int _v3);
+
+  // annular boundary conditions
+  void checkLineOrientation();
+  void setNormalAndKappa2D();
 
   // get and set methods
   clVector* getX();

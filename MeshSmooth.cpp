@@ -127,9 +127,9 @@ void MeshSmooth::stepSmoothFujiwara()
  wSmooth.Dim(numNodes);
 
  // loop over all the vertices except those belonging to the boundary
- for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ for( int i=0;i<numVerts;i++ )
  {
-  plist = neighbourVert->at(*it);
+  plist = neighbourVert->at(i);
   //size = plist.size();
   xSum = 0.0;
   ySum = 0.0;
@@ -139,29 +139,29 @@ void MeshSmooth::stepSmoothFujiwara()
   {
    // distance between the vertex *it and all its neighbours
    real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
-	                     X->Get(*it),Y->Get(*it),Z->Get(*it) );
+	                     X->Get(i),Y->Get(i),Z->Get(i) );
    // sum of distances
    distSum += dist;   
 
    // 
-   xSum += ( X->Get(*vert)-X->Get(*it) )*dist;
-   ySum += ( Y->Get(*vert)-Y->Get(*it) )*dist;
-   zSum += ( Z->Get(*vert)-Z->Get(*it) )*dist;
+   xSum += ( X->Get(*vert)-X->Get(i) )*dist;
+   ySum += ( Y->Get(*vert)-Y->Get(i) )*dist;
+   zSum += ( Z->Get(*vert)-Z->Get(i) )*dist;
   }
   aux = (1.0/distSum)*xSum; // USmooth
   //aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
   //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
-  uSmooth.Set(*it,aux);
+  uSmooth.Set(i,aux);
 
   aux = (1.0/distSum)*ySum; // VSmooth
   //aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
   //aux = (2.0/distSum)*ySum/dt; // velocidade VSmooth
-  vSmooth.Set(*it,aux);
+  vSmooth.Set(i,aux);
 
   aux = (1.0/distSum)*zSum; //  WSmooth
   //aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
   //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
-  wSmooth.Set(*it,aux);
+  wSmooth.Set(i,aux);
  }
 } // fecha metodo stepSmooth
 

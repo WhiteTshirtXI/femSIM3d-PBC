@@ -970,9 +970,9 @@ void Model3D::mesh2Dto3D()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
- //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq",&in,&out ); // quality
- tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
+ //tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
@@ -1137,13 +1137,16 @@ void Model3D::insertPointsByLength()
   // edge length
   real edgeLength = mapEdgeTri.Get(edge,0);
   real v1 = mapEdgeTri.Get(edge,1);
+  real v2 = mapEdgeTri.Get(edge,2);
   real vertID = surfMesh.vertIdRegion.Get(v1); 
 
   if( vertID > 0 &&
+	  //Z.Get(v1) != Z.Min() && Z.Get(v2) != Z.Min() &&
+	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   insertSurfacePoint(edge,"flat");
-   //insertSurfacePoint(edge,"curvature");
+   //insertSurfacePoint(edge,"flat");
+   insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -3397,7 +3400,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 14*triEdge[nb]*
+  in.regionlist[5*nb+4] = 5*triEdge[nb]*
                             triEdge[nb]*
 						    triEdge[nb]*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
@@ -3437,13 +3440,16 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   p->vertexlist[0] = v1; 
   p->vertexlist[1] = v2; 
   p->vertexlist[2] = v3;
+  real mSum = surfMesh.Marker.Get(v1) + 
+	          surfMesh.Marker.Get(v2) + 
+			  surfMesh.Marker.Get(v3);
   // melhorar esta configuracao de facet para bolha e convex hull
-  if( surfMesh.Marker.Get(v1) + 
-	  surfMesh.Marker.Get(v2) + 
-	  surfMesh.Marker.Get(v3) > 0 )
+  if( mSum == 0.5 ) // bubble/drop
    in.facetmarkerlist[i] = 10;
-  else
+  else if( mSum == 0.0 ) // out
    in.facetmarkerlist[i] = 20;
+  else // in
+   in.facetmarkerlist[i] = 30;
  }
 }
 
@@ -3493,13 +3499,16 @@ tetgenio Model3D::convertSurfaceMeshToTetGen(SurfaceMesh _mesh,
   p->vertexlist[0] = v1; 
   p->vertexlist[1] = v2; 
   p->vertexlist[2] = v3;
+  real mSum = surfMesh.Marker.Get(v1) + 
+	          surfMesh.Marker.Get(v2) + 
+			  surfMesh.Marker.Get(v3);
   // melhorar esta configuracao de facet para bolha e convex hull
-  if( _mesh.Marker.Get(v1) + 
-	  _mesh.Marker.Get(v2) + 
-	  _mesh.Marker.Get(v3) > 0 )
-   _tetmesh.facetmarkerlist[i] = 10;
-  else
-   _tetmesh.facetmarkerlist[i] = 20;
+  if( mSum == 0.5 ) // bubble/drop
+   in.facetmarkerlist[i] = 10;
+  else if( mSum == 0.0 ) // out
+   in.facetmarkerlist[i] = 20;
+  else // in
+   in.facetmarkerlist[i] = 30;
  }
  return _tetmesh;
 }
@@ -3611,20 +3620,11 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
   Z.Set(i,_tetmesh.pointlist[3*i+2]);
   if( _tetmesh.pointmarkerlist[i] == 10 ||
 	  _tetmesh.pointmarkerlist[i] == 22 )
+  {
    heaviside.Set(i,0.5);
+   vertIdRegion.Set(i,0.5);
+  }
  }
-
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  vertIdRegion.Set(i,surfMesh.vertIdRegion.Get(i));
-  //edgeSize.Set(i,surfMesh.vertIdRegion.Get(i));
- }
-//--------------------------------------------------
-//  cout << vertIdRegion.Min() << endl;;
-//  cout << vertIdRegion.Max() << endl;;
-//  cout << elemIdRegion.Min() << endl;;
-//  cout << elemIdRegion.Max() << endl;;
-//-------------------------------------------------- 
 }
 
 /*
@@ -3928,9 +3928,9 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- //tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
- tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -6425,7 +6425,7 @@ void Model3D::setSurfaceConfig()
  setInterfaceDistance();
  setNeighbourSurfaceElem(); 
  setNeighbourSurfacePoint();
- setSurfaceTri(); // triang superficie - interfaceMesh
+ //setSurfaceTri(); // triang superficie - interfaceMesh
  //setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
  setMapEdge(); 
@@ -6641,11 +6641,10 @@ void Model3D::moveXPoints(clVector &_vec,real _dt)
 
  // movimentando os pontos da malha de superficie (interface e convex) 
  // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.X.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.X.Set(surfaceNode,aux);
+  real aux = surfMesh.X.Get(i)+(_vec.Get(i)*_dt);
+  surfMesh.X.Set(i,aux);
  }
 }
 
@@ -6660,11 +6659,10 @@ void Model3D::moveYPoints(clVector &_vec,real _dt)
 
  // movimentando os pontos da malha de superficie (interface e convex) 
  // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.Y.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.Y.Set(surfaceNode,aux);
+  real aux = surfMesh.Y.Get(i)+(_vec.Get(i)*_dt);
+  surfMesh.Y.Set(i,aux);
  }
 }
 
@@ -6679,11 +6677,10 @@ void Model3D::moveZPoints(clVector &_vec,real _dt)
 
  // movimentando os pontos da malha de superficie (interface e convex) 
  // com velocidade _vec e _dt
- for( int i=0;i<surface.Dim();i++ )
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  int surfaceNode = surface.Get(i);
-  real aux = surfMesh.Z.Get(surfaceNode)+(_vec.Get(surfaceNode)*_dt);
-  surfMesh.Z.Set(surfaceNode,aux);
+  real aux = surfMesh.Z.Get(i)+(_vec.Get(i)*_dt);
+  surfMesh.Z.Set(i,aux);
  }
 }
 
@@ -7238,7 +7235,7 @@ void Model3D::setNormalAndKappa()
   surfMesh.curvature.Set(node,pressure);
 
 //--------------------------------------------------
-//   if( node == 201 )
+//   if( node == 2 )
 //   {
 //    cout << " ---> " << node << " <---" << endl;
 //    cout << "x: " << surfMesh.X.Get(node) << endl;
@@ -7250,10 +7247,15 @@ void Model3D::setNormalAndKappa()
 //    cout << "xN: " << surfMesh.X.Get(node) + xNormalUnit << endl;
 //    cout << "yN: " << surfMesh.Y.Get(node) + yNormalUnit << endl;
 //    cout << "zN: " << surfMesh.Z.Get(node) + zNormalUnit << endl;
+//    cout << "pressure: " << pressure << endl;
+//    list<int> neighPoint = getNeighbourSurfacePoint(node);
+//    for (list<int>::iterator it=neighPoint.begin(); it!=neighPoint.end(); ++it)
+// 	cout << *it << " ";
+//    cout <<endl;
 //   }
 //-------------------------------------------------- 
  }
- setNormalAndKappa2D();
+ //setNormalAndKappa2D();
 } // fecha metodo setNormalAndKappa
 
 void Model3D::setCloser()
@@ -8391,13 +8393,13 @@ void Model3D::applyBubbleVolumeCorrection()
 	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
 	{
 	 aux = surfMesh.X.Get(surfaceNode) + 
-	       surfMesh.xNormal.Get(surfaceNode)*1E-02*errov;
+	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
 	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 X.Set(surfaceNode,aux);
 	 surfMesh.X.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Y.Get(surfaceNode) + 
-	       surfMesh.yNormal.Get(surfaceNode)*1E-02*errov;
+	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
 	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 Y.Set(surfaceNode,aux);
 	 surfMesh.Y.Set(surfaceNode,aux);
@@ -8989,8 +8991,10 @@ void Model3D::checkAngleBetweenPlanes()
 		<< resetColor() << v3elem2 
 		<< resetColor() << endl;
 
-   smoothPoint(v3elem1);
-   smoothPoint(v3elem2);
+   if( surfMesh.curvature.Get(v3elem1) > 0 )
+	smoothPoint(v3elem1);
+   if( surfMesh.curvature.Get(v3elem2) > 0 )
+	smoothPoint(v3elem2);
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    spp[vertID]++;
@@ -9323,7 +9327,7 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height4);
 
 	if( heaviside.Get(*vert) != 0.5 && 
-	 // height3 < 0.3*triEdge[elemID] )
+	  //minHeight < 0.3*triEdge[elemID] )
 	 minHeight < 0.8*triEdge[elemID] )
 	{
 	 mark3DPointForDeletion(*vert);
@@ -9340,18 +9344,23 @@ void Model3D::setNormalAndKappa2D()
  vector< list<int> > neighbourLinePoint;  // 
  neighbourLinePoint.clear();
 
- for (list<int>::iterator vert=boundaryVert.begin(); vert!=boundaryVert.end(); ++vert)
+ //for( int vert=0;vert<surfMesh.numVerts;vert++ )
+ for (list<int>::iterator vert=boundaryVert.begin(); 
+                          vert!=boundaryVert.end(); 
+						  ++vert)
  {
   // identifying which *vert is part of the interface
   list<int> auxList; 
+  //if( surfMesh.Marker.Get(*vert) == 0.5 )
   if( heaviside.Get(*vert) == 0.5 )
   {
-   // neighPoint = all neighbour vertices of *vert
-   list<int> neighPoint = getNeighbourSurfacePoint(*vert);
    auxList.push_back(*vert);
 
+   // neighPoint = all neighbour vertices of *vert
+   list<int> neighPoint = getNeighbourSurfacePoint(*vert);
    for (list<int>::iterator it=neighPoint.begin(); it!=neighPoint.end(); ++it)
-	if( heaviside.Get(*it) == 0.5 )
+	if( heaviside.Get(*it) == 0.5 && 
+	    (Z.Get(*it) == Z.Max() || Z.Get(*it) == Z.Min()) )
 	 auxList.push_back(*it);
 
    neighbourLinePoint.push_back( auxList );
@@ -9366,7 +9375,7 @@ void Model3D::setNormalAndKappa2D()
   *                         o v2
   * */
  int vectorSize = neighbourLinePoint.size();
- for( int i=0;i<vectorSize-1;i++ )
+ for( int i=0;i<vectorSize;i++ )
  {
   list<int> plist = neighbourLinePoint.at(i);
   list<int>::iterator lineVert=plist.begin(); 
@@ -9375,25 +9384,28 @@ void Model3D::setNormalAndKappa2D()
   int v1 = *lineVert;++lineVert; 
   int v2 = *lineVert;
 
-  cout << v0 << " " << v1 << " " << v2 << endl;
+//--------------------------------------------------
+//   cout << v0 << " " << v1 << " " << v2 << " "
+//        << surfMesh.curvature.Get(v0) << endl;
+//-------------------------------------------------- 
 
   real P0x = surfMesh.X.Get(v0);
   real P0y = surfMesh.Y.Get(v0);
-  //real P0z = surfMesh.Z.Get(v0);
+  real P0z = surfMesh.Z.Get(v0);
 
   real P1x = surfMesh.X.Get(v1);
   real P1y = surfMesh.Y.Get(v1);
-  //real P1z = surfMesh.Z.Get(v1);
+  real P1z = surfMesh.Z.Get(v1);
 
   real P2x = surfMesh.X.Get(v2);
   real P2y = surfMesh.Y.Get(v2);
-  //real P2z = surfMesh.Z.Get(v2);
+  real P2z = surfMesh.Z.Get(v2);
 
   // distance do ponto 0 ate ponto 1
-  real a = distance(P0x,P0y,P1x,P1y);
+  real a = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 
   // distance do ponto 0 ate ponto 2
-  real b = distance(P0x,P0y,P2x,P2y);
+  real b = distance(P0x,P0y,P0z,P2x,P2y,P2z);
 
   // vetors
   real x1Unit = (P1x-P0x)/a;
@@ -9408,65 +9420,196 @@ void Model3D::setNormalAndKappa2D()
   // 1/2 of length P0-P1 and P0-P2
   real sumLength = (a+b)/2.0;
 
-  real xNormalUnit = surfMesh.xNormal.Get(v0);
-  real yNormalUnit = surfMesh.yNormal.Get(v0);
+  /* 2D rotation of z = 90 degrees
+   * x' = x*cos(z) - y*sin(z)
+   * y' = x*sin(z) + y*cos(z)
+   * */
+
+  real xNormalUnit = +y1Unit*1 - y2Unit*1;
+  real yNormalUnit = -x1Unit*1 + x2Unit*1;
+
+  real len = vectorLength(xNormalUnit,yNormalUnit);
+
+  xNormalUnit = xNormalUnit/len;
+  yNormalUnit = yNormalUnit/len;
 
   // intensidade da forca resultante
   real force = sqrt( (fx*fx)+(fy*fy) );
 
   // aplicando o teste para saber o sentido correto de aplicacao da
   // pressao no noh.
-  if( (fx*xNormalUnit+fy*yNormalUnit) < 0.0 )
+  if( (fx*xNormalUnit+fy*yNormalUnit) > 0.0 )
    force = -force;
 
   real pressure = force/sumLength;
+//--------------------------------------------------
+//   cout << v0 << " " 
+//        << v1 << " "
+//        << v2 << " "
+// 	   << fx << " "
+// 	   << fy << " "
+// 	   << xNormalUnit << " "
+// 	   << yNormalUnit << " "
+// 	   << pressure << endl;
+//-------------------------------------------------- 
 
-  surfMesh.curvature.Set(v0,pressure);
+  surfMesh.curvature.Set(v0,fabs(pressure));
+  surfMesh.xNormal.Set(v0,xNormalUnit);
+  surfMesh.yNormal.Set(v0,yNormalUnit);
+  //surfMesh.zNormal.Set(v0,surfMesh.zNormal.Get(v0));
+  surfMesh.zNormal.Set(v0,0.0);
  }
-} // fecha metodo getNormalAndKappa
+} // fecha metodo getNormalAndKappa2D
 
 void Model3D::setWallAnnularBC()
 {    
- for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
-  real rMax = 0.5;
-
-  if( Z.Get(*it)==Z.Max() || Z.Get(*it)==Z.Min() ) 
+  real rMax = 1.0;
+  if( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) < rMax*rMax - 0.001 )
+   //--------------------------------------------------
+   //    if( X.Get(i) < 0.5 && X.Get(i) > -0.5 &&  
+   //        Y.Get(i) < 0.5 && Y.Get(i) > -0.5 ) 
+   //-------------------------------------------------- 
   {
-   // adding vapor phase in the wall boundary which is not set by
-   // default from the GMsh program
-   if( X.Get(*it)*X.Get(*it)+Y.Get(*it)*Y.Get(*it) < rMax*rMax - 0.001 ) 
+   if( surfMesh.Z.Get(i) == surfMesh.Z.Min() ) 
    {
-	heaviside.Set(*it,1.0);
-	vertIdRegion.Set(*it,1.0);
+   //idbcu.AddItem(i);
+   //idbcv.AddItem(i);
+   //idbcw.AddItem(i);
+
+   real aux = 0.0;
+   //uc.Set(i,aux);
+   //vc.Set(i,aux);
+
+   wc.Set(i,1.0);
+   }
+   //else if( heaviside.Get(i) != 0.5 )
+   else 
+   {
+	idbcp.AddItem(i);
+
+	pc.Set(i,0.0);
    }
   }
+  else 
+  {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
 
-  idbcu.AddItem(*it);
-  idbcv.AddItem(*it);
-  idbcw.AddItem(*it);
-
-  real aux = 0.0;
-  uc.Set(*it,aux);
-  vc.Set(*it,aux);
-  wc.Set(*it,aux);
+   real aux = 0.0;
+   uc.Set(i,aux);
+   vc.Set(i,aux);
+   wc.Set(i,aux);
+  }
  }
 }
 
 void Model3D::setWallInterfaceBC()
 {    
- for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ for( int i=0;i<surfMesh.numVerts;i++ )
  {
   real rMax = 0.5;
 
-  if( Z.Get(*it)==Z.Max() || Z.Get(*it)==Z.Min() ) 
+  if( surfMesh.Z.Get(i)==surfMesh.Z.Max() || surfMesh.Z.Get(i)==surfMesh.Z.Min() ) 
   {
    // adding vapor phase in the wall boundary which is not set by
    // default from the GMsh program
-   if( X.Get(*it)*X.Get(*it)+Y.Get(*it)*Y.Get(*it) < rMax*rMax - 0.001 ) 
+   if( surfMesh.X.Get(i)*surfMesh.X.Get(i)+
+	   surfMesh.Y.Get(i)*surfMesh.Y.Get(i) < rMax*rMax - 0.001 ) 
+//--------------------------------------------------
+//    if( surfMesh.X.Get(i) < 0.5 && surfMesh.X.Get(i) > -0.5 &&  
+//        surfMesh.Y.Get(i) < 0.5 && surfMesh.Y.Get(i) > -0.5 ) 
+//-------------------------------------------------- 
    {
-	heaviside.Set(*it,1.0);
-	vertIdRegion.Set(*it,1.0);
+	//surfMesh.vertIdRegion.Set(i,1.0);
+	//surfMesh.Marker.Set(i,1.0);
+   }
+  }
+ }
+}
+
+clVector Model3D::computeConvexRegionCentroid2D(real _zPlane)
+{
+ real sumX = 0;
+ real sumY = 0;
+ //real sumZ = 0;
+ int count = 0;
+ //for( int vert=0;vert<surfMesh.numVerts;vert++ )
+ for (list<int>::iterator vert=boundaryVert.begin(); 
+                          vert!=boundaryVert.end(); 
+						  ++vert)
+ {
+  if( heaviside.Get(*vert) == 0.5 && Z.Get(*vert) == _zPlane )
+  {
+   sumX += surfMesh.X.Get(*vert);
+   sumY += surfMesh.Y.Get(*vert);
+   //sumZ += surfMesh.Z.Get(*vert);
+   count++;
+  }
+ }
+
+ real xc = sumX/count;
+ real yc = sumY/count;
+ //real zc = sumZ/count;
+
+ clVector centroid(2);
+ centroid.Set(0,xc);
+ centroid.Set(1,yc);
+
+ return centroid;
+}
+
+void Model3D::checkLineOrientation()
+{
+ // surfMesh.elemIdRegion == 0 --> wall
+ // surfMesh.elemIdRegion == 1 --> bubble 1
+ // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
+ for (list<int>::iterator vert=boundaryVert.begin(); 
+                          vert!=boundaryVert.end(); 
+                          ++vert)
+ {
+  clVector centroid = computeConvexRegionCentroid2D(Z.Min());
+  real xc = centroid.Get(0);
+  real yc = centroid.Get(1);
+
+  for( int elem=0;elem<surfMesh.numElems;elem++ )
+  {
+   int v1 = surfMesh.IEN.Get(elem,0);
+   real p1x = surfMesh.X.Get(v1);
+   real p1y = surfMesh.Y.Get(v1);
+
+   int v2 = surfMesh.IEN.Get(elem,1);
+   real p2x = surfMesh.X.Get(v2);
+   real p2y = surfMesh.Y.Get(v2);
+
+
+   /*               
+	*           o ----- o 
+	*         v1         v2
+	* */
+
+   // reference vector
+   real vx = p1x-xc;
+   real vy = p1y-yc;
+
+   // line edge vector
+   real x1 = p1x-p2x;
+   real y1 = p1y-p2y;
+
+   // Normal
+   /* 2D rotation of z = 90 degrees
+	* x' = x*cos(z) - y*sin(z)
+	* y' = x*sin(z) + y*cos(z)
+	* */
+   real v1x = -y1*1;
+   real v1y = +x1*1;
+
+   if( dotProd(vx,vy,v1x,v1y) > 0.0 )
+   {
+	surfMesh.IEN.Set(elem,0,v2);
+	surfMesh.IEN.Set(elem,1,v1);
    }
   }
  }

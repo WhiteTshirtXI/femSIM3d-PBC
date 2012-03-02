@@ -26,12 +26,14 @@ int main(int argc, char **argv)
 
  // set each bubble length
  vector< real > triEdge;
- triEdge.resize(5);
- triEdge[0] = 0.2;   // wall
- triEdge[1] = 0.09;   // bubble 1 
- triEdge[2] = 0.09;   // bubble 1 
- triEdge[3] = 0.02;   // bubble 1 
- triEdge[4] = 0.02;   // bubble 1 
+ triEdge.resize(2);
+ triEdge[0] = 0.06;   // wall
+ triEdge[1] = 0.07;   // bubble 1 
+//--------------------------------------------------
+//  triEdge[2] = 0.09;   // bubble 1 
+//  triEdge[3] = 0.02;   // bubble 1 
+//  triEdge[4] = 0.02;   // bubble 1 
+//-------------------------------------------------- 
 
  /* 
   * bogdan's thesis 2010 - Film thickness
@@ -43,11 +45,11 @@ int main(int argc, char **argv)
   *
   * */
  int iter = 0;
- real Re = 100;
+ real Re = 576;
  real Sc = 1;
- real We = 10;
+ real We = 11;
  //real We = 0.1162;
- real Fr = 1.0;
+ real Fr = 10.1;
  real c1 = 0.0; // lagrangian
  real c2 = 1.0; // smooth vel
  real c3 = 1.0; // smooth - fujiwara
@@ -56,17 +58,17 @@ int main(int argc, char **argv)
 
  real cfl = 0.4;
 
- real sigma = 0.01;
+ real sigma = 0.159;
  //real sigma = 15.9;
  real mu_in = 0.01;
  real mu_out = 1.00;
  real rho_in = 0.01;
  real rho_out = 1.0;
 
- //string meshFile = "micro.msh";
+ string meshFile = "micro.msh";
  //string meshFile = "2micros.msh";
  //string meshFile = "3micros.msh";
- string meshFile = "4micros.msh";
+ //string meshFile = "4micros.msh";
 
  Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  //Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
@@ -146,7 +148,7 @@ int main(int argc, char **argv)
   m1.setTriEdge(triEdge);
   m1.mesh2Dto3D();
 
-  s1(m1);
+  //s1(m1);
 
   // load 3D mesh
   file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
@@ -347,11 +349,11 @@ int main(int argc, char **argv)
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
+  m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
-  m1.removePointsByInterfaceDistance();
+  //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
+  //m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   m1.smoothPointsByCurvature();

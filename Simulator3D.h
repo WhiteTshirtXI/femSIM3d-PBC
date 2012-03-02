@@ -202,6 +202,7 @@ class Simulator3D
   void getBubbleVelocity();
   void getBubbleVelocity(clVector _uVel,clVector _vVel,clVector _wVel);
   void setALEVelBC();
+  void setAnnularALEVelBC();
   void setLagrangianVelBC();
 
  private:

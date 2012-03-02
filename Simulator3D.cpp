@@ -1379,6 +1379,7 @@ void Simulator3D::stepALE()
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
+ //setAnnularALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
@@ -1390,6 +1391,7 @@ void Simulator3D::stepALEVel()
  //setInterfaceVel();
 
  setALEVelBC();
+ //setAnnularALEVelBC();
  for( int i=0;i<20;i++ )
  {
   // smoothing - velocidade
@@ -1435,6 +1437,7 @@ void Simulator3D::stepALEVel()
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
+ //setAnnularALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  stepSL();
@@ -2598,10 +2601,12 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
  clVector one(numVerts);one.SetAll(1.0);
  mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
+ real rMax = 1.0;
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)
-  mu.Set(*it,0.0); // zero viscosity at wall
+  //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
+   mu.Set(*it,0.0); // zero viscosity at wall
 
 
 //--------------------------------------------------
@@ -2630,10 +2635,12 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
  clVector one(numVerts);one.SetAll(1.0);
  rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
 
+ real rMax = 1.0;
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)
-  rho.Set(*it,0.0); // zero density at wall
+  //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
+   rho.Set(*it,0.0); // zero density at wall
 
 //--------------------------------------------------
 //  rho.Dim(numNodes);
@@ -3175,7 +3182,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> auxstr; // float
  for( int nb=0;nb<nRegions;nb++ )
   fileP >> triEdge[nb];
- 
+
 //--------------------------------------------------
 //  cout << dt << " " << cfl << " " << time << endl;
 //  cout << iter << endl;
@@ -3502,6 +3509,25 @@ void Simulator3D::setALEVelBC()
   uALE.Set(*it,0.0);
   vALE.Set(*it,0.0);
   wALE.Set(*it,0.0);
+ }
+}
+
+void Simulator3D::setAnnularALEVelBC()
+{
+ real rMax = 1.0;
+ for (list<int>::iterator it=boundaryVert->begin(); 
+                          it!=boundaryVert->end(); 
+						  ++it)
+ {
+  if( (Z->Get(*it) == Z->Max() || Z->Get(*it) == Z->Min() ) &&
+      (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) < rMax*rMax - 0.001) )
+   wALE.Set(*it,0.0);
+  else
+  {
+   uALE.Set(*it,0.0);
+   vALE.Set(*it,0.0);
+   wALE.Set(*it,0.0);
+  }
  }
 }
 

@@ -80,7 +80,7 @@ void Laplace3D::assemble()
 
 void Laplace3D::setCRHS()
 {
- vcc = McLumped * convC;
+ vcc = convC;
 }
 
 void Laplace3D::matMountC()
@@ -93,11 +93,9 @@ void Laplace3D::matMountC()
   * */
  for( int i=0;i<numVerts;i++ )
  {
-  real sumMc = Mc.SumLine(i);
-  McLumped.Set( i,sumMc );
-  invMcLumped.Set( i,1.0/sumMc );
+  McLumped.Set( i,-1.0);
  }
- matc = McLumped + (k * Kc);
+ matc = McLumped - (k * Kc);
 
 }
 
@@ -107,12 +105,15 @@ void Laplace3D::setBC()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
+  if( surfMesh->Marker.Get(i) < 0.5 )
+  {
    idbcc.AddItem(i);
 
-   real aux = triEdge[surfMesh->vertIdRegion.Get(i)]*0.8;
+   real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
    cc.Set(i,aux);
-
-   convC.Set(i,aux);
+  }
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  convC.Set(i,aux);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
@@ -131,13 +132,13 @@ void Laplace3D::setBC()
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.3);
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
 	convC.Set(i,aux);
    }
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)]*0.1;
+   real aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }

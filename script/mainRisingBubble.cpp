@@ -28,13 +28,13 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(2);
- triEdge[0] = 1.1; // wall
+ triEdge[0] = 0.9; // wall
  triEdge[1] = 0.07; // bubble
 
  int iter = 1;
- real Re = 6.53; // case 1
+ //real Re = 6.53; // case 1
  //real Re = 13.8487; // case 2
- //real Re = 32.78; // case 3
+ real Re = 32.78; // case 3
  //real Re = 134.625; // case 7
  //real Re = 203.729549896; // case 8 (extream)
  real Sc = 1;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.00; // lagrangian
  real c2 = 1.00; // smooth vel
- real c3 = 0.50; // smooth - fujiwara
+ real c3 = 1.00; // smooth - fujiwara
  real c4 = 0.1; // smooth surface - fujiwara
  real alpha = 1;
  real beta = 1;
@@ -51,9 +51,9 @@ int main(int argc, char **argv)
 
  real mu_in = 0.0000178;
 
- real mu_out = 2.73;
+ //real mu_out = 2.73;
  //real mu_out = 1.28; 
- //real mu_out = 0.54; // case 3
+ real mu_out = 0.54; // case 3
  //real mu_out = 0.1324; // case 7
  //real mu_out = 0.0875134907735; // extream
 
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
  }
  // Point's distribution
  Laplace3D d1(m1);
- d1.setk(0.1);
+ d1.setk(0.2);
  d1.init();
  d1.assemble();
  d1.setBC();
@@ -325,6 +325,7 @@ int main(int argc, char **argv)
   }
   Laplace3D d2(m1,d1);
   d2.assemble();
+  d2.setk(0.2);
   d2.setBC();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
@@ -342,7 +343,7 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
+  m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();

@@ -142,6 +142,8 @@ class Simulator3D
   void setMuSmooth(real _mu_in,real _mu_out);
   real getMu_in();
   real getMu_out();
+  real getMu_inAdimen();
+  real getMu_outAdimen();
   void setRho(real _rho_in);
   void setRho(real _rho_in,real _rho_out);
   void setRrho_in(real _rho_in);
@@ -150,6 +152,8 @@ class Simulator3D
   real getRho_in();
   void setRho_out(real _rho_out);
   real getRho_out();
+  real getRho_inAdimen();
+  real getRho_outAdimen();
   void setUAnt(clVector &_uAnt);
   void setCSol(clVector &_cSol);
   void setUSol(clVector &_uSol);

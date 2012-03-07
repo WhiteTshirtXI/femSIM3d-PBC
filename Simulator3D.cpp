@@ -230,8 +230,12 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  g     = _s.getGrav();
  mu_in  = _s.getMu_in();
  mu_out  = _s.getMu_out();
+ mu_inAdimen  = _s.getMu_inAdimen();
+ mu_outAdimen  = _s.getMu_outAdimen();
  rho_in = _s.getRho_in();
  rho_out = _s.getRho_out();
+ rho_inAdimen = _s.getRho_inAdimen();
+ rho_outAdimen = _s.getRho_outAdimen();
  iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
@@ -1560,31 +1564,61 @@ void Simulator3D::setGravity(const char* _direction)
  clVector gy(numNodes);
  clVector gz(numNodes);
 
- if( strcmp( _direction,"x") == 0 || strcmp( _direction,"X") == 0 ) 
+ if( strcmp( _direction,"x") == 0 || 
+     strcmp( _direction,"+x") == 0 || 
+     strcmp( _direction,"X") == 0 || 
+     strcmp( _direction,"+X") == 0 ) 
  {
   gx.SetAll(gAdimen);
   gy.SetAll(0.0);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"y") == 0 || strcmp( _direction,"Y") == 0 ) 
+ if( strcmp( _direction,"y") == 0 || 
+     strcmp( _direction,"+y") == 0 || 
+     strcmp( _direction,"Y") == 0 || 
+     strcmp( _direction,"+Y") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(gAdimen);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"z") == 0 || strcmp( _direction,"Z") == 0 ) 
+ if( strcmp( _direction,"z") == 0 || 
+     strcmp( _direction,"+z") == 0 || 
+     strcmp( _direction,"Z") == 0 ||
+     strcmp( _direction,"+Z") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(0.0);
   gz.SetAll(gAdimen);
  }
+ if( strcmp( _direction,"-x") == 0 || 
+     strcmp( _direction,"-X") == 0 ) 
+ {
+  gx.SetAll(-1.0*gAdimen);
+  gy.SetAll(0.0);
+  gz.SetAll(0.0);
+ }
+ if( strcmp( _direction,"-y") == 0 || 
+     strcmp( _direction,"-Y") == 0 ) 
+ {
+  gx.SetAll(0.0);
+  gy.SetAll(-1.0*gAdimen);
+  gz.SetAll(0.0);
+ }
+ if( strcmp( _direction,"-z") == 0 || 
+     strcmp( _direction,"-Z") == 0 ) 
+ {
+  gx.SetAll(0.0);
+  gy.SetAll(0.0);
+  gz.SetAll(-1.0*gAdimen);
+ }
 
- clVector gUnit(0);
- gUnit.Append(gx);
- gUnit.Append(gy);
- gUnit.Append(gz);
+ gravity.Dim(0);
+ gravity.Append(gx);
+ gravity.Append(gy);
+ gravity.Append(gz);
 
- gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
+ //gravity = -( 1.0/(Fr*Fr) )*( Mrho*gUnit );
  //gravity = -( 1.0/(Fr*Fr) )*( (Mrho - M)*gUnit );
 
  // update RHS
@@ -1627,7 +1661,8 @@ void Simulator3D::setInterfaceGeo()
  m->setKappaSurface();
  kappa = *m->getCurvature();
 
- fint = (1.0/We) * ( kappa*(G*(*heaviside)) );
+ fint = kappa*(G*(*heaviside));
+ //fint = (1.0/We) * ( kappa*(G*(*heaviside)) );
  //fint = (1.0/We) * ( kappa*(GTilde*(*heaviside)) );
  
  //va = va + fint;
@@ -1758,15 +1793,16 @@ void Simulator3D::unCoupled()
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + 
-        dt*invMLumped*(fint.MultVec(ip)) + 
-		dt*invMrhoLumped*(gravity.MultVec(ip));
+        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
+
  }
  else // DROPLET
  {
   cout << setw(70) << "DROPLET SIMULATION" << endl;
   uvw = uTilde + 
-        invA*(fint.MultVec(ip)) + 
-		invA*(gravity.MultVec(ip));
+        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
  }
  
  //uvw = uTilde;
@@ -1802,9 +1838,11 @@ void Simulator3D::unCoupledC()
  b1cTilde = b1c + vcIp;
 
  // resolve sitema ATilde uTilde = b
+ cout << endl;
  cout << " --------> solving scalar ----------- " << endl;
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
+ cout << endl;
 
  // comentar em caso de utilizacao de setInterface()
  // pois cSol nao pode ser atualizado
@@ -2046,15 +2084,28 @@ void Simulator3D::setUnCoupledCBC()
  * */
 void Simulator3D::setDtSurfaceTension()
 {
+ if( rho_in >= rho_out )
+  rho_0 = rho_in; 
+ else
+  rho_0 = rho_out; 
+
+ rho_inAdimen = rho_in/rho_0; 
+ rho_outAdimen = rho_out/rho_0;
+
  // We assume that the minEdgeTri is ALWAYS lied on the surface.
  real minEdgeTri = m->getMinEdgeTri();
 
  // OBS.: minEdgeTri is also considering the wall elements and that is
  // wrong for the dtSurfaceTension. Should make a loop in all the
  // surface elements and check the smaller edge length.
- dtSurfaceTension = sqrt( ( 0.5*(rho_in+rho_out)*
+//--------------------------------------------------
+//  dtSurfaceTension = sqrt( ( 0.5*(rho_in+rho_out)*
+//                     minEdgeTri*minEdgeTri*minEdgeTri)/
+//                     (2*3.141592*sigma) );
+//-------------------------------------------------- 
+ dtSurfaceTension = sqrt( ( We*0.5*(rho_inAdimen+rho_outAdimen)*
                     minEdgeTri*minEdgeTri*minEdgeTri)/
-                    (2*3.141592*sigma) );
+                    (2*3.141592) );
 }
 
 /*
@@ -2766,6 +2817,10 @@ real Simulator3D::getMu_in(){return mu_in;}
 real Simulator3D::getMu_out(){return mu_out;}
 real Simulator3D::getRho_in(){return rho_in;}
 real Simulator3D::getRho_out(){return rho_out;}
+real Simulator3D::getMu_inAdimen(){return mu_inAdimen;}
+real Simulator3D::getMu_outAdimen(){return mu_outAdimen;}
+real Simulator3D::getRho_inAdimen(){return rho_inAdimen;}
+real Simulator3D::getRho_outAdimen(){return rho_outAdimen;}
 real Simulator3D::getTime(){return time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
@@ -3060,6 +3115,10 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  mu_out  = _s.getMu_out();
  rho_in = _s.getRho_in();
  rho_out = _s.getRho_out();
+ mu_inAdimen  = _s.getMu_inAdimen();
+ mu_outAdimen  = _s.getMu_outAdimen();
+ rho_inAdimen = _s.getRho_inAdimen();
+ rho_outAdimen = _s.getRho_outAdimen();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );

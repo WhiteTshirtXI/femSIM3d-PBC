@@ -83,7 +83,11 @@ class Model3D
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
   void surfaceTriangulatorEarClipping(int _v);
-  void surfaceTriangulatorQualityEarClipping(int _v);
+  void surfaceTriangulatorEarClipping(int _v,
+	                                  list<int> _list);
+  void surfaceTriangulatorEarClipping(int _v,
+	                                  list<int> _list,
+	                                  const char* _mode);
   void deleteSurfacePoint(int _v);
   void markSurfElemForDeletion(int _elem);
   void deleteSurfaceElements();

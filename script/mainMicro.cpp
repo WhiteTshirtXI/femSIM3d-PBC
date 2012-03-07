@@ -12,7 +12,7 @@
 #include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
-#include "Laplace3D.h"
+#include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -28,7 +28,7 @@ int main(int argc, char **argv)
  vector< real > triEdge;
  triEdge.resize(2);
  triEdge[0] = 0.06;   // wall
- triEdge[1] = 0.07;   // bubble 1 
+ triEdge[1] = 0.08;   // bubble 1 
 //--------------------------------------------------
 //  triEdge[2] = 0.09;   // bubble 1 
 //  triEdge[3] = 0.02;   // bubble 1 
@@ -45,9 +45,9 @@ int main(int argc, char **argv)
   *
   * */
  int iter = 0;
- real Re = 576;
+ real Re = 100;
  real Sc = 1;
- real We = 11;
+ real We = 10;
  //real We = 0.1162;
  real Fr = 10.1;
  real c1 = 0.0; // lagrangian
@@ -109,7 +109,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -165,7 +164,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -206,7 +204,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setMicroWallBC();
 
   s1(m1);
@@ -247,7 +244,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -264,11 +260,11 @@ int main(int argc, char **argv)
   return 0;
  }
  // Point's distribution
- Laplace3D d1(m1);
- d1.setk(0.7);
- d1.init();
+ Helmholtz3D d1(m1);
+ d1.setBC();
+ d1.initMicro();
  d1.assemble();
- d1.setMicroBC();
+ d1.setk(0.2);
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -328,10 +324,10 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
+  Helmholtz3D d2(m1,d1);
+  d2.setBC();
+  d2.initMicro();
   d2.assemble();
-  d2.setk(0.7);
-  d2.setMicroBC();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -348,12 +344,12 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
+  m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.remove3dMeshPointsByHeight();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   m1.smoothPointsByCurvature();

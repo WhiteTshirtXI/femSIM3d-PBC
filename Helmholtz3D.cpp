@@ -1,15 +1,15 @@
 // =================================================================== //
-// this is file Laplace3D.cpp, created at 21-Sep-2011                  //
+// this is file Helmholtz3D.cpp, created at 21-Sep-2011                  //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
 
 
-#include "Laplace3D.h"
+#include "Helmholtz3D.h"
 
-Laplace3D::Laplace3D(){}
+Helmholtz3D::Helmholtz3D(){}
 
-Laplace3D::Laplace3D( Model3D &_m )  
+Helmholtz3D::Helmholtz3D( Model3D &_m )  
 {
  getModel3DAttrib(_m);
 
@@ -20,7 +20,7 @@ Laplace3D::Laplace3D( Model3D &_m )
  k = 0.1;
 }
 
-Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )  
+Helmholtz3D::Helmholtz3D( Model3D &_m,Helmholtz3D &_d )  
 {
  getModel3DAttrib(_m);
 
@@ -32,12 +32,182 @@ Laplace3D::Laplace3D( Model3D &_m,Laplace3D &_d )
  cSolOld = *_m.getEdgeSize();
 }
 
-void Laplace3D::init()
+void Helmholtz3D::init()
 {
  cSolOld.CopyFrom( 0,cc );
 }
 
-void Laplace3D::assemble()
+void Helmholtz3D::initRisingBubble()
+{
+ init();
+
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  convC.Set(i,aux);
+ }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 1.0*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
+void Helmholtz3D::initMicro()
+{
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  convC.Set(i,aux);
+ }
+
+ //real xMid = (X->Min()+X->Max())*0.5;
+ real yMid = (Y->Min()+Y->Max())*0.5;
+ real zMid = (Z->Min()+Z->Max())*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real epslocal = 0.1*diameter;
+ clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 1.0*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+	if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
+        (Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
+		(Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
+	{
+	 real aux = triEdge[0]*10;
+	 convC.Set(i,aux);
+	}
+	else
+	{
+	 real aux = triEdge[0];
+	 convC.Set(i,aux);
+	}
+   }
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
+void Helmholtz3D::initSquareChannel()
+{
+ init();
+
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  convC.Set(i,aux);
+ }
+
+ //real xMid = (X->Min()+X->Max())*0.5;
+ real yMid = (Y->Min()+Y->Max())*0.5;
+ real zMid = (Z->Min()+Z->Max())*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
+ //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
+ real epslocal = 0.1*diameter;
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
+	(Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
+	(Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
+  {
+   real aux = triEdge[0]*10;
+   convC.Set(i,aux);
+  }
+  else
+  {
+   real aux = triEdge[0];
+   convC.Set(i,aux);
+  }
+ }
+}
+
+void Helmholtz3D::init2Bubbles()
+{
+ init();
+
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  convC.Set(i,aux);
+ }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   real factor = 1.5*triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 1.0*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
+void Helmholtz3D::assemble()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
@@ -78,12 +248,12 @@ void Laplace3D::assemble()
  
 }; // fecha metodo ASSEMBLENUC
 
-void Laplace3D::setCRHS()
+void Helmholtz3D::setCRHS()
 {
  vcc = convC;
 }
 
-void Laplace3D::matMountC()
+void Helmholtz3D::matMountC()
 {
  /* k=5;       /\     more diffusion
   * k=4;      /||\
@@ -99,10 +269,9 @@ void Laplace3D::matMountC()
 
 }
 
-void Laplace3D::setBC()
+void Helmholtz3D::setBC()
 {
  cc.Dim(numVerts);
- convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->Marker.Get(i) < 0.5 )
@@ -112,84 +281,10 @@ void Laplace3D::setBC()
    real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
    cc.Set(i,aux);
   }
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  convC.Set(i,aux);
- }
-
- clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
- for( int i=surfMesh->numVerts;i<numVerts;i++ )
- {
-  real radius = 0.5; // sphere radius
-  // outside mesh
-  if( heaviside->Get(i) < 0.5 ) 
-  {
-   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 1.0*radius )
-   {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
-	convC.Set(i,aux);
-   }
-   else
-   {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
-	convC.Set(i,aux);
-   }
-  }
-  else                         // inside mesh
-  {
-   real aux = triEdge[vertIdRegion->Get(i)];
-   convC.Set(i,aux);
-  }
  }
 }
 
-void Laplace3D::setMicroBC()
-{
- cc.Dim(numVerts);
- convC.Dim(numVerts);
- convC.SetAll(triEdge[0]);
- for( int i=0;i<surfMesh->numVerts;i++ )
- {
-  if( surfMesh->Marker.Get(i) < 0.5 )
-//--------------------------------------------------
-//   if( surfMesh->Y.Get(i) == surfMesh->Y.Max() || 
-// 	  surfMesh->Y.Get(i) == surfMesh->Y.Min() || 
-//       surfMesh->Z.Get(i) == surfMesh->Z.Max() || 
-// 	  surfMesh->Z.Get(i) == surfMesh->Z.Min() )
-//-------------------------------------------------- 
-  {
-  idbcc.AddItem(i);
-
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  cc.Set(i,aux);
-
-  convC.Set(i,aux);
-
-  }
- }
-
- //real xMid = (X->Min()+X->Max())*0.5;
- real yMid = (Y->Min()+Y->Max())*0.5;
- real zMid = (Z->Min()+Z->Max())*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
- real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- real epslocal = 0.1*diameter;
- for( int i=surfMesh->numVerts;i<numVerts;i++ )
- {
-  //if( interfaceDistance->Get(i) < 0.005*diameter)
-  if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
-      (Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
-      (Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
-  {
-   real aux = triEdge[0]*10;
-   convC.Set(i,aux);
-  }
- }
-}
-
-void Laplace3D::setUnCoupledCBC()
+void Helmholtz3D::setUnCoupledCBC()
 {
  int nbc,i,j;
  b1c.Dim(numVerts,0);  // zerando o vetore b1c
@@ -210,7 +305,7 @@ void Laplace3D::setUnCoupledCBC()
 
 } // fecha metodo setUnCoupledCBC 
 
-void Laplace3D::unCoupledC()
+void Helmholtz3D::unCoupledC()
 {
  clVector vcIp(numVerts);
  clVector b1cTilde;
@@ -228,7 +323,7 @@ void Laplace3D::unCoupledC()
  cSolOld = cSol;
 }
 
-void Laplace3D::getModel3DAttrib(Model3D &_m)
+void Helmholtz3D::getModel3DAttrib(Model3D &_m)
 {
  m = &_m;
 
@@ -250,7 +345,7 @@ void Laplace3D::getModel3DAttrib(Model3D &_m)
  edgeSize = m->getEdgeSize();
 }
 
-void Laplace3D::allocateMemoryToAttrib()
+void Helmholtz3D::allocateMemoryToAttrib()
 {
  // assembly matrix
  Kc.Dim( numVerts,numVerts );
@@ -281,11 +376,11 @@ void Laplace3D::allocateMemoryToAttrib()
  cSolOld.Dim( numVerts );
 }
 
-clVector* Laplace3D::getCSol(){return &cSol;}
-void Laplace3D::setSolver(Solver *s){solver = s;}
-void Laplace3D::setModel3DEdgeSize(){ m->setEdgeSize(cSol); }
+clVector* Helmholtz3D::getCSol(){return &cSol;}
+void Helmholtz3D::setSolver(Solver *s){solver = s;}
+void Helmholtz3D::setModel3DEdgeSize(){ m->setEdgeSize(cSol); }
 
-void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
+void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
@@ -393,7 +488,7 @@ void Laplace3D::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkFile.close();
 }
 
-void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _iter )
+void Helmholtz3D::saveChordalEdge( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
@@ -462,6 +557,6 @@ void Laplace3D::saveChordalEdge( const char* _dir,const char* _filename, int _it
 
 } // fecha metodo chordalEdge
 
-void Laplace3D::setk(real _k){k = _k;}
-real Laplace3D::getk(){return k;}
+void Helmholtz3D::setk(real _k){k = _k;}
+real Helmholtz3D::getk(){return k;}
 

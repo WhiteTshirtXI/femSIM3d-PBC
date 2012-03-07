@@ -2422,10 +2422,10 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
    _file << triEdge[nb] << " ";
   _file << endl;
  }
- else
+ else 
  {
   _file << "CHARACTERISTICLENGTH 1 1 float" << endl;
-  _file << triEdge[0] << endl;
+  _file << 0 << endl;
  }
  _file << endl;
 }
@@ -2852,8 +2852,10 @@ void InOut::printMeshReport()
  for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
   cout << "      surface (" << nb << ")" << endl;
-  cout << "       |radius (initRadius):                          "
-       << surfaceRadius[nb] << " (" << initSurfaceRadius[nb] << ")" << endl;
+//--------------------------------------------------
+//   cout << "       |radius (initRadius):                          "
+//        << surfaceRadius[nb] << " (" << initSurfaceRadius[nb] << ")" << endl;
+//-------------------------------------------------- 
   cout << "       |area (initArea):                              "
        << surfaceArea[nb] << " (" << initSurfaceArea[nb] << ")" << endl;
   cout << "       |volume (initVolume):                          "

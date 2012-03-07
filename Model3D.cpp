@@ -1297,8 +1297,9 @@ void Model3D::removePointsByCurvature()
 //    // after the deletion process it's mandatory to create new elements
 //    // to fill the space left by the deleting process
 //    //surfaceTriangulator(surfaceNode);
-//    surfaceTriangulatorEarClipping(surfaceNode);
-//    //surfaceTriangulatorQualityEarClipping(surfaceNode);
+//    surfaceTriangulatorEarClipping(surfaceNode,
+//                                   neighbourPoint.at(surfaceNode),
+//                                   "no");
 // 
 //    // deleting X,Y and Z coordinate; deleting the point maker funcition
 //    deleteSurfacePoint(surfaceNode);
@@ -1445,22 +1446,35 @@ void Model3D::surfaceTriangulator(int _v)
  *      tri4 = 0 2 4
  *
  * */
-void Model3D::surfaceTriangulatorEarClipping(int _v)
+void Model3D::surfaceTriangulatorEarClipping(int _v,
+                                             list<int> _list,
+											 const char* _mode)
 {
  int vert1,vert2,vert3;
- int listSize = neighbourPoint.at(_v).size();
+ list<int> myList = _list;
+ int listSize = myList.size();
 
  // listSize = number of points of polyhedron + 1 (to close the
  // polyhedron)
  // ex.: 0 1 2 3 4 5 0 (closed polyhedron)
  while( listSize>4 )
  {
-  list<int> plist = neighbourPoint.at(_v);
-  list<int>::iterator point=plist.begin();
-  vert1 = *point;++point;
-  vert2 = *point;++point;
-  vert3 = *point;
-  neighbourPoint.at(_v).remove(vert2); // removing 2nd vertice
+  if( strcmp( _mode,"quality" ) == 0 )
+  {
+   clVector bestTri = triangleQuality(_v);
+   vert1 = bestTri.Get(0);
+   vert2 = bestTri.Get(1);
+   vert3 = bestTri.Get(2);
+  }
+  else
+  {
+   list<int>::iterator point=myList.begin();
+   vert1 = *point;++point;
+   vert2 = *point;++point;
+   vert3 = *point;
+  }
+
+  myList.remove(vert2); // removing 2nd vertice
   listSize--;
 
   // adding new element
@@ -1477,11 +1491,9 @@ void Model3D::surfaceTriangulatorEarClipping(int _v)
   mele = plist2.end();
 
   surfMesh.numElems++;
-
  }
  // adding last remaning element
- list<int> plist = neighbourPoint.at(_v);
- list<int>::iterator point=plist.begin();
+ list<int>::iterator point=myList.begin();
  vert1 = *point;++point;
  vert2 = *point;++point;
  vert3 = *point;
@@ -1560,69 +1572,6 @@ clVector Model3D::triangleQuality(int _v)
  }
 
  return bestTri;
-}
-
-/*  Triangulator for the interface points after the deletion process.
- *  This method works with ear methodology, i.e., using a sort numbered
- *  polyhedron and making a triangulation considering the point n and
- *  the nexts neighbours n+1 and n+2, then removing from the polyhedron
- *  list the middle point n+1, therefore reducing the polyhedron to its
- *  next smaller shape.
- *  After the 1st triangulation by ear methodoly, the IEN mesh matrix
- *  needs to be updated
- *  */
-void Model3D::surfaceTriangulatorQualityEarClipping(int _v)
-{
- int vert1,vert2,vert3;
- int listSize = neighbourPoint.at(_v).size();
-
- while( listSize>4 )
- {
-  clVector bestTri = triangleQuality(_v);
-
-  vert1 = bestTri.Get(0);
-  vert2 = bestTri.Get(1);
-  vert3 = bestTri.Get(2);
-  //cout << "chosen: " << vert1 << " " << vert2 << " " << vert3 << endl;
-  neighbourPoint.at(_v).remove(vert2); // removing 2nd vertice
-  listSize--;
-
-  // adding new element
-  surfMesh.IEN.AddRow();
-  int elem = surfMesh.IEN.DimI()-1;
-  surfMesh.IEN.Set(elem,0,vert1);
-  surfMesh.IEN.Set(elem,1,vert2);
-  surfMesh.IEN.Set(elem,2,vert3);
-
-  // add new elemIdRegion
-  list<int> plist2 = neighbourSurfaceElem.at(_v);
-  list<int>::iterator mele=plist2.begin();
-  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
-  mele = plist2.end();
-
-  surfMesh.numElems++;
- }
- // adding last remaning element
- list<int> plist = neighbourPoint.at(_v);
- list<int>::iterator point=plist.begin();
- vert1 = *point;++point;
- vert2 = *point;++point;
- vert3 = *point;
- //cout << "chosen: " << vert1 << " " << vert2 << " " << vert3 << endl;
- // adding new element
- surfMesh.IEN.AddRow();
- int elem = surfMesh.IEN.DimI()-1;
- surfMesh.IEN.Set(elem,0,vert1);
- surfMesh.IEN.Set(elem,1,vert2);
- surfMesh.IEN.Set(elem,2,vert3);
-
-  // add new elemIdRegion
- list<int> plist2 = neighbourSurfaceElem.at(_v);
- list<int>::iterator mele=plist2.begin();
- surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
- mele = plist2.end();
-
- surfMesh.numElems++;
 }
 
 void Model3D::deleteSurfacePoint(int _v)
@@ -2620,8 +2569,9 @@ void Model3D::removeSurfacePoint(int _node)
  // after the deletion process it's mandatory to create new elements
  // to fill the space left by the deleting process
  //surfaceTriangulator(_node);
- surfaceTriangulatorEarClipping(_node);
- //surfaceTriangulatorQualityEarClipping(_node);
+ surfaceTriangulatorEarClipping(_node,
+                                neighbourPoint.at(_node),
+								"no");
 
  // deleting X,Y and Z coordinate; deleting the point maker funcition
  deleteSurfacePoint(_node);
@@ -2965,7 +2915,7 @@ void Model3D::remove3dMeshPointsByDistance()
 
 /*
  * Insert point(s) according to the solution of the diffusion equation
- * given by the class Laplace3D.
+ * given by the class Helmholtz3D.
  *
  * */
 void Model3D::insert3dMeshPointsByDiffusion()
@@ -3007,7 +2957,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   // edgeSize is the result of \nabla^2 edge = 0
   if( length > 3.0*maxEdge && 
 	  //ipd[vertID] < 200 &&
-	  minVert > surfMesh.numVerts )
+	  maxVert > surfMesh.numVerts )
   {
    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
@@ -3040,7 +2990,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
 
 /*
  * Remove point(s) according to the solution of the diffusion equation
- * given by the class Laplace3D.
+ * given by the class Helmholtz3D.
  *
  * */
 void Model3D::remove3dMeshPointsByDiffusion()
@@ -6435,7 +6385,7 @@ void Model3D::setSurfaceConfig()
 
  setSurfaceVolume();
  setSurfaceArea();
- setSurfaceRadius();
+ //setSurfaceRadius();
 
 }
 
@@ -9050,25 +9000,27 @@ void Model3D::removePointByNeighbourCheck()
    opersurf[vertID]++;
   }
 
-  if( elemListSize == 4 && surfMesh.curvature.Get(i) > 50 )
-  {
-   removeSurfacePoint(i);
-
-   cout << "------------- " << color(none,magenta,black) 
-	    << "removing low-quality triangle with curvature (" 
-		<< resetColor() << surfMesh.curvature.Get(i)
-		<< color(none,magenta,black) 
-		<< ") at (" 
-		<< resetColor()
-		<< surfMesh.vertIdRegion.Get(i)
-		<< color(none,magenta,black) 
-		<< "): "
-		 << resetColor() << i << endl;
-
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
-   rspn[vertID]++;
-   opersurf[vertID]++;
-  }
+//--------------------------------------------------
+//   if( elemListSize == 4 && surfMesh.curvature.Get(i) > 50 )
+//   {
+//    removeSurfacePoint(i);
+// 
+//    cout << "------------- " << color(none,magenta,black) 
+// 	    << "removing low-quality triangle with curvature (" 
+// 		<< resetColor() << surfMesh.curvature.Get(i)
+// 		<< color(none,magenta,black) 
+// 		<< ") at (" 
+// 		<< resetColor()
+// 		<< surfMesh.vertIdRegion.Get(i)
+// 		<< color(none,magenta,black) 
+// 		<< "): "
+// 		 << resetColor() << i << endl;
+// 
+//    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+//    rspn[vertID]++;
+//    opersurf[vertID]++;
+//   }
+//-------------------------------------------------- 
  }
 }
 
@@ -9358,7 +9310,7 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.3*triEdge[vertID] )
+	if( minHeight < 0.4*triEdge[vertID] )
 	{
 	 mark3DPointForDeletion(*vert);
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;
@@ -9644,3 +9596,4 @@ void Model3D::checkLineOrientation()
   }
  }
 }
+

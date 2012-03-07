@@ -12,7 +12,7 @@
 #include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
-#include "Laplace3D.h"
+#include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 0.4;
+ real cfl = 0.8;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -103,7 +103,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -160,7 +159,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -201,7 +199,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);
@@ -242,7 +239,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
 
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
@@ -259,11 +255,11 @@ int main(int argc, char **argv)
   return 0;
  }
  // Point's distribution
- Laplace3D d1(m1);
- d1.setk(0.2);
- d1.init();
- d1.assemble();
+ Helmholtz3D d1(m1);
  d1.setBC();
+ d1.initRisingBubble();
+ d1.assemble();
+ d1.setk(0.2);
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -299,7 +295,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("Z");
+   s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -323,10 +319,11 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
+  Helmholtz3D d2(m1,d1);
+  d2.setBC();
+  d2.initRisingBubble();
   d2.assemble();
   d2.setk(0.2);
-  d2.setBC();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -343,7 +340,7 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion();
+  //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -363,7 +360,7 @@ int main(int argc, char **argv)
   m1.flipTriangleEdge();
 
   m1.removePointByNeighbourCheck();
-  m1.checkAngleBetweenPlanes();
+  //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

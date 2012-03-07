@@ -12,7 +12,7 @@
 #include "Simulator3D.h"
 #include "TElement.h"
 #include "InOut.h"
-#include "Laplace3D.h"
+#include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 
@@ -75,6 +75,8 @@ int main(int argc, char **argv)
  m1.setVertNeighbour();
  m1.setInOutVert();
  m1.setMapEdge();
+ m1.setInitSurfaceVolume();
+ m1.setInitSurfaceArea();
  m1.setStepBC();
  m1.setCStepBC();
 
@@ -113,11 +115,11 @@ int main(int argc, char **argv)
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
  }
  // Point's distribution
- Laplace3D d1(m1);
- d1.setk(0.7);
- d1.init();
- d1.assemble();
+ Helmholtz3D d1(m1);
  d1.setBC();
+ d1.initSquareChannel();
+ d1.assemble();
+ d1.setk(0.7);
  d1.matMountC();
  d1.setUnCoupledCBC(); 
  d1.setCRHS();
@@ -173,9 +175,10 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Laplace3D d2(m1,d1);
-  d2.assemble();
+  Helmholtz3D d2(m1,d1);
   d2.setBC();
+  d2.initSquareChannel();
+  d2.assemble();
   d2.matMountC();
   d2.setUnCoupledCBC(); 
   d2.setCRHS();
@@ -206,6 +209,8 @@ int main(int argc, char **argv)
   m1.setVertNeighbour();
   m1.setInOutVert();
   m1.setMapEdge();
+  m1.setSurfaceVolume();
+  m1.setSurfaceArea();
   m1.setStepBC();
   m1.setCStepBC();
 

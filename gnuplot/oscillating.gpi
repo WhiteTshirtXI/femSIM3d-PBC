@@ -26,9 +26,9 @@ fileObjAnalytic = "../../validations/osc3d"
 f(x) = 1.01
 g(x) = 0.99
 
-plot fileObj1 using 1:($4-0.0004) every 18 title 'coarse grid' \
+plot fileObj1 using 1:($4-0.0004) every 1 title 'invA' \
      with points ls 2,\
-     fileObj2 using 1:($4-0.0004) every 18 title 'refined grid'  \
-	 with points ls 3,\
+     fileObj2 using 1:($4-0.0004) every 1 title 'new' \
+     with points ls 4,\
  	 fileObjAnalytic using 1:2 title 'analytic' with lines ls 1,\
 	 f(x) notitle 'y=1.01' linestyle 1,g(x) notitle 'y=0.99' linestyle 1

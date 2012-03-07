@@ -89,7 +89,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setWallBC();
   m1.setSphereToEllipsoid(1.01);
 
@@ -148,7 +147,6 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setInitSurfaceRadius();
   m1.setWallBC();
 
   s1(m1);

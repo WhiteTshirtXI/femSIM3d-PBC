@@ -45,11 +45,11 @@ set key box linestyle 7
 
 g=9.81
 D=0.0261
-mu=2.7222
+#mu=2.7222
 #mu=2.0370
 #mu=1.2771
 #mu=0.7728
-#mu=0.5396
+mu=0.5396
 #mu=0.2857
 #mu=0.1324
 #mu=0.0875
@@ -68,5 +68,7 @@ if (mu==0.1324) v_exp(x)=0.35330;
 if (mu==0.0875) v_exp(x)=0.37504;
 
 fileObj = "../dat/volume.dat"
+fileObj1 = "../../bhaga5/dat/volume.dat"
 plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar' with lines,\
+     fileObj1 using 1:($5*sqrt(g*D)) title 'bhaga5' with lines,\
      v_exp(x)

@@ -53,6 +53,8 @@ Model3D::Model3D(const Model3D &_mRight)
   minArea = _mRight.minArea;
   idMaxArea = _mRight.idMaxArea;
   idMinArea = _mRight.idMinArea;
+  numSurfElems = _mRight.numSurfElems;
+  numSurfVerts = _mRight.numSurfVerts;
 
   ip = _mRight.ip;                    
   ipd = _mRight.ipd;                    
@@ -3817,11 +3819,13 @@ void Model3D::meshStats()
   maxArea[nb] = 1.0E-20; // initial value
   idMinArea[nb] = 0;
   idMaxArea[nb] = 0;
+  numSurfElems[nb] = 0;
 
   for( int i=0;i<surfMesh.numElems;i++ )
   {
    if( surfMesh.elemIdRegion.Get(i) == nb )
    {
+	numSurfElems[nb]++;
 	real aux = fabs(getAreaElem(i));
 
 	if( aux < minArea[nb] ) 
@@ -6720,6 +6724,8 @@ vector<real> Model3D::getMinArea(){return minArea;}
 vector<real> Model3D::getMaxArea(){return maxArea;}
 vector<int> Model3D::getIdMinArea(){return idMinArea;}
 vector<int> Model3D::getIdMaxArea(){return idMaxArea;}
+vector<int> Model3D::getNumSurfElems(){return numSurfElems;}
+vector<int> Model3D::getNumSurfVerts(){return numSurfVerts;}
 vector<int> Model3D::getOPER(){return oper;}
 vector<int> Model3D::getOPERSURF(){return opersurf;}
 vector<int> Model3D::getIP(){return ip;}
@@ -6765,6 +6771,8 @@ void Model3D::operator=(Model3D &_mRight)
   maxArea = _mRight.maxArea;
   minArea = _mRight.minArea;
   idMaxArea = _mRight.idMaxArea;
+  numSurfElems = _mRight.numSurfElems;
+  numSurfVerts = _mRight.numSurfVerts;
   idMinArea = _mRight.idMinArea;
 
   oper = _mRight.oper;                    
@@ -9200,6 +9208,8 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  minArea.resize(numSurface);
  idMaxArea.resize(numSurface);
  idMinArea.resize(numSurface);
+ numSurfElems.resize(numSurface);
+ numSurfVerts.resize(numSurface);
  intet.resize(numSurface);
 
  fill(oper.begin(),oper.end(),0);
@@ -9233,6 +9243,8 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  fill(minArea.begin(),minArea.end(),0);
  fill(idMaxArea.begin(),idMaxArea.end(),0);
  fill(idMinArea.begin(),idMinArea.end(),0);
+ fill(numSurfElems.begin(),numSurfElems.end(),0);
+ fill(numSurfVerts.begin(),numSurfVerts.end(),0);
  fill(intet.begin(),intet.end(),0);
 }
 

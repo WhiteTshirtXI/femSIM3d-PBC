@@ -82,9 +82,6 @@ class Model3D
   void removePointByNeighbourCheck(int _node);
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
-  void surfaceTriangulatorEarClipping(int _v);
-  void surfaceTriangulatorEarClipping(int _v,
-	                                  list<int> _list);
   void surfaceTriangulatorEarClipping(int _v,
 	                                  list<int> _list,
 	                                  const char* _mode);
@@ -169,6 +166,8 @@ class Model3D
   vector<real> getMaxArea();
   vector<int> getIdMinArea();
   vector<int> getIdMaxArea();
+  vector<int> getNumSurfElems();
+  vector<int> getNumSurfVerts();
 
   vector<int> getIP();
   vector<int> getIPD();
@@ -410,6 +409,8 @@ class Model3D
   vector<int> idMaxArea;   // ID of max tri area 
   vector<real> minArea;    // min triangle area 
   vector<real> maxArea;    // max triangle area
+  vector<int> numSurfElems; // number of surface elements
+  vector<int> numSurfVerts; // number of surface points 
 
   vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
   vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais

@@ -2796,6 +2796,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  savePressureError(_dir);       // pressure 
  saveVolumeError(_dir);         // bubble volume
  saveTimeError(_dir);           // time step
+ saveParasiticCurrent(_dir);   // velocity
 }
 
 /*
@@ -4140,6 +4141,55 @@ void InOut::saveTimeError(const char* _dir)
           << setw(5) << setprecision(2) << fixed << s->getCfl() << " " 
 	      << setw(6) << setprecision(0) << fixed << iter 
 	 	  << endl;
+ file.close();
+}
+
+void InOut::saveParasiticCurrent(const char* _dir)
+{
+ string fileAux = (string) _dir + "parasitic" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file parasitic.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file volume.dat" << endl;
+  file << "#time" << setw(29) << "vel X" 
+                  << setw(18) << "vel Y" 
+                  << setw(18) << "vel Z" 
+                  << setw(18) << "vel XY" 
+                  << setw(18) << "vel XZ" 
+                  << setw(18) << "vel YZ" 
+                  << setw(18) << "vel XYZ" 
+	         	  << setw(6)  << "iter" 
+				  << endl;
+ }
+
+ real uMax = uSol->Abs().Max();
+ real vMax = vSol->Abs().Max();
+ real wMax = wSol->Abs().Max();
+ real uvMax = max(uMax,vMax);
+ real uwMax = max(uMax,wMax);
+ real vwMax = max(vMax,wMax);
+ real uvwMax = max(uMax,vMax);
+ uvwMax = max(uvwMax,wMax);
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << uMax << " " 
+	  << setw(17) << vMax << " " 
+	  << setw(17) << wMax << " " 
+	  << setw(17) << uvMax << " " 
+	  << setw(17) << uwMax << " " 
+	  << setw(17) << vwMax << " " 
+	  << setw(17) << uvwMax << " " 
+	  << setw(5) << setprecision(0) << fixed << iter 
+	  << endl;
  file.close();
 }
 

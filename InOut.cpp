@@ -62,6 +62,8 @@ InOut::InOut( Model3D &_m )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ numSurfElems = m->getNumSurfElems();
+ numSurfVerts = m->getNumSurfVerts();
  surfaceArea = m->getSurfaceArea();
 
  // volumetric mesh indexes:
@@ -2821,6 +2823,8 @@ void InOut::printMeshReport()
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ numSurfElems = m->getNumSurfElems();
+ numSurfVerts = m->getNumSurfVerts();
 
  time_t currentTime;
 
@@ -2869,6 +2873,12 @@ void InOut::printMeshReport()
 		  averageTriEdge[nb]*sqrt(2)/12 << endl;
   cout << "       |triangle edge size:                           "  
        << triEdge[nb] << endl;
+  cout << "       |number of surface triangle:                   "  
+       << numSurfElems[nb] << endl;
+  cout << "       |min triangle area:                            " 
+       << minArea[nb] << " (" << idMinArea[nb] << ")" << endl;
+  cout << "       |max triangle area:                            " 
+       << maxArea[nb] << " (" << idMaxArea[nb] << ")" << endl;
   cout << "       |min tetrahedron volume:                       " 
        << minVolume[nb] << " (" << idMinVolume[nb] << ")" << endl;
   cout << "       |max tetrahedron volume:                       " 

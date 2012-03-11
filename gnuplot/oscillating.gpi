@@ -8,7 +8,7 @@ set ytic auto                          # set ytics automatically
 set xlabel "time" font "Times,18"
 set ylabel "amplitude" font "Times,18"
 set label
-set xrange [0.0:1.0] 
+set xrange [0.0:4.0] 
 set yrange [0.988:1.012] 
 unset grid
 set key at 0.95,1
@@ -19,16 +19,11 @@ set key box linestyle 1
 # set output '| ps2pdf - ~/Desktop/oscillating.pdf'
 #-------------------------------------------------- 
 
-fileObj1 = "~/macpro/python/femSIM3d/osc9/dat/diameter.dat"
-fileObj2 = "~/macpro/python/femSIM3d/osc1/dat/diameter.dat"
+fileObj = "../dat/diameter.dat"
 fileObjAnalytic = "../../validations/osc3d"
 
-f(x) = 1.01
-g(x) = 0.99
-
-plot fileObj1 using 1:($4-0.0004) every 1 title 'invA' \
+plot fileObj using 1:($4-0.0004) every 1 title 'invA' \
      with points ls 2,\
-     fileObj2 using 1:($4-0.0004) every 1 title 'new' \
-     with points ls 4,\
  	 fileObjAnalytic using 1:2 title 'analytic' with lines ls 1,\
-	 f(x) notitle 'y=1.01' linestyle 1,g(x) notitle 'y=0.99' linestyle 1
+	 fileObjAnalytic using 1:($3) notitle 'y=1.01' with lines ls 1,\
+	 fileObjAnalytic using 1:($4) notitle 'y=0.99' with lines ls 1

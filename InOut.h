@@ -180,6 +180,7 @@ class InOut
   void saveVolumeError(const char* _dir);
   void saveOscillatingError(const char* _dir);
   void saveTimeError(const char* _dir);
+  void saveParasiticCurrent(const char* _dir);
   void copyLastFile(const char* _dir,const char* _filename,const char* _name);
 
   /* VTK Building Tools  */

@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
  // static bubble test (Fabricio's thesis (2005))
  real Re = 100;
- real We = 5;
+ real We = 0.2;
  real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // velocity
  real c3 = 0.0;  // coordinates - fujiwara
@@ -44,11 +44,11 @@ int main(int argc, char **argv)
  real mu_out = 0.01;
 
  real rho_in = 1.0;
- real rho_out = 0.001;
+ real rho_out = 0.01;
 
  real cfl = 1.0;
 
- string meshFile = "static1.msh";
+ string meshFile = "staticDumped1.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -138,7 +138,10 @@ int main(int argc, char **argv)
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveSol(binFolder,"sim",i);
   save.saveBubbleInfo(datFolder);
+  save.saveParasiticCurrent(datFolder);
   save.chordalPressure(datFolder,"chordalPressure",i);
+  //save.saveMeshInfo(datFolder);
+  save.printMeshReport();
 
   s1.saveOldData();
 

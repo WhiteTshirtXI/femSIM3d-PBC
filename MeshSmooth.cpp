@@ -32,9 +32,10 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  surfMesh = m->getSurfMesh();
  inVert = m->getInVert();
  surface = m->getSurface();
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ heaviside = m->getHeaviside();
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
  uSmoothSurface.Dim(surfMesh->numVerts);
  vSmoothSurface.Dim(surfMesh->numVerts);
  wSmoothSurface.Dim(surfMesh->numVerts);
@@ -63,9 +64,9 @@ void MeshSmooth::stepSmooth()
  list<int>::iterator vert;
  real xSum,ySum,zSum;
  real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  {
@@ -122,9 +123,9 @@ void MeshSmooth::stepSmoothFujiwara()
  list<int>::iterator vert;
  real xSum,ySum,zSum,distSum;
  //real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  // loop over all the vertices except those belonging to the boundary
  for( int i=0;i<numVerts;i++ )
@@ -225,24 +226,28 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
  list<int> plist;
  list<int>::iterator vert;
  real uSum,vSum,wSum;
- real size; // numero de elementos da lista
- uSmoothSurface.Dim(numNodes);
- vSmoothSurface.Dim(numNodes);
- wSmoothSurface.Dim(numNodes);
+ int size; // numero de elementos da lista
+ uSmoothSurface.Dim(numVerts);
+ vSmoothSurface.Dim(numVerts);
+ wSmoothSurface.Dim(numVerts);
 
  //for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
  for (int it=0;it<numVerts;it++ ) 
  {
   plist = neighbourVert->at(it);
-  size = plist.size();
+  size = 0;
   uSum = 0.0;
   vSum = 0.0;
   wSum = 0.0;
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
+   if( heaviside->Get(*vert) == 0.5 )
+   {
    uSum += _uVel.Get(*vert);
    vSum += _vVel.Get(*vert);
    wSum += _wVel.Get(*vert);
+   size++;
+   }
 //--------------------------------------------------
 //   if( it == 3361 )
 //   {
@@ -261,9 +266,12 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
 //   }
 //-------------------------------------------------- 
   }
+  if(size > 0 )
+  {
   uSmooth.Set( it,uSum/size ); 
   vSmooth.Set( it,vSum/size ); 
   wSmooth.Set( it,wSum/size ); 
+  }
 
  }
 } // fecha metodo stepSmooth
@@ -309,9 +317,9 @@ void MeshSmooth::stepSmoothSurface()
  list<int>::iterator vert;
  real xSum,ySum,zSum;
  real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  // loop nos vertices da interface
  for( int i=0;i<surface->Dim();i++ )
@@ -362,9 +370,9 @@ void MeshSmooth::stepSmoothSurface2()
  list<int>::iterator vert;
  real xSum,ySum,zSum;
  real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  // loop nos vertices da interface
  for( int i=0;i<surface->Dim();i++ )
@@ -413,9 +421,9 @@ void MeshSmooth::stepSmoothSurface(clVector &_uVel,
  list<int>::iterator vert;
  real uSum,vSum,wSum;
  real size; // numero de elementos da lista
- uSmooth.Dim(numNodes);
- vSmooth.Dim(numNodes);
- wSmooth.Dim(numNodes);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  // loop nos vertices da interface
  for( int i=0;i<surface->Dim();i++ )

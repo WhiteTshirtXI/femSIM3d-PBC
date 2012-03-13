@@ -44,10 +44,11 @@ int main(int argc, char **argv)
  int iter = 1;
  real Re = 100;
  real We = 5;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // velocity
- real c3 = 1.0;  // coordinates - fujiwara
- real c4 = 0.1;  // surface coordinates - fujiwara
+ real c1 = 0.00; // lagrangian
+ real c2 = 1.00; // smooth vel
+ real c3 = 1.00; // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1;
  real beta = 1;
 

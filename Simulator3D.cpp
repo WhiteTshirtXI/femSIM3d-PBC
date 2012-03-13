@@ -48,7 +48,8 @@ Simulator3D::Simulator3D( Model3D &_m )
  c1    = 1.0;
  c2    = 0.0;
  c3    = 0.0;
- c4    = 0.01;
+ d1    = 1.0;
+ d2    = 0.1;
 
  g     = 9.81;
  sigma = 1.0;
@@ -84,7 +85,8 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  c1 = _sRight.c1;
  c2 = _sRight.c2;
  c3 = _sRight.c3;
- c4 = _sRight.c4;
+ d1 = _sRight.d1;
+ d2 = _sRight.d2;
  iter = _sRight.iter;
 
  g = _sRight.g;
@@ -240,7 +242,8 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
- c4    = _s.getC4();
+ d1    = _s.getD1();
+ d2    = _s.getD2();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -1356,8 +1359,7 @@ void Simulator3D::stepLagrangianZ()
 
 void Simulator3D::stepALE()
 {
- setInterfaceVel();
- //setInterfaceVelNormal();
+ setInterfaceVelocity();
 
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1378,8 +1380,7 @@ void Simulator3D::stepALE()
  wALE = c1*wSolOld+c3*wSmoothCoord;
 
  // impoe velocidade (componente normal) do fluido na interface
- setInterfaceVel();
- //setInterfaceVelNormal();
+ setInterfaceVelocity();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1391,53 +1392,54 @@ void Simulator3D::stepALE()
 
 void Simulator3D::stepALEVel()
 {
- setInterfaceVelNormal();
- //setInterfaceVel();
+ // vertice velocity (uVert,vVert)
+ clVector uVert(numVerts);
+ clVector vVert(numVerts);
+ clVector wVert(numVerts);
+ uSol.CopyTo(0,uVert);
+ vSol.CopyTo(0,vVert);
+ wSol.CopyTo(0,wVert);
+
+ setInterfaceVelocity();
 
  setALEVelBC();
  //setAnnularALEVelBC();
- for( int i=0;i<20;i++ )
- {
-  // smoothing - velocidade
-  MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
-  e2.stepSmooth(uALE,vALE,wALE);
-
-#if NUMGLEU == 5
-  uSmooth = setTetCentroid(*IEN,*e2.getUSmooth());
-  vSmooth = setTetCentroid(*IEN,*e2.getVSmooth());
-  wSmooth = setTetCentroid(*IEN,*e2.getWSmooth());
-#else
-  uSmooth = setTetQuad(*IEN,*e2.getUSmooth());
-  vSmooth = setTetQuad(*IEN,*e2.getVSmooth());
-  wSmooth = setTetQuad(*IEN,*e2.getWSmooth());
-#endif
-
-  // impoe velocidade (componente normal) do fluido na interface
-  setInterfaceVelNormal();
-  //setInterfaceVel();
- }
-
- // smoothing - coordenadas
+ 
+ // smoothing - velocidade
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSmoothFujiwara();
+ e1.stepSmooth(uALE,vALE,wALE);
+ uSmooth = *e1.getUSmooth();
+ vSmooth = *e1.getVSmooth();
+ wSmooth = *e1.getWSmooth();
 
+ // smoothing coords
+ MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
+ e2.stepSmoothFujiwara();
+ uSmoothCoord = *e2.getUSmooth();
+ vSmoothCoord = *e2.getVSmooth();
+ wSmoothCoord = *e2.getWSmooth();
+
+ // compute ALE
+ uALE = c1*uVert+c2*uSmooth+c3*uSmoothCoord;
+ vALE = c1*vVert+c2*vSmooth+c3*vSmoothCoord;
+ wALE = c1*wVert+c2*wSmooth+c3*wSmoothCoord;
+ 
+ // impoe velocidade do fluido na interface
+ setInterfaceVelocity();
+
+ clVector zeroAux(numNodes-numVerts);
+ uALE.Append(zeroAux);
+ vALE.Append(zeroAux);
+ wALE.Append(zeroAux);
 #if NUMGLEU == 5
- uSmoothCoord = setTetCentroid(*IEN,*e1.getUSmooth());
- vSmoothCoord = setTetCentroid(*IEN,*e1.getVSmooth());
- wSmoothCoord = setTetCentroid(*IEN,*e1.getWSmooth());
+ uALE = setTetCentroid(*IEN,uALE);
+ vALE = setTetCentroid(*IEN,vALE);
+ wALE = setTetCentroid(*IEN,wALE);
 #else
- uSmoothCoord = setTetQuad(*IEN,*e1.getUSmooth());
- vSmoothCoord = setTetQuad(*IEN,*e1.getVSmooth());
- wSmoothCoord = setTetQuad(*IEN,*e1.getWSmooth());
+ uALE = setTetQuad(*IEN,uALE);
+ vALE = setTetQuad(*IEN,vALE);
+ wALE = setTetQuad(*IEN,wALE);
 #endif
-
- uALE = c1*uSolOld+c2*uSmooth+c3*uSmoothCoord;
- vALE = c1*vSolOld+c2*vSmooth+c3*vSmoothCoord;
- wALE = c1*wSolOld+c2*wSmooth+c3*wSmoothCoord;
-
- // impoe velocidade (componente normal) do fluido na interface
- setInterfaceVelNormal();
- //setInterfaceVel();
 
  // impoe velocidade ALE = 0 no contorno
  setALEVelBC();
@@ -1462,19 +1464,7 @@ void Simulator3D::movePoints()
  //getBubbleVelocity(uALE,vALE,wALE);
 }
 
-void Simulator3D::setInterfaceVel()
-{
- for( int i=0;i<surface->Dim();i++ )
- {
-  int surfaceNode = surface->Get(i);
-  uALE.Set(surfaceNode,uSolOld.Get(surfaceNode));
-  vALE.Set(surfaceNode,vSolOld.Get(surfaceNode));
-  wALE.Set(surfaceNode,wSolOld.Get(surfaceNode));
-  //wALE.Set(aux,wSolOld.Get(aux)-bubbleZVelocity);
- }
-} // fecha metodo setInterfaceVel 
-
-void Simulator3D::setInterfaceVelNormal()
+void Simulator3D::setInterfaceVelocity()
 {
  // smoothing - coordenadas
  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
@@ -1502,6 +1492,10 @@ void Simulator3D::setInterfaceVelNormal()
   real vSolNormal = yNormalUnit*prod;
   real wSolNormal = zNormalUnit*prod;
 
+  real uSolTangent = uSolOld.Get(surfaceNode) - uSolNormal;
+  real vSolTangent = vSolOld.Get(surfaceNode) - vSolNormal;
+  real wSolTangent = wSolOld.Get(surfaceNode) - wSolNormal;
+
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
@@ -1517,24 +1511,22 @@ void Simulator3D::setInterfaceVelNormal()
   real vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
   real wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
 
-  uALE.Set(surfaceNode,uSolNormal+c4*uSmoothTangent);
-  vALE.Set(surfaceNode,vSolNormal+c4*vSmoothTangent);
-  wALE.Set(surfaceNode,wSolNormal+c4*wSmoothTangent);
+  real uALESurface =   uSolOld.Get(surfaceNode) 
+                     - d1*uSolTangent 
+					 + d2*uSmoothTangent;
+  real vALESurface =   vSolOld.Get(surfaceNode) 
+                     - d1*vSolTangent 
+					 + d2*vSmoothTangent;
+  real wALESurface =   wSolOld.Get(surfaceNode) 
+                     - d1*wSolTangent 
+					 + d2*wSmoothTangent;
 
-  //uALE.Set(surfaceNode,uSmoothTangent);
-  //vALE.Set(surfaceNode,vSmoothTangent);
-  //wALE.Set(surfaceNode,wSmoothTangent);
+  uALE.Set(surfaceNode,uALESurface);
+  vALE.Set(surfaceNode,vALESurface);
+  wALE.Set(surfaceNode,wALESurface);
 
-//--------------------------------------------------
-//   uALE.Set(surfaceNode,uSolNormal);
-//   vALE.Set(surfaceNode,vSolNormal);
-//   wALE.Set(surfaceNode,wSolNormal);
-//-------------------------------------------------- 
-  
-  //cout << bubbleZVelocity << " " << wSolNormal << endl;
-  //wALE.Set(surfaceNode,wSolNormal-bubbleZVelocity);
  }
-} // fecha metodo setInterfaceVelNormal 
+} // fecha metodo setInterfaceVelocity
 
 //setRHS eh o metodo que cria o vetor do lado direito (condicao de
 //contorno + termo convectivo)
@@ -2569,11 +2561,13 @@ real Simulator3D::getCfl(){return cfl;}
 void Simulator3D::setC1(real _c1){c1 = _c1;}
 void Simulator3D::setC2(real _c2){c2 = _c2;}
 void Simulator3D::setC3(real _c3){c3 = _c3;}
-void Simulator3D::setC4(real _c4){c4 = _c4;}
+void Simulator3D::setD1(real _d1){d1 = _d1;}
+void Simulator3D::setD2(real _d2){d2 = _d2;}
 real Simulator3D::getC1(){return c1;}
 real Simulator3D::getC2(){return c2;}
 real Simulator3D::getC3(){return c3;}
-real Simulator3D::getC4(){return c4;}
+real Simulator3D::getD1(){return d1;}
+real Simulator3D::getD2(){return d2;}
 
 void Simulator3D::setMu(real _mu_in)
 { 
@@ -2925,7 +2919,8 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  c1 = _sRight.c1;
  c2 = _sRight.c2;
  c3 = _sRight.c3;
- c4 = _sRight.c4;
+ d1 = _sRight.d1;
+ d2 = _sRight.d2;
  iter = _sRight.iter;
 
  g = _sRight.g;
@@ -3072,7 +3067,8 @@ void Simulator3D::operator()(Model3D &_m)
  c1    = 1.0;
  c2    = 0.0;
  c3    = 0.0;
- c4    = 0.01;
+ d1    = 1.0;
+ d2    = 0.1;
  g     = 9.81;
  mu_in  = 1.0;
  mu_out  = 1.0;
@@ -3109,7 +3105,8 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  c1    = _s.getC1();
  c2    = _s.getC2();
  c3    = _s.getC3();
- c4    = _s.getC4();
+ d1    = _s.getD1();
+ d2    = _s.getD2();
  g     = _s.getGrav();
  mu_in  = _s.getMu_in();
  mu_out  = _s.getMu_out();
@@ -3228,7 +3225,8 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
  fileP >> c1;
  fileP >> c2;
  fileP >> c3;
- fileP >> c4;
+ fileP >> d1;
+ fileP >> d2;
  fileP >> alpha;
  fileP >> beta;
 
@@ -3248,8 +3246,8 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 //  cout << numVertsOld << " " << numNodesOld << " " << numElemsOld << endl;
 //  cout << Re << " " << Sc << " " << Fr << " " << We << " " << endl;
 //  cout << mu_in << " " << mu_out << " " << rho_in << " " << rho_out << " " << endl;
-//  cout << c1 << " " << c2 << " " << c3 << " " << c4 << " " << alpha 
-//       << " " << beta << endl;
+//  cout << c1 << " " << c2 << " " << c3 << " " << d1 << " " 
+//       << d2 << " "<< alpha << " " << beta << endl;
 //  cout << lineEdge << endl;
 //-------------------------------------------------- 
 
@@ -3699,12 +3697,12 @@ void Simulator3D::allocateMemoryToAttrib()
  uALE.Dim( numNodes );
  vALE.Dim( numNodes );
  wALE.Dim( numNodes );
- uSmooth.Dim( numNodes );
- vSmooth.Dim( numNodes );
- wSmooth.Dim( numNodes );
- uSmoothCoord.Dim( numNodes );
- vSmoothCoord.Dim( numNodes );
- wSmoothCoord.Dim( numNodes );
+ uSmooth.Dim( numVerts );
+ vSmooth.Dim( numVerts );
+ wSmooth.Dim( numVerts );
+ uSmoothCoord.Dim( numVerts );
+ vSmoothCoord.Dim( numVerts );
+ wSmoothCoord.Dim( numVerts );
  uSmoothSurface.Dim( numVerts );
  vSmoothSurface.Dim( numVerts );
  wSmoothSurface.Dim( numVerts );

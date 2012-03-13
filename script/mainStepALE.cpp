@@ -32,10 +32,11 @@ int main(int argc, char **argv)
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.3; // lagrangian
- real c2 = 0.00; // smooth vel
- real c3 = 0.2; // smooth - fujiwara
- real c4 = 0.00; // smooth surface - fujiwara
+ real c1 = 0.3;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 0.2;  // smooth coord (fujiwara)
+ real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.00;  // surface smooth cord (fujiwara)
  real cfl = 1;
  real mu_l = 1.0;
  real rho_l = 1.0;
@@ -88,7 +89,8 @@ int main(int argc, char **argv)
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
- s1.setC4(c4);
+ s1.setD1(d1);
+ s1.setD2(d2);
  s1.setCfl(cfl);
  s1.setDtEulerian();
  s1.setMu(mu_l);
@@ -115,17 +117,17 @@ int main(int argc, char **argv)
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
  }
  // Point's distribution
- Helmholtz3D d1(m1);
- d1.setBC();
- d1.initSquareChannel();
- d1.assemble();
- d1.setk(0.7);
- d1.matMountC();
- d1.setUnCoupledCBC(); 
- d1.setCRHS();
- d1.unCoupledC();
- //d1.saveVTK("./vtk/","edge");
- d1.setModel3DEdgeSize();
+ Helmholtz3D h1(m1);
+ h1.setBC();
+ h1.initSquareChannel();
+ h1.assemble();
+ h1.setk(0.7);
+ h1.matMountC();
+ h1.setUnCoupledCBC(); 
+ h1.setCRHS();
+ h1.unCoupledC();
+ //h1.saveVTK("./vtk/","edge");
+ h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -175,16 +177,16 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Helmholtz3D d2(m1,d1);
-  d2.setBC();
-  d2.initSquareChannel();
-  d2.assemble();
-  d2.matMountC();
-  d2.setUnCoupledCBC(); 
-  d2.setCRHS();
-  d2.unCoupledC();
-  d2.saveVTK("./vtk/","edge",iter-1);
-  d2.setModel3DEdgeSize();
+  Helmholtz3D h2(m1,h1);
+  h2.setBC();
+  h2.initSquareChannel();
+  h2.assemble();
+  h2.matMountC();
+  h2.setUnCoupledCBC(); 
+  h2.setCRHS();
+  h2.unCoupledC();
+  h2.saveVTK("./vtk/","edge",iter-1);
+  h2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
 

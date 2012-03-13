@@ -171,7 +171,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  c1 = s->getC1();
  c2 = s->getC2();
  c3 = s->getC3();
- c4 = s->getC4();
+ d1 = s->getD1();
+ d2 = s->getD2();
 
  K = s->getK();
  M = s->getM();
@@ -1345,7 +1346,8 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  file << "parameter c1:     " << c1 << endl;
  file << "parameter c2:     " << c2 << endl;
  file << "parameter c3:     " << c3 << endl;
- file << "parameter c4:     " << c4 << endl;
+ file << "parameter d1:     " << d1 << endl;
+ file << "parameter d2:     " << d2 << endl;
  file << "liquid viscosity: " << mu_in << endl;
  file << "gas viscosity:    " << mu_out << endl;
  file << "liquid density:   " << rho_in << endl;
@@ -1409,7 +1411,9 @@ void InOut::printInfo(const char* _mesh)
  cout << "               ";
  cout << "parameter c3:     " << c3 << endl;
  cout << "               ";
- cout << "parameter c4:     " << c4 << endl;
+ cout << "parameter d1:     " << d1 << endl;
+ cout << "               ";
+ cout << "parameter d2:     " << d2 << endl;
  cout << "               ";
  cout << "liquid viscosity: " << mu_in << endl;
  cout << "               ";
@@ -2412,8 +2416,9 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << mu_in << " " << mu_out << " " 
        << rho_in << " " << rho_out << " " 
 	   << sigma << endl;
- _file << "COEFFICIENTS 1 6 float" << endl;
- _file << c1 << " " << c2 << " " << c3 << " " << c4  << " " 
+ _file << "COEFFICIENTS 1 7 float" << endl;
+ _file << c1 << " " << c2 << " " << c3 << " " 
+       << d1  << " " << d2 << " "
        << alpha << " " << beta << endl;
 
  if( surfMesh->elemIdRegion.Dim() > 0 )
@@ -3003,8 +3008,11 @@ void InOut::printSimulationReport()
       << "c3                               " 
 	  << resetColor() << c3 << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "c4                               " 
-	  << resetColor() << c4 << endl;
+      << "d1                               " 
+	  << resetColor() << d1 << endl;
+ cout << "          parameter " << color(none,magenta,black)
+      << "d2                               " 
+	  << resetColor() << d2 << endl;
  cout << color(none,magenta,black)
       << "          liquid viscosity                           " 
 	  << resetColor() << mu_out << endl;

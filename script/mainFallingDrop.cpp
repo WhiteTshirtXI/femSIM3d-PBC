@@ -32,11 +32,12 @@ int main(int argc, char **argv)
  real Re = 1000;
  real Sc = 1;
  real We = 10;
- real Fr = 0.315;
- real c1 = 0.00; // lagrangian
- real c2 = 1.00; // smooth vel
- real c3 = 0.01; // smooth - fujiwara
- real c4 = 0.02; // smooth surface - fujiwara
+ real Fr = 1.0;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
+ real c3 = 0.1;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.2;  // surface smooth cord (fujiwara)
  real alpha = 1;
  real beta = 1;
 
@@ -101,7 +102,8 @@ int main(int argc, char **argv)
   s1.setC1(c1);
   s1.setC2(c2);
   s1.setC3(c3);
-  s1.setC4(c4);
+  s1.setD1(d1);
+  s1.setD2(d2);
   s1.setAlpha(alpha);
   s1.setBeta(beta);
   s1.setSigma(sigma);
@@ -159,7 +161,8 @@ int main(int argc, char **argv)
   s1.setC1(c1);
   s1.setC2(c2);
   s1.setC3(c3);
-  s1.setC4(c4);
+  s1.setD1(d1);
+  s1.setD2(d2);
   s1.setCfl(cfl);
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 

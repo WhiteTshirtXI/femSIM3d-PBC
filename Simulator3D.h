@@ -70,8 +70,7 @@ class Simulator3D
   void stepALEVel();
   void movePoints();
   void stepSmooth();
-  void setInterfaceVel();
-  void setInterfaceVelNormal();
+  void setInterfaceVelocity();
 
   void setRHS();
   void setCRHS();
@@ -132,11 +131,13 @@ class Simulator3D
   void setC1(real _c1);
   void setC2(real _c2);
   void setC3(real _c3);
-  void setC4(real _c4);
+  void setD1(real _d1);
+  void setD2(real _d2);
   real getC1();
   real getC2();
   real getC3();
-  real getC4();
+  real getD1();
+  real getD2();
   void setMu(real _mu_in);
   void setMu(real _mu_in,real _mu_out);
   void setMuSmooth(real _mu_in,real _mu_out);
@@ -228,7 +229,7 @@ class Simulator3D
 
   real Re,Sc,Fr,We,alpha,beta,cfl,time;
   real dt,dtLagrangian,dtSemiLagrangian,dtSurfaceTension,dtGravity;
-  real c1,c2,c3,c4;
+  real c1,c2,c3,d1,d2;
   real bubbleXVel,bubbleYVel,bubbleZVel;
   real sigma,g,rho_in,rho_out,mu_in,mu_out;
   real sigma_0,g_0,rho_0,mu_0;

@@ -48,6 +48,7 @@ class MeshSmooth
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp;
+  clVector *heaviside;
   clMatrix *IEN;
   clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
   SurfaceMesh *surfMesh;

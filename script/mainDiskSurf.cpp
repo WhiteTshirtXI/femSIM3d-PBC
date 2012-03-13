@@ -24,10 +24,11 @@ int main(int argc, char **argv)
  real Sc = 1;
  real Fr = 1;
  int beta = 1;
- real c1 = 0.6; // lagrangian
- real c2 = 0.1; // smooth
- real c3 = 0.06; // smooth
- real c4 = 0.0; // surface
+ real c1 = 0.6;  // lagrangian
+ real c2 = 0.1;  // smooth vel
+ real c3 = 0.6;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.0;  // surface smooth cord (fujiwara)
  real mu_l = 1.0;
  real rho_l = 1.0;
  real cfl = 0.3;
@@ -81,7 +82,8 @@ int main(int argc, char **argv)
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
- s1.setC4(c4);
+ s1.setD1(d1);
+ s1.setD2(d2);
  s1.setBeta(beta);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);

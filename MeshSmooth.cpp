@@ -36,9 +36,9 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
- uSmoothSurface.Dim(surfMesh->numVerts);
- vSmoothSurface.Dim(surfMesh->numVerts);
- wSmoothSurface.Dim(surfMesh->numVerts);
+ uSmoothSurface.Dim(numVerts);
+ vSmoothSurface.Dim(numVerts);
+ wSmoothSurface.Dim(numVerts);
  dt = _dt;
 }
 
@@ -173,9 +173,9 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
  list<int> plist;
  list<int>::iterator vert;
  real xSum,ySum,zSum,distSum;
- uSmooth.Dim(surfMesh->numVerts);
- vSmooth.Dim(surfMesh->numVerts);
- wSmooth.Dim(surfMesh->numVerts);
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
 
  for( int i=0;i<surface->Dim();i++ )
  {
@@ -191,14 +191,14 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
   list<int>::iterator vert=plist.begin();
   for( int i=0;i<listSize-1;i++ )
   {
-   real P0x = surfMesh->X.Get(surfaceNode);
-   real P0y = surfMesh->Y.Get(surfaceNode);
-   real P0z = surfMesh->Z.Get(surfaceNode);
+   real P0x = X->Get(surfaceNode);
+   real P0y = Y->Get(surfaceNode);
+   real P0z = Z->Get(surfaceNode);
 
    int v1 = *vert;++vert;
-   real P1x = surfMesh->X.Get(v1);
-   real P1y = surfMesh->Y.Get(v1);
-   real P1z = surfMesh->Z.Get(v1);
+   real P1x = X->Get(v1);
+   real P1y = Y->Get(v1);
+   real P1z = Z->Get(v1);
 
    real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 

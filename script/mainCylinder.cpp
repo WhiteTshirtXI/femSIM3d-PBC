@@ -150,7 +150,8 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKHalf(vtkFolder,"simCutPlane",iter);
+   save.saveVTKHalf(vtkFolder,"simCutHalf",iter);
+   save.saveVTKQuarter(vtkFolder,"simCutQuarter",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -166,35 +167,6 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Model3D mOld = m1; 
-  m1.setTriEdge(triEdge);
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setWallBC();
-
-  Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
-  s1 = s2;
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
-  saveEnd.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

@@ -2272,13 +2272,20 @@ void Simulator3D::setDtLagrangianNorberto()
  dtLagrangian = 0.1;
  for( int edge=0;edge<mapEdge->DimI();edge++ )
  {
-  int v1 = mapEdge->Get(edge,4);
-  int v2 = mapEdge->Get(edge,5);
 
-  real x=X->Get(v1)-X->Get(v2);
-  real y=Y->Get(v1)-Y->Get(v2);
-  real z=Z->Get(v1)-Z->Get(v2);
-  real length = vectorLength(x,y,z);
+  // v1
+  int v1 = mapEdge->Get(edge,4);
+  real p1x=X->Get(v1);
+  real p1y=Y->Get(v1);
+  real p1z=Z->Get(v1);
+
+  // v2
+  int v2 = mapEdge->Get(edge,5);
+  real p2x=X->Get(v2);
+  real p2y=Y->Get(v2);
+  real p2z=Z->Get(v2);
+
+  real length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
 
   // bubble.py - 146 iterations
   real xVel = fabs(uALE.Get(v1)) - fabs(uALE.Get(v2));
@@ -2638,7 +2645,7 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
  clVector one(numVerts);one.SetAll(1.0);
  mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
- real rMax = 1.0;
+ //real rMax = 1.0;
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)
@@ -2672,7 +2679,7 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
  clVector one(numVerts);one.SetAll(1.0);
  rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
 
- real rMax = 1.0;
+ //real rMax = 1.0;
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)

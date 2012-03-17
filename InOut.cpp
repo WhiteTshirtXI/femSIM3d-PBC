@@ -62,6 +62,8 @@ InOut::InOut( Model3D &_m )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ maxLength = m->getMaxLength();
+ minLength = m->getMinLength();
  numSurfElems = m->getNumSurfElems();
  numSurfVerts = m->getNumSurfVerts();
  surfaceArea = m->getSurfaceArea();
@@ -130,6 +132,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ maxLength = m->getMaxLength();
+ minLength = m->getMinLength();
  initSurfaceRadius = m->getInitSurfaceRadius();
  initSurfaceArea = m->getInitSurfaceArea();
  initSurfaceVolume = m->getInitSurfaceVolume();
@@ -2000,6 +2004,12 @@ void InOut::saveMeshInfo(const char* _dir)
 					<< setw(6) << "spc" 
 					<< setw(6) << "spp" 
 					<< setw(8) << "intet" 
+					<< setw(20) << "maxLength"
+					<< setw(20) << "minLength"
+					<< setw(20) << "maxArea"
+					<< setw(20) << "minArea"
+					<< setw(14) << "idMaxArea"
+					<< setw(14) << "idMinArea"
 					<< setw(20) << "maxVolume"
 					<< setw(20) << "minVolume"
 					<< setw(14) << "idMaxVolume"
@@ -2028,10 +2038,16 @@ void InOut::saveMeshInfo(const char* _dir)
 								   << setw(5)  << spc[nb] << " "
 								   << setw(5)  << spp[nb] << " "
 								   << setw(7)  << intet[nb] << " "
+								   << setw(19) << maxLength[nb] << " "
+								   << setw(19) << minLength[nb] << " "
+								   << setw(19) << maxArea[nb] << " "
+								   << setw(19) << minArea[nb] << " "
+								   << setw(13) << idMaxArea[nb] << " "
+								   << setw(13) << idMinArea[nb] << " "
 								   << setw(19) << maxVolume[nb] << " "
 								   << setw(19) << minVolume[nb] << " "
-								   << setw(13)  << idMaxVolume[nb] << " "
-								   << setw(13)  << idMinVolume[nb] << " "
+								   << setw(13) << idMaxVolume[nb] << " "
+								   << setw(13) << idMinVolume[nb] << " "
 								   << setw(6)  << iter << " "
 								   << endl; 
 
@@ -2818,7 +2834,6 @@ void InOut::saveBubbleInfo(const char* _dir)
  * */
 void InOut::printMeshReport()
 {
- m->meshStats();
  intet = m->getINTET();
  maxVolume = m->getMaxVolume();
  minVolume = m->getMinVolume();
@@ -2828,6 +2843,8 @@ void InOut::printMeshReport()
  minArea = m->getMinArea();
  idMaxArea = m->getIdMaxArea();
  idMinArea = m->getIdMinArea();
+ maxLength = m->getMaxLength();
+ minLength = m->getMinLength();
  numSurfElems = m->getNumSurfElems();
  numSurfVerts = m->getNumSurfVerts();
 
@@ -2855,8 +2872,6 @@ void InOut::printMeshReport()
       << surfMesh->numElems << endl;
  cout << "      min tetrahedron edge size:                      " 
       << m->getMinEdge() << endl;
- cout << "      min triangle edge size:                         " 
-      << m->getMinEdgeTri() << endl;
 
  cout << endl;
  for(int nb=0;nb<=elemIdRegion->Max();nb++ )
@@ -2880,6 +2895,10 @@ void InOut::printMeshReport()
        << triEdge[nb] << endl;
   cout << "       |number of surface triangle:                   "  
        << numSurfElems[nb] << endl;
+  cout << "       |min triangle length:                          " 
+       << minLength[nb] << endl;
+  cout << "       |max triangle length:                          " 
+       << maxLength[nb] << endl;
   cout << "       |min triangle area:                            " 
        << minArea[nb] << " (" << idMinArea[nb] << ")" << endl;
   cout << "       |max triangle area:                            " 
@@ -3464,7 +3483,6 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 
  real averageNeigh = sumNeighbours/surfacePoints;
 
- m->meshStats();
  averageTriEdge = m->getAverageTriEdge();
 
  file << setprecision(10) << scientific; 
@@ -3600,7 +3618,6 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
 
  real averageNeigh = sumNeighbours/countK;
 
- m->meshStats();
  averageTriEdge = m->getAverageTriEdge();
 
  file << setprecision(10) << scientific; 
@@ -3760,7 +3777,6 @@ void InOut::saveKappaErrorTorus(const char* _dir)
 
  real averageNeigh = sumNeighbours/surfacePoints;
 
- m->meshStats();
  averageTriEdge = m->getAverageTriEdge();
 
  file << setprecision(10) << scientific; 

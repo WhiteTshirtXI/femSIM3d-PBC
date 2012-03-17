@@ -237,6 +237,7 @@ private:
   vector<real> maxVolume,minVolume;
   vector<int> idMaxArea,idMinArea;
   vector<real> maxArea,minArea;
+  vector<real> maxLength,minLength;
   vector<int> numSurfElems,numSurfVerts;
   vector<real> initSurfaceVolume,initSurfaceArea,initSurfaceRadius;
   vector<real> surfaceVolume,surfaceArea,surfaceRadius;

@@ -2084,19 +2084,11 @@ void Simulator3D::setDtSurfaceTension()
  rho_inAdimen = rho_in/rho_0; 
  rho_outAdimen = rho_out/rho_0;
 
- // We assume that the minEdgeTri is ALWAYS lied on the surface.
- real minEdgeTri = m->getMinEdgeTri();
+ vector<real> minLength = m->getMinLength();
+ real minEdge = *min_element(minLength.begin()+1,minLength.end());
 
- // OBS.: minEdgeTri is also considering the wall elements and that is
- // wrong for the dtSurfaceTension. Should make a loop in all the
- // surface elements and check the smaller edge length.
-//--------------------------------------------------
-//  dtSurfaceTension = sqrt( ( 0.5*(rho_in+rho_out)*
-//                     minEdgeTri*minEdgeTri*minEdgeTri)/
-//                     (2*3.141592*sigma) );
-//-------------------------------------------------- 
  dtSurfaceTension = sqrt( ( We*0.5*(rho_inAdimen+rho_outAdimen)*
-                    minEdgeTri*minEdgeTri*minEdgeTri)/
+                    minEdge*minEdge*minEdge)/
                     (2*3.141592) );
 }
 

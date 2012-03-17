@@ -20,7 +20,6 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  minEdge = 0.10;
- minEdgeTri = 0.10;
 }
 
 Model3D::Model3D(const Model3D &_mRight)
@@ -34,8 +33,6 @@ Model3D::Model3D(const Model3D &_mRight)
   yCenter = _mRight.yCenter;
   zCenter = _mRight.zCenter;
   dVerts = _mRight.dVerts;                  
-  minEdge = _mRight.minEdge;
-  minEdgeTri = _mRight.minEdgeTri;
   averageTriEdge = _mRight.averageTriEdge;
   oper = _mRight.oper;
   opersurf = _mRight.opersurf;
@@ -53,6 +50,8 @@ Model3D::Model3D(const Model3D &_mRight)
   minArea = _mRight.minArea;
   idMaxArea = _mRight.idMaxArea;
   idMinArea = _mRight.idMinArea;
+  minLength = _mRight.minLength;
+  maxLength = _mRight.minLength;
   numSurfElems = _mRight.numSurfElems;
   numSurfVerts = _mRight.numSurfVerts;
 
@@ -1084,7 +1083,6 @@ void Model3D::setMapEdgeTri()
  */
 
  int j=0;
- minEdgeTri = 1000000;
  mapEdgeTri.Dim(listSize/2,7);
 
  // numeracao de arestas a partir de numVerts e associacao das arestas
@@ -1098,10 +1096,6 @@ void Model3D::setMapEdgeTri()
   real y2=surfMesh.Y.Get(faces[j].p2);
   real z2=surfMesh.Z.Get(faces[j].p2);
   real length = vectorLength(x1-x2,y1-y2,z1-z2);
-
-  // checking the minimum surface edge length
-  if( length < minEdgeTri )
-   minEdgeTri = length;
 
   mapEdgeTri.Set(i,0,length); // tamanho da aresta
   mapEdgeTri.Set(i,1,faces[j].p1 ); // numero do 1o. vertice da aresta
@@ -2951,7 +2945,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
 
   // minVert should be bigger then surfMesh.numVerts because we are
   // treating only 3D vertices after the surface mesh vertices.
-  int minVert = min(v1,v2);
+  //int minVert = min(v1,v2);
   int maxVert = max(v1,v2);
   real maxEdge = max(edgeSize.Get(v1),edgeSize.Get(v2));
   //real hSum = heaviside.Get(v1) + heaviside.Get(v2);
@@ -3819,25 +3813,60 @@ void Model3D::meshStats()
   maxArea[nb] = 1.0E-20; // initial value
   idMinArea[nb] = 0;
   idMaxArea[nb] = 0;
+  minLength[nb] = 1.0E+20; // initial value
+  maxLength[nb] = 1.0E-20; // initial value
   numSurfElems[nb] = 0;
 
   for( int i=0;i<surfMesh.numElems;i++ )
   {
    if( surfMesh.elemIdRegion.Get(i) == nb )
    {
-	numSurfElems[nb]++;
-	real aux = fabs(getAreaElem(i));
+	int v1 = surfMesh.IEN.Get(i,0);
+	real p1x = surfMesh.X.Get(v1);
+	real p1y = surfMesh.Y.Get(v1);
+	real p1z = surfMesh.Z.Get(v1);
 
-	if( aux < minArea[nb] ) 
+	// P2
+	int v2 = surfMesh.IEN.Get(i,1);
+	real p2x = surfMesh.X.Get(v2);
+	real p2y = surfMesh.Y.Get(v2);
+	real p2z = surfMesh.Z.Get(v2);
+
+	// P3
+	int v3 = surfMesh.IEN.Get(i,2);
+	real p3x = surfMesh.X.Get(v3);
+	real p3y = surfMesh.Y.Get(v3);
+	real p3z = surfMesh.Z.Get(v3);
+
+	real dist12 = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+	real dist13 = distance(p1x,p1y,p1z,p3x,p3y,p3z);
+	real dist23 = distance(p2x,p2y,p2z,p3x,p3y,p3z);
+
+	real auxLengthMin = min(dist12,dist13);
+	auxLengthMin = min(auxLengthMin,dist23);
+
+	real auxLengthMax = max(dist12,dist13);
+	auxLengthMin = min(auxLengthMax,dist23);
+
+	if( auxLengthMin < minLength[nb] ) 
+	 minLength[nb] = auxLengthMin;
+	if( auxLengthMax > maxLength[nb] ) 
+	 maxLength[nb] = auxLengthMax;
+
+	real auxArea = fabs(getAreaElem(i));
+
+	if( auxArea < minArea[nb] ) 
 	{
-	 minArea[nb] = aux;
+	 minArea[nb] = auxArea;
 	 idMinArea[nb] = i;
 	}
-	if( aux > maxArea[nb] ) 
+	if( auxArea > maxArea[nb] ) 
 	{
-	 maxArea[nb] = aux;
+	 maxArea[nb] = auxArea;
 	 idMaxArea[nb] = i;
 	}
+
+	numSurfElems[nb]++;
    }
   }
  }
@@ -6390,7 +6419,8 @@ void Model3D::setSurfaceConfig()
  setSurfaceVolume();
  setSurfaceArea();
  //setSurfaceRadius();
-
+ 
+ meshStats();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -6695,7 +6725,6 @@ list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
 list<int>* Model3D::getInElem(){return &inElem;}
 list<int>* Model3D::getOutElem(){return &outElem;}
 real Model3D::getMinEdge(){return minEdge;}
-real Model3D::getMinEdgeTri(){return minEdgeTri;}
 vector<real> Model3D::getTriEdge(){return triEdge;}
 void Model3D::setTetVol(vector< real > _tetVol){tetVol= _tetVol;}
 vector<real> Model3D::getTetVol(){return tetVol;}
@@ -6722,6 +6751,8 @@ vector<int> Model3D::getSPP(){return spp;}
 vector<int> Model3D::getINTET(){return intet;}
 vector<real> Model3D::getMinArea(){return minArea;}
 vector<real> Model3D::getMaxArea(){return maxArea;}
+vector<real> Model3D::getMinLength(){return minLength;}
+vector<real> Model3D::getMaxLength(){return maxLength;}
 vector<int> Model3D::getIdMinArea(){return idMinArea;}
 vector<int> Model3D::getIdMaxArea(){return idMaxArea;}
 vector<int> Model3D::getNumSurfElems(){return numSurfElems;}
@@ -6757,7 +6788,6 @@ void Model3D::operator=(Model3D &_mRight)
   zCenter = _mRight.zCenter;
   dVerts = _mRight.dVerts;                  
   minEdge = _mRight.minEdge;
-  minEdgeTri = _mRight.minEdgeTri;
   averageTriEdge = _mRight.averageTriEdge;
   isp = _mRight.isp;
   ispc = _mRight.ispc;
@@ -6770,6 +6800,8 @@ void Model3D::operator=(Model3D &_mRight)
   intet = _mRight.intet;
   maxArea = _mRight.maxArea;
   minArea = _mRight.minArea;
+  maxLength = _mRight.maxLength;
+  minLength = _mRight.minLength;
   idMaxArea = _mRight.idMaxArea;
   numSurfElems = _mRight.numSurfElems;
   numSurfVerts = _mRight.numSurfVerts;
@@ -8366,7 +8398,7 @@ void Model3D::applyBubbleVolumeCorrection()
 	 surfMesh.Y.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Z.Get(surfaceNode) + 
-	       surfMesh.zNormal.Get(surfaceNode)*1E-02*errov;
+	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
 	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
 	 Z.Set(surfaceNode,aux);
 	 surfMesh.Z.Set(surfaceNode,aux);
@@ -9208,6 +9240,8 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  minArea.resize(numSurface);
  idMaxArea.resize(numSurface);
  idMinArea.resize(numSurface);
+ maxLength.resize(numSurface);
+ minLength.resize(numSurface);
  numSurfElems.resize(numSurface);
  numSurfVerts.resize(numSurface);
  intet.resize(numSurface);
@@ -9243,6 +9277,8 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  fill(minArea.begin(),minArea.end(),0);
  fill(idMaxArea.begin(),idMaxArea.end(),0);
  fill(idMinArea.begin(),idMinArea.end(),0);
+ fill(maxLength.begin(),maxLength.end(),0);
+ fill(minLength.begin(),minLength.end(),0);
  fill(numSurfElems.begin(),numSurfElems.end(),0);
  fill(numSurfVerts.begin(),numSurfVerts.end(),0);
  fill(intet.begin(),intet.end(),0);

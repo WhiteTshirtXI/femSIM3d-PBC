@@ -164,6 +164,8 @@ class Model3D
   vector<int> getINTET();
   vector<real> getMinArea();
   vector<real> getMaxArea();
+  vector<real> getMinLength();
+  vector<real> getMaxLength();
   vector<int> getIdMinArea();
   vector<int> getIdMaxArea();
   vector<int> getNumSurfElems();
@@ -330,7 +332,6 @@ class Model3D
   list<int>* getOutElem();
   list<int>* getInElem();
   real getMinEdge();
-  real getMinEdgeTri();
   void setTriEdge(vector< real > _triEdge);
   vector<real> getTriEdge();
   void setTetVol(vector< real > _tetVol);
@@ -409,6 +410,8 @@ class Model3D
   vector<int> idMaxArea;   // ID of max tri area 
   vector<real> minArea;    // min triangle area 
   vector<real> maxArea;    // max triangle area
+  vector<real> minLength;  // min triangle length
+  vector<real> maxLength;  // max triangle length
   vector<int> numSurfElems; // number of surface elements
   vector<int> numSurfVerts; // number of surface points 
 

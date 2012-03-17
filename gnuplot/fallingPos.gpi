@@ -8,8 +8,8 @@ set ytic auto                          # set ytics automatically
 set xlabel "nondimensional time"
 set ylabel "z-coordinate"
 set label
-set xrange [0.0:2.0]
-set yrange [2.0:3.5]
+set xrange [0.0:1.5]
+set yrange [2.0:5.5]
 unset grid
 
 set key at 0.4,3.3
@@ -20,14 +20,12 @@ set key box linestyle 1
 # set output '| ps2pdf ~/Desktop/falling.pdf'
 #-------------------------------------------------- 
 
-gravity = 1.0
-f(x)=3.5-(1.0/2.0)*gravity*x*x
+gravity = 1
+f(x)=5.5-(1.0/2.0)*gravity*x*x
 
 f1 = "../dat/f1.dat"
-f4 = "../dat/f4.dat"
 f5 = "../dat/f5.dat"
 
-plot f1 using 1:($8) every 20 title 'numeric' with points,\
-     f4 using 1:($8) every 20 title 'numeric' with points,\
-     f5 using 1:($8) every 20 title 'numeric' with points,\
+plot f1 using 1:($8) every 20 title 'high viscosity' with points,\
+     f5 using 1:($8) every 20 title 'low viscosity' with points,\
  	 f(x) title 'z(x)=3.5-0.5*gravity*x^2' with lines 

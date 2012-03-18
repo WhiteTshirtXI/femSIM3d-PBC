@@ -8437,21 +8437,10 @@ void Model3D::applyBubbleVolumeCorrection()
                    << "|da: " << da << endl;
   cout << setw(26) << color(none,white,black) 
                    << "  area |error: " << fabs(erroa) << endl;
-//--------------------------------------------------
-//   cout << setw(21) << color(none,red,black) 
-//                    << "     ---------------------------- " << endl;
-//   cout << setw(33) << color(none,white,black) << "|initial: " 
-//                    << initSurfaceRadius[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|final: " << surfaceRadius[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|dr: " << dr << endl;
-//   cout << setw(26) << color(none,white,black) 
-//                    << " radius| error: " << fabs(error) << endl;
-//   cout << endl;
-//   cout << setw(28) << color(none,white,black) 
-//                    << "number of iterations: " << count << endl;
-//-------------------------------------------------- 
+  cout << setw(21) << color(none,red,black) 
+                   << "     ---------------------------- " << endl;
+  cout << setw(28) << color(none,white,black) 
+                   << "number of iterations: " << count << endl;
   cout << setw(20) << color(none,red,black) 
                    << "|-------------------------------------|" << endl;
   cout << resetColor() << endl;

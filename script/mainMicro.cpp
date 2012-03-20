@@ -27,8 +27,8 @@ int main(int argc, char **argv)
  // set each bubble length
  vector< real > triEdge;
  triEdge.resize(2);
- triEdge[0] = 0.06;   // wall
- triEdge[1] = 0.08;   // bubble 1 
+ triEdge[0] = 0.04;   // wall
+ triEdge[1] = 0.06;   // bubble 1 
 //--------------------------------------------------
 //  triEdge[2] = 0.09;   // bubble 1 
 //  triEdge[3] = 0.02;   // bubble 1 
@@ -49,21 +49,19 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 10;
  //real We = 0.1162;
- real Fr = 10.1;
+ real Fr = 10;
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
- real c3 = 1.0;  // smooth coord (fujiwara)
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1;
 
- real cfl = 0.4;
+ real cfl = 0.8;
 
- real sigma = 0.159;
- //real sigma = 15.9;
  real mu_in = 0.01;
  real mu_out = 1.00;
- real rho_in = 0.01;
+ real rho_in = 0.001;
  real rho_out = 1.0;
 
  string meshFile = "micro.msh";
@@ -124,7 +122,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);

@@ -149,18 +149,18 @@ void MeshSmooth::stepSmoothFujiwara()
    ySum += ( Y->Get(*vert)-Y->Get(i) )*dist;
    zSum += ( Z->Get(*vert)-Z->Get(i) )*dist;
   }
-  aux = (1.0/distSum)*xSum; // USmooth
-  //aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+  //aux = (1.0/distSum)*xSum; // USmooth
+  aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
   //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
   uSmooth.Set(i,aux);
 
-  aux = (1.0/distSum)*ySum; // VSmooth
-  //aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
+  //aux = (1.0/distSum)*ySum; // VSmooth
+  aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
   //aux = (2.0/distSum)*ySum/dt; // velocidade VSmooth
   vSmooth.Set(i,aux);
 
-  aux = (1.0/distSum)*zSum; //  WSmooth
-  //aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
+  //aux = (1.0/distSum)*zSum; //  WSmooth
+  aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
   //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
   wSmooth.Set(i,aux);
  }
@@ -273,6 +273,36 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
   wSmooth.Set( it,wSum/size ); 
   }
 
+ }
+} // fecha metodo stepSmooth
+
+void MeshSmooth::stepSmoothLonger(clVector &_uVel,clVector &_vVel,clVector &_wVel)
+{
+ list<int> plist;
+ list<int>::iterator vert;
+ real uSum,vSum,wSum;
+ int size; // numero de elementos da lista
+ uSmoothSurface.Dim(numVerts);
+ vSmoothSurface.Dim(numVerts);
+ wSmoothSurface.Dim(numVerts);
+
+ //for (list<int>::iterator it=inVert->begin(); it!=inVert->end(); ++it)
+ for (int it=0;it<numVerts;it++ ) 
+ {
+  plist = neighbourVert->at(it);
+  size = plist.size();
+  uSum = 0.0;
+  vSum = 0.0;
+  wSum = 0.0;
+  for( vert=plist.begin(); vert != plist.end(); ++vert )
+  {
+   uSum += _uVel.Get(*vert);
+   vSum += _vVel.Get(*vert);
+   wSum += _wVel.Get(*vert);
+  }
+  uSmooth.Set( it,uSum/size ); 
+  vSmooth.Set( it,vSum/size ); 
+  wSmooth.Set( it,wSum/size ); 
  }
 } // fecha metodo stepSmooth
 

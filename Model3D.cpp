@@ -972,10 +972,11 @@ void Model3D::mesh2Dto3D()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "             | meshing surface in 3D domain... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
+ tetrahedralize( (char*) "QYYApa",&in,&out ); // no insertion of points
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
@@ -2952,6 +2953,10 @@ void Model3D::insert3dMeshPointsByDiffusion()
 
   // edgeSize is the result of \nabla^2 edge = 0
   if( length > 3.0*maxEdge && 
+	//--------------------------------------------------
+	//   interfaceDistance.Get(v1) > 2*triEdge[1] &&
+	//   interfaceDistance.Get(v2) > 2*triEdge[1] &&
+	//-------------------------------------------------- 
 	  //ipd[vertID] < 200 &&
 	  maxVert > surfMesh.numVerts )
   {
@@ -3014,6 +3019,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
+  //if( length < 0.1*size && 
   if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
@@ -3343,13 +3349,15 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
   real zIn = surfMesh.Z.Get(node)-0.1*triEdge[nb]*myVec.Get(3);
 
+  real edge = triEdge[nb];
+  if( edgeSize.Dim() > 0 )
+   edge = edgeSize.Max();
+
   in.regionlist[5*nb+0] = xIn;
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 5*triEdge[nb]*
-                            triEdge[nb]*
-						    triEdge[nb]*1.4142/12.0;
+  in.regionlist[5*nb+4] = 5*edge*edge*edge*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
 //--------------------------------------------------
 //   cout << " ------ " << node << " ------" << endl;
@@ -3912,9 +3920,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- //tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
- tetrahedralize( (char*) "QYYApq",&in,&out ); // no insertion of points
+ //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "         " 
       << "|-----------------------------------------------------|" << endl;
@@ -9347,7 +9356,9 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.4*triEdge[vertID] )
+	if( minHeight < 0.4*triEdge[vertID] && 
+	  )
+	   // vertID > 0)
 	{
 	 mark3DPointForDeletion(*vert);
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;

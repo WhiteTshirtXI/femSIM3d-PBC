@@ -78,12 +78,9 @@ void Helmholtz3D::initRisingBubble()
 
 void Helmholtz3D::initMicro()
 {
+ real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
  convC.Dim(numVerts);
- for( int i=0;i<surfMesh->numVerts;i++ )
- {
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  convC.Set(i,aux);
- }
+ convC.SetAll(triEdgeMin);
 
  //real xMid = (X->Min()+X->Max())*0.5;
  real yMid = (Y->Min()+Y->Max())*0.5;
@@ -91,43 +88,18 @@ void Helmholtz3D::initMicro()
  //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
  //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
  real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- real epslocal = 0.1*diameter;
- clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ real tol = diameter/3.0;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real radius = 0.5; // sphere radius
-  // outside mesh
-  if( heaviside->Get(i) < 0.5 ) 
+  // meiuca
+  if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
+	  (Y->Get(i) > yMid-tol && Y->Get(i) < yMid+tol ) &&
+	  (Z->Get(i) > zMid-tol && Z->Get(i) < zMid+tol ) &&
+      ( interfaceDistance->Get(i) > 0.2*diameter ) )
+	convC.Set(i,triEdgeMin*30);
+  else
   {
-   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 1.0*radius )
-   {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
-	convC.Set(i,aux);
-   }
-   else
-   {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
-	convC.Set(i,aux);
-	if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
-        (Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
-		(Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
-	{
-	 real aux = triEdge[0]*10;
-	 convC.Set(i,aux);
-	}
-	else
-	{
-	 real aux = triEdge[0];
-	 convC.Set(i,aux);
-	}
-   }
-  }
-  else                         // inside mesh
-  {
-   real aux = triEdge[vertIdRegion->Get(i)];
-   convC.Set(i,aux);
+   convC.Set(i,triEdgeMin*1);
   }
  }
 }
@@ -150,7 +122,6 @@ void Helmholtz3D::initSquareChannel()
  //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
  real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
  real epslocal = 0.1*diameter;
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&

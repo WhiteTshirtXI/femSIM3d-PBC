@@ -1362,7 +1362,7 @@ void Simulator3D::stepALE()
  setInterfaceVelocity();
 
  // smoothing - coordenadas
- MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ MeshSmooth e1(*m,1.0); // criando objeto MeshSmooth
  e1.stepSmoothFujiwara();
 
 #if NUMGLEU == 5
@@ -1402,18 +1402,38 @@ void Simulator3D::stepALEVel()
 
  setInterfaceVelocity();
 
- setALEVelBC();
- //setAnnularALEVelBC();
- 
- // smoothing - velocidade
- MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSmooth(uALE,vALE,wALE);
- uSmooth = *e1.getUSmooth();
- vSmooth = *e1.getVSmooth();
- wSmooth = *e1.getWSmooth();
+//--------------------------------------------------
+//  // smoothing - velocidade
+//  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+//  e1.stepSmooth(uALE,vALE,wALE);
+//  uSmooth = *e1.getUSmooth();
+//  vSmooth = *e1.getVSmooth();
+//  wSmooth = *e1.getWSmooth();
+//-------------------------------------------------- 
+
+ uSmooth=uALE;
+ vSmooth=vALE;
+ wSmooth=wALE;
+ MeshSmooth e3(*m,dt); // criando objeto MeshSmooth
+ for( int i=0;i<20;i++ )
+ {
+  // smoothing - velocidade
+  e3.stepSmoothLonger(uSmooth,vSmooth,wSmooth);
+  uSmooth = *e3.getUSmooth();
+  vSmooth = *e3.getVSmooth();
+  wSmooth = *e3.getWSmooth();
+
+  for( int i=0;i<surfMesh->numVerts;i++ )
+  {
+   int surfaceNode = surface->Get(i);
+   uSmooth.Set(i,uALE.Get(i));
+   vSmooth.Set(i,vALE.Get(i));
+   wSmooth.Set(i,wALE.Get(i));
+  }
+ }
 
  // smoothing coords
- MeshSmooth e2(*m,dt); // criando objeto MeshSmooth
+ MeshSmooth e2(*m,1.0); // criando objeto MeshSmooth
  e2.stepSmoothFujiwara();
  uSmoothCoord = *e2.getUSmooth();
  vSmoothCoord = *e2.getVSmooth();

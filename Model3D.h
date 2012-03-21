@@ -129,11 +129,6 @@ class Model3D
   void setSurfaceArea();
   real getSurfaceArea(int _region);
 
-  // Radius calculation
-  void setInitSurfaceRadius();
-  void setSurfaceRadius();
-  real getSurfaceRadius(int _region);
-
   void applyBubbleVolumeCorrection();
   clVector computeConvexRegionCentroid(int _region);
   clVector computeConvexRegionCentroid2D(real _zPlane);
@@ -241,7 +236,8 @@ class Model3D
   void setNeighbourSurfacePoint();
   void setVertNeighbour();
   void setOFace();
-  void meshStats();
+  void triMeshStats();
+  void tetMeshStats();
   void clearBC();
   void reAllocStruct();
   void computeSurfaceNormal();
@@ -279,7 +275,9 @@ class Model3D
   void setZ(clVector _Z);
   clVector* getEdgeSize();
   void setEdgeSize(clVector _edgeSize);
-  vector<real> getAverageTriEdge();
+  vector<real> getAverageTriLength();
+  vector<real> getAverageTriArea();
+  vector<real> getAverageTetVolume();
 
   clVector* getUC();
   clVector* getVC();
@@ -332,14 +330,14 @@ class Model3D
   list<int>* getOutElem();
   list<int>* getInElem();
   real getMinEdge();
+  void setTriEdge();
   void setTriEdge(vector< real > _triEdge);
+  void initMeshParameters();
   vector<real> getTriEdge();
   void setTetVol(vector< real > _tetVol);
   vector<real> getTetVol();
-  vector<real> getInitSurfaceRadius();
   vector<real> getInitSurfaceArea();
   vector<real> getInitSurfaceVolume();
-  vector<real> getSurfaceRadius();
   vector<real> getSurfaceArea();
   vector<real> getSurfaceVolume();
   void setSingleElement();
@@ -417,9 +415,10 @@ class Model3D
 
   vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
   vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais
-  vector<real> initSurfaceRadius,surfaceRadius;  // vector de areas iniciais
   vector<real> triEdge;               // vector de tamanho de aresta 
-  vector<real> averageTriEdge;        // vector de tamanho de aresta medio
+  vector<real> averageTriLength;    // vector de tamanho de aresta medio
+  vector<real> averageTriArea;      // vector de tamanho de aresta medio
+  vector<real> averageTetVolume;    // vector de volume medio
   vector<real> tetVol;                // vector de volumes 
   vector< list<int> > neighbourElem;  // lista de elementos de cada no
   vector< list<int> > neighbourVert;  // lista de vizinhos de cada no

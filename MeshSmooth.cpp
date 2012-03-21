@@ -33,6 +33,7 @@ MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
  inVert = m->getInVert();
  surface = m->getSurface();
  heaviside = m->getHeaviside();
+ triEdge = m->getTriEdge();
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -501,4 +502,115 @@ clVector* MeshSmooth::getUSmoothSurface(){ return &uSmoothSurface; }
 clVector* MeshSmooth::getVSmoothSurface(){ return &vSmoothSurface; }
 clVector* MeshSmooth::getWSmoothSurface(){ return &wSmoothSurface; }
 
+void MeshSmooth::stepSmoothFujiwaraByHeight()
+{
+ uSmooth.Dim(numVerts);
+ vSmooth.Dim(numVerts);
+ wSmooth.Dim(numVerts);
+ for( int elem=0;elem<surfMesh->numElems;elem++ )
+ {
+  int v1 = surfMesh->IEN.Get(elem,0);
+  int v2 = surfMesh->IEN.Get(elem,1);
+  int v3 = surfMesh->IEN.Get(elem,2);
 
+  // points
+  real P1x = surfMesh->X.Get(v1);
+  real P1y = surfMesh->Y.Get(v1);
+  real P1z = surfMesh->Z.Get(v1);
+  real P2x = surfMesh->X.Get(v2);
+  real P2y = surfMesh->Y.Get(v2);
+  real P2z = surfMesh->Z.Get(v2);
+  real P3x = surfMesh->X.Get(v3);
+  real P3y = surfMesh->Y.Get(v3);
+  real P3z = surfMesh->Z.Get(v3);
+
+  // centroid
+  real xMid = (P1x+P2x+P3x)/3.0;
+  real yMid = (P1y+P2y+P3y)/3.0;
+  real zMid = (P1z+P2z+P3z)/3.0;
+
+  // mid 12
+  real xMid12 = (P1x+P2x)/2.0;
+  real yMid12 = (P1y+P2y)/2.0;
+  real zMid12 = (P1z+P2z)/2.0;
+
+  // mid 13
+  real xMid13 = (P1x+P3x)/2.0;
+  real yMid13 = (P1y+P3y)/2.0;
+  real zMid13 = (P1z+P3z)/2.0;
+
+  // mid 23
+  real xMid23 = (P2x+P3x)/2.0;
+  real yMid23 = (P2y+P3y)/2.0;
+  real zMid23 = (P2z+P3z)/2.0;
+
+  // list of neighbouring points
+  list<int> plist = neighbourVert->at(v1);
+  for(list<int>::iterator vert=plist.begin(); vert != plist.end();++vert )
+  {
+   if( *vert > surfMesh->numVerts )
+   {
+	int vertID = surfMesh->vertIdRegion.Get(v1);
+
+	real Pxvert = X->Get(*vert);
+	real Pyvert = Y->Get(*vert);
+	real Pzvert = Z->Get(*vert);
+
+	real height1 = distance(P1x,P1y,P1z,Pxvert,Pyvert,Pzvert);
+	real height2 = distance(P2x,P2y,P2z,Pxvert,Pyvert,Pzvert);
+	real height3 = distance(P3x,P3y,P3z,Pxvert,Pyvert,Pzvert);
+	// centroid
+	real height4 = distance(xMid,yMid,zMid,Pxvert,Pyvert,Pzvert);
+	// xMid12 
+	real height5 = distance(xMid12,yMid12,zMid12,Pxvert,Pyvert,Pzvert);
+	// xMid13 
+	real height6 = distance(xMid13,yMid13,zMid13,Pxvert,Pyvert,Pzvert);
+	// xMid23 
+	real height7 = distance(xMid23,yMid23,zMid23,Pxvert,Pyvert,Pzvert);
+
+	real minHeight = min(height1,height2);
+	minHeight = min(minHeight,height3);
+	minHeight = min(minHeight,height4);
+	minHeight = min(minHeight,height5);
+	minHeight = min(minHeight,height6);
+	minHeight = min(minHeight,height7);
+
+	if( minHeight < 0.4*triEdge[vertID] )
+	{
+	 list<int> plist2 = neighbourVert->at(*vert);
+	 real xSum = 0.0;
+	 real ySum = 0.0;
+	 real zSum = 0.0;
+	 real distSum = 0.0;
+	 for(list<int>::iterator viz=plist2.begin(); viz != plist2.end(); ++viz )
+	 {
+	  // distance between the vertex *it and all its neighbours
+	  real dist = distance( X->Get(*viz),Y->Get(*viz),Z->Get(*viz),
+	                    	X->Get(*vert),Y->Get(*vert),Z->Get(*vert) );
+	  // sum of distances
+	  distSum += dist;   
+
+	  // 
+	  xSum += ( X->Get(*viz)-X->Get(*vert) )*dist;
+	  ySum += ( Y->Get(*viz)-Y->Get(*vert) )*dist;
+	  zSum += ( Z->Get(*viz)-Z->Get(*vert) )*dist;
+	 }
+	 //aux = (1.0/distSum)*xSum; // USmooth
+	 real aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+	 //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
+	 uSmooth.Set(*vert,aux);
+
+	 //aux = (1.0/distSum)*ySum; // VSmooth
+	 aux = (1.0/distSum)*ySum/dt; // velocidade VSmooth
+	 //aux = (2.0/distSum)*ySum/dt; // velocidade VSmooth
+	 vSmooth.Set(*vert,aux);
+
+	 //aux = (1.0/distSum)*zSum; //  WSmooth
+	 aux = (1.0/distSum)*zSum/dt; // velocidade WSmooth
+	 //aux = (2.0/distSum)*zSum/dt; // velocidade WSmooth
+	 wSmooth.Set(*vert,aux);
+	}
+   }
+  }
+ }
+}

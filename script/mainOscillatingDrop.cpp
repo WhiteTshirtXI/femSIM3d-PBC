@@ -221,6 +221,7 @@ int main(int argc, char **argv)
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
   //m1.setNormalAndKappa();
+  //m1.initMeshParameters();
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();

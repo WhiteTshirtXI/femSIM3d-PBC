@@ -22,10 +22,6 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- vector< real > triEdge;
- triEdge.resize(1);
- triEdge[0] = 0.3; // wall 
-
  int iter = 1;
  real Re = 10000;
  real Sc = 2000;
@@ -62,7 +58,7 @@ int main(int argc, char **argv)
  //m1.setMeshStep(40,20,4);
  m1.readMSH(mesh);
  m1.setInterfaceBC();
- m1.setTriEdge(triEdge);
+ m1.setTriEdge();
  m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
  //m1.setAdimenStep();
@@ -78,6 +74,7 @@ int main(int argc, char **argv)
  m1.setMapEdge();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
+ m1.tetMeshStats();
  m1.setStepBC();
  m1.setCStepBC();
 

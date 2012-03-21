@@ -33,7 +33,9 @@ Model3D::Model3D(const Model3D &_mRight)
   yCenter = _mRight.yCenter;
   zCenter = _mRight.zCenter;
   dVerts = _mRight.dVerts;                  
-  averageTriEdge = _mRight.averageTriEdge;
+  averageTriLength = _mRight.averageTriLength;
+  averageTriArea = _mRight.averageTriArea;
+  averageTetVolume = _mRight.averageTetVolume;
   oper = _mRight.oper;
   opersurf = _mRight.opersurf;
 
@@ -107,8 +109,6 @@ Model3D::Model3D(const Model3D &_mRight)
   surfaceVolume = _mRight.surfaceVolume;
   initSurfaceArea = _mRight.initSurfaceArea;
   surfaceArea = _mRight.surfaceArea;
-  initSurfaceRadius = _mRight.initSurfaceRadius;
-  surfaceRadius = _mRight.surfaceRadius;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -3019,8 +3019,8 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  //if( length < 0.1*size && 
-  if( length < 0.7*size && 
+  if( length < 0.1*size && 
+  //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
 	mark3DPointForDeletion(minVert);
@@ -3748,136 +3748,126 @@ void Model3D::delete3DPoints()
  * TETGEN output mesh report.
  *
  * */
-void Model3D::meshStats()
+void Model3D::triMeshStats()
 {
  // fora e dentro das bolhas
  // surfMesh.elemIdRegion == 0 --> wall
  // surfMesh.elemIdRegion == 1 --> bubble 1
  // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
+ vector<real> sumLength;sumLength.clear();
+ sumLength.resize(surfMesh.elemIdRegion.Max()+1);
+ vector<real> sumArea;sumArea.clear();
+ sumArea.resize(surfMesh.elemIdRegion.Max()+1);
+ for( int e=0;e<surfMesh.numElems;e++ )
+ {
+  int v1 = surfMesh.IEN.Get(e,0);
+  real p1x = surfMesh.X.Get(v1); 
+  real p1y = surfMesh.Y.Get(v1); 
+  real p1z = surfMesh.Z.Get(v1); 
+
+  int v2=surfMesh.IEN.Get(e,1);
+  real p2x = surfMesh.X.Get(v2); 
+  real p2y = surfMesh.Y.Get(v2); 
+  real p2z = surfMesh.Z.Get(v2); 
+
+  int v3=surfMesh.IEN.Get(e,2);
+  real p3x = surfMesh.X.Get(v3); 
+  real p3y = surfMesh.Y.Get(v3); 
+  real p3z = surfMesh.Z.Get(v3); 
+
+  int elemID = surfMesh.elemIdRegion.Get(e);
+
+  real length12 = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+  real length13 = distance(p1x,p1y,p1z,p3x,p3y,p3z);
+  real length23 = distance(p2x,p2y,p2z,p3x,p3y,p3z);
+
+  sumLength[elemID] += ( length12+length13+length23 )/3.0;
+
+  real auxMinLength = min( length12,length13 );
+  auxMinLength = min( auxMinLength,length23 );
+
+  real auxMaxLength = max( length12,length13 );
+  auxMaxLength = max( auxMaxLength,length23 );
+
+  real area = fabs(getAreaElem(e));
+  sumArea[elemID] += area;
+
+  // areas
+  if( area < minArea[elemID] ) 
+  {
+   minArea[elemID] = area;
+   idMinArea[elemID] = e;
+  }
+  if( area > maxArea[elemID] ) 
+  {
+   maxArea[elemID] = area;
+   idMaxArea[elemID] = e;
+  }
+
+  // lengths
+  if( auxMinLength < minLength[elemID] ) 
+   minLength[elemID] = auxMinLength;
+
+  if( auxMaxLength > maxLength[elemID] ) 
+   maxLength[elemID] = auxMaxLength;
+
+  numSurfElems[elemID]++;
+ }
+ 
+ // average length
  for( int nb=0;nb<=surfMesh.elemIdRegion.Max();nb++ )
  {
-  // calcula o tamanho medio da aresta na superficie
-  int count = 0;
-  real aux  = 0;
-  for( int i=0;i<mapEdgeTri.DimI();i++ )
-  {
-   int v1 = mapEdgeTri.Get(i,1);
-   if( surfMesh.vertIdRegion.Get(v1) == nb )
-   {
-	aux += mapEdgeTri.Get(i,0);
-	count++;
-   }
-  }
-  averageTriEdge[nb] = aux/count;
-
-  /* ******************************************** *
-   *                                              *
-   * regular    a^3 sqrt(2)    triEdge^3 sqrt(2)  *
-   *   tet    = ----------- = ------------------  *
-   * volume         12                12          *
-   *                                              *
-   * ******************************************** */
-
-  minVolume[nb] = 1.0E+20; // initial value
-  maxVolume[nb] = 1.0E-20; // initial value
-  idMinVolume[nb] = 0;
-  idMaxVolume[nb] = 0;
-
-  intet[nb]=0;
-  for( int i=0;i<numElems;i++ )
-  {
-   int v1 = IEN.Get(i,0);
-   int v2 = IEN.Get(i,1);
-   int v3 = IEN.Get(i,2);
-   int v4 = IEN.Get(i,3);
-
-   if( elemIdRegion.Get(i) == nb )
-   {
-	//int region = _tetmesh.tetrahedronattributelist[i]-1;
-	//real volume = getVolume(v1,v2,v3,v4);
-
-	real aux = fabs(getVolume(i));
-
-	if( heaviside.Get(v1) == 0.5 &&
-	    heaviside.Get(v2) == 0.5 &&
-	    heaviside.Get(v3) == 0.5 &&
-	    heaviside.Get(v4) == 0.5 )
-	 intet[nb]++;
-
-	if( aux < minVolume[nb] ) 
-	{
-	 minVolume[nb] = aux;
-	 idMinVolume[nb] = i;
-	}
-	if( aux > maxVolume[nb] ) 
-	{
-	 maxVolume[nb] = aux;
-	 idMaxVolume[nb] = i;
-	}
-   }
-  }
-
-  minArea[nb] = 1.0E+20; // initial value
-  maxArea[nb] = 1.0E-20; // initial value
-  idMinArea[nb] = 0;
-  idMaxArea[nb] = 0;
-  minLength[nb] = 1.0E+20; // initial value
-  maxLength[nb] = 1.0E-20; // initial value
-  numSurfElems[nb] = 0;
-
-  for( int i=0;i<surfMesh.numElems;i++ )
-  {
-   if( surfMesh.elemIdRegion.Get(i) == nb )
-   {
-	int v1 = surfMesh.IEN.Get(i,0);
-	real p1x = surfMesh.X.Get(v1);
-	real p1y = surfMesh.Y.Get(v1);
-	real p1z = surfMesh.Z.Get(v1);
-
-	// P2
-	int v2 = surfMesh.IEN.Get(i,1);
-	real p2x = surfMesh.X.Get(v2);
-	real p2y = surfMesh.Y.Get(v2);
-	real p2z = surfMesh.Z.Get(v2);
-
-	// P3
-	int v3 = surfMesh.IEN.Get(i,2);
-	real p3x = surfMesh.X.Get(v3);
-	real p3y = surfMesh.Y.Get(v3);
-	real p3z = surfMesh.Z.Get(v3);
-
-	real dist12 = distance(p1x,p1y,p1z,p2x,p2y,p2z);
-	real dist13 = distance(p1x,p1y,p1z,p3x,p3y,p3z);
-	real dist23 = distance(p2x,p2y,p2z,p3x,p3y,p3z);
-
-	real auxLengthMin = min(dist12,dist13);
-	auxLengthMin = min(auxLengthMin,dist23);
-
-	real auxLengthMax = max(dist12,dist13);
-	auxLengthMin = min(auxLengthMax,dist23);
-
-	if( auxLengthMin < minLength[nb] ) 
-	 minLength[nb] = auxLengthMin;
-	if( auxLengthMax > maxLength[nb] ) 
-	 maxLength[nb] = auxLengthMax;
-
-	real auxArea = fabs(getAreaElem(i));
-
-	if( auxArea < minArea[nb] ) 
-	{
-	 minArea[nb] = auxArea;
-	 idMinArea[nb] = i;
-	}
-	if( auxArea > maxArea[nb] ) 
-	{
-	 maxArea[nb] = auxArea;
-	 idMaxArea[nb] = i;
-	}
-
-	numSurfElems[nb]++;
-   }
-  }
+  averageTriLength[nb] = sumLength[nb]/numSurfElems[nb];
+  averageTriArea[nb] = sumArea[nb]/numSurfElems[nb];
  }
+}
+
+void Model3D::tetMeshStats()
+{
+ /* ******************************************** *
+  *                                              *
+  * regular    a^3 sqrt(2)    triEdge^3 sqrt(2)  *
+  *   tet    = ----------- = ------------------  *
+  * volume         12                12          *
+  *                                              *
+  * ******************************************** */
+
+ vector<real> sumVolume;sumVolume.clear();
+ sumVolume.resize(elemIdRegion.Max()+1);
+ vector<int> count;count.clear();
+ count.resize(elemIdRegion.Max()+1);
+ for( int e=0;e<numElems;e++ )
+ {
+  int v1 = IEN.Get(e,0);
+  int v2 = IEN.Get(e,1);
+  int v3 = IEN.Get(e,2);
+  int v4 = IEN.Get(e,3);
+
+  int elemID = elemIdRegion.Get(e);
+  real volume = fabs(getVolume(e));
+
+  if( heaviside.Get(v1) == 0.5 &&
+	  heaviside.Get(v2) == 0.5 &&
+	  heaviside.Get(v3) == 0.5 &&
+	  heaviside.Get(v4) == 0.5 )
+   intet[elemID]++;
+
+  sumVolume[elemID] += volume;
+
+  if( volume < minVolume[elemID] ) 
+  {
+   minVolume[elemID] = volume;
+   idMinVolume[elemID] = e;
+  }
+  if( volume > maxVolume[elemID] ) 
+  {
+   maxVolume[elemID] = volume;
+   idMaxVolume[elemID] = e;
+  }
+  count[elemID]++;
+ }
+ for( int nb=0;nb<=elemIdRegion.Max();nb++ )
+  averageTetVolume[nb] = sumVolume[nb]/count[nb];
 }
 
 /*
@@ -4428,7 +4418,7 @@ void Model3D::setMicroWallBC()
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
 
-   uc.Set(*it,1.0);
+   uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -4439,7 +4429,7 @@ void Model3D::setMicroWallBC()
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
 
-   uc.Set(*it,0.0);
+   uc.Set(*it,-1.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -6427,9 +6417,8 @@ void Model3D::setSurfaceConfig()
 
  setSurfaceVolume();
  setSurfaceArea();
- //setSurfaceRadius();
- 
- meshStats();
+ triMeshStats();
+ tetMeshStats();
 }
 
 bool Model3D::testFace(int v1, int v2, int v3, int v4)
@@ -6552,13 +6541,13 @@ real Model3D::getAreaElem(int _elem)
  int v3=(int) surfMesh.IEN.Get(_elem,2);
 
  // vectors
- real x1 = X.Get(v2) - X.Get(v1);
- real y1 = Y.Get(v2) - Y.Get(v1);
- real z1 = Z.Get(v2) - Z.Get(v1);
+ real x1 = surfMesh.X.Get(v2) - surfMesh.X.Get(v1);
+ real y1 = surfMesh.Y.Get(v2) - surfMesh.Y.Get(v1);
+ real z1 = surfMesh.Z.Get(v2) - surfMesh.Z.Get(v1);
 
- real x2 = X.Get(v3) - X.Get(v1);
- real y2 = Y.Get(v3) - Y.Get(v1);
- real z2 = Z.Get(v3) - Z.Get(v1);
+ real x2 = surfMesh.X.Get(v3) - surfMesh.X.Get(v1);
+ real y2 = surfMesh.Y.Get(v3) - surfMesh.Y.Get(v1);
+ real z2 = surfMesh.Z.Get(v3) - surfMesh.Z.Get(v1);
 
  real crossX = (y1*z2)-(z1*y2);
  real crossY = -( (x1*z2)-(z1*x2) );
@@ -6739,12 +6728,12 @@ void Model3D::setTetVol(vector< real > _tetVol){tetVol= _tetVol;}
 vector<real> Model3D::getTetVol(){return tetVol;}
 clVector* Model3D::getEdgeSize(){ return &edgeSize; }
 void Model3D::setEdgeSize(clVector _edgeSize){ edgeSize = _edgeSize; }
-vector<real> Model3D::getAverageTriEdge(){ return averageTriEdge; }
+vector<real> Model3D::getAverageTriLength(){ return averageTriLength; }
+vector<real> Model3D::getAverageTriArea(){ return averageTriArea; }
+vector<real> Model3D::getAverageTetVolume(){ return averageTetVolume; }
 
-vector<real> Model3D::getInitSurfaceRadius(){return initSurfaceRadius;}
 vector<real> Model3D::getInitSurfaceArea(){return initSurfaceArea;}
 vector<real> Model3D::getInitSurfaceVolume(){return initSurfaceVolume;}
-vector<real> Model3D::getSurfaceRadius(){return surfaceRadius;}
 vector<real> Model3D::getSurfaceArea(){return surfaceArea;}
 vector<real> Model3D::getSurfaceVolume(){return surfaceVolume;}
 
@@ -6797,7 +6786,9 @@ void Model3D::operator=(Model3D &_mRight)
   zCenter = _mRight.zCenter;
   dVerts = _mRight.dVerts;                  
   minEdge = _mRight.minEdge;
-  averageTriEdge = _mRight.averageTriEdge;
+  averageTriLength = _mRight.averageTriLength;
+  averageTriArea = _mRight.averageTriArea;
+  averageTetVolume = _mRight.averageTetVolume;
   isp = _mRight.isp;
   ispc = _mRight.ispc;
   rsp = _mRight.rsp;        
@@ -6871,8 +6862,6 @@ void Model3D::operator=(Model3D &_mRight)
   surfaceVolume = _mRight.surfaceVolume;
   initSurfaceArea = _mRight.initSurfaceArea;
   surfaceArea = _mRight.surfaceArea;
-  initSurfaceRadius = _mRight.initSurfaceRadius;
-  surfaceRadius = _mRight.surfaceRadius;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -7382,43 +7371,6 @@ void Model3D::setSurfaceArea()
   surfaceArea[nb] = getSurfaceArea(nb);
 }
 
-void Model3D::setInitSurfaceRadius()
-{
- initSurfaceRadius.clear();
- initSurfaceRadius.resize((int) surfMesh.elemIdRegion.Max()+1);
-
- // surfMesh.elemIdRegion == 0 --> none
- // surfMesh.elemIdRegion == 1 --> wall
- // surfMesh.elemIdRegion == 2 --> bubble 1
- // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
- for( int nb=0;nb<=surfMesh.elemIdRegion.Max();nb++ )
-  initSurfaceRadius[nb] = 3.0*initSurfaceVolume[nb]/initSurfaceArea[nb];
-}
-
-/*
- * A = 4*PI*r^2
- * V = (4/3)*PI*r^3
- *
- *         4
- *        --- * PI * r^3
- *  V      3                 r            3*V
- * --- = ---------------- = --- ---> r = -----
- *  A      4 * PI * r^2      3             A
- *
- * */
-void Model3D::setSurfaceRadius()
-{
- surfaceRadius.clear();
- surfaceRadius.resize((int) surfMesh.elemIdRegion.Max()+1);
-
- // surfMesh.elemIdRegion == 0 --> none
- // surfMesh.elemIdRegion == 1 --> wall
- // surfMesh.elemIdRegion == 2 --> bubble 1
- // surfMesh.elemIdRegion == 3 --> bubble 2 , etc
- for( int nb=0;nb<=surfMesh.elemIdRegion.Max();nb++ )
-  surfaceRadius[nb] = 3.0*surfaceVolume[nb]/surfaceArea[nb];
-}
-
 /* 
  * Computing the volume of a surface V by the divergence theorem:
  *
@@ -7568,24 +7520,6 @@ real Model3D::getSurfaceArea(int _region)
   if( surfMesh.elemIdRegion.Get(tri) == _region )
    sumArea += getAreaElem(tri);
  return sumArea;
-}
-
-/*
- * Calculates the radius of a surface identified by (int _region). This
- * method computes the radius dividing the 3.0*surfaceVolume/surfaceArea
- * input: region defined by elemIdRegion.
- *        1 none
- *        2 wall
- *        3 bubble1
- *        4 bubble2, etc.
- *
- * return: radius of a surface
- *
- * */
-real Model3D::getSurfaceRadius(int _region)
-{
- real radius = 3.0*surfaceVolume[_region]/surfaceArea[_region];
- return radius;
 }
 
 void Model3D::setSingleElement()
@@ -8372,11 +8306,9 @@ void Model3D::applyBubbleVolumeCorrection()
  {
   real aux = 0;
 
-  //real dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
 
-  //real error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
   real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
   real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
 
@@ -8415,11 +8347,8 @@ void Model3D::applyBubbleVolumeCorrection()
    }
    surfaceVolume[nb] = getSurfaceVolume(nb);
    surfaceArea[nb] = getSurfaceArea(nb);
-   //surfaceRadius[nb] = getSurfaceRadius(nb);
-   //dr = (initSurfaceRadius[nb]- surfaceRadius[nb]);
    da = (initSurfaceArea[nb] - surfaceArea[nb]);
    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-   //error = (1.0 - surfaceRadius[nb]/initSurfaceRadius[nb]);
    erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
    errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
    count++;
@@ -9200,10 +9129,21 @@ void Model3D::smoothPoint(int _node)
 
 void Model3D::setTriEdge(vector< real > _triEdge)
 {
+ initMeshParameters();
  triEdge = _triEdge;
+}
 
+void Model3D::setTriEdge()
+{
+ initMeshParameters();
+ triMeshStats();
+ triEdge = averageTriLength;
+}
+
+void Model3D::initMeshParameters()
+{
  // number of surfaces 
- int numSurface = triEdge.size();
+ int numSurface = surfMesh.elemIdRegion.Max()+1; 
  oper.resize(numSurface);
  opersurf.resize(numSurface);
 
@@ -9228,7 +9168,9 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  badtet.resize(numSurface);
 
  // set surface lengths
- averageTriEdge.resize(numSurface); 
+ averageTriLength.resize(numSurface); 
+ averageTriArea.resize(numSurface); 
+ averageTetVolume.resize(numSurface); 
  tetVol.resize(numSurface); 
  maxVolume.resize(numSurface); 
  minVolume.resize(numSurface); 
@@ -9265,18 +9207,20 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  fill(rph.begin(),rph.end(),0);
 
  fill(badtet.begin(),badtet.end(),0);
- fill(averageTriEdge.begin(),averageTriEdge.end(),0);
+ fill(averageTriLength.begin(),averageTriLength.end(),0);
+ fill(averageTriArea.begin(),averageTriArea.end(),0);
+ fill(averageTetVolume.begin(),averageTetVolume.end(),0);
  fill(tetVol.begin(),tetVol.end(),0);
- fill(maxVolume.begin(),maxVolume.end(),0);
- fill(minVolume.begin(),minVolume.end(),0);
+ fill(maxVolume.begin(),maxVolume.end(),1.0E-20);
+ fill(minVolume.begin(),minVolume.end(),1.0E+20);
  fill(idMaxVolume.begin(),idMaxVolume.end(),0);
  fill(idMinVolume.begin(),idMinVolume.end(),0);
- fill(maxArea.begin(),maxArea.end(),0);
- fill(minArea.begin(),minArea.end(),0);
+ fill(maxArea.begin(),maxArea.end(),1.0E-20);
+ fill(minArea.begin(),minArea.end(),1.0E+20);
  fill(idMaxArea.begin(),idMaxArea.end(),0);
  fill(idMinArea.begin(),idMinArea.end(),0);
- fill(maxLength.begin(),maxLength.end(),0);
- fill(minLength.begin(),minLength.end(),0);
+ fill(maxLength.begin(),maxLength.end(),1.0E-20);
+ fill(minLength.begin(),minLength.end(),1.0E+20);
  fill(numSurfElems.begin(),numSurfElems.end(),0);
  fill(numSurfVerts.begin(),numSurfVerts.end(),0);
  fill(intet.begin(),intet.end(),0);
@@ -9284,9 +9228,6 @@ void Model3D::setTriEdge(vector< real > _triEdge)
 
 void Model3D::remove3dMeshPointsByHeight()
 {
- // number of removed 2d mesh points by interface distance
- fill(rph.begin(),rph.end(),0);
-
  for( int elem=0;elem<surfMesh.numElems;elem++ )
  {
   int v1 = surfMesh.IEN.Get(elem,0);
@@ -9356,9 +9297,9 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.4*triEdge[vertID] && 
+	if( minHeight < 0.4*triEdge[vertID] //&& 
 	  )
-	   // vertID > 0)
+	  // vertID > 0)
 	{
 	 mark3DPointForDeletion(*vert);
 	 cout << "-----> deleting (" << *vert <<  ")" << endl;

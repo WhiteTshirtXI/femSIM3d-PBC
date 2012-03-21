@@ -23,6 +23,7 @@ class MeshSmooth
   clVector compute();
   void stepSmooth();
   void stepSmoothFujiwara();
+void stepSmoothFujiwaraByHeight();
   void stepSurfaceSmoothFujiwara();
   void stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void stepSmoothLonger(clVector &_uVel,clVector &_vVel,clVector &_wVel);
@@ -56,6 +57,7 @@ class MeshSmooth
 
   vector< list<int> > *neighbourVert,*neighbourPoint;
   list<int> *inVert;
+  vector<real> triEdge;
 };
 #endif /* ifndef MESHSMOOTH_H */
 

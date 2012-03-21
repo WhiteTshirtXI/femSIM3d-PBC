@@ -24,17 +24,6 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- // set each bubble length
- vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 0.04;   // wall
- triEdge[1] = 0.06;   // bubble 1 
-//--------------------------------------------------
-//  triEdge[2] = 0.09;   // bubble 1 
-//  triEdge[3] = 0.02;   // bubble 1 
-//  triEdge[4] = 0.02;   // bubble 1 
-//-------------------------------------------------- 
-
  /* 
   * bogdan's thesis 2010 - Film thickness
   * Air-Ethanol
@@ -96,7 +85,7 @@ int main(int argc, char **argv)
 
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdge();
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
@@ -143,7 +132,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdge();
   m1.mesh2Dto3D();
 
   //s1(m1);
@@ -192,7 +181,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
   m1.setMiniElement();
@@ -232,7 +221,7 @@ int main(int argc, char **argv)
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
 #if NUMGLEU == 5
   m1.setMiniElement();
@@ -336,11 +325,11 @@ int main(int argc, char **argv)
   h2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
-  m1.setTriEdge(triEdge);
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
   m1.setNormalAndKappa();
+  m1.initMeshParameters();
 
   // 3D operations
   m1.insert3dMeshPointsByDiffusion();

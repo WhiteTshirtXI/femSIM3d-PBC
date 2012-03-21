@@ -228,7 +228,7 @@ private:
   clVector *elemIdRegion,*vertIdRegion;
   list<int> *inElem,*outElem;
   vector< list<int> >* neighbourPoint;
-  vector<real> averageTriEdge;
+  vector<real> averageTriLength;
   // mesh indexes
   vector<int> isp,ispc,rsp,rspn,rspc,ip,ipd; 
   vector<int> rp,rpi,rpd,rpdist,rph,rpv,csp,flip; 

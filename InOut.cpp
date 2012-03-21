@@ -40,11 +40,9 @@ InOut::InOut( Model3D &_m )
  vertIdRegion = m->getVertIdRegion();
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
- averageTriEdge = m->getAverageTriEdge();
- initSurfaceRadius = m->getInitSurfaceRadius();
+ averageTriLength = m->getAverageTriLength();
  initSurfaceArea = m->getInitSurfaceArea();
  initSurfaceVolume = m->getInitSurfaceVolume();
- surfaceRadius = m->getSurfaceRadius();
  surfaceArea = m->getSurfaceArea();
  surfaceVolume = m->getSurfaceVolume();
 
@@ -116,7 +114,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  vertIdRegion = m->getVertIdRegion();
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
- averageTriEdge = m->getAverageTriEdge();
+ averageTriLength = m->getAverageTriLength();
 
  // surface mesh indexes:
  isp = m->getISP();
@@ -134,10 +132,8 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  idMinArea = m->getIdMinArea();
  maxLength = m->getMaxLength();
  minLength = m->getMinLength();
- initSurfaceRadius = m->getInitSurfaceRadius();
  initSurfaceArea = m->getInitSurfaceArea();
  initSurfaceVolume = m->getInitSurfaceVolume();
- surfaceRadius = m->getSurfaceRadius();
  surfaceArea = m->getSurfaceArea();
  surfaceVolume = m->getSurfaceVolume();
 
@@ -2877,20 +2873,16 @@ void InOut::printMeshReport()
  for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
   cout << "      surface (" << nb << ")" << endl;
-//--------------------------------------------------
-//   cout << "       |radius (initRadius):                          "
-//        << surfaceRadius[nb] << " (" << initSurfaceRadius[nb] << ")" << endl;
-//-------------------------------------------------- 
   cout << "       |area (initArea):                              "
        << surfaceArea[nb] << " (" << initSurfaceArea[nb] << ")" << endl;
   cout << "       |volume (initVolume):                          "
        << surfaceVolume[nb] << " (" << initSurfaceVolume[nb] << ")" << endl;
   cout << "       |average element edge length:                  " 
-       << averageTriEdge[nb] << endl;
+       << averageTriLength[nb] << endl;
   cout << "       |desired tetrahedron volume:                   "   
-       << averageTriEdge[nb]*
-	      averageTriEdge[nb]*
-		  averageTriEdge[nb]*sqrt(2)/12 << endl;
+       << averageTriLength[nb]*
+	      averageTriLength[nb]*
+		  averageTriLength[nb]*sqrt(2)/12 << endl;
   cout << "       |triangle edge size:                           "  
        << triEdge[nb] << endl;
   cout << "       |number of surface triangle:                   "  
@@ -3483,7 +3475,7 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 
  real averageNeigh = sumNeighbours/surfacePoints;
 
- averageTriEdge = m->getAverageTriEdge();
+ averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
  file << setw(10) << simTime << " " 
@@ -3493,9 +3485,9 @@ void InOut::saveKappaErrorSphere(const char* _dir)
       << setw(17) << kappaErrorRel << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[1] << " " 
+      << setw(13) << averageTriLength[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[1]/radius << " " 
+      << setw(13) << averageTriLength[1]/radius << " " 
 	  << setprecision(3) << fixed
       << setw(14) << surfaceArea[1] << " " 
       << setw(14) << surfaceVolume[1] << " " 
@@ -3618,7 +3610,7 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
 
  real averageNeigh = sumNeighbours/countK;
 
- averageTriEdge = m->getAverageTriEdge();
+ averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
  file << setw(10) << simTime << " " 
@@ -3628,9 +3620,9 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
       << setw(17) << kappaErrorRel << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[1] << " " 
+      << setw(13) << averageTriLength[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[1]/radius << " " 
+      << setw(13) << averageTriLength[1]/radius << " " 
 	  << setprecision(3) << fixed
       << setw(14) << surfaceArea[1] << " " 
       << setw(14) << surfaceVolume[1] << " " 
@@ -3777,7 +3769,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
 
  real averageNeigh = sumNeighbours/surfacePoints;
 
- averageTriEdge = m->getAverageTriEdge();
+ averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
  file << setw(10) << simTime << " " 
@@ -3786,9 +3778,9 @@ void InOut::saveKappaErrorTorus(const char* _dir)
       << setw(17) << kappaError << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
-      << setw(13) << averageTriEdge[1] << " " 
+      << setw(13) << averageTriLength[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriEdge[1]/radius1 << " " 
+      << setw(13) << averageTriLength[1]/radius1 << " " 
 	  << setprecision(3) << fixed
       << setw(14) << surfaceArea[1] << " " 
       << setw(14) << surfaceVolume[1] << " " 

@@ -1425,7 +1425,6 @@ void Simulator3D::stepALEVel()
 
   for( int i=0;i<surfMesh->numVerts;i++ )
   {
-   int surfaceNode = surface->Get(i);
    uSmooth.Set(i,uALE.Get(i));
    vSmooth.Set(i,vALE.Get(i));
    wSmooth.Set(i,wALE.Get(i));
@@ -1438,6 +1437,15 @@ void Simulator3D::stepALEVel()
  uSmoothCoord = *e2.getUSmooth();
  vSmoothCoord = *e2.getVSmooth();
  wSmoothCoord = *e2.getWSmooth();
+
+//--------------------------------------------------
+//  // smoothing coords
+//  MeshSmooth e4(*m,1.0); // criando objeto MeshSmooth
+//  e4.stepSmoothFujiwaraByHeight();
+//  clVector uSmoothHeight = *e4.getUSmooth();
+//  clVector vSmoothHeight = *e4.getVSmooth();
+//  clVector wSmoothHeight = *e4.getWSmooth();
+//-------------------------------------------------- 
 
  // compute ALE
  uALE = c1*uVert+c2*uSmooth+c3*uSmoothCoord;

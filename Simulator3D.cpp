@@ -2388,7 +2388,7 @@ void Simulator3D::setDtALETwoPhase()
  setDtLagrangianNorberto();
  setDtGravity();
  dtSemiLagrangian = dtLagrangian;
- dtSurfaceTension = 0.0;
+ setDtSemiLagrangian();
 
  real dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
  dtALETwoPhase = min(dtALETwoPhase,getDtGravity());
@@ -2409,6 +2409,7 @@ void Simulator3D::setDtALESinglePhase()
  setDtLagrangianNorberto();
  setDtGravity();
  dtSemiLagrangian=dtLagrangian;
+ dtSurfaceTension = 0.0;
 
  real dtALETwoPhase = min(getDtLagrangian(),getDtGravity());
 

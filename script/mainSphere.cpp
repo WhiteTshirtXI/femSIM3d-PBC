@@ -22,12 +22,6 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
- // set each bubble length
- vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 1.0; // wall
- triEdge[1] = 0.08; // bubble 1 
-
  // static bubble test (Fabricio's thesis (2005))
  real Re = 100;
  real We = 0.2;
@@ -37,9 +31,6 @@ int main(int argc, char **argv)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.0;  // surface smooth cord (fujiwara)
  real alpha = 1;
- real beta = 1;
-
- real sigma = 1.0;
 
  real mu_in = 1.0;
  real mu_out = 0.01;
@@ -69,7 +60,7 @@ int main(int argc, char **argv)
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
- m1.setTriEdge(triEdge);
+ m1.setTriEdge();
  m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
 #if NUMGLEU == 5
@@ -93,8 +84,6 @@ int main(int argc, char **argv)
  s1.setD1(d1);
  s1.setD2(d2);
  s1.setAlpha(alpha);
- s1.setBeta(beta);
- s1.setSigma(sigma);
  //s1.setDtALETwoPhase(dt);
  s1.setMu(mu_in,mu_out);
  s1.setRho(rho_in,rho_out);
@@ -110,7 +99,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 1000;
  for( int i=1;i<nIter;i++ )
@@ -120,10 +108,14 @@ int main(int argc, char **argv)
        << i << endl << endl;
   cout << resetColor();
 
+  s1.setDtALETwoPhase();
+
+  InOut save(m1,s1); // cria objeto de gravacao
+  save.printSimulationReport();
+
   //s1.stepLagrangian();
   //s1.stepALE();
   s1.stepALEVel();
-  s1.setDtALETwoPhase();
   s1.movePoints();
   s1.assemble();
   s1.matMount();
@@ -133,7 +125,6 @@ int main(int argc, char **argv)
   s1.setInterfaceGeo();
   s1.unCoupled();
 
-  InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
   save.saveVTKHalf(vtkFolder,"simCutHalf",i);
@@ -144,7 +135,6 @@ int main(int argc, char **argv)
   save.saveParasiticCurrent(datFolder);
   save.chordalPressure(datFolder,"chordalPressure",i);
   //save.saveMeshInfo(datFolder);
-  save.printMeshReport();
 
   s1.saveOldData();
 

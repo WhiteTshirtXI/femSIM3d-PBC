@@ -560,13 +560,13 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
   * Q: Quiet: No terminal output except errors.
   * */
  cout << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
-      << "             | meshing 3D points... ";
+      << "                | meshing 3D points... ";
  tetrahedralize( (char*) "Q",&in,&out );
  cout << "finished | " << resetColor() << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << endl;
 
@@ -907,13 +907,13 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
   * Q: Quiet: No terminal output except errors.
   * */
  cout << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
-      << "             | meshing 3D points... ";
+      << "                | meshing 3D points... ";
  tetrahedralize( (char*) "Q",&in,&out );
  cout << "finished | " << resetColor() << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << endl;
 
@@ -968,10 +968,10 @@ void Model3D::mesh2Dto3D()
   * q: Quality mesh generation. Min radius-edge ratio may be specifyed
   * */
  cout << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
-      << "             | meshing surface in 3D domain... ";
+      << "                 | meshing surface to 3D domain... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
@@ -979,7 +979,7 @@ void Model3D::mesh2Dto3D()
  tetrahedralize( (char*) "QYYApa",&in,&out ); // no insertion of points
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
@@ -3215,13 +3215,13 @@ void Model3D::mesh2Dto3DOriginal()
   * Q: Quiet: No terminal output except errors.
   * */
  cout << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
-      << "             | complete re-meshing the domain... ";
+      << "                | complete re-meshing the domain... ";
  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
  cout << "finished | " << resetColor() << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");
@@ -3902,10 +3902,10 @@ void Model3D::mesh3DPoints()
   * q: Quality mesh generation. Min radius-edge ratio may be specifyed
   * */
  cout << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
-      << "             | re-meshing 3D points... ";
+      << "                     | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
@@ -3915,7 +3915,7 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
  //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
- cout << "         " 
+ cout << "            " 
       << "|-----------------------------------------------------|" << endl;
  //out.save_elements("out");
  //out.save_nodes("out");

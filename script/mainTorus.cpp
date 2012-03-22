@@ -22,12 +22,6 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
- // set each bubble length
- vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 0.8; // wall
- triEdge[1] = 0.1; // bubble 1 
-
  // static bubble test (Fabricio's thesis (2005))
  int iter = 1;
  real Re = 10;
@@ -76,7 +70,7 @@ int main(int argc, char **argv)
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
- m1.setTriEdge(triEdge);
+ m1.setTriEdge();
  //m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
 #if NUMGLEU == 5
@@ -119,7 +113,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;
@@ -133,10 +126,14 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   s1.setDtALETwoPhase();
+
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.printSimulationReport();
+
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   s1.setDtALETwoPhase();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -147,7 +144,6 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKHalf(vtkFolder,"simCutHalf",iter);

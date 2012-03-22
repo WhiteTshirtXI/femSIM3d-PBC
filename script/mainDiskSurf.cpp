@@ -95,7 +95,6 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;

@@ -2345,17 +2345,8 @@ void Simulator3D::setDtLagrangianNorberto()
  * */
 void Simulator3D::setDtSemiLagrangian()
 {
- real minEdge = m->getMinEdge();
-
- clVector velU = uSolOld-uALE;
- clVector velV = vSolOld-vALE;
- clVector velW = wSolOld-wALE;
-
- real velMax = max( 1.0,velU.Abs().Max() );
- velMax = max( velMax,velV.Abs().Max() );
- velMax = max( velMax,velW.Abs().Max() );
-
- dtSemiLagrangian = minEdge/velMax;
+ setDtLagrangianNorberto();
+ dtSemiLagrangian=dtLagrangian;
 }
 
 void Simulator3D::setDtGravity()
@@ -2375,29 +2366,13 @@ void Simulator3D::setDtEulerian()
 {
  // setting required dt
  setDtSemiLagrangian();
+ setDtGravity();
+ dtSurfaceTension=0.0;
 
  real dtEulerian = min(1.0,getDtSemiLagrangian());
+ dtEulerian = min(dtEulerian,getDtGravity());
 
  dt = cfl*dtEulerian;
-
- cout << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|------------- TIME STEP -------------|" << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Semi-Lagrangian:    " << dtSemiLagrangian << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Gravity:            " << dtGravity << endl;
- cout << setw(21) << color(none,red,black) 
-                  << "    -------------------------------    " << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "CFL:                " << cfl << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "dt:                 " << dt << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "time:               " << time << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
- cout << resetColor() << endl;
 }
 
 /*
@@ -2411,36 +2386,14 @@ void Simulator3D::setDtALETwoPhase()
 {
  // setting required dt
  setDtLagrangianNorberto();
- setDtSurfaceTension();
  setDtGravity();
+ dtSemiLagrangian = dtLagrangian;
+ dtSurfaceTension = 0.0;
 
  real dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
  dtALETwoPhase = min(dtALETwoPhase,getDtGravity());
 
  dt = cfl*dtALETwoPhase;
-
- cout << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|------------- TIME STEP -------------|" << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Lagrangian:         " << dtLagrangian << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Semi-Lagrangian:    " << dtSemiLagrangian << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Surface tension:    " << dtSurfaceTension << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Gravity:            " << dtGravity << endl;
- cout << setw(21) << color(none,red,black) 
-                  << "    -------------------------------    " << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "CFL:                " << cfl << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "dt:                 " << dt << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "time:               " << time << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
- cout << resetColor() << endl;
 }
 
 /*
@@ -2455,31 +2408,11 @@ void Simulator3D::setDtALESinglePhase()
  // setting required dt
  setDtLagrangianNorberto();
  setDtGravity();
+ dtSemiLagrangian=dtLagrangian;
 
  real dtALETwoPhase = min(getDtLagrangian(),getDtGravity());
 
  dt = cfl*dtALETwoPhase;
-
- cout << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|------------- TIME STEP -------------|" << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Lagrangian:         " << dtLagrangian << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Semi-Lagrangian:    " << dtSemiLagrangian << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "Gravity:            " << dtGravity << endl;
- cout << setw(21) << color(none,red,black) 
-                  << "    -------------------------------    " << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "CFL:                " << cfl << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "dt:                 " << dt << endl;
- cout << setw(26) << color(none,white,black) 
-                  << "time:               " << time << endl;
- cout << setw(20) << color(none,red,black) 
-                  << "|-------------------------------------|" << endl;
- cout << resetColor() << endl;
 }
 
 void Simulator3D::setDt()

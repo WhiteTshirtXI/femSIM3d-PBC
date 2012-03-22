@@ -21,10 +21,6 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- vector< real > triEdge;
- triEdge.resize(1);
- triEdge[0] = 0.1; // wall 
-
  int iter = 1;
  real Re = 10000;
  real Sc = 2000;
@@ -53,7 +49,6 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setTriEdge(triEdge);
  m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
  //m1.setSingleElement();
@@ -105,7 +100,6 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 100;
  int nRe = 5;

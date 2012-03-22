@@ -168,7 +168,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 13000;
  int nReMesh = 1;
@@ -182,10 +181,14 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   s1.setDtALETwoPhase();
+
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.printSimulationReport();
+
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   s1.setDtALETwoPhase();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -196,14 +199,12 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKQuarter(vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
@@ -215,61 +216,62 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Model3D mOld = m1; 
-  m1.setTriEdge(triEdge);
-
-  /* *********** MESH TREATMENT ************* */
-  // set normal and kappa values
-  //m1.setNormalAndKappa();
-  //m1.initMeshParameters();
-
-  // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume(0.005);
-  //m1.removePointsByInterfaceDistance();
-  //m1.remove3dMeshPointsByDistance();
-  //m1.delete3DPoints();
-
-  // surface operations
-  //m1.insertPointsByLength();
-  //m1.insertPointsByCurvature();
-  //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance();
-  //m1.contractEdgeByLength();
-  //m1.removePointsByLength();
-  //m1.flipTriangleEdge();
-  //m1.removePointByNeighbourCheck();
-  /* **************************************** */
-
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setWallBC();
-
-  Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
-  s1 = s2;
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKQuarter(vtkFolder,"simCutPlane",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
-  saveEnd.saveMeshInfo(datFolder);
-  saveEnd.printMeshReport();
+//--------------------------------------------------
+//   Model3D mOld = m1; 
+// 
+//   /* *********** MESH TREATMENT ************* */
+//   // set normal and kappa values
+//   //m1.setNormalAndKappa();
+//   //m1.initMeshParameters();
+// 
+//   // 3D operations
+//   //m1.insert3dMeshPointsByDiffusion();
+//   //m1.remove3dMeshPointsByDiffusion();
+//   //m1.removePointByVolume(0.005);
+//   //m1.removePointsByInterfaceDistance();
+//   //m1.remove3dMeshPointsByDistance();
+//   //m1.delete3DPoints();
+// 
+//   // surface operations
+//   //m1.insertPointsByLength();
+//   //m1.insertPointsByCurvature();
+//   //m1.removePointsByCurvature();
+//   //m1.insertPointsByInterfaceDistance();
+//   //m1.contractEdgeByLength();
+//   //m1.removePointsByLength();
+//   //m1.flipTriangleEdge();
+//   //m1.removePointByNeighbourCheck();
+//   /* **************************************** */
+// 
+//   //m1.mesh2Dto3DOriginal();
+//   m1.mesh3DPoints();
+// #if NUMGLEU == 5
+//  m1.setMiniElement();
+// #else
+//  m1.setQuadElement();
+// #endif
+//   m1.setOFace();
+//   m1.setSurfaceConfig();
+//   m1.setWallBC();
+// 
+//   Simulator3D s2(m1,s1);
+//   s2.applyLinearInterpolation(mOld);
+//   s1 = s2;
+//   s1.setSolverPressure(solverP);
+//   s1.setSolverVelocity(solverV);
+//   s1.setSolverConcentration(solverC);
+// 
+//   InOut saveEnd(m1,s1); // cria objeto de gravacao
+//   saveEnd.printMeshReport();
+//   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
+//   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+//   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
+//   saveEnd.saveVTKQuarter(vtkFolder,"simCutPlane",iter-1);
+//   saveEnd.saveSol(binFolder,"sim",iter-1);
+//   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
+//   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
+//   saveEnd.saveMeshInfo(datFolder);
+//-------------------------------------------------- 
  }
 
  PetscFinalize();

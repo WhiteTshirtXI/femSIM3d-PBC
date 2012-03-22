@@ -158,6 +158,10 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  We = s->getWe();
  Fr = s->getFr();
  dt = s->getDt();
+ dtLagrangian = s->getDtLagrangian();
+ dtSurfaceTension = s->getDtSurfaceTension();
+ dtSemiLagrangian = s->getDtSemiLagrangian();
+ dtGravity = s->getDtGravity();
  cfl = s->getCfl();
  alpha = s->getAlpha();
  beta = s->getBeta();
@@ -1360,78 +1364,6 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
 
  file.close();
  cout << "simulation INFO file saved!" << endl;
-}
-
-void InOut::printInfo(const char* _mesh)
-{
- time_t currentTime;
-
- time( &currentTime );
-
- // ATTRIBUTES  :none,underscore,blink,reverse,concealed
- // COLORS      :black,red,green,yellow,blue,magenta,cyan,white
- cout << endl;
- cout << endl;
- cout << color(bold,cyan,black);
- cout << "              ";
- cout << "----------------------- INFO -----------------------" << endl; 
- cout << endl;
- cout << "               ";
- cout << "start process:    " << asctime( localtime( &currentTime ) );
- cout << "               ";
- cout << "mesh:             " << _mesh << endl;
- cout << "               ";
- cout << "numVerts:         " << numVerts << endl;
- cout << "               ";
- cout << "numNodes:         " << numNodes << endl;
- cout << "               ";
- cout << "numElems:         " << numElems << endl;
- cout << "               ";
- cout << "Lin Sys dim UVW:  " << 3*numNodes << " x " << 3*numNodes << endl;
- cout << "               ";
- cout << "Lin Sys dim P:    " << numVerts << " x " << numVerts << endl;
- cout << "               ";
- cout << "Lin Sys dim C:    " << numVerts << " x " << numVerts << endl;
- cout << "               ";
- cout << "Reynolds number:  " << Re << endl;
- cout << "               ";
- cout << "Schmidt number:   " << Sc << endl;
- cout << "               ";
- cout << "Froud number:     " << Fr << endl;
- cout << "               ";
- cout << "Webber number:    " << We << endl;
- cout << "               ";
- cout << "alpha number:     " << alpha << endl;
- cout << "               ";
- cout << "beta number:      " << beta << endl;
- cout << "               ";
- cout << "parameter c1:     " << c1 << endl;
- cout << "               ";
- cout << "parameter c2:     " << c2 << endl;
- cout << "               ";
- cout << "parameter c3:     " << c3 << endl;
- cout << "               ";
- cout << "parameter d1:     " << d1 << endl;
- cout << "               ";
- cout << "parameter d2:     " << d2 << endl;
- cout << "               ";
- cout << "liquid viscosity: " << mu_in << endl;
- cout << "               ";
- cout << "gas viscosity:    " << mu_out << endl;
- cout << "               ";
- cout << "liquid density:   " << rho_in << endl;
- cout << "               ";
- cout << "gas density:      " << rho_out << endl;
- cout << "               ";
- cout << "CFL number:       " << cfl << endl;
- cout << "               ";
- cout << "dt:               " << dt << endl;
- cout << endl;
- cout << "              ";
- cout << "----------------------------------------------------" << endl; 
- cout << resetColor();
- cout << endl;
- cout << endl;
 }
 
 void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
@@ -2989,67 +2921,133 @@ void InOut::printMeshReport()
 
 void InOut::printSimulationReport()
 {
+//--------------------------------------------------
+//  time_t currentTime;
+//  time( &currentTime );
+//  cout << color(none,magenta,black)
+//       << "          start process" << resetColor()
+// 	  << ":                       " 
+// 	  << asctime( localtime( &currentTime ) ) << endl;
+//-------------------------------------------------- 
+
+ real rho_ratio,mu_ratio;
+ if( rho_in >= rho_out )
+ {
+  rho_ratio = rho_in/rho_out;
+  mu_ratio = mu_in/mu_out;
+ }
+ else
+ {
+  rho_ratio = rho_out/rho_in;
+  mu_ratio = mu_out/mu_in;
+ }
+
  cout << endl;
  cout << "   |-------------------------- Simulation Report --------------------------|" 
       << endl;
  cout << "   |                                                                       |" 
       << endl;
  cout << color(none,magenta,black)
-      << "          Reynolds" << resetColor()
-	  << " number:                           " << Re << endl;
+      << "          linear system dimension " << resetColor()
+	  << " UVW:                  " 
+	  << 3*numNodes << " x " << 3*numNodes << endl;
+ cout << color(none,magenta,black)
+      << "          linear system dimension " << resetColor()
+	  << " P:                    " 
+	  << numVerts << " x " << numVerts << endl;
+ cout << color(none,magenta,black)
+      << "          linear system dimension " << resetColor()
+	  << " C/T:                  " 
+	  << numVerts << " x " << numVerts << endl;
+ cout << endl;
+ cout << color(none,magenta,black)
+      << "          Reynolds/Archimedes" << resetColor()
+	  << " number:                    " << Re << endl;
  cout << color(none,magenta,black)
       << "          Froud" << resetColor()
-	  << " number:                              " << Fr << endl;
+	  << " number:                                  " 
+	  << Fr << endl;
  cout << color(none,magenta,black)
-      << "          Webber" << resetColor()
-	  << " number:                             " << We << endl;
+      << "          Webber/Eotvos" << resetColor()
+	  << " number:                          " << We << endl;
  cout << color(none,magenta,black)
-      << "          alpha" << resetColor()
-	  << " number:                              " << alpha << endl;
- cout << color(none,magenta,black)
-      << "          beta" << resetColor()
-	  << " number:                               " << beta << endl;
+      << "          alpha (time method)" << resetColor()
+	  << " number:                    " << alpha << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "c1                               " 
-	  << resetColor() << c1 << endl;
+      << "c1 (Lagrangian velocity)" 
+	  << resetColor() << ":            " << c1 << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "c2                               " 
-	  << resetColor() << c2 << endl;
+      << "c2 (smooth by velocity)" 
+	  << resetColor() << ":             " << c2 << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "c3                               " 
-	  << resetColor() << c3 << endl;
+      << "c3 (smooth by coordinates)" 
+	  << resetColor() << ":          " << c3 << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "d1                               " 
-	  << resetColor() << d1 << endl;
+      << "d1 (remove tangent velocity)" 
+	  << resetColor() << ":        " << d1 << endl;
  cout << "          parameter " << color(none,magenta,black)
-      << "d2                               " 
-	  << resetColor() << d2 << endl;
+      << "d2 (smooth surface by coordinates)" 
+	  << resetColor() << ":  " << d2 << endl;
  cout << color(none,magenta,black)
-      << "          liquid viscosity                           " 
-	  << resetColor() << mu_out << endl;
+      << "          liquid viscosity" << resetColor() 
+	  << ":                              " 
+	  << mu_out << endl;
  cout << color(none,magenta,black)
-      << "          gas viscosity                              " 
-	  << resetColor() << mu_in << endl;
+      << "          gas viscosity" << resetColor() 
+	  << ":                                 " 
+	  << mu_in << endl;
  cout << color(none,magenta,black)
-      << "          liquid density                             " 
-	  << resetColor() << rho_out << endl;
+      << "          liquid density" << resetColor() 
+	  << ":                                " 
+	  << rho_out << endl;
  cout << color(none,magenta,black)
-      << "          gas density                                " 
-	  << resetColor() << rho_in << endl;
+      << "          gas density" << resetColor() 
+	  << ":                                   " 
+	  << rho_in << endl;
+ cout << endl;
+ cout << color(none,magenta,black)
+      << "          density ratio" << resetColor() 
+	  << ":                                 " 
+	  << rho_ratio << endl;
+ cout << color(none,magenta,black)
+      << "          viscosity ratio" << resetColor() 
+	  << ":                               " 
+	  << mu_ratio << endl;
+ cout << endl;
+ cout << "          time step:"  << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "Lagrangian" << resetColor()
+	  << ":                               " 
+	  << dtLagrangian << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "Semi-Lagrangian" << resetColor()
+	  << ":                          " 
+	  << dtSemiLagrangian << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "Surface tension" << resetColor()
+	  << ":                          " 
+	  << dtSurfaceTension << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "Gravity" << resetColor()
+	  << ":                                  " 
+	  << dtGravity << endl;
+ cout << endl;
  cout << color(none,magenta,black)
       << "          CFL" << resetColor()
-	  << " number:                                " << cfl << endl;
+	  << " number:                                    " 
+	  << cfl << endl;
  cout << color(none,magenta,black)
-      << "          dt:                                        " << resetColor() 
+      << "          dt" << resetColor() 
+	  << ":                                            " 
 	  << dt << endl;
  cout << color(none,magenta,black)
-      << "          time:                                      " << resetColor() 
+      << "          time" << resetColor() 
+	  << ":                                          " 
 	  << simTime << endl;
  cout << "   |                                                                       |" 
       << endl;
  cout << "   |-----------------------------------------------------------------------|" 
       << endl;
- cout << endl;
  cout << endl;
 }
 

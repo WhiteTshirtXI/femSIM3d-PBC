@@ -74,18 +74,12 @@ int main(int argc, char **argv)
        << i << endl << endl;
   cout << resetColor();
 
-  // set each bubble length
-  vector< real > triEdge;
-  triEdge.resize(2);
-  triEdge[0] = 0.8; // wall
-  triEdge[1] = 0.10-0.01*i; // bubble 1 
-
   Model3D m1;
   Simulator3D s1;
 
   m1.readMSH(mesh[i]);
   m1.setInterfaceBC();
-  m1.setTriEdge(triEdge);
+  m1.setTriEdge();
   m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5

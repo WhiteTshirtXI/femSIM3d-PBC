@@ -125,7 +125,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;
@@ -138,10 +137,14 @@ int main(int argc, char **argv)
        << i << endl << endl;
   cout << resetColor();
 
+  s1.setDtALETwoPhase();
+
+  InOut save(m1,s1); // cria objeto de gravacao
+  save.printSimulationReport();
+
   //s1.stepLagrangian();
   //s1.stepALE();
   s1.stepALEVel();
-  s1.setDtALETwoPhase();
   s1.movePoints();
   s1.assemble();
   s1.matMount();
@@ -151,7 +154,6 @@ int main(int argc, char **argv)
   s1.setInterfaceGeo();
   s1.unCoupled();
 
-  InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
   save.saveVTKHalf(vtkFolder,"simCutPlane",i);
@@ -214,6 +216,7 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.printMeshReport();
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
@@ -222,7 +225,6 @@ int main(int argc, char **argv)
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
-  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

@@ -84,7 +84,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  //save.saveInfo(datFolder,"info",mesh);
- //save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;

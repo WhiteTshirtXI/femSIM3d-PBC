@@ -26,34 +26,35 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //real Re = 6.53; // case 1
+ //real Re = sqrt(42.895); // case 1
  //real Re = 13.8487; // case 2
- real Re = 32.78; // case 3
- //real Re = 134.625; // case 7
- //real Re = 203.729549896; // case 8 (extream)
+ //real Re = 32.78; // case 3
+ //real Re = sqrt(3892.856); // case 6
+ //real Re = sqrt(18124.092); // case 7
+ //real Re = sqrt(41505.729); // case 8 (extream)
+ real Re = 79.88; // case 3
  real Sc = 1;
- real We = 116;
+ real We = 32.2;
  real Fr = 1.0;
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
- real c3 = 1.0;  // smooth coord (fujiwara)
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
- real beta = 1;
+ real alpha = 1.0;
 
- real sigma = 0.078;
-
- real mu_in = 0.0000178;
+ real mu_in = 0.01;
 
  //real mu_out = 2.73;
  //real mu_out = 1.28; 
- real mu_out = 0.54; // case 3
+ //real mu_out = 0.54; // case 3
+ //real mu_out = 0.2857; // case 6
  //real mu_out = 0.1324; // case 7
  //real mu_out = 0.0875134907735; // extream
+ real mu_out = 1.0; 
 
- real rho_in = 1.225;
- real rho_out = 1350;
+ real rho_in = 0.001;
+ real rho_out = 1.0;
 
  real cfl = 0.8;
 
@@ -112,8 +113,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
@@ -268,7 +267,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
- save.printInfo(meshFile.c_str());
 
  int nIter = 3000;
  int nReMesh = 1;
@@ -282,10 +280,14 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   s1.setDtALETwoPhase();
+
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.printSimulationReport();
+
    //s1.stepLagrangian();
    //s1.stepALE();
    s1.stepALEVel();
-   s1.setDtALETwoPhase();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -296,14 +298,12 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKQuarter(vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
@@ -378,6 +378,7 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
+  saveEnd.printMeshReport();
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
@@ -386,7 +387,6 @@ int main(int argc, char **argv)
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
-  saveEnd.printMeshReport();
  }
 
  PetscFinalize();

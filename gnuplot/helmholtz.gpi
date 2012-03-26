@@ -1,0 +1,32 @@
+# Gnuplot script file for plotting data in file "vk-???.dat"
+set   autoscale                        # scale axes automatically
+unset log                              # remove any log-scaling
+unset label                            # remove any previous labels
+set xtic auto                          # set xtics automatically
+set ytic auto                          # set ytics automatically
+#set title "Helmholtz's solution" 
+set xlabel "z" font "Times,18"
+set ylabel "edge length" font "Times,18"
+set label
+#--------------------------------------------------
+# set xrange [0.0:10.0] 
+# set yrange [0.988:1.012] 
+#-------------------------------------------------- 
+unset grid
+set key at 1.0,0.45
+set key box linestyle 1
+
+set terminal postscript enhanced
+set output '| ps2pdf - ~/Desktop/helmholtz1.pdf'
+
+N = "last"
+obj1 = "../dat/edge1."
+obj2 = "../dat/edge2."
+obj3 = "../dat/edge3."
+
+plot obj1 .N using 3:5 title 'h_b (initial)' \
+     with lines ls 1 lw 3,\
+     obj1 .N using 3:6 every 20 title 'k=3.80' ls 2 lw 3,\
+     obj2 .N using 3:6 every 20 title 'k=1.20' ls 4 lw 3,\
+     obj3 .N using 3:6 every 20 title 'k=0.03' ls 6 lw 3
+

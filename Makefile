@@ -143,6 +143,8 @@ restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)
 #                                                                            #
 2bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+helmholtz: ${FEM3D_DIR}/script/mainHelmholtz.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #
 # -------------------------------------------------------------------------- #
 

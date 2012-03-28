@@ -76,6 +76,48 @@ void Helmholtz3D::initRisingBubble()
  }
 }
 
+void Helmholtz3D::initSessile()
+{
+ init();
+
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
+  if( surfMesh->Z.Get(i) == surfMesh->Z.Min() )
+   convC.Set(i,aux/2.0);
+  else
+   convC.Set(i,aux/2.0);
+ }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 1.2*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
 void Helmholtz3D::initMicro()
 {
  real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));

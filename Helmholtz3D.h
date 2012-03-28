@@ -38,6 +38,7 @@ class Helmholtz3D
   void initMicro();
   void initSquareChannel();
   void initRisingBubble();
+  void initSessile();
   void init2Bubbles();
   void assemble();
   void matMountC();

@@ -206,9 +206,16 @@ class Simulator3D
   void applyLinearInterpolation(Model3D &_mOld);
   void getBubbleVelocity();
   void getBubbleVelocity(clVector _uVel,clVector _vVel,clVector _wVel);
+  real getBubbleVelocity(clVector &_vel);
   void setALEVelBC();
   void setAnnularALEVelBC();
   void setLagrangianVelBC();
+  real getCentroidVelX();
+  real getCentroidVelY();
+  real getCentroidVelZ();
+  void setCentroidVelX(real _centroidVelX);
+  void setCentroidVelY(real _centroidVelY);
+  void setCentroidVelZ(real _centroidVelZ);
 
  private:
   Model3D *m;
@@ -236,6 +243,9 @@ class Simulator3D
   real sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
   real bubbleVel;
   int iter;
+  real centroidVelX,centroidVelY,centroidVelZ;
+  real centroidVelXOld,centroidVelYOld,centroidVelZOld;
+
   clMatrix K,Kc,Mrho,M,Mc,G,D,A;
   clMatrix mat,matc;
   clMatrix gx,gy,gz;

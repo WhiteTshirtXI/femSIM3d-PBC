@@ -1272,6 +1272,17 @@ void Simulator3D::stepSL()
  clVector velV = vSolOld-vALE;
  clVector velW = wSolOld-wALE;
 
+//--------------------------------------------------
+//  for ( int i=0;i<numVerts;i++ )
+//  {
+//   int node = i;
+//   //if( heaviside->Get(node) != 0.5 )
+//   {
+//    velW.Set(node,velW.Get(node) - centroidVelZ);
+//   }
+//  }
+//-------------------------------------------------- 
+
  SemiLagrangean sl(*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
 
  sl.compute(dt);
@@ -1885,6 +1896,9 @@ void Simulator3D::saveOldData()
  muOld      = mu;
  rhoOld     = rho;
  hSmoothOld = hSmooth;
+ centroidVelXOld = centroidVelX;
+ centroidVelYOld = centroidVelY;
+ centroidVelZOld = centroidVelZ;
 }
 
 /**
@@ -2820,6 +2834,15 @@ clVector* Simulator3D::getRho(){return &rho;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 void Simulator3D::setCfl(real _cfl){cfl = _cfl;}
+real Simulator3D::getCentroidVelX(){return centroidVelX;}
+real Simulator3D::getCentroidVelY(){return centroidVelY;}
+real Simulator3D::getCentroidVelZ(){return centroidVelZ;}
+void Simulator3D::setCentroidVelX(real _centroidVelX)
+{centroidVelX = _centroidVelX;}
+void Simulator3D::setCentroidVelY(real _centroidVelY)
+{centroidVelY = _centroidVelY;}
+void Simulator3D::setCentroidVelZ(real _centroidVelZ)
+{centroidVelZ = _centroidVelZ;}
 
 
 // set do centroide para o elemento mini apos a interpolacao linear
@@ -3007,6 +3030,9 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
  hSmoothOld = _sRight.hSmoothOld;
+ centroidVelXOld = _sRight.centroidVelXOld;
+ centroidVelYOld = _sRight.centroidVelYOld;
+ centroidVelZOld = _sRight.centroidVelZOld;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;
@@ -3092,6 +3118,10 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
 
  allocateMemoryToAttrib();
 
+ centroidVelX = _s.getCentroidVelX();
+ centroidVelY = _s.getCentroidVelY();
+ centroidVelZ = _s.getCentroidVelZ();
+
  numVertsOld = _s.m->getNumVerts();
  numNodesOld = _s.m->getNumNodes();
  numElemsOld = _s.m->getNumElems();
@@ -3111,6 +3141,9 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  kappaOld   = *_s.getKappa();
  fintOld    = *_s.getFint();
  gravityOld = *_s.getGravity();
+ centroidVelXOld = _s.getCentroidVelX();
+ centroidVelYOld = _s.getCentroidVelY();
+ centroidVelZOld = _s.getCentroidVelZ();
 }
 
 int Simulator3D::loadSolution( const char* _filename,int _iter )
@@ -3700,3 +3733,31 @@ void Simulator3D::allocateMemoryToAttrib()
  hSmooth.Dim( numVerts );
 }
 
+real Simulator3D::getBubbleVelocity(clVector &_vel)
+{
+ real vel=0;
+ real volume=0;
+ real sumVolume=0;
+ real sumVelVolume=0;
+
+ list<int> *inElem;
+ inElem = m->getInElem();
+ for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
+ {
+  int v1 = IEN->Get(*it,0);
+  int v2 = IEN->Get(*it,1);
+  int v3 = IEN->Get(*it,2);
+  int v4 = IEN->Get(*it,3);
+
+  vel = ( _vel.Get(v1)+
+	      _vel.Get(v2)+
+		  _vel.Get(v3)+
+		  _vel.Get(v4) )/4.0;
+
+  volume = m->getVolume(*it);
+
+  sumVelVolume += vel * volume;
+  sumVolume += volume;
+ }
+ return sumVelVolume/sumVolume;
+}

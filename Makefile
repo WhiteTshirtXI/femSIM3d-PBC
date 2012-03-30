@@ -133,6 +133,9 @@ fallingDrop: ${FEM3D_DIR}/script/mainFallingDrop.o $(obj)
 risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #

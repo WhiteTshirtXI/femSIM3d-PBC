@@ -532,7 +532,7 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
 
 
  // conta numero de elementos
- real plane1 = ( Z->Max()+Z->Min() )/2.0;
+ real plane1 = ( X->Max()+X->Min() )/2.0;
  int count = 0;
  for( int i=0;i<numElems;i++ )
  {
@@ -542,8 +542,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
    count++;
  }
  
@@ -557,8 +557,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -577,8 +577,8 @@ void InOut::saveVTKHalf( const char* _dir,const char* _filename, int _iter )
   int v4 = IEN->Get(i,3);
   if( (heaviside->Get(v1)+heaviside->Get(v2)+
 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (Z->Get( v1 ) <  plane1) && (Z->Get( v2 ) <  plane1) && 
-	  (Z->Get( v3 ) <  plane1) && (Z->Get( v4 ) <  plane1) ) )
+    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
    vtkFile << "10 ";
  }
 

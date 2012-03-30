@@ -286,7 +286,7 @@ int main(int argc, char **argv)
    vel = s1.getBubbleVelocity(test);
    s1.setCentroidVelZ(vel);
 
-   //m1.setWallBC(vel);
+   //m1.setMovingWallBC(vel);
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao

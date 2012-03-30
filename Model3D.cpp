@@ -4406,6 +4406,73 @@ void Model3D::setWallBC()
  }
 }
 
+void Model3D::setMovingWallBC()
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  if( Z.Get(*it) == Z.Min() &&
+	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+	  X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+  {
+   idbcp.AddItem(*it);
+   pc.Set(*it,0.0);
+  }
+  else if( Z.Get(*it) == Z.Max() &&
+	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+		   X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux);
+  }
+  else
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux);
+  }
+ }
+}
+
+void Model3D::setMovingWallBC(real _vel)
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  if( Z.Get(*it) == Z.Min() &&
+	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+	  X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+  {
+   pc.Set(*it,0.0);
+  }
+  else if( Z.Get(*it) == Z.Max() &&
+	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+		   X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+  {
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux-_vel);
+  }
+  else
+  {
+   real aux = 0.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,aux);
+   wc.Set(*it,aux-_vel);
+  }
+ }
+}
+
 void Model3D::setMicroWallBC()
 {    
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)

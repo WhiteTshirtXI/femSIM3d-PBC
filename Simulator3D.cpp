@@ -310,7 +310,7 @@ void Simulator3D::initFixedBubbleZ()
   wSolOld.Set( (int) idbcw->Get(i),0.0 ); 
 }
 
-void Simulator3D::init2Bubbles()
+void Simulator3D::init2AxiBubbles()
 {
  init();
 
@@ -322,6 +322,22 @@ void Simulator3D::init2Bubbles()
   aux = -1.0*Y->Get(i);
   vSolOld.Set(i,aux);
   aux = 0.0;
+  wSolOld.Set(i,aux);
+ }
+}
+
+void Simulator3D::init2Bubbles()
+{
+ init();
+
+/* two bubbles */
+ for( int i=0;i<numNodes;i++ )
+ {
+  real aux = X->Get(i);
+  uSolOld.Set(i,aux);
+  aux = -1.0*Y->Get(i);
+  vSolOld.Set(i,aux);
+  aux = Z->Get(i);
   wSolOld.Set(i,aux);
  }
 }

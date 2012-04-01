@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file main2AxiBubbles.cpp, created at 11-Apr-2012            //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "2bubbles.msh";
+ string meshFile = "2Axibubbles.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2BubblesBC();
+  m1.set2AxiBubblesBC();
 
   s1(m1);
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.init2Bubbles();
+  s1.init2AxiBubbles();
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2BubblesBC();
+  m1.set2AxiBubblesBC();
 
   s1(m1);
 
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2BubblesBC();
+  m1.set2AxiBubblesBC();
 
   s1(m1);
 
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.set2BubblesBC();
+  m1.set2AxiBubblesBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

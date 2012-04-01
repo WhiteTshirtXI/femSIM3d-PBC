@@ -4590,7 +4590,7 @@ void Model3D::setWallCouetteBC()
  }
 }
 
-void Model3D::set2BubbleBC()
+void Model3D::set2AxiBubblesBC()
 {
  real aux;
 
@@ -4616,20 +4616,57 @@ void Model3D::set2BubbleBC()
    aux = 0.0;
    wc.Set(i,aux);
   }
+  else if( (Z.Get(i)==Z.Min()) || Z.Get(i)==Z.Max() )  
+  {
+   idbcw.AddItem(i);
+
+   aux = 0.0;
+   wc.Set(i,aux);
+  }
   // condicao de outflow
-  if( (X.Get(i)==X.Min()) || X.Get(i)==X.Max() )  
+  else
   {
    idbcp.AddItem(i);
 
    aux = 0.0;
    pc.Set(i,aux);
   }
-  if( (Z.Get(i)==Z.Min()) || Z.Get(i)==Z.Max() )  
+ }
+}
+
+void Model3D::set2BubblesBC()
+{
+ real aux;
+
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
+ {
+  // condicao de velocidade
+  if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
   {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
    idbcw.AddItem(i);
 
-   aux = 0.0;
+   aux = X.Get(i);
+   uc.Set(i,aux);
+   aux = (-1.0)*Y.Get(i);
+   vc.Set(i,aux);
+   aux = Z.Get(i);
    wc.Set(i,aux);
+  }
+  // condicao de outflow
+  else
+  {
+   idbcp.AddItem(i);
+
+   aux = 0.0;
+   pc.Set(i,aux);
   }
  }
 }

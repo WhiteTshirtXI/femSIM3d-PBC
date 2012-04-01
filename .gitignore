@@ -22,3 +22,13 @@ sessileDrop
 staticTorus
 risingBubble
 risingBubbleHT
+curvatureAndPressureCylinder
+curvatureAndPressureSphere
+curvatureAndPressureTorus
+curvatureCylinder
+curvatureSphere
+curvatureTorus
+finiteDisk
+oscillatingDrop
+stepALE
+torus

@@ -49,6 +49,7 @@ class Simulator3D
   void init();
   void initHeatTransfer();
   void initFixedBubbleZ();
+  void init2AxiBubbles();
   void init2Bubbles();
   void assemble();
   void assembleK();

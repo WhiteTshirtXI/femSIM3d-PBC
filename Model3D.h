@@ -201,7 +201,8 @@ class Model3D
   void setWallCouetteBC();
   void setWallAnnularBC();
   void setWallInterfaceBC();
-  void set2BubbleBC();
+  void set2BubblesBC();
+  void set2AxiBubblesBC();
   void setStepBC();
   void setWallStepBC();
   void setCStepBC();

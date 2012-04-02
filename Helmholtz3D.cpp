@@ -200,15 +200,15 @@ void Helmholtz3D::init2Bubbles()
   // outside mesh
   if( heaviside->Get(i) < 0.5 ) 
   {
-   real factor = 1.5*triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 1.0*radius )
+   real factor = minEdge/triEdge[vertIdRegion->Get(i)];
+   if( interfaceDistance->Get(i) < 0.6*radius )
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	real aux = triEdge[vertIdRegion->Get(i)]*factor*0.4;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	real aux = triEdge[vertIdRegion->Get(i)];
 	convC.Set(i,aux);
    }
   }

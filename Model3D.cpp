@@ -4594,42 +4594,36 @@ void Model3D::set2AxiBubblesBC()
 {
  real aux;
 
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   // condicao de velocidade
-  if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
+  if( (Y.Get(*it)==Y.Min()) || (Y.Get(*it)==Y.Max()) )  
   {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   aux = X.Get(i);
-   uc.Set(i,aux);
-   aux = (-1.0)*Y.Get(i);
-   vc.Set(i,aux);
+   aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
    aux = 0.0;
-   wc.Set(i,aux);
+   wc.Set(*it,aux);
   }
-  else if( (Z.Get(i)==Z.Min()) || Z.Get(i)==Z.Max() )  
+  else if( (Z.Get(*it)==Z.Min()) || Z.Get(*it)==Z.Max() )  
   {
-   idbcw.AddItem(i);
+   idbcw.AddItem(*it);
 
    aux = 0.0;
-   wc.Set(i,aux);
+   wc.Set(*it,aux);
   }
   // condicao de outflow
   else
   {
-   idbcp.AddItem(i);
+   idbcp.AddItem(*it);
 
    aux = 0.0;
-   pc.Set(i,aux);
+   pc.Set(*it,aux);
   }
  }
 }
@@ -4638,35 +4632,28 @@ void Model3D::set2BubblesBC()
 {
  real aux;
 
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  // condicao de velocidade
-  if( (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) )  
+  if( (Y.Get(*it)==Y.Min()) || (Y.Get(*it)==Y.Max()) )  
   {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   aux = X.Get(i);
-   uc.Set(i,aux);
-   aux = (-1.0)*Y.Get(i);
-   vc.Set(i,aux);
-   aux = Z.Get(i);
-   wc.Set(i,aux);
+   aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
+   aux = Z.Get(*it);
+   wc.Set(*it,aux);
   }
   // condicao de outflow
   else
   {
-   idbcp.AddItem(i);
+   idbcp.AddItem(*it);
 
    aux = 0.0;
-   pc.Set(i,aux);
+   pc.Set(*it,aux);
   }
  }
 }

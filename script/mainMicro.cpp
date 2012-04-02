@@ -53,7 +53,8 @@ int main(int argc, char **argv)
  real rho_in = 0.001;
  real rho_out = 1.0;
 
- string meshFile = "micro.msh";
+ string meshFile = "test.msh";
+ //string meshFile = "micro.msh";
  //string meshFile = "2micros.msh";
  //string meshFile = "3micros.msh";
  //string meshFile = "4micros.msh";

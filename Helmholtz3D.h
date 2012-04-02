@@ -74,6 +74,7 @@ class Helmholtz3D
   Mesh3D *mesh3d;
 
   list<int> *boundaryVert;
+  vector< list<int> > *neighbourPoint;
 
   clMatrix Kc,Mc;
   clMatrix matc,AcTilde;

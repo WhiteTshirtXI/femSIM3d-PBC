@@ -44,8 +44,23 @@ void Helmholtz3D::initRisingBubble()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  convC.Set(i,aux);
+  real P0x = surfMesh->X.Get(i);
+  real P0y = surfMesh->Y.Get(i);
+  real P0z = surfMesh->Z.Get(i);
+
+  real sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   real P1x = surfMesh->X.Get(*vert);
+   real P1y = surfMesh->Y.Get(*vert);
+   real P1z = surfMesh->Z.Get(*vert);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
@@ -83,11 +98,23 @@ void Helmholtz3D::initSessile()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  if( surfMesh->Z.Get(i) == surfMesh->Z.Min() )
-   convC.Set(i,aux/2.0);
-  else
-   convC.Set(i,aux/2.0);
+  real P0x = surfMesh->X.Get(i);
+  real P0y = surfMesh->Y.Get(i);
+  real P0z = surfMesh->Z.Get(i);
+
+  real sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   real P1x = surfMesh->X.Get(*vert);
+   real P1y = surfMesh->Y.Get(*vert);
+   real P1z = surfMesh->Z.Get(*vert);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
@@ -153,8 +180,23 @@ void Helmholtz3D::initSquareChannel()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  convC.Set(i,aux);
+  real P0x = surfMesh->X.Get(i);
+  real P0y = surfMesh->Y.Get(i);
+  real P0z = surfMesh->Z.Get(i);
+
+  real sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   real P1x = surfMesh->X.Get(*vert);
+   real P1y = surfMesh->Y.Get(*vert);
+   real P1z = surfMesh->Z.Get(*vert);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
  }
 
  //real xMid = (X->Min()+X->Max())*0.5;
@@ -188,8 +230,23 @@ void Helmholtz3D::init2Bubbles()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-  convC.Set(i,aux);
+  real P0x = surfMesh->X.Get(i);
+  real P0y = surfMesh->Y.Get(i);
+  real P0z = surfMesh->Z.Get(i);
+
+  real sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   real P1x = surfMesh->X.Get(*vert);
+   real P1y = surfMesh->Y.Get(*vert);
+   real P1z = surfMesh->Z.Get(*vert);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
@@ -291,8 +348,23 @@ void Helmholtz3D::setBC()
   {
    idbcc.AddItem(i);
 
-   real aux = triEdge[surfMesh->vertIdRegion.Get(i)];
-   cc.Set(i,aux);
+   real P0x = surfMesh->X.Get(i);
+   real P0y = surfMesh->Y.Get(i);
+   real P0z = surfMesh->Z.Get(i);
+
+   real sumEdgeLength = 0;
+   int listSize = neighbourPoint->at(i).size();
+   list<int> plist = neighbourPoint->at(i);
+   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+   {
+	real P1x = surfMesh->X.Get(*vert);
+	real P1y = surfMesh->Y.Get(*vert);
+	real P1z = surfMesh->Z.Get(*vert);
+
+	real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+	sumEdgeLength += edgeLength;
+   }
+   cc.Set(i,sumEdgeLength/listSize);
   }
  }
 }
@@ -352,6 +424,7 @@ void Helmholtz3D::getModel3DAttrib(Model3D &_m)
  heaviside = m->getHeaviside();
  surfMesh = m->getSurfMesh();
  interfaceDistance = m->getInterfaceDistance();
+ neighbourPoint = m->getNeighbourPoint();
 
  triEdge = m->getTriEdge();
  boundaryVert = m->getBoundaryVert();

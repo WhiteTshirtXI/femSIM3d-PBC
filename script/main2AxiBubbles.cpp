@@ -24,8 +24,8 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- real Re = 20;
- real Sc = 2;
+ real Re = 100;
+ real Sc = 10;
  real We = 10;
  real Fr = 1;
  real c1 = 0.00; // lagrangian
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "2Axibubbles.msh";
+ string meshFile = "2AxiBubbles.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);

@@ -332,25 +332,24 @@ void Model3D::readMSH( const char* filename )
   exit(1);
  }
 
-//--------------------------------------------------
-//  int numberOfPhyNames;
-//  while( ( !mshFile.eof())&&(strcmp(auxstr,"$PhysicalNames") != 0) )
-//   mshFile >> auxstr;
-// 
-//  mshFile >> numberOfPhyNames;
-// 
-//  surfMesh.elemIdRegion.resize(numberOfPhyNames);
-//  if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
-//  {
-//   for (i=0; i < numberOfPhyNames; i++)
-//   {
-//    mshFile >> auxstr;
-//    mshFile >> auxstr;
-//    mshFile >> auxstr;
-//    surfMesh.elemIdRegion.at(i)=auxstr;
-//   }
-//  }
-//-------------------------------------------------- 
+ int numberOfPhyNames;
+ while( ( !mshFile.eof())&&(strcmp(auxstr,"$PhysicalNames") != 0) )
+  mshFile >> auxstr;
+
+ mshFile >> numberOfPhyNames;
+
+ surfMesh.physicalNames.resize(numberOfPhyNames);
+ if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
+ {
+  for (i=0; i < numberOfPhyNames; i++)
+  {
+   mshFile >> auxstr;
+   mshFile >> id;
+   id = id-1;
+   mshFile >> auxstr;
+   surfMesh.physicalNames.at(id)=auxstr;
+  }
+ }
 
  while( ( !mshFile.eof())&&(strcmp(auxstr,"$Nodes") != 0) )
   mshFile >> auxstr;
@@ -384,6 +383,7 @@ void Model3D::readMSH( const char* filename )
 
   surfMesh.IEN.Dim(surfMesh.numElems,3);
   surfMesh.elemIdRegion.Dim(surfMesh.numElems);
+  surfMesh.idRegion.Dim(surfMesh.numElems);
 
   for( i=0; i < surfMesh.numElems; i++ )
   {
@@ -406,8 +406,17 @@ void Model3D::readMSH( const char* filename )
    {
 	mshFile >> id;
 	id = id-1;
-	surfMesh.elemIdRegion.Set(i,id);
+	surfMesh.idRegion.Set(i,id);
 	mshFile >> auxstr;
+	if( surfMesh.physicalNames.at(id).compare(1,4,"wall") == 0 )
+	 surfMesh.elemIdRegion.Set(i,0);
+	else 
+	{
+	 char buffer[10];
+	 surfMesh.physicalNames.at(id).copy(buffer,2,7);
+	 int idBubble = atoi(buffer);
+	 surfMesh.elemIdRegion.Set(i,idBubble);
+	}
    }
 
    for( j=0; j < type+1 ; j++ )
@@ -1485,6 +1494,7 @@ void Model3D::surfaceTriangulatorEarClipping(int _v,
   list<int> plist2 = neighbourSurfaceElem.at(_v);
   list<int>::iterator mele=plist2.begin();
   surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
+  surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
   mele = plist2.end();
 
   surfMesh.numElems++;
@@ -1505,6 +1515,7 @@ void Model3D::surfaceTriangulatorEarClipping(int _v,
  list<int> plist2 = neighbourSurfaceElem.at(_v);
  list<int>::iterator mele=plist2.begin();
  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(*mele));
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(*mele));
  mele = plist2.end();
 
  surfMesh.numElems++;
@@ -2355,6 +2366,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.IEN.Set(elem1,2,v3elem1);
  // add new elemIdRegion
  surfMesh.elemIdRegion.Set(elem1,surfMesh.elemIdRegion.Get(elem1));
+ surfMesh.idRegion.Set(elem1,surfMesh.idRegion.Get(elem1));
 
  // 2nd. new element (v1 - vAdd - v3elem2) 
  // on the same position of the OLD 2nd. element (v1 - v2 - v3elem2)
@@ -2364,6 +2376,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.IEN.Set(elem2,2,vAdd);
  // add new elemIdRegion
  surfMesh.elemIdRegion.Set(elem2,surfMesh.elemIdRegion.Get(elem1));
+ surfMesh.idRegion.Set(elem2,surfMesh.idRegion.Get(elem1));
 
  // 3rd. new element (v2 - vAdd - v3elem1) on the last row
  // OLD ELEM1 //
@@ -2374,6 +2387,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.IEN.Set(elem3,2,vAdd);
  // add new elemIdRegion
  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
 
  // 4th. new element (v2 - vAdd - v3elem2) on the last row
@@ -2385,6 +2399,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.IEN.Set(elem4,2,v3elem2);
  // add new elemIdRegion
  surfMesh.elemIdRegion.AddItem(surfMesh.elemIdRegion.Get(elem1));
+ surfMesh.idRegion.AddItem(surfMesh.idRegion.Get(elem1));
  surfMesh.numElems++;
  
  // updating surface, xSurface, ySurface and zSurface
@@ -2979,6 +2994,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
    heaviside.AddItem(vAdd,heaviside.Get(maxVert));
    //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
    //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //idRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
    //edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
 
    numVerts++;
@@ -4410,16 +4426,29 @@ void Model3D::setMovingWallBC()
 {    
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  if( Z.Get(*it) == Z.Min() &&
-	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
-	  X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+//--------------------------------------------------
+//   if( X.Get(*it) == X.Min() &&
+// 	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+// 	  Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+//-------------------------------------------------- 
+  if( X.Get(*it)==X.Min() && 
+    ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
-   idbcp.AddItem(*it);
-   pc.Set(*it,0.0);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
-  else if( Z.Get(*it) == Z.Max() &&
-	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
-		   X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+//--------------------------------------------------
+//   else if( X.Get(*it) == X.Max() &&
+// 	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+// 		   Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+//-------------------------------------------------- 
+  else if( X.Get(*it)==X.Max() && 
+	     ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -4436,10 +4465,9 @@ void Model3D::setMovingWallBC()
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
 
-   real aux = 0.0;
-   uc.Set(*it,aux);
-   vc.Set(*it,aux);
-   wc.Set(*it,aux);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
  }
 }
@@ -4448,27 +4476,35 @@ void Model3D::setMovingWallBC(real _vel)
 {    
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  if( Z.Get(*it) == Z.Min() &&
-	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
-	  X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+//--------------------------------------------------
+//   if( X.Get(*it) == X.Min() &&
+// 	  Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+// 	  Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+//-------------------------------------------------- 
+  if( X.Get(*it)==X.Min() && 
+    ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
-   pc.Set(*it,0.0);
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
-  else if( Z.Get(*it) == Z.Max() &&
-	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
-		   X.Get(*it) > X.Min() && X.Get(*it) < X.Max() )
+//--------------------------------------------------
+//   else if( X.Get(*it) == X.Max() &&
+// 	       Y.Get(*it) > Y.Min() && Y.Get(*it) < Y.Max() && 
+// 		   Z.Get(*it) > Z.Min() && Z.Get(*it) < Z.Max() )
+//-------------------------------------------------- 
+  else if( X.Get(*it)==X.Max() && 
+	     ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
-   real aux = 0.0;
-   uc.Set(*it,aux);
-   vc.Set(*it,aux);
-   wc.Set(*it,aux-_vel);
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
   else
   {
-   real aux = 0.0;
-   uc.Set(*it,aux);
-   vc.Set(*it,aux);
-   wc.Set(*it,aux-_vel);
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
  }
 }

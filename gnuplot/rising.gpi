@@ -68,7 +68,7 @@ if (mu==0.1324) v_exp(x)=0.35330;
 if (mu==0.0875) v_exp(x)=0.37504;
 
 fileObj = "../dat/volume.dat"
-fileObj1 = "../../bhaga5/dat/volume.dat"
+fileObj1 = "/home/gustavo/macpro/python/femSIM3d/bhaga5/dat/volume.dat"
 plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar' with lines,\
      fileObj1 using 1:($5*sqrt(g*D)) title 'bhaga5' with lines,\
      v_exp(x)

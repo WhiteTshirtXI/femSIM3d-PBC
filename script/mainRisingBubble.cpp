@@ -28,37 +28,37 @@ int main(int argc, char **argv)
  int iter = 1;
  //real Re = sqrt(42.895); // case 1
  //real Re = 13.8487; // case 2
- //real Re = 32.78; // case 3
+ real Re = 32.78; // case 3
  //real Re = sqrt(3892.856); // case 6
  //real Re = sqrt(18124.092); // case 7
  //real Re = sqrt(41505.729); // case 8 (extream)
- real Re = 79.88; // case 3
+ //real Re = 79.88; // case 3
  real Sc = 1;
- real We = 32.2;
+ real We = 116;
  real Fr = 1.0;
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1.0;
 
- real mu_in = 0.01;
+ real mu_in = 0.0000178;
 
  //real mu_out = 2.73;
  //real mu_out = 1.28; 
- //real mu_out = 0.54; // case 3
+ real mu_out = 0.54; // case 3
  //real mu_out = 0.2857; // case 6
  //real mu_out = 0.1324; // case 7
  //real mu_out = 0.0875134907735; // extream
- real mu_out = 1.0; 
 
- real rho_in = 0.001;
- real rho_out = 1.0;
+ real rho_in = 1.225;
+ real rho_out =1350; 
 
  real cfl = 0.8;
 
- string meshFile = "bubble-tube5.msh";
+ //string meshFile = "bubble-tube5.msh";
+ string meshFile = "test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -268,6 +268,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
+ real vel = 0;
  int nIter = 3000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
@@ -280,6 +281,12 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   clVector test(m1.getNumNodes());test.SetAll(vel);
+   test = *s1.getWSol();
+   vel = s1.getBubbleVelocity(test);
+   s1.setCentroidVelZ(vel);
+
+   //m1.setWallBC(vel);
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao

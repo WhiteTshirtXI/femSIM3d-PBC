@@ -2554,9 +2554,9 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << surfMesh->physicalNames.size() << endl;
- for( int nb=0;nb<(int)surfMesh->physicalNames.size();nb++ )
-   mshFile << "2 " << nb+1 << " " << surfMesh->physicalNames.at(nb) << endl;
+ mshFile << surfMesh->phyNames.size() << endl;
+ for( int nb=0;nb<(int)surfMesh->phyNames.size();nb++ )
+   mshFile << "2 " << nb+1 << " " << surfMesh->phyNames.at(nb) << endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -2616,9 +2616,9 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
  mshFile << "2.1 0 8" << endl;
  mshFile << "$EndMeshFormat" << endl;
  mshFile << "$PhysicalNames" << endl;
- mshFile << surfMesh->physicalNames.size() << endl;
- for( int nb=0;nb<(int)surfMesh->physicalNames.size();nb++ )
-   mshFile << "2 " << nb+1 << " " << surfMesh->physicalNames.at(nb) << endl;
+ mshFile << surfMesh->phyNames.size() << endl;
+ for( int nb=0;nb<(int)surfMesh->phyNames.size();nb++ )
+   mshFile << "2 " << nb+1 << " " << surfMesh->phyNames.at(nb) << endl;
  mshFile << "$EndPhysicalNames" << endl;
  mshFile << "$Nodes" << endl;
  mshFile << surfMesh->numVerts << endl;
@@ -3820,100 +3820,50 @@ void InOut::savePressureError(const char* _dir)
 
 void InOut::saveVolumeError(const char* _dir)
 {
- string fileAux = (string) _dir + "volume" + ".dat";
- const char* filename = fileAux.c_str();
-
- ifstream testFile( filename );
- ofstream file( filename,ios::app );
- if( testFile )
+ for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
-  testFile.close();
-  cout << "appending on file volume.dat" << endl;
+  stringstream ss;  //convertendo int --> string
+  string str;
+  ss << nb;
+  ss >> str;
+
+  string fileAux = (string) _dir + "volume" + str + ".dat";
+  const char* filename = fileAux.c_str();
+ 
+  ifstream testFile( filename );
+  ofstream file( filename,ios::app );
+  if( testFile )
+  {
+   testFile.close();
+   cout << "appending on file volume" << nb << ".dat" << endl;
+  }
+  else
+  {
+   cout << "Creating file volume" << nb << ".dat" << endl;
+   file << "#time" << setw(29) << "volume" 
+                   << setw(18) << "vel centroid X" 
+                   << setw(18) << "vel centroid Y" 
+                   << setw(18) << "vel centroid Z" 
+                   << setw(18) << "centroid X" 
+                   << setw(18) << "centroid Y" 
+                   << setw(18) << "centroid Z" 
+              	  << setw(6)  << "iter" 
+     			  << endl;
+  }
+ 
+  file << setprecision(10) << scientific; 
+  file << setw(10) << simTime << " " 
+       << setw(17) << m->getSurfaceVolume()[nb] << " " 
+       << setw(17) << s->getCentroidVelX()[nb] << " " 
+       << setw(17) << s->getCentroidVelY()[nb] << " " 
+       << setw(17) << s->getCentroidVelZ()[nb] << " " 
+       << setw(17) << s->getCentroidPosX()[nb] << " " 
+       << setw(17) << s->getCentroidPosY()[nb] << " " 
+       << setw(17) << s->getCentroidPosZ()[nb] << " " 
+       << setw(5) << setprecision(0) << fixed << iter 
+       << endl;
+  file.close();
  }
- else
- {
-  cout << "Creating file volume.dat" << endl;
-  file << "#time" << setw(29) << "volume" 
-                  << setw(18) << "vel centroid X" 
-                  << setw(18) << "vel centroid Y" 
-                  << setw(18) << "vel centroid Z" 
-                  << setw(18) << "centroid X" 
-                  << setw(18) << "centroid Y" 
-                  << setw(18) << "centroid Z" 
-	         	  << setw(6)  << "iter" 
-				  << endl;
- }
-
- real velX,velY,velZ;
- real posX,posY,posZ;
- real volume=0;
- real sumVolume=0;
- real sumXVelVolume=0;
- real sumYVelVolume=0;
- real sumZVelVolume=0;
- real sumXPosVolume=0;
- real sumYPosVolume=0;
- real sumZPosVolume=0;
- for( list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it )
- {
-  int v1 = IEN->Get(*it,0);
-  int v2 = IEN->Get(*it,1);
-  int v3 = IEN->Get(*it,2);
-  int v4 = IEN->Get(*it,3);
-
-  velX = ( uSol->Get(v1)+
-	       uSol->Get(v2)+
-		   uSol->Get(v3)+
-		   uSol->Get(v4) )/4.0;
-
-  velY = ( vSol->Get(v1)+
-           vSol->Get(v2)+
-           vSol->Get(v3)+
-	 	   vSol->Get(v4) )/4.0;
-
-  velZ = ( wSol->Get(v1)+
-           wSol->Get(v2)+
-           wSol->Get(v3)+
-	 	   wSol->Get(v4) )/4.0;
-
-  posX = ( X->Get(v1)+
-	       X->Get(v2)+
-		   X->Get(v3)+
-		   X->Get(v4) )/4.0;
-
-  posY = ( Y->Get(v1)+
-	       Y->Get(v2)+
-		   Y->Get(v3)+
-		   Y->Get(v4) )/4.0;
-
-  posZ = ( Z->Get(v1)+
-	       Z->Get(v2)+
-		   Z->Get(v3)+
-		   Z->Get(v4) )/4.0;
-
-  volume = m->getVolume(*it);
-
-  sumXVelVolume += velX * volume;
-  sumYVelVolume += velY * volume;
-  sumZVelVolume += velZ * volume;
-  sumXPosVolume += posX * volume;
-  sumYPosVolume += posY * volume;
-  sumZPosVolume += posZ * volume;
-  sumVolume += volume;
- }
-
- file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
-      << setw(17) << sumVolume << " " 
-	  << setw(17) << sumXVelVolume/sumVolume << " " 
-	  << setw(17) << sumYVelVolume/sumVolume << " " 
-	  << setw(17) << sumZVelVolume/sumVolume << " " 
-	  << setw(17) << sumXPosVolume/sumVolume << " " 
-	  << setw(17) << sumYPosVolume/sumVolume << " " 
-	  << setw(17) << sumZPosVolume/sumVolume << " " 
-	  << setw(5) << setprecision(0) << fixed << iter 
-	  << endl;
- file.close();
 }
 
 void InOut::saveOscillatingError(const char* _dir)
@@ -4065,11 +4015,11 @@ void InOut::saveTimeError(const char* _dir)
  if( testFile )
  {
   testFile.close();
-  cout << "appending on file volume.dat" << endl;
+  cout << "appending on file time.dat" << endl;
  }
  else
  {
-  cout << "Creating file volume.dat" << endl;
+  cout << "Creating file time.dat" << endl;
   file << "#time" << setw(30) << "lagrangian" 
                   << setw(17) << "semi-lagrangian" 
                   << setw(18) << "gravity"
@@ -4105,7 +4055,7 @@ void InOut::saveParasiticCurrent(const char* _dir)
  }
  else
  {
-  cout << "Creating file volume.dat" << endl;
+  cout << "Creating file parasitic.dat" << endl;
   file << "#time" << setw(29) << "vel X" 
                   << setw(18) << "vel Y" 
                   << setw(18) << "vel Z" 

@@ -54,7 +54,7 @@ mu=0.5396
 #mu=0.1324
 #mu=0.0875
 rho=1350
-v_star=system("tail -n1 ../dat/volume.dat | awk '{print $5}'")
+v_star=system("tail -n1 ../dat/volume1.dat | awk '{print $5}'")
 
 Re(x)=rho*v_star*sqrt(g*D)*D/mu
 
@@ -67,8 +67,6 @@ if (mu==0.2857) v_exp(x)=0.34224;
 if (mu==0.1324) v_exp(x)=0.35330;
 if (mu==0.0875) v_exp(x)=0.37504;
 
-fileObj = "../dat/volume.dat"
-fileObj1 = "/home/gustavo/macpro/python/femSIM3d/bhaga5/dat/volume.dat"
+fileObj = "../dat/volume1.dat"
 plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar' with lines,\
-     fileObj1 using 1:($5*sqrt(g*D)) title 'bhaga5' with lines,\
      v_exp(x)

@@ -27,16 +27,10 @@ int main(int argc, char **argv)
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
  real vel = 0;
- //real Re = sqrt(42.895); // case 1
- //real Re = 13.8487; // case 2
- real Re = 1000; // case 3
- //real Re = sqrt(3892.856); // case 6
- //real Re = sqrt(18124.092); // case 7
- //real Re = sqrt(41505.729); // case 8 (extream)
- //real Re = 79.88; // case 3
+ real Re = 576.24; 
  real Sc = 1;
- real We = 10;
- real Fr = 1.0;
+ real We = 0.1162;
+ real Fr = 10.096;
  real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
@@ -44,17 +38,17 @@ int main(int argc, char **argv)
  real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1.0;
 
- real mu_in = 0.01;
+//--------------------------------------------------
+//  real mu_in = 0.01;
+//  real mu_out = 1.0; 
+//  real rho_in = 0.001;
+//  real rho_out = 1.0; 
+//-------------------------------------------------- 
 
- //real mu_out = 2.73;
- //real mu_out = 1.28; 
- real mu_out = 1.0; // case 3
- //real mu_out = 0.2857; // case 6
- //real mu_out = 0.1324; // case 7
- //real mu_out = 0.0875134907735; // extream
-
- real rho_in = 0.001;
- real rho_out = 1.0; 
+ real mu_in=1.78E-05;
+ real mu_out=320.7E-05;
+ real rho_in=1.225;
+ real rho_out=1849;
 
  real cfl = 0.8;
 
@@ -221,14 +215,14 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("-X");
+   s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKQuarter(vtkFolder,"simCutPlane",iter);
+   save.saveVTK("y","z",vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -310,7 +304,7 @@ int main(int argc, char **argv)
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveVTK("y","z",vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);

@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
-  save.saveVTKHalf(vtkFolder,"simCutPlane",i);
+  save.saveVTK("x","x",vtkFolder,"simCutPlane",i);
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveBubbleInfo(datFolder);
 

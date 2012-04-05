@@ -162,7 +162,7 @@ int main(int argc, char **argv)
    s1.unCoupledC();
 
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKHalf(vtkFolder,"simCutPlane",iter);
+   save.saveVTK("z","z",vtkFolder,"simCutPlane",iter);
    save.saveVTU(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
 
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",iter-1);
+  saveEnd.saveVTK("z","z",vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }

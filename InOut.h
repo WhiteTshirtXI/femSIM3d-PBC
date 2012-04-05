@@ -115,8 +115,9 @@ class InOut
   void saveVTK( const char* _dir,const char* _filename, int _iter );
   void saveMSH( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
-  void saveVTKQuarter( const char* _dir,const char* _filename, int _iter );
-  void saveVTKHalf( const char* _dir,const char* _filename, int _iter );
+  void saveVTK( const char* _coord1, const char* _coord2,
+                const char* _dir, const char* _filename, 
+				int _iter );
   void saveVTU( const char* _dir,const char* _filename, int _iter );
 
   /**

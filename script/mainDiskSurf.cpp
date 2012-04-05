@@ -128,7 +128,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",i*nReMesh+j+iter);
    save.saveVTK(vtkFolder,"sim",i*nReMesh+j+iter);
-   save.saveVTKHalf(vtkFolder,"simCutPlane",i*nReMesh+j+iter);
+   save.saveVTK("x","y",vtkFolder,"simCutPlane",i*nReMesh+j+iter);
    save.saveVTKSurface(vtkFolder,"sim",i*nReMesh+j+iter);
    save.saveSol(binFolder,"sim",i*nReMesh+j+iter);
    save.saveBubbleInfo(datFolder);
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 //   saveEnd.saveMSH(mshFolder,"newMesh",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveVTK(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveVTKSurface(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
-//   saveEnd.saveVTKHalf(vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
+//   saveEnd.saveVTK("x","y",vtkFolder,"simCutPlane",nReMesh+i*nReMesh+iter-1);
 //   saveEnd.saveSol(binFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   //saveEnd.saveVTU(vtkFolder,"sim",nReMesh+i*nReMesh+iter-1);
 //   //saveEnd.saveSolTXT(binFolder,"sim",nReMesh+i*nReMesh+iter-1);

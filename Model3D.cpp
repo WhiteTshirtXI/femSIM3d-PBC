@@ -4422,6 +4422,21 @@ void Model3D::setWallBC()
  }
 }
 
+void Model3D::setWallBC(real _vel)
+{    
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  idbcu.AddItem(*it);
+  idbcv.AddItem(*it);
+  idbcw.AddItem(*it);
+
+  real aux = 0.0;
+  uc.Set(*it,aux-_vel);
+  vc.Set(*it,aux);
+  wc.Set(*it,aux);
+ }
+}
+
 void Model3D::setMovingWallBC()
 {    
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
@@ -4434,13 +4449,9 @@ void Model3D::setMovingWallBC()
   if( X.Get(*it)==X.Min() && 
     ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
+   idbcp.AddItem(*it);
 
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
+   pc.Set(*it,0.0);
   }
 //--------------------------------------------------
 //   else if( X.Get(*it) == X.Max() &&
@@ -4465,7 +4476,7 @@ void Model3D::setMovingWallBC()
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
 
-   uc.Set(*it,0.0);
+   uc.Set(*it,-1.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -4484,9 +4495,7 @@ void Model3D::setMovingWallBC(real _vel)
   if( X.Get(*it)==X.Min() && 
     ( Z.Get(*it)*Z.Get(*it)+Y.Get(*it)*Y.Get(*it) < (0.5*0.5 + 0.001) ) )
   {
-   uc.Set(*it,0.0-_vel);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
+   pc.Set(*it,0.0);
   }
 //--------------------------------------------------
 //   else if( X.Get(*it) == X.Max() &&
@@ -4502,7 +4511,7 @@ void Model3D::setMovingWallBC(real _vel)
   }
   else
   {
-   uc.Set(*it,0.0-_vel);
+   uc.Set(*it,-1.0-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }

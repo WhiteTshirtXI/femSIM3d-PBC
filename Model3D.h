@@ -194,6 +194,7 @@ class Model3D
   void setInterfaceBC();
   void setCubeBC();
   void setWallBC();
+  void setWallBC(real _vel);
   void setMovingWallBC();
   void setMovingWallBC(real _vel);
   void setMicroWallBC();

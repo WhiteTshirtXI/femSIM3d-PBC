@@ -146,8 +146,8 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKHalf(vtkFolder,"simCutHalf",iter);
-   save.saveVTKQuarter(vtkFolder,"simCutQuarter",iter);
+   save.saveVTK("x","x",vtkFolder,"simCutHalf",iter);
+   save.saveVTK("x","y",vtkFolder,"simCutQuarter",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);

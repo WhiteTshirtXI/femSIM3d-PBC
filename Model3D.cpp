@@ -338,7 +338,7 @@ void Model3D::readMSH( const char* filename )
 
  mshFile >> numberOfPhyNames;
 
- surfMesh.physicalNames.resize(numberOfPhyNames);
+ surfMesh.phyNames.resize(numberOfPhyNames);
  if( ( !mshFile.eof())&&(strcmp(auxstr,"$EndPhysicalNames") != 0) )
  {
   for (i=0; i < numberOfPhyNames; i++)
@@ -347,7 +347,7 @@ void Model3D::readMSH( const char* filename )
    mshFile >> id;
    id = id-1;
    mshFile >> auxstr;
-   surfMesh.physicalNames.at(id)=auxstr;
+   surfMesh.phyNames.at(id)=auxstr;
   }
  }
 
@@ -408,12 +408,12 @@ void Model3D::readMSH( const char* filename )
 	id = id-1;
 	surfMesh.idRegion.Set(i,id);
 	mshFile >> auxstr;
-	if( surfMesh.physicalNames.at(id).compare(1,4,"wall") == 0 )
+	if( surfMesh.phyNames.at(id).compare(1,4,"wall") == 0 )
 	 surfMesh.elemIdRegion.Set(i,0);
 	else 
 	{
 	 char buffer[10];
-	 surfMesh.physicalNames.at(id).copy(buffer,2,7);
+	 surfMesh.phyNames.at(id).copy(buffer,2,7);
 	 int idBubble = atoi(buffer);
 	 surfMesh.elemIdRegion.Set(i,idBubble);
 	}
@@ -1598,6 +1598,7 @@ void Model3D::deleteSurfacePoint(int _v)
  surfMesh.yNormal.Delete(_v);
  surfMesh.zNormal.Delete(_v);
  surfMesh.vertIdRegion.Delete(_v);
+ surfMesh.phyBounds.erase(surfMesh.phyBounds.begin()+_v);
  surfMesh.Marker.Delete(_v);
  surfMesh.numVerts--;
 
@@ -1625,6 +1626,7 @@ void Model3D::deleteSurfaceElements()
   {
    surfMesh.IEN.DelLine(i);
    surfMesh.elemIdRegion.Delete(i);
+   surfMesh.idRegion.Delete(i);
    //surfMesh.xNormalElem.Delete(i);
    //surfMesh.yNormalElem.Delete(i);
    //surfMesh.zNormalElem.Delete(i);
@@ -2326,6 +2328,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  surfMesh.Z.AddItem(ZvAdd);
  surfMesh.Marker.AddItem(0.5); // interface set up
  surfMesh.vertIdRegion.AddItem(surfMesh.vertIdRegion.Get(v1));
+ surfMesh.phyBounds.push_back(surfMesh.phyBounds.at(v1));
 
  // incremeting the number of points
  surfMesh.numVerts++;
@@ -4403,6 +4406,210 @@ void Model3D::setCubeBC()
    uc.Set(i,aux);
    vc.Set(i,aux);
    wc.Set(i,aux);
+  }
+ }
+}
+
+void Model3D::setGenericBC()
+{    
+ surfMesh.phyBounds.clear();
+ surfMesh.phyBounds.resize(surfMesh.numVerts);
+
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  string aux = surfMesh.phyNames.at(id);
+  surfMesh.phyBounds.at(v1) = aux;
+  surfMesh.phyBounds.at(v2) = aux;
+  surfMesh.phyBounds.at(v3) = aux;
+ }
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  // string: "wallSlipUVW"
+  if( surfMesh.phyNames.at(id).compare(5,9,"NoSlip") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
+ }
+
+ for( int j=0;j<surfMesh.numVerts;j++ )
+ {
+  if( surfMesh.phyBounds.at(j) == "\"wallOutflow\"" )
+  {
+   idbcp.AddItem(j);
+   pc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,1.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,1.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,1.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" || 
+      surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" ||
+	  surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,-1.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,-1.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,-1.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+ }
+}
+
+void Model3D::setGenericBC(real _vel)
+{    
+ for( int j=0;j<surfMesh.numVerts;j++ )
+ {
+  if( surfMesh.phyBounds.at(j) == "\"wallOutflow\"" )
+  {
+   pc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+  {
+   uc.Set(j,1.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,1.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,1.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" )
+  {
+   uc.Set(j,0.0-_vel);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,0.0-_vel);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0-_vel);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+  {
+   uc.Set(j,-1.0-_vel);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,-1.0-_vel);
+   wc.Set(j,0.0);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+  {
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,-1.0-_vel);
+  }
+  if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   uc.Set(j,0.0);
+   vc.Set(j,0.0);
+   wc.Set(j,0.0);
   }
  }
 }

@@ -26,7 +26,7 @@ set key box linestyle 1
 gravity = 1.0
 g(x)=0-gravity*x
 
-fileObj = "../dat/volume.dat"
+fileObj = "../dat/volume1.dat"
 
 plot fileObj using 1:($5) every 20 title 'numeric' with points ,\
  	 g(x) title 'v(x)=0-9.81*x' with lines 

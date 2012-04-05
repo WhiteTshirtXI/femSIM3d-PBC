@@ -1514,9 +1514,6 @@ void Simulator3D::movePoints()
 
  // correcao do volume da bolha
  m->applyBubbleVolumeCorrection();
-
- // velocidade da bolha
- //getBubbleVelocity(uALE,vALE,wALE);
 }
 
 void Simulator3D::setInterfaceVelocity()
@@ -2850,15 +2847,25 @@ clVector* Simulator3D::getRho(){return &rho;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 void Simulator3D::setCfl(real _cfl){cfl = _cfl;}
-real Simulator3D::getCentroidVelX(){return centroidVelX;}
-real Simulator3D::getCentroidVelY(){return centroidVelY;}
-real Simulator3D::getCentroidVelZ(){return centroidVelZ;}
-void Simulator3D::setCentroidVelX(real _centroidVelX)
+vector<real> Simulator3D::getCentroidVelX(){return centroidVelX;}
+vector<real> Simulator3D::getCentroidVelY(){return centroidVelY;}
+vector<real> Simulator3D::getCentroidVelZ(){return centroidVelZ;}
+void Simulator3D::setCentroidVelX(vector<real> _centroidVelX)
 {centroidVelX = _centroidVelX;}
-void Simulator3D::setCentroidVelY(real _centroidVelY)
+void Simulator3D::setCentroidVelY(vector<real> _centroidVelY)
 {centroidVelY = _centroidVelY;}
-void Simulator3D::setCentroidVelZ(real _centroidVelZ)
+void Simulator3D::setCentroidVelZ(vector<real> _centroidVelZ)
 {centroidVelZ = _centroidVelZ;}
+
+vector<real> Simulator3D::getCentroidPosX(){return centroidPosX;}
+vector<real> Simulator3D::getCentroidPosY(){return centroidPosY;}
+vector<real> Simulator3D::getCentroidPosZ(){return centroidPosZ;}
+void Simulator3D::setCentroidPosX(vector<real> _centroidPosX)
+{centroidPosX = _centroidPosX;}
+void Simulator3D::setCentroidPosY(vector<real> _centroidPosY)
+{centroidPosY = _centroidPosY;}
+void Simulator3D::setCentroidPosZ(vector<real> _centroidPosZ)
+{centroidPosZ = _centroidPosZ;}
 
 
 // set do centroide para o elemento mini apos a interpolacao linear
@@ -3511,54 +3518,6 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  saveOldData();
 } // fecha metodo applyLinearInterpolation
 
-// calcula velocidade media da bolha tomando como referencia o centro de
-// massa
-void Simulator3D::getBubbleVelocity(clVector _uVel,
-                                    clVector _vVel,
-									clVector _wVel)
-{
- real velX,velY,velZ;
- real volume=0;
- real sumVolume=0;
- real sumXVelVolume=0;
- real sumYVelVolume=0;
- real sumZVelVolume=0;
-
- list<int> *inElem;
- inElem = m->getInElem();
- for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
- {
-  int v1 = IEN->Get(*it,0);
-  int v2 = IEN->Get(*it,1);
-  int v3 = IEN->Get(*it,2);
-  int v4 = IEN->Get(*it,3);
-
-  velX = ( _uVel.Get(v1)+
-	       _uVel.Get(v2)+
-		   _uVel.Get(v3)+
-		   _uVel.Get(v4) )/4.0;
-
-  velY = ( _vVel.Get(v1)+
-           _vVel.Get(v2)+
-           _vVel.Get(v3)+
-	 	   _vVel.Get(v4) )/4.0;
-
-  velZ = ( _wVel.Get(v1)+
-           _wVel.Get(v2)+
-           _wVel.Get(v3)+
-	 	   _wVel.Get(v4) )/4.0;
-
-  volume = m->getVolume(*it);
-
-  sumXVelVolume += velX * volume;
-  sumYVelVolume += velY * volume;
-  sumZVelVolume += velZ * volume;
-  sumVolume += volume;
- }
- bubbleXVel = sumXVelVolume/sumVolume;
- bubbleYVel = sumYVelVolume/sumVolume;
- bubbleZVel = sumZVelVolume/sumVolume;
-}
 
 // impoe velocidade Lagrangian = 0 no contorno
 void Simulator3D::setLagrangianVelBC()
@@ -3749,12 +3708,37 @@ void Simulator3D::allocateMemoryToAttrib()
  hSmooth.Dim( numVerts );
 }
 
-real Simulator3D::getBubbleVelocity(clVector &_vel)
+void Simulator3D::setCentroidVelPos()
 {
- real vel=0;
- real volume=0;
- real sumVolume=0;
- real sumVelVolume=0;
+ clVector _uVel = uSolOld;
+ clVector _vVel = vSolOld;
+ clVector _wVel = wSolOld;
+
+ int v = elemIdRegion->Max();
+ vector<real> velX,velY,velZ;
+ velX.resize(v);velY.resize(v);velZ.resize(v);
+ fill(velX.begin(),velX.end(),0);
+ fill(velY.begin(),velY.end(),0);
+ fill(velZ.begin(),velZ.end(),0);
+ vector<real> posX,posY,posZ;
+ posX.resize(v);posY.resize(v);posZ.resize(v);
+ fill(posX.begin(),posX.end(),0);
+ fill(posY.begin(),posY.end(),0);
+ fill(posZ.begin(),posZ.end(),0);
+ vector<real> volume,sumVolume;
+ volume.resize(v);sumVolume.resize(v);
+ fill(volume.begin(),volume.end(),0);
+ fill(sumVolume.begin(),sumVolume.end(),0);
+ vector<real> sumXVelVolume,sumYVelVolume,sumZVelVolume;
+ sumXVelVolume.resize(v);sumYVelVolume.resize(v);sumZVelVolume.resize(v);
+ fill(sumXVelVolume.begin(),sumXVelVolume.end(),0);
+ fill(sumYVelVolume.begin(),sumYVelVolume.end(),0);
+ fill(sumZVelVolume.begin(),sumZVelVolume.end(),0);
+ vector<real> sumXPosVolume,sumYPosVolume,sumZPosVolume;
+ sumXPosVolume.resize(v);sumYPosVolume.resize(v);sumZPosVolume.resize(v);
+ fill(sumXPosVolume.begin(),sumXPosVolume.end(),0);
+ fill(sumYPosVolume.begin(),sumYPosVolume.end(),0);
+ fill(sumZPosVolume.begin(),sumZPosVolume.end(),0);
 
  list<int> *inElem;
  inElem = m->getInElem();
@@ -3765,15 +3749,114 @@ real Simulator3D::getBubbleVelocity(clVector &_vel)
   int v3 = IEN->Get(*it,2);
   int v4 = IEN->Get(*it,3);
 
-  vel = ( _vel.Get(v1)+
-	      _vel.Get(v2)+
-		  _vel.Get(v3)+
-		  _vel.Get(v4) )/4.0;
+  int elemID = elemIdRegion->Get(*it);
 
-  volume = m->getVolume(*it);
+  velX[elemID] = ( _uVel.Get(v1)+
+	               _uVel.Get(v2)+
+				   _uVel.Get(v3)+
+				   _uVel.Get(v4) )/4.0;
 
-  sumVelVolume += vel * volume;
-  sumVolume += volume;
+  velY[elemID] = ( _vVel.Get(v1)+
+                   _vVel.Get(v2)+
+				   _vVel.Get(v3)+
+				   _vVel.Get(v4) )/4.0;
+
+  velZ[elemID] = ( _wVel.Get(v1)+
+                   _wVel.Get(v2)+
+				   _wVel.Get(v3)+
+				   _wVel.Get(v4) )/4.0;
+
+  posX[elemID] = ( X->Get(v1)+
+                   X->Get(v2)+
+				   X->Get(v3)+
+				   X->Get(v4) )/4.0;
+
+  posY[elemID] = ( Y->Get(v1)+
+                   Y->Get(v2)+
+				   Y->Get(v3)+
+				   Y->Get(v4) )/4.0;
+
+  posZ[elemID] = ( Z->Get(v1)+
+                   Z->Get(v2)+
+				   Z->Get(v3)+
+				   Z->Get(v4) )/4.0;
+
+  volume[elemID] = m->getVolume(*it);
+
+  sumXVelVolume[elemID] += velX[elemID] * volume[elemID];
+  sumYVelVolume[elemID] += velY[elemID] * volume[elemID];
+  sumZVelVolume[elemID] += velZ[elemID] * volume[elemID];
+
+  sumXPosVolume[elemID] += posX[elemID] * volume[elemID];
+  sumYPosVolume[elemID] += posY[elemID] * volume[elemID];
+  sumZPosVolume[elemID] += posZ[elemID] * volume[elemID];
  }
- return sumVelVolume/sumVolume;
+
+ centroidVelX.clear();centroidVelY.clear();centroidVelZ.clear();
+ centroidPosX.clear();centroidPosY.clear();centroidPosZ.clear();
+ vector<real> surfaceVolume = m->getSurfaceVolume();
+ for( int nb=0;nb<=v;nb++ )
+ {
+  centroidVelX.push_back(sumXVelVolume[nb]/surfaceVolume[nb]);
+  centroidVelY.push_back(sumYVelVolume[nb]/surfaceVolume[nb]);
+  centroidVelZ.push_back(sumZVelVolume[nb]/surfaceVolume[nb]);
+
+  centroidPosX.push_back(sumXPosVolume[nb]/surfaceVolume[nb]);
+  centroidPosY.push_back(sumYPosVolume[nb]/surfaceVolume[nb]);
+  centroidPosZ.push_back(sumZPosVolume[nb]/surfaceVolume[nb]);
+ }
+}
+
+real Simulator3D::getCentroidVelXAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidVelX[nb];
+ return sum/v;
+}
+
+real Simulator3D::getCentroidVelYAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidVelY[nb];
+ return sum/v;
+}
+
+real Simulator3D::getCentroidVelZAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidVelZ[nb];
+ return sum/v;
+}
+
+real Simulator3D::getCentroidPosXAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidPosX[nb];
+ return sum/v;
+}
+
+real Simulator3D::getCentroidPosYAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidPosY[nb];
+ return sum/v;
+}
+
+real Simulator3D::getCentroidPosZAverage()
+{
+ real sum=0;
+ int v = elemIdRegion->Max();
+ for( int nb=1;nb<=v;nb++ )
+  sum+=centroidPosZ[nb];
+ return sum/v;
 }

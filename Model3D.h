@@ -193,6 +193,8 @@ class Model3D
   void setDiskCouetteBC();
   void setInterfaceBC();
   void setCubeBC();
+  void setGenericBC();
+  void setGenericBC(real _vel);
   void setWallBC();
   void setWallBC(real _vel);
   void setMovingWallBC();

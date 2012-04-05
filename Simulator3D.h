@@ -205,18 +205,31 @@ class Simulator3D
   void operator()(Model3D &_m,Simulator3D &_s);
   int loadSolution( const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
-  void getBubbleVelocity();
-  void getBubbleVelocity(clVector _uVel,clVector _vVel,clVector _wVel);
-  real getBubbleVelocity(clVector &_vel);
+  void setCentroidVelPos();
   void setALEVelBC();
   void setAnnularALEVelBC();
   void setLagrangianVelBC();
-  real getCentroidVelX();
-  real getCentroidVelY();
-  real getCentroidVelZ();
-  void setCentroidVelX(real _centroidVelX);
-  void setCentroidVelY(real _centroidVelY);
-  void setCentroidVelZ(real _centroidVelZ);
+
+  vector<real> getCentroidVelX();
+  real getCentroidVelXAverage();
+  vector<real> getCentroidVelY();
+  real getCentroidVelYAverage();
+  vector<real> getCentroidVelZ();
+  real getCentroidVelZAverage();
+
+  void setCentroidVelX(vector<real> _centroidVelX);
+  void setCentroidVelY(vector<real> _centroidVelY);
+  void setCentroidVelZ(vector<real> _centroidVelZ);
+
+  vector<real> getCentroidPosX();
+  real getCentroidPosXAverage();
+  vector<real> getCentroidPosY();
+  real getCentroidPosYAverage();
+  vector<real> getCentroidPosZ();
+  real getCentroidPosZAverage();
+  void setCentroidPosX(vector<real> _centroidPosX);
+  void setCentroidPosY(vector<real> _centroidPosY);
+  void setCentroidPosZ(vector<real> _centroidPosZ);
 
  private:
   Model3D *m;
@@ -244,8 +257,10 @@ class Simulator3D
   real sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
   real bubbleVel;
   int iter;
-  real centroidVelX,centroidVelY,centroidVelZ;
-  real centroidVelXOld,centroidVelYOld,centroidVelZOld;
+  vector<real> centroidVelX,centroidVelY,centroidVelZ;
+  vector<real> centroidVelXOld,centroidVelYOld,centroidVelZOld;
+  vector<real> centroidPosX,centroidPosY,centroidPosZ;
+  vector<real> centroidPosXOld,centroidPosYOld,centroidPosZOld;
 
   clMatrix K,Kc,Mrho,M,Mc,G,D,A;
   clMatrix mat,matc;

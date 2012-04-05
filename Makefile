@@ -136,6 +136,9 @@ risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+test: ${FEM3D_DIR}/script/mainTest.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #

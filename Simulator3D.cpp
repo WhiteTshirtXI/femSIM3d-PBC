@@ -1617,44 +1617,50 @@ void Simulator3D::setGravity(const char* _direction)
   gy.SetAll(0.0);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"y") == 0 || 
-     strcmp( _direction,"+y") == 0 || 
-     strcmp( _direction,"Y") == 0 || 
-     strcmp( _direction,"+Y") == 0 ) 
+ else if( strcmp( _direction,"y") == 0 || 
+          strcmp( _direction,"+y") == 0 || 
+		  strcmp( _direction,"Y") == 0 || 
+		  strcmp( _direction,"+Y") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(gAdimen);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"z") == 0 || 
-     strcmp( _direction,"+z") == 0 || 
-     strcmp( _direction,"Z") == 0 ||
-     strcmp( _direction,"+Z") == 0 ) 
+ else if( strcmp( _direction,"z") == 0 || 
+          strcmp( _direction,"+z") == 0 || 
+		  strcmp( _direction,"Z") == 0 ||
+		  strcmp( _direction,"+Z") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(0.0);
   gz.SetAll(gAdimen);
  }
- if( strcmp( _direction,"-x") == 0 || 
-     strcmp( _direction,"-X") == 0 ) 
+ else if( strcmp( _direction,"-x") == 0 || 
+          strcmp( _direction,"-X") == 0 ) 
  {
   gx.SetAll(-1.0*gAdimen);
   gy.SetAll(0.0);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"-y") == 0 || 
-     strcmp( _direction,"-Y") == 0 ) 
+ else if( strcmp( _direction,"-y") == 0 || 
+          strcmp( _direction,"-Y") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(-1.0*gAdimen);
   gz.SetAll(0.0);
  }
- if( strcmp( _direction,"-z") == 0 || 
-     strcmp( _direction,"-Z") == 0 ) 
+ else if( strcmp( _direction,"-z") == 0 || 
+          strcmp( _direction,"-Z") == 0 ) 
  {
   gx.SetAll(0.0);
   gy.SetAll(0.0);
   gz.SetAll(-1.0*gAdimen);
+ }
+ else 
+ {
+  gx.SetAll(0.0);
+  gy.SetAll(0.0);
+  gz.SetAll(0.0);
  }
 
  gravity.Dim(0);

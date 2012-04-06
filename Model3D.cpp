@@ -9222,7 +9222,7 @@ void Model3D::checkAngleBetweenPlanes()
 						normalElem2.Get(1),
 						normalElem2.Get(2) );
 
-  if( (180*theta/3.1415) > 120 )
+  if( (180*theta/3.1415) > 120  && vertID > 0)
   {
 //--------------------------------------------------
 //    cout << "v1: " << mapEdgeTri.Get(edge,1) << endl;

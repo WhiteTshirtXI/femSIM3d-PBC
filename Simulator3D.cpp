@@ -3714,34 +3714,25 @@ void Simulator3D::setCentroidVelPos()
  clVector _vVel = vSolOld;
  clVector _wVel = wSolOld;
 
- int v = elemIdRegion->Max();
- vector<real> velX,velY,velZ;
- velX.resize(v);velY.resize(v);velZ.resize(v);
- fill(velX.begin(),velX.end(),0);
- fill(velY.begin(),velY.end(),0);
- fill(velZ.begin(),velZ.end(),0);
- vector<real> posX,posY,posZ;
- posX.resize(v);posY.resize(v);posZ.resize(v);
- fill(posX.begin(),posX.end(),0);
- fill(posY.begin(),posY.end(),0);
- fill(posZ.begin(),posZ.end(),0);
- vector<real> volume,sumVolume;
- volume.resize(v);sumVolume.resize(v);
- fill(volume.begin(),volume.end(),0);
- fill(sumVolume.begin(),sumVolume.end(),0);
- vector<real> sumXVelVolume,sumYVelVolume,sumZVelVolume;
- sumXVelVolume.resize(v);sumYVelVolume.resize(v);sumZVelVolume.resize(v);
- fill(sumXVelVolume.begin(),sumXVelVolume.end(),0);
- fill(sumYVelVolume.begin(),sumYVelVolume.end(),0);
- fill(sumZVelVolume.begin(),sumZVelVolume.end(),0);
- vector<real> sumXPosVolume,sumYPosVolume,sumZPosVolume;
- sumXPosVolume.resize(v);sumYPosVolume.resize(v);sumZPosVolume.resize(v);
- fill(sumXPosVolume.begin(),sumXPosVolume.end(),0);
- fill(sumYPosVolume.begin(),sumYPosVolume.end(),0);
- fill(sumZPosVolume.begin(),sumZPosVolume.end(),0);
+ int v = elemIdRegion->Max()+1;
+ vector<real> velX(v,0);
+ vector<real> velY(v,0);
+ vector<real> velZ(v,0);
+ vector<real> posX(v,0);
+ vector<real> posY(v,0);
+ vector<real> posZ(v,0);
+ vector<real> volume(v,0);
+ vector<real> sumVolume(v,0);
+ vector<real> sumXVelVolume(v,0);
+ vector<real> sumYVelVolume(v,0);
+ vector<real> sumZVelVolume(v,0);
+ vector<real> sumXPosVolume(v,0);
+ vector<real> sumYPosVolume(v,0);
+ vector<real> sumZPosVolume(v,0);
 
  list<int> *inElem;
  inElem = m->getInElem();
+ //for( int elem=0;elem<surfMesh->numElems;elem ) 
  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
  {
   int v1 = IEN->Get(*it,0);

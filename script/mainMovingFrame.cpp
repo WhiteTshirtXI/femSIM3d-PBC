@@ -32,32 +32,32 @@ int main(int argc, char **argv)
  real d1 = 0.0;      // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;      // surface smooth cord (fujiwara)
  real alpha = 1.0;   // time discrete method
-
- real Re = 100; 
- real We = 10;
- real Fr = 10;
- real mu_in = 0.01;
- real mu_out = 1.0; 
- real rho_in = 0.001;
- real rho_out = 1.0; 
-
 //--------------------------------------------------
-//  /* Japonese paper */
-//  real Re = 576.24; 
-//  real We = 0.1162;
-//  real Fr = 10.096;
-//  real mu_in=1.78E-05;
-//  real mu_out=320.7E-05;
-//  real rho_in=1.225;
-//  real rho_out=1849;
+// 
+//  real Re = 100; 
+//  real We = 10;
+//  real Fr = 10;
+//  real mu_in = 0.01;
+//  real mu_out = 1.0; 
+//  real rho_in = 0.001;
+//  real rho_out = 1.0; 
 //-------------------------------------------------- 
+
+ /* Japonese paper */
+ real Re = 298.8; 
+ real We = 4.15;
+ real Fr = 18.43;
+ real mu_in=1.78E-05;
+ real mu_out=320.7E-05;
+ real rho_in=1.225;
+ real rho_out=1849;
 
  real cfl = 0.8;
 
  //string meshFile = "bubble-tube5.msh";
  //string meshFile = "test.msh";
- //string meshFile = "circular.msh";
- string meshFile = "hexaedron.msh";
+ string meshFile = "circular.msh";
+ //string meshFile = "hexaedron.msh";
  //string meshFile = "2micros.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);

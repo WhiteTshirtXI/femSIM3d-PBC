@@ -57,7 +57,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/2bubbles/" + meshFile;
+ meshDir += "/gmsh/3d/2Bubbles/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2AxiBubblesBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2AxiBubblesBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.set2AxiBubblesBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -267,6 +267,8 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << iter << endl << endl;
    cout << resetColor();
+
+   s1.setCentroidVelPos();
 
    s1.setDtALETwoPhase();
 
@@ -354,7 +356,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.set2AxiBubblesBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

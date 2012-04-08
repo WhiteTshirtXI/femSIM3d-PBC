@@ -4434,11 +4434,15 @@ void Model3D::setGenericBC()
   int v3 = surfMesh.IEN.Get(i,2);
   int id = surfMesh.idRegion.Get(i);
 
-  // string: "wallSlipUVW"
+  // This IF selects the priority boundary conditions to be set on the
+  // phyBounds vector. Note that only these names will be written on top
+  // of the others. For instance if a corner point has 2 types of
+  // boundary condition, the phyNames below will be written.
   if( surfMesh.phyNames.at(id).compare(5,9,"NoSlip") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 )
+      surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 )
   {
    string aux = surfMesh.phyNames.at(id);
    surfMesh.phyBounds.at(v1) = aux;
@@ -4449,12 +4453,15 @@ void Model3D::setGenericBC()
 
  for( int j=0;j<surfMesh.numVerts;j++ )
  {
+  // outflow condition
   if( surfMesh.phyBounds.at(j) == "\"wallOutflow\"" )
   {
    idbcp.AddItem(j);
    pc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+
+  // inflow condition U
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4464,7 +4471,9 @@ void Model3D::setGenericBC()
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  
+  // inflow condition V
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4474,7 +4483,9 @@ void Model3D::setGenericBC()
    vc.Set(j,1.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+
+  // inflow condition W
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4484,9 +4495,41 @@ void Model3D::setGenericBC()
    vc.Set(j,0.0);
    wc.Set(j,1.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" || 
-      surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" ||
-	  surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+
+  // 2 bubbles inflow condition
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflow2Bubbles\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   real aux = X.Get(j);
+   uc.Set(j,aux);
+   aux = (-1.0)*Y.Get(j);
+   vc.Set(j,aux);
+   aux = Z.Get(j);
+   wc.Set(j,aux);
+  }
+
+  // 2 Axi bubbles inflow condition
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflow2AxiBubbles\"" )
+  {
+   idbcu.AddItem(j);
+   idbcv.AddItem(j);
+   idbcw.AddItem(j);
+
+   real aux = X.Get(j);
+   uc.Set(j,aux);
+   aux = (-1.0)*Y.Get(j);
+   vc.Set(j,aux);
+   aux = 0.0;
+   wc.Set(j,aux);
+  }
+
+  // moving boundary condition as inflow set to Zero
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" || 
+           surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" ||
+		   surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4496,7 +4539,9 @@ void Model3D::setGenericBC()
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+
+  // moving boundary U
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4506,7 +4551,9 @@ void Model3D::setGenericBC()
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+
+  // moving boundary V
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4516,7 +4563,9 @@ void Model3D::setGenericBC()
    vc.Set(j,-1.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+
+  // moving boundary W
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4526,7 +4575,10 @@ void Model3D::setGenericBC()
    vc.Set(j,0.0);
    wc.Set(j,-1.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+
+  // no slip condition if any other is imposed
+  //if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  else
   {
    idbcu.AddItem(j);
    idbcv.AddItem(j);
@@ -4547,66 +4599,63 @@ void Model3D::setGenericBC(real _vel)
   {
    pc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
   {
    uc.Set(j,1.0);
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,1.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,0.0);
    wc.Set(j,1.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" )
   {
    uc.Set(j,0.0-_vel);
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,0.0-_vel);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,0.0);
    wc.Set(j,0.0-_vel);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
   {
    uc.Set(j,-1.0-_vel);
    vc.Set(j,0.0);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,-1.0-_vel);
    wc.Set(j,0.0);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+  else if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
   {
    uc.Set(j,0.0);
    vc.Set(j,0.0);
    wc.Set(j,-1.0-_vel);
   }
-  if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  //if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  else
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
-
    uc.Set(j,0.0);
    vc.Set(j,0.0);
    wc.Set(j,0.0);

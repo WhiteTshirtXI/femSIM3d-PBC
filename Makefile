@@ -147,9 +147,9 @@ restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)
 
 # --------------------------<< misc (two-phase) >>-------------------------- #
 #                                                                            #
-2bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
+2Bubbles: ${FEM3D_DIR}/script/main2Bubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-2Axibubbles: ${FEM3D_DIR}/script/main2AxiBubbles.o $(obj)
+2AxiBubbles: ${FEM3D_DIR}/script/main2AxiBubbles.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 helmholtz: ${FEM3D_DIR}/script/mainHelmholtz.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@

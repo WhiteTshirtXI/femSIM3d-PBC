@@ -267,7 +267,6 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
    
-   s1.setCentroidVelPos();
 
    s1.setDtALETwoPhase();
 

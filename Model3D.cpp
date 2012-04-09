@@ -4439,7 +4439,8 @@ void Model3D::setGenericBC()
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
-      surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 )
+      surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,17,"Inflow2AxiBubbles") == 0 )
   {
    string aux = surfMesh.phyNames.at(id);
    surfMesh.phyBounds.at(v1) = aux;

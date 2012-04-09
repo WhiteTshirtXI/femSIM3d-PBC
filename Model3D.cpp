@@ -1709,12 +1709,6 @@ list<int> Model3D::setPolyhedron(list<int> _myList)
 	}
 	if( vSwap2 == node2 )
 	{
-	 test.Set(k+1,0,vSwap2);
-	 test.Set(k+1,1,vSwap1);
-	 test.Set(z,0,v3);
-	 test.Set(z,1,v2);
-	 break;
-
 	 cerr << endl;
 	 cerr << endl;
 	 cerr << color(blink,red,black);
@@ -1724,7 +1718,12 @@ list<int> Model3D::setPolyhedron(list<int> _myList)
 	 cerr << resetColor();
 	 cerr << endl;
 	 cerr << endl;
-	 exit(1);
+
+	 test.Set(k+1,0,vSwap2);
+	 test.Set(k+1,1,vSwap1);
+	 test.Set(z,0,v3);
+	 test.Set(z,1,v2);
+	 break;
 	}
    }
   }
@@ -8687,94 +8686,6 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
  return coordAdd;
 }
 
-void Model3D::applyBubbleVolumeCorrection()
-{
- // surfMesh.elemIdRegion == 0 --> wall
- // surfMesh.elemIdRegion == 1 --> bubble 1
- // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
- for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
- {
-  real aux = 0;
-
-  real da = (initSurfaceArea[nb] - surfaceArea[nb]);
-  real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-
-  real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-  real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
-
-  real TOL = initSurfaceVolume[nb]*0.0001;
-
-  int count = 0;
-  //while( fabs(dv) > 1E-06 )
-  //while( fabs(da) > 1E-06 )
-  //while( fabs(dv) > TOL && count < 30 )
-  while( fabs(errov) > TOL && count < 30 )
-  {
-   for( int i=0;i<surface.Dim();i++ )
-   {
-	int surfaceNode = surface.Get(i);
-
-	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
-	{
-	 aux = surfMesh.X.Get(surfaceNode) + 
-	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-	 X.Set(surfaceNode,aux);
-	 surfMesh.X.Set(surfaceNode,aux);
-
-	 aux = surfMesh.Y.Get(surfaceNode) + 
-	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-	 Y.Set(surfaceNode,aux);
-	 surfMesh.Y.Set(surfaceNode,aux);
-
-	 aux = surfMesh.Z.Get(surfaceNode) + 
-	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-	 Z.Set(surfaceNode,aux);
-	 surfMesh.Z.Set(surfaceNode,aux);
-	}
-   }
-   surfaceVolume[nb] = getSurfaceVolume(nb);
-   surfaceArea[nb] = getSurfaceArea(nb);
-   da = (initSurfaceArea[nb] - surfaceArea[nb]);
-   dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-   erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-   errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
-   count++;
-   //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
-  }
-  cout << endl;
-  cout << setw(20) << color(none,red,black) 
-                   << "|--------- VOLUME CORRECTION ---------|" << endl;
-  cout << setw(33) << color(none,white,black) << "|initial: " 
-                   << initSurfaceVolume[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|final: " << surfaceVolume[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|dv: " << dv << endl;
-  cout << setw(26) << color(none,white,black) 
-                   << "volume |error: " << fabs(errov) << endl;
-  cout << setw(21) << color(none,red,black) 
-                   << "     ---------------------------- " << endl;
-  cout << setw(33) << color(none,white,black) << "|initial: " 
-                   << initSurfaceArea[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|final: " << surfaceArea[nb] << endl;
-  cout << setw(33) << color(none,white,black) 
-                   << "|da: " << da << endl;
-  cout << setw(26) << color(none,white,black) 
-                   << "  area |error: " << fabs(erroa) << endl;
-  cout << setw(21) << color(none,red,black) 
-                   << "     ---------------------------- " << endl;
-  cout << setw(28) << color(none,white,black) 
-                   << "number of iterations: " << count << endl;
-  cout << setw(20) << color(none,red,black) 
-                   << "|-------------------------------------|" << endl;
-  cout << resetColor() << endl;
- }
-}
-
 //--------------------------------------------------
 // clVector Model3D::getNormalAndKappaByGauss(int _node,list<int> _myList)
 // {
@@ -9976,3 +9887,225 @@ void Model3D::checkLineOrientation()
  }
 }
 
+//--------------------------------------------------
+// void Model3D::applyBubbleVolumeCorrection()
+// {
+//  // surfMesh.elemIdRegion == 0 --> wall
+//  // surfMesh.elemIdRegion == 1 --> bubble 1
+//  // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
+//  for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+//  {
+//   real aux = 0;
+// 
+//   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
+//   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+// 
+//   real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+//   real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+// 
+//   real TOL = initSurfaceVolume[nb]*0.00000001;
+// 
+//   int count = 0;
+//   //while( fabs(dv) > 1E-06 )
+//   //while( fabs(da) > 1E-06 )
+//   //while( fabs(dv) > TOL && count < 30 )
+//   while( fabs(errov) > TOL && count < 30 )
+//   {
+//    for( int i=0;i<surface.Dim();i++ )
+//    {
+// 	int surfaceNode = surface.Get(i);
+// 
+// 	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
+// 	{
+// 	 aux = surfMesh.X.Get(surfaceNode) + 
+// 	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
+// 	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+// 	 X.Set(surfaceNode,aux);
+// 	 surfMesh.X.Set(surfaceNode,aux);
+// 
+// 	 aux = surfMesh.Y.Get(surfaceNode) + 
+// 	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
+// 	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+// 	 Y.Set(surfaceNode,aux);
+// 	 surfMesh.Y.Set(surfaceNode,aux);
+// 
+// 	 aux = surfMesh.Z.Get(surfaceNode) + 
+// 	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
+// 	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+// 	 Z.Set(surfaceNode,aux);
+// 	 surfMesh.Z.Set(surfaceNode,aux);
+// 	}
+//    }
+//    surfaceVolume[nb] = getSurfaceVolume(nb);
+//    surfaceArea[nb] = getSurfaceArea(nb);
+//    da = (initSurfaceArea[nb] - surfaceArea[nb]);
+//    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+//    erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+//    errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+//    count++;
+//    //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
+//   }
+//   cout << endl;
+//   cout << setw(20) << color(none,red,black) 
+//                    << "|--------- VOLUME CORRECTION ---------|" << endl;
+//   cout << setw(33) << color(none,white,black) << "|initial: " 
+//                    << initSurfaceVolume[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|final: " << surfaceVolume[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|dv: " << dv << endl;
+//   cout << setw(26) << color(none,white,black) 
+//                    << "volume |error: " << fabs(errov) << endl;
+//   cout << setw(21) << color(none,red,black) 
+//                    << "     ---------------------------- " << endl;
+//   cout << setw(33) << color(none,white,black) << "|initial: " 
+//                    << initSurfaceArea[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|final: " << surfaceArea[nb] << endl;
+//   cout << setw(33) << color(none,white,black) 
+//                    << "|da: " << da << endl;
+//   cout << setw(26) << color(none,white,black) 
+//                    << "  area |error: " << fabs(erroa) << endl;
+//   cout << setw(21) << color(none,red,black) 
+//                    << "     ---------------------------- " << endl;
+//   cout << setw(28) << color(none,white,black) 
+//                    << "number of iterations: " << count << endl;
+//   cout << setw(20) << color(none,red,black) 
+//                    << "|-------------------------------------|" << endl;
+//   cout << resetColor() << endl;
+//  }
+// }
+//-------------------------------------------------- 
+
+/* 
+ * Bubble volume correction, print screen and save in file with
+ * iteratios
+ * */
+void Model3D::applyBubbleVolumeCorrection()
+{
+ // surfMesh.elemIdRegion == 0 --> wall
+ // surfMesh.elemIdRegion == 1 --> bubble 1
+ // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
+ for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
+ {
+  stringstream ss;  //convertendo int --> string
+  string str;
+  ss << nb;
+  ss >> str;
+
+  string fileAux = "dat/updateVolume" + str + ".dat";
+  const char* filename = fileAux.c_str();
+  ifstream testFile( filename );
+  ofstream file( filename,ios::app );
+  if( testFile )
+  {
+   testFile.close();
+   cout << "appending on file updateVolume" << nb << ".dat" << endl;
+  }
+  else
+  {
+   cout << "Creating file updateVolume" << nb << ".dat" << endl;
+   file << "#count" << setw(19) << "volume" 
+                    << setw(18) << "area" 
+                    << setw(18) << "errov" 
+                    << setw(18) << "erroa" 
+                    << setw(18) << "dv" 
+                    << setw(18) << "da" 
+     			    << endl;
+  }
+
+  real aux = 0;
+
+  real da = (initSurfaceArea[nb] - surfaceArea[nb]);
+  real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+
+  real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+  real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+
+  real TOL = initSurfaceVolume[nb]*0.00000001;
+
+  int count = 0;
+  //while( fabs(dv) > 1E-06 )
+  //while( fabs(da) > 1E-06 )
+  //while( fabs(dv) > TOL && count < 30 )
+  while( fabs(errov) > TOL && count < 30 )
+  {
+  file << setprecision(20) << scientific; 
+  file << setw(10) << count << " " 
+       << setw(17) << surfaceVolume[nb] << " " 
+       << setw(17) << surfaceArea[nb] << " " 
+       << setw(17) << errov << " " 
+       << setw(17) << erroa << " " 
+       << setw(17) << dv << " " 
+       << setw(17) << da << " " 
+       << setw(5) << setprecision(0) << fixed  
+       << endl;
+
+   for( int i=0;i<surface.Dim();i++ )
+   {
+	int surfaceNode = surface.Get(i);
+
+	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
+	{
+	 aux = surfMesh.X.Get(surfaceNode) + 
+	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
+	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	 X.Set(surfaceNode,aux);
+	 surfMesh.X.Set(surfaceNode,aux);
+
+	 aux = surfMesh.Y.Get(surfaceNode) + 
+	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
+	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	 Y.Set(surfaceNode,aux);
+	 surfMesh.Y.Set(surfaceNode,aux);
+
+	 aux = surfMesh.Z.Get(surfaceNode) + 
+	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
+	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	 Z.Set(surfaceNode,aux);
+	 surfMesh.Z.Set(surfaceNode,aux);
+	}
+   }
+   surfaceVolume[nb] = getSurfaceVolume(nb);
+   surfaceArea[nb] = getSurfaceArea(nb);
+   da = (initSurfaceArea[nb] - surfaceArea[nb]);
+   dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+   erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+   errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+
+   count++;
+   //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
+   
+  }
+  file.close();
+
+  cout << endl;
+  cout << setw(20) << color(none,red,black) 
+                   << "|--------- VOLUME CORRECTION ---------|" << endl;
+  cout << setw(33) << color(none,white,black) << "|initial: " 
+                   << initSurfaceVolume[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|final: " << surfaceVolume[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|dv: " << dv << endl;
+  cout << setw(26) << color(none,white,black) 
+                   << "volume |error: " << fabs(errov) << endl;
+  cout << setw(21) << color(none,red,black) 
+                   << "     ---------------------------- " << endl;
+  cout << setw(33) << color(none,white,black) << "|initial: " 
+                   << initSurfaceArea[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|final: " << surfaceArea[nb] << endl;
+  cout << setw(33) << color(none,white,black) 
+                   << "|da: " << da << endl;
+  cout << setw(26) << color(none,white,black) 
+                   << "  area |error: " << fabs(erroa) << endl;
+  cout << setw(21) << color(none,red,black) 
+                   << "     ---------------------------- " << endl;
+  cout << setw(28) << color(none,white,black) 
+                   << "number of iterations: " << count << endl;
+  cout << setw(20) << color(none,red,black) 
+                   << "|-------------------------------------|" << endl;
+  cout << resetColor() << endl;
+ }
+}

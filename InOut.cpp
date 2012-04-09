@@ -476,6 +476,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
 
+ setCutPlaneTwoPhase(vtkFile); // set cut plane functions
+
  if( uALE->Dim() > 0 )
   vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
@@ -4114,3 +4116,114 @@ void InOut::copyLastFile(const char* _dir,
  outFile.close();
 }
 
+//--------------------------------------------------
+// void InOut::setCutPlaneTwoPhase(ofstream& _file)
+// {
+//  real plane1 = ( X->Max()+X->Min() )/2.0;
+//  real plane2 = ( Y->Max()+Y->Min() )/2.0;
+//  real plane3 = ( Z->Max()+Z->Min() )/2.0;
+//  clVector cutPlaneX(numElems);
+//  clVector cutPlaneY(numElems);
+//  clVector cutPlaneZ(numElems);
+//  for( int i=0;i<numElems;i++ )
+//  {
+//   int v1 = IEN->Get(i,0);
+//   int v2 = IEN->Get(i,1);
+//   int v3 = IEN->Get(i,2);
+//   int v4 = IEN->Get(i,3);
+//   bool planeTestX = (X->Get( v1 ) <  plane1) && 
+//                     (X->Get( v2 ) <  plane1) && 
+// 					(X->Get( v3 ) <  plane1) && 
+// 					(X->Get( v4 ) <  plane1);
+// 
+//   bool planeTestY = (Y->Get( v1 ) <  plane2) && 
+//                     (Y->Get( v2 ) <  plane2) && 
+// 					(Y->Get( v3 ) <  plane2) && 
+// 					(Y->Get( v4 ) <  plane2);
+// 
+//   bool planeTestZ = (Z->Get( v1 ) <  plane3) && 
+//                     (Z->Get( v2 ) <  plane3) && 
+// 					(Z->Get( v3 ) <  plane3) && 
+// 					(Z->Get( v4 ) <  plane3);
+// 
+//   real hTest = heaviside->Get(v1)+heaviside->Get(v2)+
+// 	           heaviside->Get(v3)+heaviside->Get(v4) > 1.5;
+// 
+//   if( planeTestX || hTest )
+//    cutPlaneX.Set(i,1.0);
+//   else
+//    cutPlaneX.Set(i,0.0);
+// 
+//   if( planeTestY || hTest )
+//    cutPlaneY.Set(i,1.0);
+//   else
+//    cutPlaneY.Set(i,0.0);
+// 
+//   if( planeTestZ || hTest )
+//    cutPlaneZ.Set(i,1.0);
+//   else
+//    cutPlaneZ.Set(i,0.0);
+//  }
+// 
+//   vtkScalarCell(_file,"cutPlaneX",cutPlaneX);
+//   vtkScalarCell(_file,"cutPlaneY",cutPlaneY);
+//   vtkScalarCell(_file,"cutPlaneZ",cutPlaneZ);
+// }
+//-------------------------------------------------- 
+
+void InOut::setCutPlaneTwoPhase(ofstream& _file)
+{
+ real plane1a =   ( X->Max()+X->Min() )/4.0;
+ real plane1b = 2*( X->Max()+X->Min() )/4.0;
+ real plane1c = 3*( X->Max()+X->Min() )/4.0;
+ real plane2a =   ( Y->Max()+Y->Min() )/4.0;
+ real plane2b = 2*( Y->Max()+Y->Min() )/4.0;
+ real plane2c = 3*( Y->Max()+Y->Min() )/4.0;
+ real plane3a =   ( Z->Max()+Z->Min() )/4.0;
+ real plane3b = 2*( Z->Max()+Z->Min() )/4.0;
+ real plane3c = 3*( Z->Max()+Z->Min() )/4.0;
+ clVector cutPlaneX(numVerts);
+ clVector cutPlaneY(numVerts);
+ clVector cutPlaneZ(numVerts);
+ for( int i=0;i<numVerts;i++ )
+ {
+  bool planeTestXa = (X->Get( i ) >  plane1a);
+  bool planeTestXb = (X->Get( i ) >  plane1b);
+  bool planeTestXc = (X->Get( i ) >  plane1c);
+
+  bool planeTestYa = (Y->Get( i ) >  plane2a); 
+  bool planeTestYb = (Y->Get( i ) >  plane2b); 
+  bool planeTestYc = (Y->Get( i ) >  plane2c); 
+
+  bool planeTestZa = (Z->Get( i ) >  plane3a); 
+  bool planeTestZb = (Z->Get( i ) >  plane3b); 
+  bool planeTestZc = (Z->Get( i ) >  plane3c); 
+
+  real hTest = heaviside->Get(i) > 0.0;
+
+  if( planeTestXa || hTest )
+   cutPlaneX.Set(i,1.0);
+  if( planeTestXb || hTest )
+   cutPlaneX.Set(i,2.0);
+  if( planeTestXc || hTest )
+   cutPlaneX.Set(i,3.0);
+
+  if( planeTestYa || hTest )
+   cutPlaneY.Set(i,1.0);
+  if( planeTestYb || hTest )
+   cutPlaneY.Set(i,2.0);
+  if( planeTestYc || hTest )
+   cutPlaneY.Set(i,3.0);
+
+  if( planeTestZa || hTest )
+   cutPlaneZ.Set(i,1.0);
+  if( planeTestZb || hTest )
+   cutPlaneZ.Set(i,2.0);
+  if( planeTestZc || hTest )
+   cutPlaneZ.Set(i,3.0);
+ }
+
+  vtkScalar(_file,"cutPlaneX",cutPlaneX);
+  vtkScalar(_file,"cutPlaneY",cutPlaneY);
+  vtkScalar(_file,"cutPlaneZ",cutPlaneZ);
+}

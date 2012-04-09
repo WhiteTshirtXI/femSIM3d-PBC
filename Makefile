@@ -47,7 +47,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureTorus curvatureAndPressureSphere \
 	       curvatureAndPressureCylinder curvatureAndPressureTorus\
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
-		   2bubbles micro
+		   2Bubbles micro
 
 two-phaseHT: risingBubbleHT
 

@@ -1876,6 +1876,9 @@ void Simulator3D::unCoupled()
 
  time = time + dt;
  iter++;
+
+ // compute bubble's centroid velocity
+ setCentroidVelPos();
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()

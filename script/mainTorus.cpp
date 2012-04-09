@@ -82,7 +82,7 @@ int main(int argc, char **argv)
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
- m1.setWallBC();
+ m1.setGenericBC();
 
  s1(m1);
 
@@ -146,8 +146,6 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTK("x","x",vtkFolder,"simCutHalf",iter);
-   save.saveVTK("x","y",vtkFolder,"simCutQuarter",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);

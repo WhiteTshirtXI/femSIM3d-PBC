@@ -39,7 +39,7 @@ int main(int argc, char **argv)
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1.0;
 
@@ -57,8 +57,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- //string meshFile = "bubble-tube5.msh";
- string meshFile = "test.msh";
+ string meshFile = "bubble-tube5.msh";
+ //string meshFile = "test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -245,7 +245,6 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTK("x","y",vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
@@ -268,7 +267,6 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- real vel = 0;
  int nIter = 3000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
@@ -281,12 +279,7 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   clVector test(m1.getNumNodes());test.SetAll(vel);
-   test = *s1.getWSol();
-   vel = s1.getBubbleVelocity(test);
-   s1.setCentroidVelZ(vel);
-
-   //m1.setWallBC(vel);
+   s1.setCentroidVelPos();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
@@ -307,7 +300,6 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTK("x","y",vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -375,7 +367,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -387,9 +379,8 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
+  //saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTK("x","y",vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);

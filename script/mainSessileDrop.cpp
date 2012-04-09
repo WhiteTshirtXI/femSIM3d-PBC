@@ -230,7 +230,6 @@ int main(int argc, char **argv)
   saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
   saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
   saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveVTK("x","y",vtkFolder,"simCutPlane",atoi(*(argv+2)));
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
@@ -273,7 +272,6 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTK("x","y",vtkFolder,"simCutPlane",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
@@ -338,7 +336,6 @@ int main(int argc, char **argv)
   saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
   saveEnd.saveVTK(vtkFolder,"sim",iter-1);
   saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTK("x","y",vtkFolder,"simCutPlane",iter-1);
   saveEnd.saveSol(binFolder,"sim",iter-1);
   //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
   //saveEnd.saveSolTXT(binFolder,"sim",iter-1);

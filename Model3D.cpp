@@ -1709,13 +1709,11 @@ list<int> Model3D::setPolyhedron(list<int> _myList)
 	}
 	if( vSwap2 == node2 )
 	{
-	//--------------------------------------------------
-	//  test.Set(k+1,0,vSwap2);
-	//  test.Set(k+1,1,vSwap1);
-	//  test.Set(z,0,v3);
-	//  test.Set(z,1,v2);
-	//  break;
-	//-------------------------------------------------- 
+	 test.Set(k+1,0,vSwap2);
+	 test.Set(k+1,1,vSwap1);
+	 test.Set(z,0,v3);
+	 test.Set(z,1,v2);
+	 break;
 
 	 cerr << endl;
 	 cerr << endl;
@@ -4451,214 +4449,214 @@ void Model3D::setGenericBC()
   }
  }
 
- for( int j=0;j<surfMesh.numVerts;j++ )
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   // outflow condition
-  if( surfMesh.phyBounds.at(j) == "\"wallOutflow\"" )
+  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
   {
-   idbcp.AddItem(j);
-   pc.Set(j,0.0);
+   idbcp.AddItem(*it);
+   pc.Set(*it,0.0);
   }
 
   // inflow condition U
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,1.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
   
   // inflow condition V
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,1.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,1.0);
+   wc.Set(*it,0.0);
   }
 
   // inflow condition W
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,1.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,1.0);
   }
 
   // 2 bubbles inflow condition
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflow2Bubbles\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2Bubbles\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   real aux = X.Get(j);
-   uc.Set(j,aux);
-   aux = (-1.0)*Y.Get(j);
-   vc.Set(j,aux);
-   aux = Z.Get(j);
-   wc.Set(j,aux);
+   real aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
+   aux = Z.Get(*it);
+   wc.Set(*it,aux);
   }
 
   // 2 Axi bubbles inflow condition
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflow2AxiBubbles\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2AxiBubbles\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   real aux = X.Get(j);
-   uc.Set(j,aux);
-   aux = (-1.0)*Y.Get(j);
-   vc.Set(j,aux);
+   real aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
    aux = 0.0;
-   wc.Set(j,aux);
+   wc.Set(*it,aux);
   }
 
   // moving boundary condition as inflow set to Zero
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" || 
-           surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" ||
-		   surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" || 
+           surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" ||
+		   surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
 
   // moving boundary U
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,-1.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,-1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
 
   // moving boundary V
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,-1.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,-1.0);
+   wc.Set(*it,0.0);
   }
 
   // moving boundary W
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,-1.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,-1.0);
   }
 
   // no slip condition if any other is imposed
-  //if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   else
   {
-   idbcu.AddItem(j);
-   idbcv.AddItem(j);
-   idbcw.AddItem(j);
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
 
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
  }
 }
 
 void Model3D::setGenericBC(real _vel)
 {    
- for( int j=0;j<surfMesh.numVerts;j++ )
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
-  if( surfMesh.phyBounds.at(j) == "\"wallOutflow\"" )
+  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
   {
-   pc.Set(j,0.0);
+   pc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
   {
-   uc.Set(j,1.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,1.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,1.0);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,1.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,1.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" )
   {
-   uc.Set(j,0.0-_vel);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,0.0-_vel);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0-_vel);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInflowZeroW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0-_vel);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0-_vel);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
   {
-   uc.Set(j,-1.0-_vel);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,-1.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,-1.0-_vel);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,-1.0-_vel);
+   wc.Set(*it,0.0);
   }
-  else if( surfMesh.phyBounds.at(j) == "\"wallInvW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
   {
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,-1.0-_vel);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,-1.0-_vel);
   }
-  //if( surfMesh.phyBounds.at(j) == "\"wallNoSlip\"" )
+  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   else
   {
-   uc.Set(j,0.0);
-   vc.Set(j,0.0);
-   wc.Set(j,0.0);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
   }
  }
 }

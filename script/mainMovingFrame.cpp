@@ -163,7 +163,6 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("sim",atoi(*(argv+2)));
 
-  s1.setCentroidVelPos();
   vel += s1.getCentroidVelXAverage();
   m1.setGenericBC(vel);
  }
@@ -198,7 +197,6 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setCentroidVelPos();
    vel += s1.getCentroidVelXAverage();
    m1.setGenericBC(vel);
    

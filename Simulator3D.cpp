@@ -1921,6 +1921,9 @@ void Simulator3D::saveOldData()
  centroidVelXOld = centroidVelX;
  centroidVelYOld = centroidVelY;
  centroidVelZOld = centroidVelZ;
+ centroidPosXOld = centroidPosX;
+ centroidPosYOld = centroidPosY;
+ centroidPosZOld = centroidPosZ;
 }
 
 /**
@@ -3019,6 +3022,12 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  uSmoothSurface = _sRight.uSmoothSurface;
  vSmoothSurface = _sRight.vSmoothSurface;
  wSmoothSurface = _sRight.wSmoothSurface;
+ centroidVelX = _sRight.centroidVelX;
+ centroidVelY = _sRight.centroidVelY;
+ centroidVelZ = _sRight.centroidVelZ;
+ centroidPosX = _sRight.centroidPosX;
+ centroidPosY = _sRight.centroidPosY;
+ centroidPosZ = _sRight.centroidPosZ;
 
  va = _sRight.va;
  vcc = _sRight.vcc;
@@ -3065,6 +3074,9 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  centroidVelXOld = _sRight.centroidVelXOld;
  centroidVelYOld = _sRight.centroidVelYOld;
  centroidVelZOld = _sRight.centroidVelZOld;
+ centroidPosXOld = _sRight.centroidPosXOld;
+ centroidPosYOld = _sRight.centroidPosYOld;
+ centroidPosZOld = _sRight.centroidPosZOld;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;
@@ -3150,10 +3162,6 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
 
  allocateMemoryToAttrib();
 
- centroidVelX = _s.getCentroidVelX();
- centroidVelY = _s.getCentroidVelY();
- centroidVelZ = _s.getCentroidVelZ();
-
  numVertsOld = _s.m->getNumVerts();
  numNodesOld = _s.m->getNumNodes();
  numElemsOld = _s.m->getNumElems();
@@ -3176,6 +3184,9 @@ void Simulator3D::operator()(Model3D &_m,Simulator3D &_s)
  centroidVelXOld = _s.getCentroidVelX();
  centroidVelYOld = _s.getCentroidVelY();
  centroidVelZOld = _s.getCentroidVelZ();
+ centroidPosXOld = _s.getCentroidPosX();
+ centroidPosYOld = _s.getCentroidPosY();
+ centroidPosZOld = _s.getCentroidPosZ();
 }
 
 int Simulator3D::loadSolution( const char* _filename,int _iter )
@@ -3715,6 +3726,20 @@ void Simulator3D::allocateMemoryToAttrib()
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  hSmooth.Dim( numVerts );
+
+ int numSurface = surfMesh->elemIdRegion.Max()+1; 
+ centroidVelX.resize(numSurface);
+ centroidVelY.resize(numSurface);
+ centroidVelZ.resize(numSurface);
+ centroidVelXOld.resize(numSurface);
+ centroidVelYOld.resize(numSurface);
+ centroidVelZOld.resize(numSurface);
+ centroidPosX.resize(numSurface);
+ centroidPosY.resize(numSurface);
+ centroidPosZ.resize(numSurface);
+ centroidPosXOld.resize(numSurface);
+ centroidPosYOld.resize(numSurface);
+ centroidPosZOld.resize(numSurface);
 }
 
 void Simulator3D::setCentroidVelPos()
@@ -3812,7 +3837,7 @@ real Simulator3D::getCentroidVelXAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelX[nb];
+  sum+=centroidVelXOld[nb];
  return sum/v;
 }
 
@@ -3821,7 +3846,7 @@ real Simulator3D::getCentroidVelYAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelY[nb];
+  sum+=centroidVelYOld[nb];
  return sum/v;
 }
 
@@ -3830,7 +3855,7 @@ real Simulator3D::getCentroidVelZAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelZ[nb];
+  sum+=centroidVelZOld[nb];
  return sum/v;
 }
 
@@ -3839,7 +3864,7 @@ real Simulator3D::getCentroidPosXAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosX[nb];
+  sum+=centroidPosXOld[nb];
  return sum/v;
 }
 
@@ -3848,7 +3873,7 @@ real Simulator3D::getCentroidPosYAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosY[nb];
+  sum+=centroidPosYOld[nb];
  return sum/v;
 }
 
@@ -3857,6 +3882,6 @@ real Simulator3D::getCentroidPosZAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosZ[nb];
+  sum+=centroidPosZOld[nb];
  return sum/v;
 }

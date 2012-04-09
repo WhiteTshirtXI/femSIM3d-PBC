@@ -428,6 +428,23 @@ void Model3D::readMSH( const char* filename )
   }
  }
  mshFile.close();
+
+ // filling surfMesh.phyBounds
+ surfMesh.phyBounds.clear();
+ surfMesh.phyBounds.resize(surfMesh.numVerts);
+
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  string aux = surfMesh.phyNames.at(id);
+  surfMesh.phyBounds.at(v1) = aux;
+  surfMesh.phyBounds.at(v2) = aux;
+  surfMesh.phyBounds.at(v3) = aux;
+ }
 } // fim do metodo readMsh
 
 void Model3D::setInterfaceBC()
@@ -4409,9 +4426,11 @@ void Model3D::setCubeBC()
 
 void Model3D::setGenericBC()
 {    
- surfMesh.phyBounds.clear();
- surfMesh.phyBounds.resize(surfMesh.numVerts);
-
+ /* This IF selects the priority boundary conditions to be set on the
+  * phyBounds vector. Note that only these names will be written on top
+  * of the others. For instance if a corner point has 2 types of
+  * boundary condition, the phyNames below will be written.
+  * */ 
  for( int i=0; i < surfMesh.numElems; i++ )
  {
   int v1 = surfMesh.IEN.Get(i,0);
@@ -4419,22 +4438,26 @@ void Model3D::setGenericBC()
   int v3 = surfMesh.IEN.Get(i,2);
   int id = surfMesh.idRegion.Get(i);
 
-  string aux = surfMesh.phyNames.at(id);
-  surfMesh.phyBounds.at(v1) = aux;
-  surfMesh.phyBounds.at(v2) = aux;
-  surfMesh.phyBounds.at(v3) = aux;
+  // 2nd. priority
+  if( surfMesh.phyNames.at(id).compare(5,7,"NormalU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"NormalV") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,7,"NormalW") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
  }
+
  for( int i=0; i < surfMesh.numElems; i++ )
  {
   int v1 = surfMesh.IEN.Get(i,0);
   int v2 = surfMesh.IEN.Get(i,1);
   int v3 = surfMesh.IEN.Get(i,2);
   int id = surfMesh.idRegion.Get(i);
-
-  // This IF selects the priority boundary conditions to be set on the
-  // phyBounds vector. Note that only these names will be written on top
-  // of the others. For instance if a corner point has 2 types of
-  // boundary condition, the phyNames below will be written.
+  
+  // 1st. priority
   if( surfMesh.phyNames.at(id).compare(5,9,"NoSlip") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
@@ -4574,6 +4597,26 @@ void Model3D::setGenericBC()
    wc.Set(*it,-1.0);
   }
 
+  // symmetry boundary U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalU\"" )
+  {
+   idbcu.AddItem(*it);
+   uc.Set(*it,0.0);
+  }
+
+  // symmetry boundary V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
+  {
+   idbcv.AddItem(*it);
+   vc.Set(*it,0.0);
+  }
+
+  // symmetry boundary W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
+  {
+   idbcw.AddItem(*it);
+   wc.Set(*it,0.0);
+  }
   // no slip condition if any other is imposed
   //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   else
@@ -4891,8 +4934,7 @@ void Model3D::setWallCouetteBC()
 
 void Model3D::set2AxiBubblesBC()
 {
- real aux;
-
+ real aux = 0;
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   // condicao de velocidade

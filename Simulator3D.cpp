@@ -161,6 +161,12 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  uSmoothSurface = _sRight.uSmoothSurface;
  vSmoothSurface = _sRight.vSmoothSurface;
  wSmoothSurface = _sRight.wSmoothSurface;
+ centroidVelX = _sRight.centroidVelX;
+ centroidVelY = _sRight.centroidVelY;
+ centroidVelZ = _sRight.centroidVelZ;
+ centroidPosX = _sRight.centroidPosX;
+ centroidPosY = _sRight.centroidPosY;
+ centroidPosZ = _sRight.centroidPosZ;
 
  va = _sRight.va;
  vcc = _sRight.vcc;
@@ -204,6 +210,12 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
  hSmoothOld = _sRight.hSmoothOld;
+ centroidVelXOld = _sRight.centroidVelXOld;
+ centroidVelYOld = _sRight.centroidVelYOld;
+ centroidVelZOld = _sRight.centroidVelZOld;
+ centroidPosXOld = _sRight.centroidPosXOld;
+ centroidPosYOld = _sRight.centroidPosYOld;
+ centroidPosZOld = _sRight.centroidPosZOld;
 
  solverV = _sRight.solverV;
  solverP = _sRight.solverP;

@@ -51,7 +51,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/misc/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -72,10 +72,14 @@ int main(int argc, char **argv)
  m1.setVertNeighbour();
  m1.setInOutVert();
  m1.setMapEdge();
+ m1.setNeighbourSurfaceElem(); 
+ m1.setNeighbourSurfacePoint();
  m1.setInitSurfaceVolume();
+ m1.setSurfaceVolume();
  m1.setInitSurfaceArea();
+ m1.setSurfaceArea();
  m1.tetMeshStats();
- m1.setStepBC();
+ m1.setGenericBC();
  m1.setCStepBC();
 
  Simulator3D s1(m1);
@@ -210,7 +214,7 @@ int main(int argc, char **argv)
   m1.setMapEdge();
   m1.setSurfaceVolume();
   m1.setSurfaceArea();
-  m1.setStepBC();
+  m1.setGenericBC();
   m1.setCStepBC();
 
   Simulator3D s2(m1,s1);

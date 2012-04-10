@@ -3832,7 +3832,7 @@ void Simulator3D::setCentroidVelPos()
  centroidVelX.clear();centroidVelY.clear();centroidVelZ.clear();
  centroidPosX.clear();centroidPosY.clear();centroidPosZ.clear();
  vector<real> surfaceVolume = m->getSurfaceVolume();
- for( int nb=0;nb<=v;nb++ )
+ for( int nb=0;nb<v;nb++ )
  {
   centroidVelX.push_back(sumXVelVolume[nb]/surfaceVolume[nb]);
   centroidVelY.push_back(sumYVelVolume[nb]/surfaceVolume[nb]);

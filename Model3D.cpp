@@ -4447,10 +4447,29 @@ void Model3D::setGenericBC()
   int v3 = surfMesh.IEN.Get(i,2);
   int id = surfMesh.idRegion.Get(i);
 
-  // 2nd. priority
+  // 3nd. priority
   if( surfMesh.phyNames.at(id).compare(5,7,"NormalU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,7,"NormalV") == 0 ||
       surfMesh.phyNames.at(id).compare(5,7,"NormalW") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
+ }
+ 
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  // 2nd. priority
+  if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 )
   {
    string aux = surfMesh.phyNames.at(id);
    surfMesh.phyBounds.at(v1) = aux;
@@ -4467,7 +4486,7 @@ void Model3D::setGenericBC()
   int id = surfMesh.idRegion.Get(i);
   
   // 1st. priority
-  if( surfMesh.phyNames.at(id).compare(5,9,"NoSlip") == 0 || 
+  if( surfMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||

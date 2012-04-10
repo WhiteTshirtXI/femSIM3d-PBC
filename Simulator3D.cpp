@@ -282,6 +282,12 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  muOld      = *_s.getMu();
  rhoOld     = *_s.getRho();
  hSmoothOld = *_s.getHSmooth();
+ centroidVelXOld = _s.getCentroidVelX();
+ centroidVelYOld = _s.getCentroidVelY();
+ centroidVelZOld = _s.getCentroidVelZ();
+ centroidPosXOld = _s.getCentroidPosX();
+ centroidPosYOld = _s.getCentroidPosY();
+ centroidPosZOld = _s.getCentroidPosZ();
 }
 
 Simulator3D::~Simulator3D()
@@ -1301,12 +1307,17 @@ void Simulator3D::stepSL()
  clVector velW = wSolOld-wALE;
 
 //--------------------------------------------------
+//  real test = centroidVelZ[1];
 //  for ( int i=0;i<numVerts;i++ )
 //  {
 //   int node = i;
-//   //if( heaviside->Get(node) != 0.5 )
+//   if( heaviside->Get(node) == 0.5 )
 //   {
-//    velW.Set(node,velW.Get(node) - centroidVelZ);
+//    velU.Set(node,0.0);
+//    velV.Set(node,0.0);
+//    velW.Set(node,0.0);
+//    //velW.Set(node,velW.Get(node) - test);
+//    //wSolOld.Set(node,wSolOld.Get(node) + test);
 //   }
 //  }
 //-------------------------------------------------- 
@@ -1588,7 +1599,6 @@ void Simulator3D::setInterfaceVelocity()
   uALE.Set(surfaceNode,uALESurface);
   vALE.Set(surfaceNode,vALESurface);
   wALE.Set(surfaceNode,wALESurface);
-
  }
 } // fecha metodo setInterfaceVelocity
 
@@ -1930,12 +1940,6 @@ void Simulator3D::saveOldData()
  muOld      = mu;
  rhoOld     = rho;
  hSmoothOld = hSmooth;
- centroidVelXOld = centroidVelX;
- centroidVelYOld = centroidVelY;
- centroidVelZOld = centroidVelZ;
- centroidPosXOld = centroidPosX;
- centroidPosYOld = centroidPosY;
- centroidPosZOld = centroidPosZ;
 }
 
 /**
@@ -3545,6 +3549,9 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  
  // updating setEdgeSize on Model3D.
  m->setEdgeSize(edgeSize);
+
+ // updating centroidVelPos
+ setCentroidVelPos();
 
  // updating old data vectors with the new mesh.
  saveOldData();

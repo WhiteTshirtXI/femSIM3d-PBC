@@ -398,9 +398,18 @@ void Model3D::readMSH( const char* filename )
 	// surfMesh.elemIdRegion 3 = surface 3 (if it has more than 2 bubbles)
 	mshFile >> id;
 	id = id-1;
-	surfMesh.elemIdRegion.Set(i,id);
+	surfMesh.idRegion.Set(i,id);
 	mshFile >> auxstr;
 	mshFile >> auxstr;
+	if( surfMesh.phyNames.at(id).compare(1,4,"wall") == 0 )
+	 surfMesh.elemIdRegion.Set(i,0);
+	else 
+	{
+	 char buffer[10];
+	 surfMesh.phyNames.at(id).copy(buffer,2,7);
+	 int idBubble = atoi(buffer);
+	 surfMesh.elemIdRegion.Set(i,idBubble);
+	}
    }
    else // msh file vertion 2.2
    {

@@ -4173,15 +4173,15 @@ void InOut::copyLastFile(const char* _dir,
 
 void InOut::setCutPlaneTwoPhase(ofstream& _file)
 {
- real plane1a =   ( X->Max()+X->Min() )/4.0;
- real plane1b = 2*( X->Max()+X->Min() )/4.0;
- real plane1c = 3*( X->Max()+X->Min() )/4.0;
- real plane2a =   ( Y->Max()+Y->Min() )/4.0;
- real plane2b = 2*( Y->Max()+Y->Min() )/4.0;
- real plane2c = 3*( Y->Max()+Y->Min() )/4.0;
- real plane3a =   ( Z->Max()+Z->Min() )/4.0;
- real plane3b = 2*( Z->Max()+Z->Min() )/4.0;
- real plane3c = 3*( Z->Max()+Z->Min() )/4.0;
+ real plane1a = X->Min() +  ( X->Max()-X->Min() )/4.0;
+ real plane1b = X->Min() +2*( X->Max()-X->Min() )/4.0;
+ real plane1c = X->Min() +3*( X->Max()-X->Min() )/4.0;
+ real plane2a = Y->Min() +  ( Y->Max()-Y->Min() )/4.0;
+ real plane2b = Y->Min() +2*( Y->Max()-Y->Min() )/4.0;
+ real plane2c = Y->Min() +3*( Y->Max()-Y->Min() )/4.0;
+ real plane3a = Z->Min() +  ( Z->Max()-Z->Min() )/4.0;
+ real plane3b = Z->Min() +2*( Z->Max()-Z->Min() )/4.0;
+ real plane3c = Z->Min() +3*( Z->Max()-Z->Min() )/4.0;
  clVector cutPlaneX(numVerts);
  clVector cutPlaneY(numVerts);
  clVector cutPlaneZ(numVerts);

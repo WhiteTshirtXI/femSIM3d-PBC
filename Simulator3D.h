@@ -206,6 +206,7 @@ class Simulator3D
   int loadSolution( const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   void setCentroidVelPos();
+  void setCentroidVelPosInterface();
   void setALEVelBC();
   void setAnnularALEVelBC();
   void setLagrangianVelBC();

@@ -1900,7 +1900,8 @@ void Simulator3D::unCoupled()
  iter++;
 
  // compute bubble's centroid velocity
- setCentroidVelPos();
+ //setCentroidVelPos();
+ setCentroidVelPosInterface();
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()
@@ -3551,7 +3552,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  m->setEdgeSize(edgeSize);
 
  // updating centroidVelPos
- setCentroidVelPos();
+ //setCentroidVelPos();
+ setCentroidVelPosInterface();
 
  // updating old data vectors with the new mesh.
  saveOldData();
@@ -3903,4 +3905,84 @@ real Simulator3D::getCentroidPosZAverage()
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidPosZOld[nb];
  return sum/v;
+}
+
+void Simulator3D::setCentroidVelPosInterface()
+{
+ clVector _uVel = uALEOld;
+ clVector _vVel = vALEOld;
+ clVector _wVel = wALEOld;
+
+ int v = surfMesh->elemIdRegion.Max()+1;
+ vector<real> velX(v,0);
+ vector<real> velY(v,0);
+ vector<real> velZ(v,0);
+ vector<real> posX(v,0);
+ vector<real> posY(v,0);
+ vector<real> posZ(v,0);
+ vector<real> area(v,0);
+ vector<real> sumArea(v,0);
+ vector<real> sumXVelArea(v,0);
+ vector<real> sumYVelArea(v,0);
+ vector<real> sumZVelArea(v,0);
+ vector<real> sumXPosArea(v,0);
+ vector<real> sumYPosArea(v,0);
+ vector<real> sumZPosArea(v,0);
+
+ for( int elem=0;elem<surfMesh->numElems;elem++ ) 
+ {
+  int v1 = surfMesh->IEN.Get(elem,0);
+  int v2 = surfMesh->IEN.Get(elem,1);
+  int v3 = surfMesh->IEN.Get(elem,2);
+
+  int elemID = surfMesh->elemIdRegion.Get(elem);
+
+  velX[elemID] = ( _uVel.Get(v1)+
+	               _uVel.Get(v2)+
+				   _uVel.Get(v3) )/3.0;
+
+  velY[elemID] = ( _vVel.Get(v1)+
+                   _vVel.Get(v2)+
+				   _vVel.Get(v3) )/3.0;
+
+  velZ[elemID] = ( _wVel.Get(v1)+
+                   _wVel.Get(v2)+
+				   _wVel.Get(v3) )/3.0;
+
+  posX[elemID] = ( surfMesh->X.Get(v1)+
+                   surfMesh->X.Get(v2)+
+				   surfMesh->X.Get(v3) )/3.0;
+
+  posY[elemID] = ( surfMesh->Y.Get(v1)+
+                   surfMesh->Y.Get(v2)+
+				   surfMesh->Y.Get(v3) )/3.0;
+
+  posZ[elemID] = ( surfMesh->Z.Get(v1)+
+                   surfMesh->Z.Get(v2)+
+				   surfMesh->Z.Get(v3) )/3.0;
+
+  area[elemID] = m->getAreaElem(elem);
+
+  sumXVelArea[elemID] += velX[elemID] * area[elemID];
+  sumYVelArea[elemID] += velY[elemID] * area[elemID];
+  sumZVelArea[elemID] += velZ[elemID] * area[elemID];
+
+  sumXPosArea[elemID] += posX[elemID] * area[elemID];
+  sumYPosArea[elemID] += posY[elemID] * area[elemID];
+  sumZPosArea[elemID] += posZ[elemID] * area[elemID];
+ }
+
+ centroidVelX.clear();centroidVelY.clear();centroidVelZ.clear();
+ centroidPosX.clear();centroidPosY.clear();centroidPosZ.clear();
+ vector<real> surfaceArea = m->getSurfaceArea();
+ for( int nb=0;nb<v;nb++ )
+ {
+  centroidVelX.push_back(sumXVelArea[nb]/surfaceArea[nb]);
+  centroidVelY.push_back(sumYVelArea[nb]/surfaceArea[nb]);
+  centroidVelZ.push_back(sumZVelArea[nb]/surfaceArea[nb]);
+
+  centroidPosX.push_back(sumXPosArea[nb]/surfaceArea[nb]);
+  centroidPosY.push_back(sumYPosArea[nb]/surfaceArea[nb]);
+  centroidPosZ.push_back(sumZPosArea[nb]/surfaceArea[nb]);
+ }
 }

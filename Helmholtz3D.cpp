@@ -115,6 +115,11 @@ void Helmholtz3D::initSessile()
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
+  
+  // Adding bubble as boundary condition
+  cc.Set(i,sumEdgeLength/listSize);
+  if( surfMesh->Marker.Get(i) >= 0.5 )
+   idbcc.AddItem(i);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();

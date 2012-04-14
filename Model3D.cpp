@@ -9670,12 +9670,14 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.4*triEdge[vertID] //&& 
+	//if( minHeight < 0.4*triEdge[vertID] //&& 
+	if( minHeight < 0.4*edgeSize.Get(v1)  //&& 
 	  )
 	  // vertID > 0)
 	{
 	 mark3DPointForDeletion(*vert);
-	 cout << "-----> deleting (" << *vert <<  ")" << endl;
+	 cout << "-----> deleting (" << *vert <<  ")" 
+	      << "   " << minHeight << " < " << 0.4*triEdge[vertID] <<  endl;
 	 rph[vertID3d]++;
 	}
    }

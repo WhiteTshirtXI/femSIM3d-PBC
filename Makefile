@@ -19,11 +19,6 @@ INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
 FEM3D_DIR = .
 
-# Petsc new config
-include ${PETSC_DIR}/conf/variables
-include ${PETSC_DIR}/conf/rules
-
-
 # Sorces
 src += ${FEMLIB_DIR}/clVector.cpp
 src += ${FEMLIB_DIR}/clMatrix.cpp
@@ -188,6 +183,11 @@ libtest.so: $(obj)
 
 %.o: %.cpp $(wildcard *.h)
 	$(CXX) $(INCLUDES) -c $< $(CXXFLAGS) -o $@
+
+
+# Petsc new config
+include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/conf/rules
 	
 erase:
 	@rm -f core

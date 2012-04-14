@@ -1900,8 +1900,17 @@ void Simulator3D::unCoupled()
  iter++;
 
  // compute bubble's centroid velocity
- //setCentroidVelPos();
- setCentroidVelPosInterface();
+ setCentroidVelPos();
+ //setCentroidVelPosInterface();
+//--------------------------------------------------
+//  // NOT WORKING!
+//  setCentroidVelPosInterface();
+//  for ( int i=0;i<numVerts;i++ )
+//  {
+//   int node = i;
+//   wSol.Set(node,wSol.Get(node) - centroidVelZ[1]);
+//  }
+//-------------------------------------------------- 
 } // fecha metodo unCoupled 
 
 void Simulator3D::unCoupledC()
@@ -3552,8 +3561,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  m->setEdgeSize(edgeSize);
 
  // updating centroidVelPos
- //setCentroidVelPos();
- setCentroidVelPosInterface();
+ setCentroidVelPos();
+ //setCentroidVelPosInterface();
 
  // updating old data vectors with the new mesh.
  saveOldData();
@@ -3765,9 +3774,9 @@ void Simulator3D::allocateMemoryToAttrib()
 
 void Simulator3D::setCentroidVelPos()
 {
- clVector _uVel = uSolOld;
- clVector _vVel = vSolOld;
- clVector _wVel = wSolOld;
+ clVector _uVel = uSol;
+ clVector _vVel = vSol;
+ clVector _wVel = wSol;
 
  int v = elemIdRegion->Max()+1;
  vector<real> velX(v,0);
@@ -3985,4 +3994,29 @@ void Simulator3D::setCentroidVelPosInterface()
   centroidPosY.push_back(sumYPosArea[nb]/surfaceArea[nb]);
   centroidPosZ.push_back(sumZPosArea[nb]/surfaceArea[nb]);
  }
+}
+
+real Simulator3D::getCentroidVelXMax()
+{
+ return *max_element(centroidVelXOld.begin()+1,centroidVelXOld.end());
+}
+real Simulator3D::getCentroidVelYMax()
+{
+ return *max_element(centroidVelYOld.begin()+1,centroidVelYOld.end());
+}
+real Simulator3D::getCentroidVelZMax()
+{
+ return *max_element(centroidVelZOld.begin()+1,centroidVelZOld.end());
+}
+real Simulator3D::getCentroidVelXMin()
+{
+ return *min_element(centroidVelXOld.begin()+1,centroidVelXOld.end());
+}
+real Simulator3D::getCentroidVelYMin()
+{
+ return *min_element(centroidVelYOld.begin()+1,centroidVelYOld.end());
+}
+real Simulator3D::getCentroidVelZMin()
+{
+ return *min_element(centroidVelZOld.begin()+1,centroidVelZOld.end());
 }

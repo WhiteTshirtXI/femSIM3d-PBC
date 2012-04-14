@@ -217,6 +217,12 @@ class Simulator3D
   real getCentroidVelYAverage();
   vector<real> getCentroidVelZ();
   real getCentroidVelZAverage();
+  real getCentroidVelXMax();
+  real getCentroidVelYMax();
+  real getCentroidVelZMax();
+  real getCentroidVelXMin();
+  real getCentroidVelYMin();
+  real getCentroidVelZMin();
 
   void setCentroidVelX(vector<real> _centroidVelX);
   void setCentroidVelY(vector<real> _centroidVelY);

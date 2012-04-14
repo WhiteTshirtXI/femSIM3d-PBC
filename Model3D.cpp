@@ -1143,6 +1143,7 @@ void Model3D::setMapEdgeTri()
 
   j=j+2; // pois cada aresta eh dividida com apenas 2 elementos
  }
+ delete[] faces;
 }
 
 int Model3D::findEdge(int _v1,int _v2)
@@ -3061,8 +3062,8 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < 0.1*size && 
-  //if( length < 0.7*size && 
+  //if( length < 0.1*size && 
+  if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
 	mark3DPointForDeletion(minVert);

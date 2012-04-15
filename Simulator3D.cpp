@@ -379,6 +379,147 @@ void Simulator3D::assemble()
  clMatrix Gx( numNodes,numVerts );
  clMatrix Gy( numNodes,numVerts );
  clMatrix Gz( numNodes,numVerts );
+
+#if NUMGLEU == 5
+ FEMMiniElement3D miniElem(*X,*Y,*Z);
+#else
+ FEMQuadElement3D miniElem(*X,*Y,*Z);
+#endif
+
+ //setMu( mu_in );
+ //setRho( rho_in );
+ setMu( mu_in,mu_out );
+ setRho( rho_in,rho_out );
+
+ for( int mele=0;mele<numElems;mele++ )
+ {
+  for( int n=0;n<NUMGLEU;n++ )
+   v[n] = (int) IEN->Get(mele,n);
+
+  real muValue=0;
+  real rhoValue=0;
+  if( elemIdRegion->Get(mele) == 0.0 ) // out
+  {
+   muValue = mu_outAdimen;
+   rhoValue = rho_outAdimen;
+  }
+  else
+  {
+   muValue = mu_inAdimen;
+   rhoValue = rho_inAdimen;
+  }
+
+  miniElem.getM(*v);  // para problemas SEM deslizamento
+
+  for( i=0;i<NUMGLEU;i++ )
+  {
+   ii=v[i];
+   for( j=0;j<NUMGLEU;j++ )
+   {
+	jj=v[j];
+
+	// bloco 11
+	aux = Kxx.Get(ii,jj) + muValue*( 2*miniElem.kxx[i][j] + 
+	                                   miniElem.kyy[i][j] + 
+									   miniElem.kzz[i][j] ); 
+	Kxx.Set(ii,jj,aux);
+
+	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rho.Set(ii,jj,aux); // matriz de massa
+
+	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
+	Mx.Set(ii,jj,aux); // matriz de massa sem rho
+
+	// bloco 12
+	aux = Kxy.Get(ii,jj) + muValue*( miniElem.kxy[i][j] ); 
+	Kxy.Set(ii,jj,aux);
+
+	// bloco 13
+	aux = Kxz.Get(ii,jj) + muValue*( miniElem.kxz[i][j] ); 
+	Kxz.Set(ii,jj,aux);
+
+	// bloco 22
+	aux = Kyy.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
+	                               2*miniElem.kyy[i][j] + 
+							         miniElem.kzz[i][j] ); 
+	Kyy.Set(ii,jj,aux);
+
+	// bloco 23
+	aux = Kyz.Get(ii,jj) + muValue*( miniElem.kyz[i][j] ); 
+	Kyz.Set(ii,jj,aux);
+
+	// bloco 33
+	aux = Kzz.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
+	                                 miniElem.kyy[i][j] + 
+								   2*miniElem.kzz[i][j] ); 
+	Kzz.Set(ii,jj,aux);
+   }
+   for( j=0;j<NUMGLEP;j++ )
+   {
+	jj=v[j];
+	
+	// bloco 1
+	aux = Gx.Get(ii,jj) + miniElem.gxele[i][j];
+	Gx.Set(ii,jj,aux);
+	// bloco 2
+	aux = Gy.Get(ii,jj) + miniElem.gyele[i][j];
+	Gy.Set(ii,jj,aux);
+	// bloco 3
+	aux = Gz.Get(ii,jj) + miniElem.gzele[i][j];
+	Gz.Set(ii,jj,aux);
+   }
+  }
+ }
+ 
+ /* GALERKIN */
+ // gx = Gx;
+ // gy = Gy;
+ // gz = Gz;
+ Mrho.CopyFrom(          0,          0,  Mx_rho );
+ Mrho.CopyFrom(   numNodes,   numNodes,  Mx_rho );
+ Mrho.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rho );
+
+ M.CopyFrom(          0,          0,     Mx );
+ M.CopyFrom(   numNodes,   numNodes,     Mx );
+ M.CopyFrom( 2*numNodes, 2*numNodes,     Mx );
+
+ K.CopyFrom(          0,          0,     Kxx );
+ K.CopyFrom(          0,   numNodes,     Kxy );
+ K.CopyFrom(          0, 2*numNodes,     Kxz );
+ K.CopyFrom(   numNodes,          0,     Kxy.Transpose() );
+ K.CopyFrom(   numNodes,   numNodes,     Kyy );
+ K.CopyFrom(   numNodes, 2*numNodes,     Kyz );
+ K.CopyFrom( 2*numNodes,          0,     Kxz.Transpose() );
+ K.CopyFrom( 2*numNodes,   numNodes,     Kyz.Transpose() );
+ K.CopyFrom( 2*numNodes, 2*numNodes,     Kzz );
+
+ G.CopyFrom(          0,          0,     Gx );
+ G.CopyFrom(   numNodes,          0,     Gy );
+ G.CopyFrom( 2*numNodes,          0,     Gz );
+ D.CopyFrom(          0,          0,     Gx.Transpose() );
+ D.CopyFrom(          0,   numNodes,     Gy.Transpose() );
+ D.CopyFrom(          0, 2*numNodes,     Gz.Transpose() );
+} // fecha metodo ASSEMBLE
+
+void Simulator3D::assembleHeatTransfer()
+{
+ int i,j,ii,jj;
+ int v[NUMGLEU];
+ real aux;
+ clMatrix Kxx( numNodes,numNodes );
+ clMatrix Kxy( numNodes,numNodes );
+ clMatrix Kxz( numNodes,numNodes );
+ clMatrix Kyx( numNodes,numNodes );
+ clMatrix Kyy( numNodes,numNodes );
+ clMatrix Kyz( numNodes,numNodes );
+ clMatrix Kzx( numNodes,numNodes );
+ clMatrix Kzy( numNodes,numNodes );
+ clMatrix Kzz( numNodes,numNodes );
+ clMatrix Mx_rho( numNodes,numNodes );
+ clMatrix Mx( numNodes,numNodes );
+ clMatrix Gx( numNodes,numVerts );
+ clMatrix Gy( numNodes,numVerts );
+ clMatrix Gz( numNodes,numVerts );
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
@@ -1780,11 +1921,11 @@ void Simulator3D::matMount()
   invA.Set( i,1.0/sumMat );
 
   real sumM = M.SumLine(i);
-  MLumped.Set( i,sumM );
+  //MLumped.Set( i,sumM );
   invMLumped.Set( i,1.0/sumM );
 
   real sumMrho = Mrho.SumLine(i);
-  MrhoLumped.Set( i,sumMrho );
+  //MrhoLumped.Set( i,sumMrho );
   invMrhoLumped.Set( i,1.0/sumMrho );
  }
 }

@@ -203,7 +203,6 @@ class Simulator3D
   clVector* getHSmooth();
   void operator=(Simulator3D &_s);
   void operator()(Model3D &_m);
-  void operator()(Model3D &_m,Simulator3D &_s);
   int loadSolution( const char* _filename,int _iter );
   void applyLinearInterpolation(Model3D &_mOld);
   void setCentroidVelPos();

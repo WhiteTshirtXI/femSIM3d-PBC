@@ -152,6 +152,12 @@ void Helmholtz3D::initSessile()
 
 void Helmholtz3D::initMicro()
 {
+ // init closer
+ setCloserWall();
+
+ // set liquid film thickness
+ real thickness = 0.2;
+
  real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
  convC.Dim(numVerts);
  convC.SetAll(triEdgeMin);
@@ -162,7 +168,8 @@ void Helmholtz3D::initMicro()
  //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
  //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
  real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- real tol = diameter/3.0;
+ //real tol = diameter/3.0;
+ real tol = diameter/2.0-thickness;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   // meiuca
@@ -173,7 +180,11 @@ void Helmholtz3D::initMicro()
 	convC.Set(i,triEdgeMin*30);
   else
   {
-   convC.Set(i,triEdgeMin*1);
+   // add boundary condition value to convC. Note that the boundary
+   // conditions is bases on the initial mesh, thus if the mesh is
+   // refined, convC will be refined.
+   convC.Set(i,cc.Get(closerWall.Get(i))*0.7);
+   //convC.Set(i,triEdgeMin*0.7);
   }
  }
 }
@@ -460,6 +471,9 @@ void Helmholtz3D::allocateMemoryToAttrib()
  cTilde.Dim( numVerts );
  cSol.Dim( numVerts );
 
+ // closer
+ closerWall.Dim( numVerts );
+
  // auxiliar vectors
  ipc.Dim( numVerts,1 );
 
@@ -650,4 +664,54 @@ void Helmholtz3D::saveChordalEdge( const char* _dir,const char* _filename, int _
 
 void Helmholtz3D::setk(real _k){k = _k;}
 real Helmholtz3D::getk(){return k;}
+
+
+void Helmholtz3D::setCloserWall()
+{
+ // procurando vertices da parede
+ clVector boundaryAux = surfMesh->Marker == 0.0;
+ clVector boundary = boundaryAux.Find();
+ 
+ clVector xBoundary( boundary.Dim() );
+ clVector yBoundary( boundary.Dim() );
+ clVector zBoundary( boundary.Dim() );
+ for( int i=0;i<boundary.Dim();i++ )
+ {
+  int surfaceNode = boundary.Get(i);
+  xBoundary.Set(i,X->Get( surfaceNode ));
+  yBoundary.Set(i,Y->Get( surfaceNode ));
+  zBoundary.Set(i,Z->Get( surfaceNode ));
+ }
+
+ // xVert da malha nova
+ clVector xVert(numVerts);
+ clVector yVert(numVerts);
+ clVector zVert(numVerts);
+ X->CopyTo(0,xVert);
+ Y->CopyTo(0,yVert);
+ Z->CopyTo(0,zVert);
+
+ closerWall = dsearchn(xBoundary,yBoundary,zBoundary,xVert,yVert,zVert);
+ for( int i=0;i<closerWall.Dim();i++ )
+ {
+  int aux = closerWall.Get(i);
+  closerWall.Set(i,boundary.Get(aux)); // alterando os valores de closer(i)
+ }
+}
+
+bool Helmholtz3D::isInsideLiquidFilm(int _node, real _thickness)
+{
+ real x1 = X->Get(_node);
+ real y1 = Y->Get(_node);
+ real z1 = Z->Get(_node);
+
+ int closer = closerWall.Get(_node);
+ real x2 = X->Get(closer);
+ real y2 = Y->Get(closer);
+ real z2 = Z->Get(closer);
+ 
+ return distance(x1,y1,z1,x2,y2,z2) < _thickness;
+}
+
+
 

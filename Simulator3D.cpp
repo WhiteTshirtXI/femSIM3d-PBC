@@ -2043,13 +2043,13 @@ void Simulator3D::unCoupled()
  // compute bubble's centroid velocity
  setCentroidVelPos();
  //setCentroidVelPosInterface();
+ // NOT WORKING!
+ //setCentroidVelPosInterface();
 //--------------------------------------------------
-//  // NOT WORKING!
-//  setCentroidVelPosInterface();
 //  for ( int i=0;i<numVerts;i++ )
 //  {
 //   int node = i;
-//   wSol.Set(node,wSol.Get(node) - centroidVelZ[1]);
+//   uSol.Set(node,uSol.Get(node) - getCentroidVelXMax());
 //  }
 //-------------------------------------------------- 
 } // fecha metodo unCoupled 
@@ -2822,11 +2822,13 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
  mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
  //real rMax = 1.0;
- for (list<int>::iterator it=boundaryVert->begin(); 
-                          it!=boundaryVert->end(); 
-						  ++it)
-  //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
-   mu.Set(*it,0.0); // zero viscosity at wall
+//--------------------------------------------------
+//  for (list<int>::iterator it=boundaryVert->begin(); 
+//                           it!=boundaryVert->end(); 
+// 						  ++it)
+//   //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
+//    mu.Set(*it,0.0); // zero viscosity at wall
+//-------------------------------------------------- 
 
 
 //--------------------------------------------------
@@ -2856,11 +2858,13 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
  rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
 
  //real rMax = 1.0;
- for (list<int>::iterator it=boundaryVert->begin(); 
-                          it!=boundaryVert->end(); 
-						  ++it)
-  //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
-   rho.Set(*it,0.0); // zero density at wall
+//--------------------------------------------------
+//  for (list<int>::iterator it=boundaryVert->begin(); 
+//                           it!=boundaryVert->end(); 
+// 						  ++it)
+//   //if (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) > rMax*rMax - 0.001) 
+//    rho.Set(*it,0.0); // zero density at wall
+//-------------------------------------------------- 
 
 //--------------------------------------------------
 //  rho.Dim(numNodes);

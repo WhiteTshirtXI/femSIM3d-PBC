@@ -3062,8 +3062,8 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  //if( length < 0.1*size && 
-  if( length < 0.7*size && 
+  if( length < 0.1*size && 
+  //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
 	mark3DPointForDeletion(minVert);
@@ -3400,7 +3400,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 5*edge*edge*edge*1.4142/12.0;
+  in.regionlist[5*nb+4] = 10*edge*edge*edge*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
 //--------------------------------------------------
 //   cout << " ------ " << node << " ------" << endl;
@@ -4517,7 +4517,16 @@ void Model3D::setGenericBC()
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
 
-   uc.Set(*it,1.0);
+
+   real diameter = ( ( X.Min()+X.Max() )/2.0 + 
+	                 ( Y.Min()+Y.Max() )/2.0 );
+   real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   real Umax = 1.5;
+   real aux = Umax*( 1.0-radius*radius/((diameter/2.0)*(diameter/2.0)) );
+
+   uc.Set(*it,aux);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }

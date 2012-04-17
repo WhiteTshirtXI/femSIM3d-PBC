@@ -53,7 +53,7 @@ int main(int argc, char **argv)
  real rho_in = 0.001;
  real rho_out = 1.0;
 
- string meshFile = "test.msh";
+ string meshFile = "circular.msh";
  //string meshFile = "micro.msh";
  //string meshFile = "2micros.msh";
  //string meshFile = "3micros.msh";
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setMicroWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setMicroWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setMicroWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setMicroWallBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

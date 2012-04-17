@@ -56,6 +56,8 @@ class Helmholtz3D
 
   void setk(real _k);
   real getk();
+  void setCloserWall();
+  bool isInsideLiquidFilm(int _node, real _thickness);
 
   clVector* getCSol();
 
@@ -82,6 +84,7 @@ class Helmholtz3D
   clVector vcc,convC;
   clVector cTilde,b1c,ipc;
   clVector cSol,cSolOld;
+  clVector closerWall;
 
   Solver *solver;
 };

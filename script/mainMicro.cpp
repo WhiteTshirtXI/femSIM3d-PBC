@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
  }
  else if( strcmp( *(argv+1),"remesh") == 0 ) 
  {
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
   s1.applyLinearInterpolation(mOld);
  }
  else if( strcmp( *(argv+1),"restop") == 0 )  
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
   s1(m1);
   //file = (string) "sim-" + *(argv+2);
   //const char *sol = file.c_str();
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
   s1.applyLinearInterpolation(mOld);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao

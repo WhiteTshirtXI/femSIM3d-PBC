@@ -12,9 +12,9 @@ CXX = clang
 CXXFLAGS = -g -fPIC
 
 # Libraries and includes
-LIBS += -lgsl -lgslcblas -lm
+LIBS += -lm -L/opt/local/lib -lgsl -lgslcblas
 LIBS += -L. -L${TETGEN_DIR} -ltet
-INCLUDES += -I. -I${FEMLIB_DIR}
+INCLUDES += -I. -I${FEMLIB_DIR} -I/opt/local/include
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
 FEM3D_DIR = .

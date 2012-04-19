@@ -94,7 +94,7 @@ int main(int argc, char **argv)
   cout << endl;
 
   string file = (string) "sim-" + *(argv+2);
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
  }
 
  InOut save(m1,s1); // cria objeto de gravacao

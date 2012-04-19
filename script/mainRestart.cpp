@@ -56,7 +56,7 @@ int main(int argc, char **argv)
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
- m1.setWallBC();
+ m1.setGenericBC();
 
  s1(m1);
 
@@ -64,12 +64,12 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(solverV);
  s1.setSolverConcentration(solverC);
 
- iter = s1.loadSolution("sim",atoi(*(argv+1)));
+ iter = s1.loadSolution("./","sim",atoi(*(argv+1)));
 
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initRising();
+ h1.initRisingBubble();
  h1.assemble();
  h1.setk(0.1);
  h1.matMountC();
@@ -81,7 +81,6 @@ int main(int argc, char **argv)
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  //save.saveInfo(datFolder,"info",mesh);
 
@@ -97,24 +96,25 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.stepALEVel();
    s1.setDtALETwoPhase();
+
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.printSimulationReport();
+
+   s1.stepALEVel();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("Z");
+   s1.setGravity("-Z");
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   InOut save(m1,s1); // cria objeto de gravacao
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   save.printSimulationReport();
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
@@ -128,13 +128,12 @@ int main(int argc, char **argv)
   }
   Helmholtz3D h2(m1,h1);
   h2.setBC();
-  h2.initRising();
+  h2.initRisingBubble();
   h2.assemble();
   h2.matMountC();
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
 
@@ -143,24 +142,19 @@ int main(int argc, char **argv)
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
   m1.setNormalAndKappa();
+  m1.initMeshParameters();
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume();
-  //m1.removePointsByInterfaceDistance();
-  //m1.remove3dMeshPointsByDistance();
+  m1.remove3dMeshPointsByDiffusion();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   // surface operations
   m1.smoothPointsByCurvature();
 
   m1.insertPointsByLength();
-  //m1.insertPointsByCurvature();
-  //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
-  //m1.removePointsByLength();
   m1.flipTriangleEdge();
 
   m1.removePointByNeighbourCheck();
@@ -176,7 +170,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -186,12 +180,6 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
   saveEnd.printMeshReport();
  }

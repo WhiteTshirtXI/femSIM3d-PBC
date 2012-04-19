@@ -3292,7 +3292,7 @@ void Simulator3D::operator()(Model3D &_m)
  allocateMemoryToAttrib();
 }
 
-int Simulator3D::loadSolution( const char* _filename,int _iter )
+int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter )
 {
  stringstream ss;  //convertendo int --> string
  string str;
@@ -3301,7 +3301,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 
  // read numVerts and numNodes and all the simulation parameters
  // iteration
- string file = "./vtk/" + (string) _filename + "-" + str + ".vtk";
+ string file = (string) _dir + "vtk/" + (string) _filename + "-" + str + ".vtk";
  const char* filename = file.c_str();
 
  ifstream fileP( filename,ios::in ); 
@@ -3400,7 +3400,7 @@ int Simulator3D::loadSolution( const char* _filename,int _iter )
 //-------------------------------------------------- 
 
  // read solution of U, V, W and P
- string fileUVWPC = "./bin/" + (string) _filename + "-" + str + ".bin";
+ string fileUVWPC = (string) _dir + "bin/" + (string) _filename + "-" + str + ".bin";
  const char* filenameUVPC = fileUVWPC.c_str();
 
  clVector aux2(6*numNodesOld+2*numVertsOld); // vetor tambem carrega a concentracao

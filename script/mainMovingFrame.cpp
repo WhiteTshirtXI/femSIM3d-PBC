@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
-  iter = s1.loadSolution("sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
 
   vel += s1.getCentroidVelXAverage();
   m1.setGenericBC(vel);

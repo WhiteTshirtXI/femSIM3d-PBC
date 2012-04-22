@@ -4672,62 +4672,102 @@ void Model3D::setGenericBC()
 
 void Model3D::setGenericBC(real _vel)
 {    
+ clearBC();
+
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
   {
+   idbcp.AddItem(*it);
+  
    pc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,1.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,1.0);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,1.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,0.0-_vel);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0-_vel);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,-1.0-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,-1.0-_vel);
    wc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,-1.0-_vel);
@@ -4735,6 +4775,10 @@ void Model3D::setGenericBC(real _vel)
   //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   else
   {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
@@ -4759,6 +4803,8 @@ void Model3D::setWallBC()
 
 void Model3D::setWallBC(real _vel)
 {    
+ clearBC();
+
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   idbcu.AddItem(*it);

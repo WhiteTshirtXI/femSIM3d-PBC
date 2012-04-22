@@ -164,6 +164,9 @@ class Simulator3D
   void setWSol(clVector &_wSol);
   void updateIEN();
   clVector setCentroid(clVector &_vector);
+  void setUSol(real _vel);
+  void setVSol(real _vel);
+  void setWSol(real _vel);
 
   void setSolverVelocity(Solver *s);
   void setSolverPressure(Solver *s);

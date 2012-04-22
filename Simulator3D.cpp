@@ -4097,3 +4097,28 @@ real Simulator3D::getCentroidVelZMin()
 {
  return *min_element(centroidVelZOld.begin()+1,centroidVelZOld.end());
 }
+
+void Simulator3D::setUSol(real _vel)
+{
+ for( int i=0;i<numNodes;i++ )
+ {
+  uSol.Set(i,uSol.Get(i)-_vel);
+  uSolOld.Set(i,uSolOld.Get(i)-_vel);
+ }
+}
+void Simulator3D::setVSol(real _vel)
+{
+ for( int i=0;i<numNodes;i++ )
+ {
+  vSol.Set(i,vSol.Get(i)-_vel);
+  vSolOld.Set(i,vSolOld.Get(i)-_vel);
+ }
+}
+void Simulator3D::setWSol(real _vel)
+{
+ for( int i=0;i<numNodes;i++ )
+ {
+  wSol.Set(i,wSol.Get(i)-_vel);
+  wSolOld.Set(i,wSolOld.Get(i)-_vel);
+ }
+}

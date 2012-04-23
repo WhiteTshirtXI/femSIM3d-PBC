@@ -72,7 +72,7 @@ void Helmholtz3D::initRisingBubble()
   if( heaviside->Get(i) < 0.5 ) 
   {
    real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 1.0*radius )
+   if( interfaceDistance->Get(i) < 2.0*radius )
    {
 	real aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);

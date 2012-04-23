@@ -2290,7 +2290,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << mu_in << " " << mu_out << " " 
        << rho_in << " " << rho_out << " " 
 	   << sigma << endl;
- _file << "VEL-REFERENCE 1 3 float" << endl;
+ _file << "REFERENCEVELOCITY 1 3 float" << endl;
  _file << uRef << " " << vRef << " " 
 	   << wRef << endl;
  _file << "COEFFICIENTS 1 7 float" << endl;

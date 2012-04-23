@@ -3391,6 +3391,16 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  fileP >> rho_out;
  fileP >> sigma;
 
+ while( ( !fileP.eof())&&(strcmp(auxstr,"REFERENCEVELOCITY") != 0) )
+  fileP >> auxstr;
+
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> uRef;
+ fileP >> vRef;
+ fileP >> wRef;
+
  while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
   fileP >> auxstr;
 
@@ -3404,16 +3414,6 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  fileP >> d2;
  fileP >> alpha;
  fileP >> beta;
-
- while( ( !fileP.eof())&&(strcmp(auxstr,"VEL-REFERENCE") != 0) )
-  fileP >> auxstr;
-
- fileP >> auxstr;
- fileP >> auxstr;
- fileP >> auxstr;
- fileP >> uRef;
- fileP >> vRef;
- fileP >> wRef;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISTICLENGTH") != 0) )
   fileP >> auxstr;

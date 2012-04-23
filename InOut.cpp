@@ -177,6 +177,9 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  c3 = s->getC3();
  d1 = s->getD1();
  d2 = s->getD2();
+ uRef = s->getURef();
+ vRef = s->getVRef();
+ wRef = s->getWRef();
 
  K = s->getK();
  M = s->getM();
@@ -2274,7 +2277,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "3D Simulation C++" << endl;
  _file << "ASCII" << endl;
  _file << "DATASET UNSTRUCTURED_GRID" << endl;
- _file << "FIELD FieldData 7" << endl;
+ _file << "FIELD FieldData 8" << endl;
  _file << "TIME 1 3 double" << endl;
  _file << dt << " " << cfl << " " << simTime << endl;
  _file << "ITERATION 1 1 int" << endl;
@@ -2287,6 +2290,9 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << mu_in << " " << mu_out << " " 
        << rho_in << " " << rho_out << " " 
 	   << sigma << endl;
+ _file << "VEL-REFERENCE 1 3 float" << endl;
+ _file << uRef << " " << vRef << " " 
+	   << wRef << endl;
  _file << "COEFFICIENTS 1 7 float" << endl;
  _file << c1 << " " << c2 << " " << c3 << " " 
        << d1  << " " << d2 << " "
@@ -3846,6 +3852,9 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "vel centroid X" 
                    << setw(18) << "vel centroid Y" 
                    << setw(18) << "vel centroid Z" 
+                   << setw(18) << "vel refenrece X" 
+                   << setw(18) << "vel refenrece Y" 
+                   << setw(18) << "vel refenrece Z" 
                    << setw(18) << "centroid X" 
                    << setw(18) << "centroid Y" 
                    << setw(18) << "centroid Z" 
@@ -3859,6 +3868,9 @@ void InOut::saveVolumeError(const char* _dir)
        << setw(17) << s->getCentroidVelX()[nb] << " " 
        << setw(17) << s->getCentroidVelY()[nb] << " " 
        << setw(17) << s->getCentroidVelZ()[nb] << " " 
+       << setw(17) << s->getURef() << " " 
+       << setw(17) << s->getVRef() << " " 
+       << setw(17) << s->getWRef() << " " 
        << setw(17) << s->getCentroidPosX()[nb] << " " 
        << setw(17) << s->getCentroidPosY()[nb] << " " 
        << setw(17) << s->getCentroidPosZ()[nb] << " " 

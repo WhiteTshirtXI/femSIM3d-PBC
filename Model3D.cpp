@@ -4469,6 +4469,7 @@ void Model3D::setGenericBC()
 
   // 2nd. priority
   if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
       surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 )
   {
@@ -4511,7 +4512,7 @@ void Model3D::setGenericBC()
   }
 
   // inflow condition U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -4527,6 +4528,17 @@ void Model3D::setGenericBC()
    real aux = Umax*( 1.0-radius*radius/((diameter/2.0)*(diameter/2.0)) );
 
    uc.Set(*it,aux);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,1.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -4683,6 +4695,16 @@ void Model3D::setGenericBC(real _vel)
    pc.Set(*it,0.0);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);

@@ -57,6 +57,9 @@ Simulator3D::Simulator3D( Model3D &_m )
  mu_out  = 1.0;
  rho_in = 1.0;
  rho_out = 1.0;
+ uRef = 0.0;
+ vRef = 0.0;
+ wRef = 0.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -95,6 +98,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  rho_out = _sRight.rho_out;
  mu_in = _sRight.mu_in;
  mu_out = _sRight.mu_out;
+ 
+ uRef = _sRight.uRef;
+ vRef = _sRight.vRef;
+ wRef = _sRight.wRef;
 
  g_0 = _sRight.g_0;
  sigma_0 = _sRight.sigma_0;
@@ -256,6 +263,10 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  c3    = _s.getC3();
  d1    = _s.getD1();
  d2    = _s.getD2();
+
+ uRef = _s.getURef();
+ vRef = _s.getVRef();
+ wRef = _s.getWRef();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -1701,16 +1712,18 @@ void Simulator3D::setInterfaceVelocity()
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod = uSolOld.Get(surfaceNode)*xNormalUnit+ 
-              vSolOld.Get(surfaceNode)*yNormalUnit + 
-			  wSolOld.Get(surfaceNode)*zNormalUnit;
+  real prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
+              (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
+			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
   real uSolNormal = xNormalUnit*prod;
   real vSolNormal = yNormalUnit*prod;
   real wSolNormal = zNormalUnit*prod;
 
-  real uSolTangent = uSolOld.Get(surfaceNode) - uSolNormal;
-  real vSolTangent = vSolOld.Get(surfaceNode) - vSolNormal;
-  real wSolTangent = wSolOld.Get(surfaceNode) - wSolNormal;
+  // 1.3 is a pragmatic number which fits the velocity for the bhaga5
+  // and the moving frame technique. Still don't know why!
+  real uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
+  real vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
+  real wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
 
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
@@ -2744,6 +2757,14 @@ real Simulator3D::getC3(){return c3;}
 real Simulator3D::getD1(){return d1;}
 real Simulator3D::getD2(){return d2;}
 
+// reference frame velocity
+void Simulator3D::setURef(real _uRef){uRef = _uRef;}
+void Simulator3D::setVRef(real _vRef){vRef = _vRef;}
+void Simulator3D::setWRef(real _wRef){wRef = _wRef;}
+real Simulator3D::getURef(){return uRef;}
+real Simulator3D::getVRef(){return vRef;}
+real Simulator3D::getWRef(){return wRef;}
+
 void Simulator3D::setMu(real _mu_in)
 { 
  mu_in = _mu_in;
@@ -3120,6 +3141,9 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  d1 = _sRight.d1;
  d2 = _sRight.d2;
  iter = _sRight.iter;
+ uRef = _sRight.uRef;
+ vRef = _sRight.vRef;
+ wRef = _sRight.wRef;
 
  g = _sRight.g;
  sigma = _sRight.sigma;
@@ -3279,6 +3303,9 @@ void Simulator3D::operator()(Model3D &_m)
  c3    = 0.0;
  d1    = 1.0;
  d2    = 0.1;
+ uRef  = 0.0;
+ vRef  = 0.0;
+ wRef  = 0.0;
  g     = 9.81;
  mu_in  = 1.0;
  mu_out  = 1.0;
@@ -3377,6 +3404,16 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  fileP >> d2;
  fileP >> alpha;
  fileP >> beta;
+
+ while( ( !fileP.eof())&&(strcmp(auxstr,"VEL-REFERENCE") != 0) )
+  fileP >> auxstr;
+
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> auxstr;
+ fileP >> uRef;
+ fileP >> vRef;
+ fileP >> wRef;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"CHARACTERISTICLENGTH") != 0) )
   fileP >> auxstr;

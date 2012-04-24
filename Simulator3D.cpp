@@ -60,6 +60,9 @@ Simulator3D::Simulator3D( Model3D &_m )
  uRef = 0.0;
  vRef = 0.0;
  wRef = 0.0;
+ xRef = 0.0;
+ yRef = 0.0;
+ zRef = 0.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -102,6 +105,9 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  uRef = _sRight.uRef;
  vRef = _sRight.vRef;
  wRef = _sRight.wRef;
+ xRef = _sRight.xRef;
+ yRef = _sRight.yRef;
+ zRef = _sRight.zRef;
 
  g_0 = _sRight.g_0;
  sigma_0 = _sRight.sigma_0;
@@ -267,6 +273,9 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  uRef = _s.getURef();
  vRef = _s.getVRef();
  wRef = _s.getWRef();
+ xRef = _s.getXRef();
+ yRef = _s.getYRef();
+ zRef = _s.getZRef();
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -2758,12 +2767,30 @@ real Simulator3D::getD1(){return d1;}
 real Simulator3D::getD2(){return d2;}
 
 // reference frame velocity
-void Simulator3D::setURef(real _uRef){uRef = _uRef;}
-void Simulator3D::setVRef(real _vRef){vRef = _vRef;}
-void Simulator3D::setWRef(real _wRef){wRef = _wRef;}
+void Simulator3D::setURef(real _uRef)
+{
+ uRef = _uRef;
+ xRef = uRef*time;
+}
+void Simulator3D::setVRef(real _vRef)
+{
+ vRef = _vRef;
+ yRef = vRef*time;
+}
+void Simulator3D::setWRef(real _wRef)
+{
+ wRef = _wRef;
+ zRef = wRef*time;
+}
 real Simulator3D::getURef(){return uRef;}
 real Simulator3D::getVRef(){return vRef;}
 real Simulator3D::getWRef(){return wRef;}
+void Simulator3D::setXRef(real _xRef){xRef = _xRef;}
+real Simulator3D::getXRef(){return xRef;}
+void Simulator3D::setYRef(real _yRef){yRef = _yRef;}
+real Simulator3D::getYRef(){return yRef;}
+void Simulator3D::setZRef(real _zRef){zRef = _zRef;}
+real Simulator3D::getZRef(){return zRef;}
 
 void Simulator3D::setMu(real _mu_in)
 { 
@@ -3144,6 +3171,9 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  uRef = _sRight.uRef;
  vRef = _sRight.vRef;
  wRef = _sRight.wRef;
+ xRef = _sRight.xRef;
+ yRef = _sRight.yRef;
+ zRef = _sRight.zRef;
 
  g = _sRight.g;
  sigma = _sRight.sigma;
@@ -3306,6 +3336,9 @@ void Simulator3D::operator()(Model3D &_m)
  uRef  = 0.0;
  vRef  = 0.0;
  wRef  = 0.0;
+ xRef  = 0.0;
+ yRef  = 0.0;
+ zRef  = 0.0;
  g     = 9.81;
  mu_in  = 1.0;
  mu_out  = 1.0;
@@ -3400,6 +3433,9 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  fileP >> uRef;
  fileP >> vRef;
  fileP >> wRef;
+ fileP >> xRef;
+ fileP >> yRef;
+ fileP >> zRef;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"COEFFICIENTS") != 0) )
   fileP >> auxstr;

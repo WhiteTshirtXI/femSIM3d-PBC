@@ -180,6 +180,9 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  uRef = s->getURef();
  vRef = s->getVRef();
  wRef = s->getWRef();
+ xRef = s->getXRef();
+ yRef = s->getYRef();
+ zRef = s->getZRef();
 
  K = s->getK();
  M = s->getM();
@@ -2290,9 +2293,9 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << mu_in << " " << mu_out << " " 
        << rho_in << " " << rho_out << " " 
 	   << sigma << endl;
- _file << "REFERENCEVELOCITY 1 3 float" << endl;
- _file << uRef << " " << vRef << " " 
-	   << wRef << endl;
+ _file << "REFERENCEVELOCITY 1 6 float" << endl;
+ _file << uRef << " " << vRef << " " << wRef << " " 
+       << xRef << " " << yRef << " " << zRef << endl;
  _file << "COEFFICIENTS 1 7 float" << endl;
  _file << c1 << " " << c2 << " " << c3 << " " 
        << d1  << " " << d2 << " "
@@ -3858,8 +3861,11 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "centroid X" 
                    << setw(18) << "centroid Y" 
                    << setw(18) << "centroid Z" 
-              	  << setw(6)  << "iter" 
-     			  << endl;
+                   << setw(18) << "centroid ref X" 
+                   << setw(18) << "centroid ref Y" 
+                   << setw(18) << "centroid ref Z" 
+              	   << setw(6)  << "iter" 
+     			   << endl;
   }
  
   file << setprecision(10) << scientific; 
@@ -3874,6 +3880,9 @@ void InOut::saveVolumeError(const char* _dir)
        << setw(17) << s->getCentroidPosX()[nb] << " " 
        << setw(17) << s->getCentroidPosY()[nb] << " " 
        << setw(17) << s->getCentroidPosZ()[nb] << " " 
+       << setw(17) << s->getXRef() << " " 
+       << setw(17) << s->getYRef() << " " 
+       << setw(17) << s->getZRef() << " " 
        << setw(5) << setprecision(0) << fixed << iter 
        << endl;
   file.close();

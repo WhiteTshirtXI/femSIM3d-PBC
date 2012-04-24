@@ -326,6 +326,52 @@ void Simulator3D::init()
  cSolOld.CopyFrom( 0,*cc );
 }
 
+void Simulator3D::initChannel()
+{
+ init();
+
+ // calculating channel's diameter.
+ real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
+                     dist(Z->Min(),Z->Max()) ) / 2.0;
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  real radius = sqrt( Y->Get(i)*Y->Get(i) + 
+	                  Z->Get(i)*Z->Get(i) );
+
+  // Parabolic profile
+  real Umax = 2.0/3.0;
+  real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                   (diameterYZ/2.0)) );
+
+  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
+ }
+}
+
+void Simulator3D::initChannelInv()
+{
+ init();
+
+ // calculating channel's diameter.
+ real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
+                     dist(Z->Min(),Z->Max()) ) / 2.0;
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  real radius = sqrt( Y->Get(i)*Y->Get(i) + 
+	                  Z->Get(i)*Z->Get(i) );
+
+  // Parabolic profile
+  real Umax = 2.0/3.0;
+  real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                   (diameterYZ/2.0)) );
+
+  uSol.Set(i,aux-1.0);
+  uSolOld.Set(i,aux-1.0);
+ }
+}
+
 void Simulator3D::initHeatTransfer()
 {
  init();

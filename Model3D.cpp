@@ -4469,11 +4469,11 @@ void Model3D::setGenericBC()
 
   // 2nd. priority
   if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 || 
       surfMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
       surfMesh.phyNames.at(id).compare(5,16,"InflowVParabolic") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,16,"InflowWParabolic") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 )
+      surfMesh.phyNames.at(id).compare(5,16,"InflowWParabolic") == 0 )
   {
    string aux = surfMesh.phyNames.at(id);
    surfMesh.phyBounds.at(v1) = aux;
@@ -4494,6 +4494,9 @@ void Model3D::setGenericBC()
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,12,"InvUPressure") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,12,"InvVPressure") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,12,"InvWPressure") == 0 || 
       surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 ||
       surfMesh.phyNames.at(id).compare(5,17,"Inflow2AxiBubbles") == 0 )
   {
@@ -4504,13 +4507,13 @@ void Model3D::setGenericBC()
   }
  }
 
- // calculating diameter of channels.
- real diameterXY = ( ( X.Min()+X.Max() )/2.0 + 
-                     ( Y.Min()+Y.Max() )/2.0 );
- real diameterXZ = ( ( X.Min()+X.Max() )/2.0 + 
-                     ( Z.Min()+Z.Max() )/2.0 );
- real diameterYZ = ( ( Y.Min()+Y.Max() )/2.0 + 
-                     ( Z.Min()+Z.Max() )/2.0 );
+ // calculating channel's diameter.
+ real diameterXY = ( dist(X.Min(),X.Max()) + 
+                     dist(Y.Min(),Y.Max()) ) / 2.0;
+ real diameterXZ = ( dist(X.Min(),X.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+ real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
 
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
@@ -4693,6 +4696,27 @@ void Model3D::setGenericBC()
    wc.Set(*it,-1.0);
   }
 
+  // moving boundary U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
+  {
+   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,-1.0);
+	vc.Set(*it,0.0);
+	wc.Set(*it,0.0);
+   }
+  }
+
   // symmetry boundary U
   else if( surfMesh.phyBounds.at(*it) == "\"wallNormalU\"" )
   {
@@ -4732,6 +4756,14 @@ void Model3D::setGenericBC(real _vel)
 {    
  clearBC();
 
+ // calculating channel's diameter.
+ real diameterXY = ( dist(X.Min(),X.Max()) + 
+                     dist(Y.Min(),Y.Max()) ) / 2.0;
+ real diameterXZ = ( dist(X.Min(),X.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+ real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
@@ -4755,10 +4787,55 @@ void Model3D::setGenericBC(real _vel)
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
-  
-   uc.Set(*it,1.0);
+
+   real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   real Umax = 2.0/3.0;
+   real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                    (diameterYZ/2.0)) );
+
+   uc.Set(*it,aux-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
+  }
+
+  // inflow condition V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   real Vmax = 2.0/3.0;
+   real aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
+	                                    (diameterXZ/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,aux-_vel);
+   wc.Set(*it,0.0);
+  }
+
+  // inflow condition W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   real radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
+
+   // Parabolic profile
+   real Wmax = 2.0/3.0;
+   real aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
+	                                    (diameterXY/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,aux-_vel);
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
   {
@@ -4840,6 +4917,70 @@ void Model3D::setGenericBC(real _vel)
    vc.Set(*it,0.0);
    wc.Set(*it,-1.0-_vel);
   }
+
+  // moving boundary U with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
+  {
+   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,-1.0-_vel);
+	vc.Set(*it,0.0);
+	wc.Set(*it,0.0);
+   }
+  }
+
+  // moving boundary V with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvVPressure\"" )
+  {
+   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,0.0);
+	vc.Set(*it,-1.0-_vel);
+	wc.Set(*it,0.0);
+   }
+  }
+
+  // moving boundary W with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvWPressure\"" )
+  {
+   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,0.0);
+	vc.Set(*it,0.0);
+	wc.Set(*it,-1.0-_vel);
+   }
+  }
+
   //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   else
   {

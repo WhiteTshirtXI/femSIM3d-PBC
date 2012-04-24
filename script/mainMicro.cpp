@@ -115,7 +115,8 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.init();
+  //s1.initChannel(); // fixed frame
+  s1.initChannelInv(); // moving frame
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
   m1.setTriEdge();
   m1.mesh2Dto3D();
 
-  //s1(m1);
+  s1(m1);
 
   // load 3D mesh
   file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
@@ -257,7 +258,6 @@ int main(int argc, char **argv)
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK("./vtk/","edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -266,8 +266,11 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
+ real vinst=0;
+ real vref=0;
  int nIter = 3000;
  int nReMesh = 1;
+
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -277,6 +280,14 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << iter << endl << endl;
    cout << resetColor();
+
+   // moving frame
+   vinst = s1.getCentroidVelXAverage();
+   vref += vinst;
+   //cout << vref << " " << vinst << endl;
+   s1.setUSol(vinst);
+   m1.setGenericBC(vref);
+   s1.setURef(vref);
 
    s1.setDtALETwoPhase();
 
@@ -291,7 +302,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity("Y");
+   //s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -320,7 +331,6 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
 
@@ -332,7 +342,7 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion();
+  //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -340,9 +350,9 @@ int main(int argc, char **argv)
   m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
+  // surface operations
   m1.smoothPointsByCurvature();
 
-  // surface operations
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
   //m1.removePointsByCurvature();
@@ -365,7 +375,8 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setGenericBC();
+  //m1.setGenericBC(); // fixed frame
+  m1.setGenericBC(vref); // moving frame
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -376,12 +387,6 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }
 

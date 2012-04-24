@@ -258,7 +258,6 @@ int main(int argc, char **argv)
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -332,7 +331,6 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
 

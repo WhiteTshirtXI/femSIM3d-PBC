@@ -146,6 +146,12 @@ class Simulator3D
   real getVRef();
   void setWRef(real _wRef);
   real getWRef();
+  void setXRef(real _XRef);
+  real getXRef();
+  void setYRef(real _YRef);
+  real getYRef();
+  void setZRef(real _ZRef);
+  real getZRef();
   void setMu(real _mu_in);
   void setMu(real _mu_in,real _mu_out);
   void setMuSmooth(real _mu_in,real _mu_out);
@@ -280,6 +286,7 @@ class Simulator3D
 
   // moving referential
   real uRef,vRef,wRef;
+  real xRef,yRef,zRef;
 
   clMatrix K,Kc,Mrho,M,Mc,G,D,A;
   clMatrix mat,matc;

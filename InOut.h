@@ -249,7 +249,7 @@ private:
   real dt,cfl,dtGravity,dtSurfaceTension;
   real dtSemiLagrangian,dtLagrangian;
   real mu_in,mu_out,rho_in,rho_out,sigma;
-  real uRef,vRef,wRef;
+  real uRef,vRef,wRef,xRef,yRef,zRef;
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;

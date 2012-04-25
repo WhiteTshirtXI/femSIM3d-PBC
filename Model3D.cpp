@@ -4699,7 +4699,7 @@ void Model3D::setGenericBC()
   // moving boundary U
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
   {
-   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
    {
 	idbcp.AddItem(*it);
 
@@ -4714,6 +4714,48 @@ void Model3D::setGenericBC()
 	uc.Set(*it,-1.0);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
+   }
+  }
+
+  // moving boundary V with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvVPressure\"" )
+  {
+   if( Y.Get(*it) == Y.Max() && Z.Get(*it) == Y.Min() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,0.0);
+	vc.Set(*it,-1.0);
+	wc.Set(*it,0.0);
+   }
+  }
+
+  // moving boundary W with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvWPressure\"" )
+  {
+   if( Y.Get(*it) == Y.Min() && Z.Get(*it) == Z.Max() )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,0.0);
+	vc.Set(*it,0.0);
+	wc.Set(*it,-1.0);
    }
   }
 
@@ -4921,7 +4963,7 @@ void Model3D::setGenericBC(real _vel)
   // moving boundary U with 1 node pressure
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
   {
-   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
    {
 	idbcp.AddItem(*it);
 
@@ -4942,7 +4984,7 @@ void Model3D::setGenericBC(real _vel)
   // moving boundary V with 1 node pressure
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvVPressure\"" )
   {
-   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   if( Y.Get(*it) == Y.Max() && Z.Get(*it) == Y.Min() )
    {
 	idbcp.AddItem(*it);
 
@@ -4963,7 +5005,7 @@ void Model3D::setGenericBC(real _vel)
   // moving boundary W with 1 node pressure
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvWPressure\"" )
   {
-   if( X.Get(*it) == X.Min() && Y.Get(*it) == Y.Min() )
+   if( Y.Get(*it) == Y.Min() && Z.Get(*it) == Z.Max() )
    {
 	idbcp.AddItem(*it);
 

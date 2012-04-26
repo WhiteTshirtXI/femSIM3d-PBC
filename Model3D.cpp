@@ -4491,12 +4491,10 @@ void Model3D::setGenericBC()
   
   // 1st. priority
   if( surfMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,14,"NoSlipPressure") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
-      surfMesh.phyNames.at(id).compare(5,12,"InvUPressure") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,12,"InvVPressure") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,12,"InvWPressure") == 0 || 
       surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 ||
       surfMesh.phyNames.at(id).compare(5,17,"Inflow2AxiBubbles") == 0 )
   {
@@ -4534,7 +4532,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 2.0/3.0;
+   real Umax = 3.0/2.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
 
@@ -4553,7 +4551,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Vmax = 2.0/3.0;
+   real Vmax = 3.0/2.0;
    real aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
@@ -4572,7 +4570,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   real Wmax = 2.0/3.0;
+   real Wmax = 3.0/2.0;
    real aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 
@@ -4697,7 +4695,7 @@ void Model3D::setGenericBC()
   }
 
   // moving boundary U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
   {
    if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
    {
@@ -4711,51 +4709,9 @@ void Model3D::setGenericBC()
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,-1.0);
-	vc.Set(*it,0.0);
-	wc.Set(*it,0.0);
-   }
-  }
-
-  // moving boundary V with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvVPressure\"" )
-  {
-   if( Y.Get(*it) == Y.Max() && Z.Get(*it) == Y.Min() )
-   {
-	idbcp.AddItem(*it);
-
-	pc.Set(*it,0.0);
-   }
-   else
-   {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
-	uc.Set(*it,0.0);
-	vc.Set(*it,-1.0);
-	wc.Set(*it,0.0);
-   }
-  }
-
-  // moving boundary W with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvWPressure\"" )
-  {
-   if( Y.Get(*it) == Y.Min() && Z.Get(*it) == Z.Max() )
-   {
-	idbcp.AddItem(*it);
-
-	pc.Set(*it,0.0);
-   }
-   else
-   {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
 	uc.Set(*it,0.0);
 	vc.Set(*it,0.0);
-	wc.Set(*it,-1.0);
+	wc.Set(*it,0.0);
    }
   }
 
@@ -4833,7 +4789,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 2.0/3.0;
+   real Umax = 3.0/2.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
 
@@ -4852,7 +4808,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Vmax = 2.0/3.0;
+   real Vmax = 3.0/2.0;
    real aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
@@ -4871,7 +4827,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   real Wmax = 2.0/3.0;
+   real Wmax = 3.0/2.0;
    real aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 
@@ -4961,7 +4917,7 @@ void Model3D::setGenericBC(real _vel)
   }
 
   // moving boundary U with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvUPressure\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
   {
    if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
    {
@@ -4975,51 +4931,9 @@ void Model3D::setGenericBC(real _vel)
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,-1.0-_vel);
+	uc.Set(*it,0.0-_vel);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
-   }
-  }
-
-  // moving boundary V with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvVPressure\"" )
-  {
-   if( Y.Get(*it) == Y.Max() && Z.Get(*it) == Y.Min() )
-   {
-	idbcp.AddItem(*it);
-
-	pc.Set(*it,0.0);
-   }
-   else
-   {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
-	uc.Set(*it,0.0);
-	vc.Set(*it,-1.0-_vel);
-	wc.Set(*it,0.0);
-   }
-  }
-
-  // moving boundary W with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvWPressure\"" )
-  {
-   if( Y.Get(*it) == Y.Min() && Z.Get(*it) == Z.Max() )
-   {
-	idbcp.AddItem(*it);
-
-	pc.Set(*it,0.0);
-   }
-   else
-   {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
-	uc.Set(*it,0.0);
-	vc.Set(*it,0.0);
-	wc.Set(*it,-1.0-_vel);
    }
   }
 

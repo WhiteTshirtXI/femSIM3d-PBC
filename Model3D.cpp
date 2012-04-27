@@ -4532,7 +4532,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 3.0/2.0;
+   real Umax = 2.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
 
@@ -4551,7 +4551,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Vmax = 3.0/2.0;
+   real Vmax = 2.0;
    real aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
@@ -4570,7 +4570,7 @@ void Model3D::setGenericBC()
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   real Wmax = 3.0/2.0;
+   real Wmax = 2.0;
    real aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 
@@ -4789,7 +4789,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 3.0/2.0;
+   real Umax = 2.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
 
@@ -4808,7 +4808,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Vmax = 3.0/2.0;
+   real Vmax = 2.0;
    real aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
@@ -4827,7 +4827,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   real Wmax = 3.0/2.0;
+   real Wmax = 2.0;
    real aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 

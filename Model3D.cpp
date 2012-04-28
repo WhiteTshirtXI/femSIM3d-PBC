@@ -3062,7 +3062,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < 0.1*size && 
+  if( length < 0.3*size && 
   //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
@@ -3400,7 +3400,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 10*edge*edge*edge*1.4142/12.0;
+  in.regionlist[5*nb+4] = 6*edge*edge*edge*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
 //--------------------------------------------------
 //   cout << " ------ " << node << " ------" << endl;
@@ -4513,6 +4513,7 @@ void Model3D::setGenericBC()
  real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
                      dist(Z.Min(),Z.Max()) ) / 2.0;
 
+ int count = 0;
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   // outflow condition
@@ -4697,7 +4698,9 @@ void Model3D::setGenericBC()
   // moving boundary U
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
   {
-   if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
+   if( X.Get(*it) == X.Max() && 
+	   Z.Get(*it) == Z.Min() && 
+	   count < 1 )
    {
 	idbcp.AddItem(*it);
 
@@ -4762,6 +4765,7 @@ void Model3D::setGenericBC(real _vel)
  real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
                      dist(Z.Min(),Z.Max()) ) / 2.0;
 
+ int count = 0;
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
   if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
@@ -4769,6 +4773,7 @@ void Model3D::setGenericBC(real _vel)
    idbcp.AddItem(*it);
   
    pc.Set(*it,0.0);
+   count++;
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
   {
@@ -4919,11 +4924,14 @@ void Model3D::setGenericBC(real _vel)
   // moving boundary U with 1 node pressure
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
   {
-   if( X.Get(*it) == X.Max() && Z.Get(*it) == Z.Min() )
+   if( X.Get(*it) == X.Max() && 
+	   Z.Get(*it) == Z.Min() &&
+	   count < 1 )
    {
 	idbcp.AddItem(*it);
 
 	pc.Set(*it,0.0);
+	count++;
    }
    else
    {

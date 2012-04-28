@@ -177,7 +177,7 @@ void Helmholtz3D::initMicro()
 	  (Y->Get(i) > yMid-tol && Y->Get(i) < yMid+tol ) &&
 	  (Z->Get(i) > zMid-tol && Z->Get(i) < zMid+tol ) &&
       ( interfaceDistance->Get(i) > 0.2*diameter ) )
-	convC.Set(i,triEdgeMin*30);
+	convC.Set(i,triEdgeMin*10);
   else
   {
    // add boundary condition value to convC. Note that the boundary

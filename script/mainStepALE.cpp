@@ -23,16 +23,16 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 1;
- real Re = 10000;
- real Sc = 2000;
+ real Re = 10;
+ real Sc = 20;
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.3;  // lagrangian
+ real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // smooth vel
- real c3 = 0.2;  // smooth coord (fujiwara)
+ real c3 = 0.0;  // smooth coord (fujiwara)
  real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.00;  // surface smooth cord (fujiwara)
+ real d2 = 0.0;  // surface smooth cord (fujiwara)
  real cfl = 1;
  real mu_l = 1.0;
  real rho_l = 1.0;
@@ -44,14 +44,14 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "stepSimple.msh";
+ string meshFile = "circular.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/misc/" + meshFile;
+ meshDir += "/gmsh/3d/singlePhase/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -166,7 +166,6 @@ int main(int argc, char **argv)
    s1.unCoupledC();
 
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTU(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
 
    s1.saveOldData();

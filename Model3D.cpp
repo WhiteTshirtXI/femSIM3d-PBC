@@ -3400,7 +3400,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   in.regionlist[5*nb+1] = yIn;
   in.regionlist[5*nb+2] = zIn;
   in.regionlist[5*nb+3] = nb+1;
-  in.regionlist[5*nb+4] = 6*edge*edge*edge*1.4142/12.0;
+  in.regionlist[5*nb+4] = 10*edge*edge*edge*1.4142/12.0;
   //in.regionlist[5*nb+4] = tetVol[nb];
 //--------------------------------------------------
 //   cout << " ------ " << node << " ------" << endl;

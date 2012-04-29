@@ -334,15 +334,15 @@ void Simulator3D::initChannel()
  real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
                      dist(Z->Min(),Z->Max()) ) / 2.0;
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   real radius = sqrt( Y->Get(i)*Y->Get(i) + 
 	                  Z->Get(i)*Z->Get(i) );
 
   // Parabolic profile
-  real Umax = 2.0/3.0;
-  real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                   (diameterYZ/2.0)) );
+  real Umax = 1.0;
+  real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                     (diameterYZ/2.0)) );
 
   uSol.Set(i,aux);
   uSolOld.Set(i,aux);
@@ -357,15 +357,15 @@ void Simulator3D::initChannelInv()
  real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
                      dist(Z->Min(),Z->Max()) ) / 2.0;
 
- for( int i=0;i<numVerts;i++ )
+ for( int i=0;i<numNodes;i++ )
  {
   real radius = sqrt( Y->Get(i)*Y->Get(i) + 
 	                  Z->Get(i)*Z->Get(i) );
 
   // Parabolic profile
-  real Umax = 2.0/3.0;
-  real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                   (diameterYZ/2.0)) );
+  real Umax = 1.0;
+  real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                     (diameterYZ/2.0)) );
 
   uSol.Set(i,aux-1.0);
   uSolOld.Set(i,aux-1.0);
@@ -4063,7 +4063,7 @@ real Simulator3D::getCentroidVelXAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelXOld[nb];
+  sum+=centroidVelX[nb];
  return sum/v;
 }
 
@@ -4072,7 +4072,7 @@ real Simulator3D::getCentroidVelYAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelYOld[nb];
+  sum+=centroidVelY[nb];
  return sum/v;
 }
 
@@ -4081,7 +4081,7 @@ real Simulator3D::getCentroidVelZAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidVelZOld[nb];
+  sum+=centroidVelZ[nb];
  return sum/v;
 }
 
@@ -4090,7 +4090,7 @@ real Simulator3D::getCentroidPosXAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosXOld[nb];
+  sum+=centroidPosX[nb];
  return sum/v;
 }
 
@@ -4099,7 +4099,7 @@ real Simulator3D::getCentroidPosYAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosYOld[nb];
+  sum+=centroidPosY[nb];
  return sum/v;
 }
 
@@ -4108,7 +4108,7 @@ real Simulator3D::getCentroidPosZAverage()
  real sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
-  sum+=centroidPosZOld[nb];
+  sum+=centroidPosZ[nb];
  return sum/v;
 }
 
@@ -4194,27 +4194,27 @@ void Simulator3D::setCentroidVelPosInterface()
 
 real Simulator3D::getCentroidVelXMax()
 {
- return *max_element(centroidVelXOld.begin()+1,centroidVelXOld.end());
+ return *max_element(centroidVelX.begin()+1,centroidVelX.end());
 }
 real Simulator3D::getCentroidVelYMax()
 {
- return *max_element(centroidVelYOld.begin()+1,centroidVelYOld.end());
+ return *max_element(centroidVelY.begin()+1,centroidVelY.end());
 }
 real Simulator3D::getCentroidVelZMax()
 {
- return *max_element(centroidVelZOld.begin()+1,centroidVelZOld.end());
+ return *max_element(centroidVelZ.begin()+1,centroidVelZ.end());
 }
 real Simulator3D::getCentroidVelXMin()
 {
- return *min_element(centroidVelXOld.begin()+1,centroidVelXOld.end());
+ return *min_element(centroidVelX.begin()+1,centroidVelX.end());
 }
 real Simulator3D::getCentroidVelYMin()
 {
- return *min_element(centroidVelYOld.begin()+1,centroidVelYOld.end());
+ return *min_element(centroidVelY.begin()+1,centroidVelY.end());
 }
 real Simulator3D::getCentroidVelZMin()
 {
- return *min_element(centroidVelZOld.begin()+1,centroidVelZOld.end());
+ return *min_element(centroidVelZ.begin()+1,centroidVelZ.end());
 }
 
 void Simulator3D::setUSol(real _vel)

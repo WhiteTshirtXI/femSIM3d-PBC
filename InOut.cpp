@@ -2681,7 +2681,8 @@ void InOut::saveBubbleInfo(const char* _dir)
  savePressureError(_dir);       // pressure 
  saveVolumeError(_dir);         // bubble volume
  saveTimeError(_dir);           // time step
- saveParasiticCurrent(_dir);   // velocity
+ //saveParasiticCurrent(_dir);   // velocity
+ saveFilmThickness(_dir);    // oscillating velocity and diameter
 }
 
 /*
@@ -4247,4 +4248,111 @@ void InOut::setCutPlaneTwoPhase(ofstream& _file)
   vtkScalar(_file,"cutPlaneX",cutPlaneX);
   vtkScalar(_file,"cutPlaneY",cutPlaneY);
   vtkScalar(_file,"cutPlaneZ",cutPlaneZ);
+}
+
+void InOut::saveFilmThickness(const char* _dir)
+{
+ // max and min of domain
+ real xdMin = surfMesh->X.Min();  
+ real ydMin = surfMesh->Y.Min();
+ real zdMin = surfMesh->Z.Min(); 
+ real xdMax = surfMesh->X.Max(); 
+ real ydMax = surfMesh->Y.Max(); 
+ real zdMax = surfMesh->Z.Max(); 
+
+ for(int nb=0;nb<=elemIdRegion->Max();nb++ )
+ {
+  stringstream ss;  //convertendo int --> string
+  string str;
+  ss << nb;
+  ss >> str;
+
+  string fileAux = (string) _dir + "film" + str + ".dat";
+  const char* filename = fileAux.c_str();
+ 
+  ifstream testFile( filename );
+  ofstream file( filename,ios::app );
+  if( testFile )
+  {
+   testFile.close();
+   cout << "appending on file film" << nb << ".dat" << endl;
+  }
+  else
+  {
+   cout << "Creating file film" << nb << ".dat" << endl;
+   file << "#time" << setw(29) << "minFilmX" 
+                   << setw(18) << "minFilmY" 
+                   << setw(18) << "minFilmZ" 
+                   << setw(18) << "maxFilmX" 
+                   << setw(18) << "maxFilmY" 
+                   << setw(18) << "maxFilmZ" 
+                   << setw(18) << "min domain X" 
+                   << setw(18) << "min domain Y" 
+                   << setw(18) << "min domain Z" 
+                   << setw(18) << "max domain X" 
+                   << setw(18) << "max domain Y" 
+                   << setw(18) << "max domain Z" 
+                   << setw(18) << "min drop X" 
+                   << setw(18) << "min drop Y" 
+                   << setw(18) << "min drop Z" 
+              	   << setw(6)  << "iter" 
+     			   << endl;
+  }
+
+ real xMax = -1E-10;
+ real yMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real yMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == nb )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) > yMax )
+	yMax = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) < yMin )
+	yMin = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+
+ real minFilmX = fabs(xMin-xdMin);
+ real minFilmY = fabs(yMin-ydMin);
+ real minFilmZ = fabs(zMin-zdMin);
+ real maxFilmX = fabs(xMax-xdMax);
+ real maxFilmY = fabs(yMax-ydMax);
+ real maxFilmZ = fabs(zMax-zdMax);
+
+  file << setprecision(10) << scientific; 
+  file << setw(10) << simTime << " " 
+       << setw(17) << minFilmX << " " 
+       << setw(17) << minFilmY << " " 
+       << setw(17) << minFilmZ << " " 
+       << setw(17) << maxFilmX << " " 
+       << setw(17) << maxFilmY << " " 
+       << setw(17) << maxFilmZ << " " 
+       << setw(17) << xdMin << " " 
+       << setw(17) << ydMin << " " 
+       << setw(17) << zdMin << " " 
+       << setw(17) << xdMax << " " 
+       << setw(17) << ydMax << " " 
+       << setw(17) << zdMax << " " 
+       << setw(17) << xMin << " " 
+       << setw(17) << yMin << " " 
+       << setw(17) << zMin << " " 
+       << setw(17) << xMax << " " 
+       << setw(17) << yMax << " " 
+       << setw(17) << zMax << " " 
+       << setw(5) << setprecision(0) << fixed << iter 
+       << endl;
+  file.close();
+ }
 }

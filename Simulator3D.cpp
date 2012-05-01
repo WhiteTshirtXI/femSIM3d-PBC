@@ -330,9 +330,14 @@ void Simulator3D::initChannel()
 {
  init();
 
+ real p1y = Y->Min();
+ real p2y = Y->Max();
+ real p1z = Z->Min();
+ real p2z = Z->Max();
+
  // calculating channel's diameter.
- real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
-                     dist(Z->Min(),Z->Max()) ) / 2.0;
+ real diameterYZ = ( dist(p1y,p2y) + 
+                     dist(p1z,p2z) ) / 2.0;
 
  for( int i=0;i<numNodes;i++ )
  {
@@ -343,19 +348,22 @@ void Simulator3D::initChannel()
   real Umax = 1.0;
   real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
-
-  uSol.Set(i,aux);
-  uSolOld.Set(i,aux);
+  uSol.Set(i,aux-1);
+  uSolOld.Set(i,aux-1);
  }
 }
 
-void Simulator3D::initChannelInv()
+void Simulator3D::initChannelSquare()
 {
  init();
 
+ real p1y = Y->Min();
+ real p2y = Y->Max();
+ real p1z = Z->Min();
+ real p2z = Z->Max();
+
  // calculating channel's diameter.
- real diameterYZ = ( dist(Y->Min(),Y->Max()) + 
-                     dist(Z->Min(),Z->Max()) ) / 2.0;
+ real diameterYZ = distance(p1y,p1z,p2y,p2z); 
 
  for( int i=0;i<numNodes;i++ )
  {

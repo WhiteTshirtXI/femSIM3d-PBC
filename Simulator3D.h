@@ -48,7 +48,7 @@ class Simulator3D
   void allocateMemoryToAttrib();
   void init();
   void initChannel();
-  void initChannelInv();
+  void initChannelSquare();
   void initHeatTransfer();
   void initFixedBubbleZ();
   void init2AxiBubbles();

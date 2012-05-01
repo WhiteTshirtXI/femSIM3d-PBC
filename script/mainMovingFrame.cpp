@@ -26,39 +26,26 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //real Re = sqrt(42.895); // case 1
- //real Re = 13.8487; // case 2
- real Re = 32.78; // case 3
- //real Re = sqrt(3892.856); // case 6
- //real Re = sqrt(18124.092); // case 7
- //real Re = sqrt(41505.729); // case 8 (extream)
- //real Re = 79.88; // case 3
- real Sc = 1;
- real We = 116;
- real Fr = 1.0;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1.0;
+ real vel = 0;
+ real c1 = 0.0;      // lagrangian
+ real c2 = 0.0;      // smooth vel
+ real c3 = 3.0;      // smooth coord (fujiwara)
+ real d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;      // surface smooth cord (fujiwara)
+ real alpha = 1.0;   // time discrete method
 
- real mu_in = 0.0000178;
-
- //real mu_out = 2.73;
- //real mu_out = 1.28; 
- real mu_out = 0.54; // case 3
- //real mu_out = 0.2857; // case 6
- //real mu_out = 0.1324; // case 7
- //real mu_out = 0.0875134907735; // extream
-
- real rho_in = 1.225;
- real rho_out =1350; 
+ /* Japonese paper */
+ real Re = 571.732; 
+ real We = 13.6168;
+ real Fr = 31.9275;
+ real mu_in=1.2471e-05;
+ real mu_out=0.00020235;
+ real rho_in=26.016;
+ real rho_out=1156.9;
 
  real cfl = 0.8;
 
- //string meshFile = "bubble-tube5.msh";
- string meshFile = "test.msh";
+ string meshFile = "circular.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -71,7 +58,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/rising/" + meshFile;
+ meshDir += "/gmsh/3d/micro/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -104,7 +91,6 @@ int main(int argc, char **argv)
   s1(m1);
 
   s1.setRe(Re);
-  s1.setSc(Sc);
   s1.setWe(We);
   s1.setFr(Fr);
   s1.setC1(c1);
@@ -281,12 +267,12 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   vinst = s1.getCentroidVelZAverage();
+   vinst = s1.getCentroidVelXAverage();
    vref += vinst;
    cout << vref << " " << vinst << endl;
-   s1.setWSol(vinst);
+   s1.setUSol(vinst);
    m1.setGenericBC(vref);
-   s1.setWRef(vref);
+   s1.setURef(vref);
 
    s1.setDtALETwoPhase();
 

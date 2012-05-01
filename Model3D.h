@@ -350,6 +350,7 @@ class Model3D
   void setTwoElements();
   void setThreeElements();
   void setFourElements();
+  void integralParabolic();
 
   void operator=(Model3D &_mRight);
 

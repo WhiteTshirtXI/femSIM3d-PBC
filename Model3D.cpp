@@ -4512,6 +4512,9 @@ void Model3D::setGenericBC()
                      dist(Z.Min(),Z.Max()) ) / 2.0;
  real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
                      dist(Z.Min(),Z.Max()) ) / 2.0;
+//--------------------------------------------------
+//  real diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
+//-------------------------------------------------- 
 
  int count = 0;
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
@@ -4520,6 +4523,7 @@ void Model3D::setGenericBC()
   if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
   {
    idbcp.AddItem(*it);
+
    pc.Set(*it,0.0);
   }
 
@@ -4533,10 +4537,11 @@ void Model3D::setGenericBC()
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 2.0;
-   real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                    (diameterYZ/2.0)) );
+   real Umax = 1.0;
+   real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                         (diameterYZ/2.0)) );
 
+   //aux=1.0;
    uc.Set(*it,aux);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
@@ -4712,7 +4717,7 @@ void Model3D::setGenericBC()
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,0.0);
+	uc.Set(*it,-1.0);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
    }
@@ -4751,6 +4756,7 @@ void Model3D::setGenericBC()
    wc.Set(*it,0.0);
   }
  }
+ //integralParabolic();
 }
 
 void Model3D::setGenericBC(real _vel)
@@ -4764,16 +4770,19 @@ void Model3D::setGenericBC(real _vel)
                      dist(Z.Min(),Z.Max()) ) / 2.0;
  real diameterYZ = ( dist(Y.Min(),Y.Max()) + 
                      dist(Z.Min(),Z.Max()) ) / 2.0;
+//--------------------------------------------------
+//  real diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
+//-------------------------------------------------- 
 
  int count = 0;
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
  {
+  // outflow condition
   if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
   {
    idbcp.AddItem(*it);
   
    pc.Set(*it,0.0);
-   count++;
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
   {
@@ -4797,8 +4806,9 @@ void Model3D::setGenericBC(real _vel)
    real Umax = 2.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
+   //aux=1.0;
 
-   uc.Set(*it,aux-_vel);
+   uc.Set(*it,aux-1.0-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -4939,7 +4949,7 @@ void Model3D::setGenericBC(real _vel)
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,0.0-_vel);
+	uc.Set(*it,0.0-1.0-_vel);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
    }
@@ -10410,4 +10420,30 @@ void Model3D::applyBubbleVolumeCorrection()
                    << "|-------------------------------------|" << endl;
   cout << resetColor() << endl;
  }
+}
+
+void Model3D::integralParabolic()
+{
+ real sumUArea = 0;
+ real sumArea = 0;
+ for( int i=0;i<surfMesh.numElems;i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+
+  real P1x = surfMesh.X.Get(v1);
+  real P2x = surfMesh.X.Get(v2);
+  real P3x = surfMesh.X.Get(v3); 
+
+  if( P1x == X.Max() &&
+      P2x == X.Max() && 
+      P3x == X.Max() )
+  {
+   real area = getAreaElem(i);
+   sumArea += area;
+   sumUArea += area*(uc.Get(v1)+uc.Get(v2)+uc.Get(v3))/3.0;
+  }
+ }
+ cout << sumUArea/sumArea << endl;
 }

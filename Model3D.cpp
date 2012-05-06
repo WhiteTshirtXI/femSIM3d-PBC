@@ -4538,7 +4538,7 @@ void Model3D::setGenericBC()
 
    // Parabolic profile
    real Umax = 1.0;
-   real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+   real aux = 1.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                         (diameterYZ/2.0)) );
 
    //aux=1.0;
@@ -4803,7 +4803,7 @@ void Model3D::setGenericBC(real _vel)
    real radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   real Umax = 2.0;
+   real Umax = 1.0;
    real aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
    //aux=1.0;
@@ -7435,6 +7435,7 @@ vector<real> Model3D::getInitSurfaceArea(){return initSurfaceArea;}
 vector<real> Model3D::getInitSurfaceVolume(){return initSurfaceVolume;}
 vector<real> Model3D::getSurfaceArea(){return surfaceArea;}
 vector<real> Model3D::getSurfaceVolume(){return surfaceVolume;}
+clVector* Model3D::getCloser(){ return &closer; }
 
 // Mesh indexes:
 vector<int> Model3D::getISP(){return isp;}

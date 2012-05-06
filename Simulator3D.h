@@ -165,7 +165,22 @@ class Simulator3D
   void setRho(real _rho_in,real _rho_out);
   void setRrho_in(real _rho_in);
   void setRhoSmooth(real _rho_in,real _rho_out);
+  void setCp(real _cp_in);
+  void setCp(real _cp_in,real _cp_out);
+  void setCpSmooth(real _cp_in,real _cp_out);
+  real getCp_in();
+  real getCp_out();
+  real getCp_inAdimen();
+  real getCp_outAdimen();
+  void setKt(real _kt_in);
+  void setKt(real _kt_in,real _kt_out);
+  void setKtSmooth(real _kt_in,real _kt_out);
+  real getKt_in();
+  real getKt_out();
+  real getKt_inAdimen();
+  real getKt_outAdimen();
   void setHSmooth();
+  void setHeatFlux();
   real getRho_in();
   void setRho_out(real _rho_out);
   real getRho_out();
@@ -217,7 +232,10 @@ class Simulator3D
   clMatrix* getGz();
   clVector* getMu();
   clVector* getRho();
+  clVector* getCp();
+  clVector* getKt();
   clVector* getHSmooth();
+  clVector* getHeatFlux();
   void operator=(Simulator3D &_s);
   void operator()(Model3D &_m);
   int loadSolution( const char* _dir,const char* _filename, int _iter );
@@ -254,6 +272,8 @@ class Simulator3D
   void setCentroidPosX(vector<real> _centroidPosX);
   void setCentroidPosY(vector<real> _centroidPosY);
   void setCentroidPosZ(vector<real> _centroidPosZ);
+  void setSurfaceTSat();
+  void setMassTransfer();
 
  private:
   Model3D *m;
@@ -278,6 +298,8 @@ class Simulator3D
   real bubbleXVel,bubbleYVel,bubbleZVel;
   real sigma,g,rho_in,rho_out,mu_in,mu_out;
   real sigma_0,g_0,rho_0,mu_0;
+  real cp_in,cp_out,cp_0,cp_inAdimen,cp_outAdimen;
+  real kt_in,kt_out,kt_0,kt_inAdimen,kt_outAdimen;
   real sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
   real bubbleVel;
   int iter;
@@ -290,7 +312,7 @@ class Simulator3D
   real uRef,vRef,wRef;
   real xRef,yRef,zRef;
 
-  clMatrix K,Kc,Mrho,M,Mc,G,D,A;
+  clMatrix K,Kc,Mrho,M,Mc,G,Gc,D,A;
   clMatrix mat,matc;
   clMatrix gx,gy,gz;
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
@@ -306,12 +328,13 @@ class Simulator3D
   clVector uSL,vSL,wSL,cSL,uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
   clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
-  clVector fint,gravity,hSmooth,mu,rho;
+  clVector fint,gravity,hSmooth,mu,rho,cp,kt;
+  clVector heatFlux,heatFluxOld;
 
   clDMatrix kappaOld;
   clVector uALEOld,vALEOld,wALEOld;
   clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
-  clVector fintOld,gravityOld,Fold,muOld,rhoOld,hSmoothOld;
+  clVector fintOld,gravityOld,Fold,muOld,rhoOld,hSmoothOld,cpOld,ktOld;
 
   Solver *solverV,*solverP,*solverC;
 };

@@ -201,6 +201,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  cSol = s->getCSol();
  kappa = s->getKappa();
  fint = s->getFint();
+ heatFlux = s->getHeatFlux();
  mu = s->getMu();
  rho = s->getRho();
  //hSmooth = s->getHSmooth();
@@ -508,6 +509,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
+
+ if( heatFlux->Dim() > 0 )
+  vtkScalar(vtkFile,"heatFlux",*heatFlux);
 
  if( edgeSize->Dim() > 0 )
   vtkScalar(vtkFile,"edgeSize",*edgeSize);

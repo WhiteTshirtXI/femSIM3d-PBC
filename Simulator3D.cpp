@@ -57,6 +57,10 @@ Simulator3D::Simulator3D( Model3D &_m )
  mu_out  = 1.0;
  rho_in = 1.0;
  rho_out = 1.0;
+ cp_in = 1.0;
+ cp_out = 1.0;
+ kt_in = 1.0;
+ kt_out = 1.0;
  uRef = 0.0;
  vRef = 0.0;
  wRef = 0.0;
@@ -101,6 +105,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  rho_out = _sRight.rho_out;
  mu_in = _sRight.mu_in;
  mu_out = _sRight.mu_out;
+ cp_in = _sRight.cp_in;
+ cp_out = _sRight.cp_out;
+ kt_in = _sRight.kt_in;
+ kt_out = _sRight.kt_out;
  
  uRef = _sRight.uRef;
  vRef = _sRight.vRef;
@@ -113,6 +121,8 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  sigma_0 = _sRight.sigma_0;
  rho_0 = _sRight.rho_0;
  mu_0 = _sRight.mu_0;
+ cp_0 = _sRight.cp_0;
+ kt_0 = _sRight.kt_0;
 
  gAdimen = _sRight.gAdimen;
  sigmaAdimen = _sRight.sigmaAdimen;
@@ -120,6 +130,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  rho_outAdimen = _sRight.rho_outAdimen;
  mu_inAdimen = _sRight.mu_inAdimen;
  mu_outAdimen = _sRight.mu_outAdimen;
+ cp_inAdimen = _sRight.cp_inAdimen;
+ cp_outAdimen = _sRight.cp_outAdimen;
+ kt_inAdimen = _sRight.kt_inAdimen;
+ kt_outAdimen = _sRight.kt_outAdimen;
 
  K = _sRight.K;
  Kc = _sRight.Kc;
@@ -127,6 +141,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  M = _sRight.M;
  Mc = _sRight.Mc;
  G = _sRight.G;
+ Gc = _sRight.Gc;
  D = _sRight.D;
  mat = _sRight.mat;
  matc = _sRight.matc;
@@ -201,7 +216,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  Fold    = _sRight.Fold;
  mu      = _sRight.mu;
  rho     = _sRight.rho;
+ cp      = _sRight.cp;
+ kt      = _sRight.kt;
  hSmooth = _sRight.hSmooth;
+ heatFlux= _sRight.heatFlux;
  
  // old ints
  numVertsOld = _sRight.numVerts;
@@ -222,7 +240,10 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  gravityOld = _sRight.gravityOld;
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
+ cpOld      = _sRight.cpOld;
+ ktOld      = _sRight.ktOld;
  hSmoothOld = _sRight.hSmoothOld;
+ heatFluxOld = _sRight.heatFluxOld;
  centroidVelXOld = _sRight.centroidVelXOld;
  centroidVelYOld = _sRight.centroidVelYOld;
  centroidVelZOld = _sRight.centroidVelZOld;
@@ -263,6 +284,14 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  rho_out = _s.getRho_out();
  rho_inAdimen = _s.getRho_inAdimen();
  rho_outAdimen = _s.getRho_outAdimen();
+ cp_in = _s.getCp_in();
+ cp_out = _s.getCp_out();
+ cp_inAdimen = _s.getCp_inAdimen();
+ cp_outAdimen = _s.getCp_outAdimen();
+ kt_in = _s.getKt_in();
+ kt_out = _s.getKt_out();
+ kt_inAdimen = _s.getKt_inAdimen();
+ kt_outAdimen = _s.getKt_outAdimen();
  iter  = _s.getIter();
  c1    = _s.getC1();
  c2    = _s.getC2();
@@ -301,7 +330,10 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)
  gravityOld = *_s.getGravity();
  muOld      = *_s.getMu();
  rhoOld     = *_s.getRho();
+ cpOld     = *_s.getCp();
+ ktOld     = *_s.getKt();
  hSmoothOld = *_s.getHSmooth();
+ heatFluxOld = *_s.getHeatFlux();
  centroidVelXOld = _s.getCentroidVelX();
  centroidVelYOld = _s.getCentroidVelY();
  centroidVelZOld = _s.getCentroidVelZ();
@@ -382,11 +414,16 @@ void Simulator3D::initChannelSquare()
 
 void Simulator3D::initHeatTransfer()
 {
- init();
+//--------------------------------------------------
+//  for( int i=0;i<numVerts;i++ )
+//   if( Z->Get(i) > 0.4*Z->Max() )
+//    cSolOld.Set(i,1.0);
+//-------------------------------------------------- 
 
+/* heat transfer */
  for( int i=0;i<numVerts;i++ )
-  if( Z->Get(i) > 0.4*Z->Max() )
-   cSolOld.Set(i,1.0);
+  if( heaviside->Get(i) < 0.5 )
+   cSolOld.Set(i,0.001);
 }
 
 void Simulator3D::initFixedBubbleZ()
@@ -596,6 +633,9 @@ void Simulator3D::assembleHeatTransfer()
  clMatrix Gz( numNodes,numVerts );
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
+ clMatrix GcMatx( numVerts,numVerts );
+ clMatrix GcMaty( numVerts,numVerts );
+ clMatrix GcMatz( numVerts,numVerts );
 
 #if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
@@ -607,8 +647,12 @@ void Simulator3D::assembleHeatTransfer()
 
  //setMu( mu_in );
  //setRho( rho_in );
+ //setCp( cp_in );
+ //setKt( kt_in );
  setMu( mu_in,mu_out );
  setRho( rho_in,rho_out );
+ setCp( cp_in,cp_out );
+ setKt( kt_in,kt_out );
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -617,15 +661,21 @@ void Simulator3D::assembleHeatTransfer()
 
   real muValue=0;
   real rhoValue=0;
+  real cpValue=0;
+  real ktValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
+   cpValue = cp_outAdimen;
+   ktValue = kt_outAdimen;
   }
   else
   {
    muValue = mu_inAdimen;
    rhoValue = rho_inAdimen;
+   cpValue = cp_inAdimen;
+   ktValue = kt_inAdimen;
   }
 
   miniElem.getM(*v);  // para problemas SEM deslizamento
@@ -695,13 +745,23 @@ void Simulator3D::assembleHeatTransfer()
    for( j=0;j<NUMGLEC;j++ )
    {
 	jj=v[j];
-	aux = KcMat.Get(ii,jj) + ( linElem.kxxc[i][j] + 
-	                           linElem.kyyc[i][j] + 
-							   linElem.kzzc[i][j] );
+	aux = KcMat.Get(ii,jj) + ktValue*( linElem.kxxc[i][j] + 
+	                                   linElem.kyyc[i][j] + 
+							           linElem.kzzc[i][j] );
 	KcMat.Set(ii,jj,aux);
 
+	//aux = McMat.Get(ii,jj) + rhoValue*linElem.masselec[i][j];
 	aux = McMat.Get(ii,jj) + linElem.masselec[i][j];
 	McMat.Set(ii,jj,aux);
+
+	aux = GcMatx.Get(ii,jj) + linElem.gxelec[i][j];
+	GcMatx.Set(ii,jj,aux);
+
+	aux = GcMaty.Get(ii,jj) + linElem.gyelec[i][j];
+	GcMaty.Set(ii,jj,aux);
+
+	aux = GcMatz.Get(ii,jj) + linElem.gzelec[i][j];
+	GcMatz.Set(ii,jj,aux);
    }
   }
  }
@@ -735,10 +795,13 @@ void Simulator3D::assembleHeatTransfer()
  D.CopyFrom(          0,   numNodes,     Gy.Transpose() );
  D.CopyFrom(          0, 2*numNodes,     Gz.Transpose() );
 
- Kc.CopyFrom(         0,          0,     KcMat );
- Mc.CopyFrom(         0,          0,     McMat );
+ Kc.CopyFrom(          0,         0,     KcMat );
+ Mc.CopyFrom(          0,         0,     McMat );
+ Gc.CopyFrom(          0,         0,     GcMatx );
+ Gc.CopyFrom(   numVerts,         0,     GcMaty );
+ Gc.CopyFrom( 2*numVerts,         0,     GcMatz );
  
-} // fecha metodo ASSEMBLE
+} // fecha metodo ASSEMBLEHEATTRANSFER
 
 void Simulator3D::assembleC()
 {
@@ -1665,7 +1728,8 @@ void Simulator3D::stepALEVel()
  vSol.CopyTo(0,vVert);
  wSol.CopyTo(0,wVert);
 
- setInterfaceVelocity();
+ //setInterfaceVelocity();
+ setMassTransfer();
 
 //--------------------------------------------------
 //  // smoothing - velocidade
@@ -1718,7 +1782,8 @@ void Simulator3D::stepALEVel()
  wALE = c1*wVert+c2*wSmooth+c3*wSmoothCoord;
  
  // impoe velocidade do fluido na interface
- setInterfaceVelocity();
+ //setInterfaceVelocity();
+ setMassTransfer();
 
  clVector zeroAux(numNodes-numVerts);
  uALE.Append(zeroAux);
@@ -2096,7 +2161,19 @@ void Simulator3D::unCoupled()
  
  //uvw = uTilde;
 
- b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+
+ /* 
+  * Mass Transfer
+  * */
+ //clVector massTransfer = dt*invMcLumped*( heatFlux );
+ //clVector massTransfer = ( invMcLumped*heatFlux );
+ clVector massTransfer = dt*
+                         (1.0/rho_inAdimen - 1.0/rho_outAdimen)
+						 *heatFlux;
+
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+
 
  // resolve sistema E pTilde = b2
  cout << " --------> solving pressure --------- " << endl;
@@ -2139,6 +2216,10 @@ void Simulator3D::unCoupledC()
 
  b1cTilde = b1c + vcIp;
 
+ b1cTilde = b1cTilde + 
+        //dt*invMcLumped*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+        invC*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+
  // resolve sitema ATilde uTilde = b
  cout << endl;
  cout << " --------> solving scalar ----------- " << endl;
@@ -2166,7 +2247,10 @@ void Simulator3D::saveOldData()
  kappaOld   = kappa;
  muOld      = mu;
  rhoOld     = rho;
+ cpOld      = cp;
+ ktOld      = kt;
  hSmoothOld = hSmooth;
+ heatFluxOld = heatFluxOld;
 }
 
 /**
@@ -2864,6 +2948,24 @@ void Simulator3D::setRho(real _rho_in)
  rho.SetAll(rho_inAdimen); 
 }
 
+void Simulator3D::setCp(real _cp_in)
+{ 
+ cp_in = _cp_in;
+ cp_0 = cp_in; 
+ cp_inAdimen = cp_in/cp_0; 
+
+ cp.SetAll(cp_inAdimen); 
+}
+
+void Simulator3D::setKt(real _kt_in)
+{ 
+ kt_in = _kt_in;
+ kt_0 = kt_in; 
+ kt_inAdimen = kt_in/kt_0; 
+
+ kt.SetAll(kt_inAdimen); 
+}
+
 /* Since we are working here with non-dimensional equations and also
  * because the referential Reynolds used in two-phase flow is the one
  * from the liquid phase, we set the liquid viscosity (mu_fluid) as
@@ -2975,6 +3077,54 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
 //  inElem = m->getInElem();
 //  for (list<int>::iterator it=inElem->begin(); it!=inElem->end(); ++it)
 //   rho.Set(*it,rho_outAdimen);
+//-------------------------------------------------- 
+}
+
+void Simulator3D::setCp(real _cp_in,real _cp_out)
+{ 
+ cp_in = _cp_in;
+ cp_out = _cp_out;
+
+ if( cp_in >= cp_out )
+  cp_0 = cp_in; 
+ else
+  cp_0 = cp_out;
+
+ cp_inAdimen = cp_in/cp_0; 
+ cp_outAdimen = cp_out/cp_0;
+
+ clVector one(numVerts);one.SetAll(1.0);
+ cp = cp_inAdimen*(*heaviside) + cp_outAdimen*(one-(*heaviside));
+
+//--------------------------------------------------
+//  for (list<int>::iterator it=boundaryVert->begin(); 
+//                           it!=boundaryVert->end(); 
+// 						  ++it)
+//   cp.Set(*it,0.0); // set cp = 0 in the Wall
+//-------------------------------------------------- 
+}
+
+void Simulator3D::setKt(real _kt_in,real _kt_out)
+{ 
+ kt_in = _kt_in;
+ kt_out = _kt_out;
+
+ if( kt_in >= kt_out )
+  kt_0 = kt_in; 
+ else
+  kt_0 = kt_out;
+
+ kt_inAdimen = kt_in/kt_0; 
+ kt_outAdimen = kt_out/kt_0;
+
+ clVector one(numVerts);one.SetAll(1.0);
+ kt = kt_inAdimen*(*heaviside) + kt_outAdimen*(one-(*heaviside));
+
+//--------------------------------------------------
+//  for (list<int>::iterator it=boundaryVert->begin(); 
+//                           it!=boundaryVert->end(); 
+// 						  ++it)
+//   kt.Set(*it,0.0); // set kt = 0 in the Wall
 //-------------------------------------------------- 
 }
 
@@ -3092,10 +3242,18 @@ real Simulator3D::getMu_in(){return mu_in;}
 real Simulator3D::getMu_out(){return mu_out;}
 real Simulator3D::getRho_in(){return rho_in;}
 real Simulator3D::getRho_out(){return rho_out;}
+real Simulator3D::getCp_in(){return cp_in;}
+real Simulator3D::getCp_out(){return cp_out;}
+real Simulator3D::getKt_in(){return kt_in;}
+real Simulator3D::getKt_out(){return kt_out;}
 real Simulator3D::getMu_inAdimen(){return mu_inAdimen;}
 real Simulator3D::getMu_outAdimen(){return mu_outAdimen;}
 real Simulator3D::getRho_inAdimen(){return rho_inAdimen;}
 real Simulator3D::getRho_outAdimen(){return rho_outAdimen;}
+real Simulator3D::getCp_inAdimen(){return cp_inAdimen;}
+real Simulator3D::getCp_outAdimen(){return cp_outAdimen;}
+real Simulator3D::getKt_inAdimen(){return kt_inAdimen;}
+real Simulator3D::getKt_outAdimen(){return kt_outAdimen;}
 real Simulator3D::getTime(){return time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
@@ -3129,7 +3287,10 @@ clMatrix* Simulator3D::getG(){return &G;}
 clMatrix* Simulator3D::getD(){return &D;}
 clVector* Simulator3D::getMu(){return &mu;}
 clVector* Simulator3D::getRho(){return &rho;}
+clVector* Simulator3D::getCp(){return &cp;}
+clVector* Simulator3D::getKt(){return &kt;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
+clVector* Simulator3D::getHeatFlux(){return &heatFlux;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
 void Simulator3D::setCfl(real _cfl){cfl = _cfl;}
 vector<real> Simulator3D::getCentroidVelX(){return centroidVelX;}
@@ -3235,11 +3396,17 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  rho_out = _sRight.rho_out;
  mu_in = _sRight.mu_in;
  mu_out = _sRight.mu_out;
+ cp_in = _sRight.cp_in;
+ cp_out = _sRight.cp_out;
+ kt_in = _sRight.kt_in;
+ kt_out = _sRight.kt_out;
 
  g_0 = _sRight.g_0;
  sigma_0 = _sRight.sigma_0;
  rho_0 = _sRight.rho_0;
  mu_0 = _sRight.mu_0;
+ cp_0 = _sRight.cp_0;
+ kt_0 = _sRight.kt_0;
 
  gAdimen = _sRight.gAdimen;
  sigmaAdimen = _sRight.sigmaAdimen;
@@ -3247,6 +3414,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  rho_outAdimen = _sRight.rho_outAdimen;
  mu_inAdimen = _sRight.mu_inAdimen;
  mu_outAdimen = _sRight.mu_outAdimen;
+ cp_inAdimen = _sRight.cp_inAdimen;
+ cp_outAdimen = _sRight.cp_outAdimen;
+ kt_inAdimen = _sRight.kt_inAdimen;
+ kt_outAdimen = _sRight.kt_outAdimen;
 
  K = _sRight.K;
  Kc = _sRight.Kc;
@@ -3254,6 +3425,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  M = _sRight.M;
  Mc = _sRight.Mc;
  G = _sRight.G;
+ Gc = _sRight.Gc;
  D = _sRight.D;
  mat = _sRight.mat;
  matc = _sRight.matc;
@@ -3328,7 +3500,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  Fold    = _sRight.Fold;
  mu      = _sRight.mu;
  rho     = _sRight.rho;
+ cp      = _sRight.cp;
+ kt      = _sRight.kt;
  hSmooth = _sRight.hSmooth;
+ heatFlux= _sRight.heatFlux;
  
  // old ints
  numVertsOld = _sRight.numVerts;
@@ -3349,7 +3524,10 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  gravityOld = _sRight.gravityOld;
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
+ cpOld      = _sRight.cpOld;
+ ktOld      = _sRight.ktOld;
  hSmoothOld = _sRight.hSmoothOld;
+ heatFluxOld= _sRight.heatFluxOld;
  centroidVelXOld = _sRight.centroidVelXOld;
  centroidVelYOld = _sRight.centroidVelYOld;
  centroidVelZOld = _sRight.centroidVelZOld;
@@ -3398,6 +3576,10 @@ void Simulator3D::operator()(Model3D &_m)
  mu_out  = 1.0;
  rho_in = 1.0;
  rho_out = 1.0;
+ cp_in = 1.0;
+ cp_out = 1.0;
+ kt_in = 1.0;
+ kt_out = 1.0;
 
  setSolverVelocity( new PCGSolver() );
  setSolverPressure( new PCGSolver() );
@@ -3613,7 +3795,10 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALE.Dim( numVerts );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
+ cp.Dim( numVerts );
+ kt.Dim( numVerts );
  hSmooth.Dim( numVerts );
+ heatFlux.Dim( numVerts );
 
  // the edgeSize vector is not part of the Simulator3D, but because we
  // are not saving the matrix interpLin, we should interpolate edgeSize
@@ -3657,7 +3842,10 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector gravityOldVert(numVertsOld);
  clVector muOldVert(numVertsOld);
  clVector rhoOldVert(numVertsOld);
+ clVector cpOldVert(numVertsOld);
+ clVector ktOldVert(numVertsOld);
  clVector hSmoothOldVert(numVertsOld);
+ clVector heatFluxOldVert(numVertsOld);
  
  // shrinking the solution vectors with size numNodes to numVerts. 
  uSolOld.CopyTo(0,uSolOldVert);
@@ -3672,7 +3860,10 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravityOld.CopyTo(0,gravityOldVert);
  muOld.CopyTo(0,muOldVert);
  rhoOld.CopyTo(0,rhoOldVert);
+ cpOld.CopyTo(0,cpOldVert);
+ ktOld.CopyTo(0,ktOldVert);
  hSmoothOld.CopyTo(0,hSmoothOldVert);
+ heatFluxOld.CopyTo(0,heatFluxOldVert);
  clVector edgeSizeOld = *_mOld.getEdgeSize();
 
  // interpolation process between the old mesh with numVertsOld to the new
@@ -3681,7 +3872,10 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  cSol = interpLin*(cSolOld);
  mu = interpLin*(muOld);
  rho = interpLin*(rhoOld);
+ cp  = interpLin*(cpOld);
+ kt  = interpLin*(ktOld);
  hSmooth = interpLin*(hSmoothOld);
+ heatFlux = interpLin*(heatFluxOld);
  edgeSize = interpLin*(edgeSizeOld);
 
  // For velocities, kappa, fint and gravity it is mandatory to
@@ -3865,6 +4059,7 @@ void Simulator3D::allocateMemoryToAttrib()
  MLumped.Dim( 3*numNodes );
  McLumped.Dim( numVerts );
  G.Dim( 3*numNodes,numVerts );
+ Gc.Dim( 3*numVerts,numVerts );
  D.Dim( numVerts,3*numNodes );
  gx.Dim( numNodes,numVerts );
  gy.Dim( numNodes,numVerts );
@@ -3952,14 +4147,20 @@ void Simulator3D::allocateMemoryToAttrib()
  gravityOld.Dim( numVerts );
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
+ cpOld.Dim( numVerts );
+ ktOld.Dim( numVerts );
  hSmoothOld.Dim( numVerts );
+ heatFluxOld.Dim( numVerts );
 
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
  gravity.Dim( 3*numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
+ cp.Dim( numVerts );
+ kt.Dim( numVerts );
  hSmooth.Dim( numVerts );
+ heatFlux.Dim( numVerts );
 
  int numSurface = surfMesh->elemIdRegion.Max()+1; 
  centroidVelX.resize(numSurface);
@@ -4249,3 +4450,177 @@ void Simulator3D::setWSol(real _vel)
   wSolOld.Set(i,wSolOld.Get(i)-_vel);
  }
 }
+
+void Simulator3D::setSurfaceTSat()
+{
+ real Tsat = 0.0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int surfaceNode = surface->Get(i);
+  cSol.Set(surfaceNode,Tsat);
+  cSolOld.Set(surfaceNode,Tsat);
+ }
+}
+
+//--------------------------------------------------
+// void Simulator3D::setMassTransferVelocity()
+// {
+//  for( int i=0;i<surface->Dim();i++ )
+//  {
+//   int surfaceNode = surface->Get(i);
+// 
+//   // unitario do vetor normal (ponderado com a area) resultante
+//   real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+//   real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+//   real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
+// 
+//   real uSurface = xNormalUnit;
+//   real vSurface = yNormalUnit;
+//   real wSurface = zNormalUnit;
+// 
+//   uMassTransfer.Set(surfaceNode,uSurface);
+//   vMassTransfer.Set(surfaceNode,vSurface);
+//   wMassTransfer.Set(surfaceNode,wSurface);
+//  }
+// } // fecha metodo setInterfaceVelocity
+//-------------------------------------------------- 
+
+void Simulator3D::setMassTransfer()
+{
+ setSurfaceTSat();
+
+ // compute q
+ //clVector q(numVerts);q.SetAll(-0.1);
+ //clVector q = (-1.0)*invMcLumped*Kc*cSolOld;
+ clVector q = (-1.0)*invC*Kc*cSolOld;
+//--------------------------------------------------
+//  for( int i=0;i<surface->Dim();i++ )
+//  {
+//   int surfaceNode = surface->Get(i);
+//    cout << cSolOld.Get(surfaceNode) << " " << q.Get(surfaceNode) << endl;
+//  }
+//-------------------------------------------------- 
+
+ clDMatrix distrib(numVerts);
+ clVector* closer = m->getCloser();
+ for( int i=0;i<numVerts;i++ )
+ {
+  int aux = closer->Get(i);
+  distrib.Set( i,q.Get(aux) );
+ }
+
+ clVector GH = Gc*(*heaviside);
+ //clVector GT = Gc*(cSolOld);
+ clVector *vertIdRegion = m->getVertIdRegion();
+ for( int i=0;i<numVerts;i++ )
+ {
+  real aux = sqrt( GH.Get(i)*GH.Get(i) + 
+                   GH.Get(i+numVerts)*GH.Get(i+numVerts) +
+                   GH.Get(i+2*numVerts)*GH.Get(i+2*numVerts) );
+  heatFlux.Set(i,distrib.Get(i)*aux);
+  //heatFlux.Set(i,1.0*aux);
+
+
+//--------------------------------------------------
+// // Uni-dimensional problem in Y
+// //-------------------------------------------------- 
+//   //if( Y->Get(i) < Y->Max() )
+//   if( vertIdRegion->Get(i) == 1 && i < lineMesh->numVerts )
+//   {
+//    real aux = fabs( GH.Get(i+numVerts) );
+//    heatFlux.Set(i,0.0*aux);
+//   }
+//-------------------------------------------------- 
+ }
+
+
+ /* 
+  * Interface velocity + Mesh Smooth
+  *
+  * */
+
+ // smoothing - coordenadas
+ MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ e1.stepSurfaceSmoothFujiwara();
+ uSmoothSurface = *e1.getUSmoothSurface();
+ vSmoothSurface = *e1.getVSmoothSurface();
+ wSmoothSurface = *e1.getWSmoothSurface();
+
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int surfaceNode = surface->Get(i);
+
+  // unitario do vetor normal (ponderado com a area) resultante
+  real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+  real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+  real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
+
+  // produto escalar --> projecao do vetor normalUnit no segmento de reta
+  // | Unit.RetaUnit | . RetaUnit
+  // resultado = vetor normal a reta situado na superficie
+  real prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
+              (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
+			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
+  real uSolNormal = xNormalUnit*prod;
+  real vSolNormal = yNormalUnit*prod;
+  real wSolNormal = zNormalUnit*prod;
+
+  // 1.3 is a pragmatic number which fits the velocity for the bhaga5
+  // and the moving frame technique. Still don't know why!
+  real uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
+  real vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
+  real wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
+
+  // tratamento da superficie
+  // produto escalar --> projecao do vetor normalUnit no segmento de reta
+  // | Unit.RetaUnit | . RetaUnit
+  // resultado = vetor normal a reta situado na superficie
+  real prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
+               vSmoothSurface.Get(surfaceNode)*yNormalUnit + 
+			   wSmoothSurface.Get(surfaceNode)*zNormalUnit;
+  real uSmoothNormal = xNormalUnit*prod2;
+  real vSmoothNormal = yNormalUnit*prod2;
+  real wSmoothNormal = zNormalUnit*prod2;
+
+  real uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
+  real vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
+  real wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
+
+  real uALESurface =   uSolOld.Get(surfaceNode) 
+                     - d1*uSolTangent 
+					 + d2*uSmoothTangent;
+  real vALESurface =   vSolOld.Get(surfaceNode) 
+                     - d1*vSolTangent 
+					 + d2*vSmoothTangent;
+  real wALESurface =   wSolOld.Get(surfaceNode) 
+                     - d1*wSolTangent 
+					 + d2*wSmoothTangent;
+
+
+  // MASS TRASNFER at SURFACE NODES
+  real rho1 = ( (1.0/(rho_inAdimen*rho_inAdimen))+
+                (1.0/(rho_outAdimen*rho_outAdimen)) )/
+                ( (1.0/rho_inAdimen)+(1.0/rho_outAdimen) ) ;
+
+  real rho2 = 0.5*( 1.0/rho_inAdimen + 1.0/rho_outAdimen );
+
+  cout << surfaceNode << " " 
+       << q.Get(surfaceNode) << " "
+       << rho1 << " "
+	   << rho2 << endl;
+
+  real uMassTransfer = uALESurface
+                       - (q.Get(surfaceNode)*xNormalUnit)*rho2;
+
+  real vMassTransfer = vALESurface
+                       - (q.Get(surfaceNode)*yNormalUnit)*rho2;
+
+  real wMassTransfer = wALESurface
+                       - (q.Get(surfaceNode)*zNormalUnit)*rho2;
+
+  uALE.Set(surfaceNode,uMassTransfer);
+  vALE.Set(surfaceNode,vMassTransfer);
+  wALE.Set(surfaceNode,wMassTransfer);
+ }
+} // fecha metodo setInterface 
+

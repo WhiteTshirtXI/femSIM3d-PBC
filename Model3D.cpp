@@ -4721,6 +4721,12 @@ void Model3D::setGenericBC()
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
    }
+   if( Z.Get(*it) == Z.Min() )
+   {
+	idbcc.AddItem(*it);
+
+	cc.Set(*it,1.0);
+   }
   }
 
   // symmetry boundary U
@@ -4952,6 +4958,12 @@ void Model3D::setGenericBC(real _vel)
 	uc.Set(*it,0.0-1.0-_vel);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
+   }
+   if( Z.Get(*it) == Z.Min() )
+   {
+	idbcc.AddItem(*it);
+
+	cc.Set(*it,1.0);
    }
   }
 

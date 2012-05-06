@@ -256,7 +256,7 @@ private:
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
   clVector *uSolOld,*vSolOld,*wSolOld,*pSolOld,*cSolOld;
   clVector *uALE,*vALE,*wALE;
-  clVector *fint;
+  clVector *fint,*heatFlux;
   clDMatrix *kappa;
   clVector *mu,*rho;
   clVector *hSmooth,*gravity;

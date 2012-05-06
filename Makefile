@@ -44,7 +44,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
 		   2Bubbles micro
 
-two-phaseHT: risingBubbleHT
+two-phaseHT: risingBubbleHT sphereHMT
 
 
 # --------------------<< backward step (single-phase) >>-------------------- #
@@ -163,6 +163,9 @@ micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
 # ---------------------<< heat-transfer (two-phase) >>---------------------- #
 #                                                                            #
 risingBubbleHT: ${FEM3D_DIR}/script/mainRisingBubbleHT.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+sphereHMT: ${FEM3D_DIR}/script/mainSphereHMT.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #
 # -------------------------------------------------------------------------- #

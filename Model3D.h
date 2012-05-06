@@ -351,6 +351,7 @@ class Model3D
   void setThreeElements();
   void setFourElements();
   void integralParabolic();
+  clVector* getCloser();
 
   void operator=(Model3D &_mRight);
 

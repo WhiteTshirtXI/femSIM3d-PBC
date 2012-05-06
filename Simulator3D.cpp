@@ -380,6 +380,7 @@ void Simulator3D::initChannel()
   real Umax = 1.0;
   real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
+  aux = 1.0;
   uSol.Set(i,aux-1);
   uSolOld.Set(i,aux-1);
  }
@@ -407,6 +408,7 @@ void Simulator3D::initChannelSquare()
   real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
 
+  aux = 1.0;
   uSol.Set(i,aux-1.0);
   uSolOld.Set(i,aux-1.0);
  }

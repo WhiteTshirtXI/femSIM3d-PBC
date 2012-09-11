@@ -20,6 +20,12 @@ Model3D::Model3D()
  yCenter = 0;
  zCenter = 0;
  minEdge = 0.10;
+
+ surfMesh.numVerts = 0;
+ surfMesh.numElems = 0;
+ surfMesh.numNodes = 0;
+ surfMesh.numInterfaces = 0;
+ surfMesh.numBoundaries = 0;
 }
 
 Model3D::Model3D(const Model3D &_mRight)
@@ -358,12 +364,22 @@ void Model3D::readMSH( const char* filename )
   *
   * */
  for( int i=0;i<numberOfPhyNames;i++ )
-  if( surfMesh.phyNames[i].find("bubble") == 0 )
-  {
-   surfMesh.numBoundaries = i-1;
-   break;
-  }
+ {
+  if( surfMesh.phyNames[i].find("bubble") == true )
+   surfMesh.numInterfaces++;
+  else
+   surfMesh.numBoundaries++;
+ }
  surfMesh.numInterfaces = numberOfPhyNames - surfMesh.numBoundaries;
+
+ cout << endl;
+ cout << "number of boundaries detected: " << surfMesh.numBoundaries 
+      << endl;
+ cout << "number of phases detected: " << surfMesh.numInterfaces+1
+      << endl;
+ cout << "number of interfaces: " << surfMesh.numInterfaces
+      << endl;
+ cout << endl;
 
  while( ( !mshFile.eof())&&(strcmp(auxstr,"$Nodes") != 0) )
   mshFile >> auxstr;

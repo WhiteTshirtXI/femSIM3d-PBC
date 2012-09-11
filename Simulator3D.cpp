@@ -2173,8 +2173,8 @@ void Simulator3D::unCoupled()
                          (1.0/rho_inAdimen - 1.0/rho_outAdimen)
 						 *heatFlux;
 
- //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
- b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
 
 
  // resolve sistema E pTilde = b2

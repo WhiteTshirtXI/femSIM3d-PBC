@@ -483,7 +483,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
 
- setCutPlaneTwoPhase(vtkFile); // set cut plane functions
+ if( surfMesh->numInterfaces > 0 )
+  setCutPlaneTwoPhase(vtkFile); // set cut plane functions
 
  if( uALE->Dim() > 0 )
   vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);

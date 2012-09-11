@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "2Bubbles.msh";
+ string meshFile = "2bubbles.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/2Bubbles/" + meshFile;
+ meshDir += "/gmsh/3d/2bubbles/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;

@@ -1730,8 +1730,8 @@ void Simulator3D::stepALEVel()
  vSol.CopyTo(0,vVert);
  wSol.CopyTo(0,wVert);
 
- //setInterfaceVelocity();
- setMassTransfer();
+ setInterfaceVelocity();
+ //setMassTransfer();
 
 //--------------------------------------------------
 //  // smoothing - velocidade
@@ -1784,8 +1784,8 @@ void Simulator3D::stepALEVel()
  wALE = c1*wVert+c2*wSmooth+c3*wSmoothCoord;
  
  // impoe velocidade do fluido na interface
- //setInterfaceVelocity();
- setMassTransfer();
+ setInterfaceVelocity();
+ //setMassTransfer();
 
  clVector zeroAux(numNodes-numVerts);
  uALE.Append(zeroAux);
@@ -2196,7 +2196,8 @@ void Simulator3D::unCoupled()
  iter++;
 
  // compute bubble's centroid velocity
- setCentroidVelPos();
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
  //setCentroidVelPosInterface();
  // NOT WORKING!
  //setCentroidVelPosInterface();
@@ -3961,7 +3962,8 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  m->setEdgeSize(edgeSize);
 
  // updating centroidVelPos
- setCentroidVelPos();
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
  //setCentroidVelPosInterface();
 
  // updating old data vectors with the new mesh.
@@ -4164,7 +4166,7 @@ void Simulator3D::allocateMemoryToAttrib()
  hSmooth.Dim( numVerts );
  heatFlux.Dim( numVerts );
 
- int numSurface = surfMesh->elemIdRegion.Max()+1; 
+ int numSurface = surfMesh->numInterfaces+1; 
  centroidVelX.resize(numSurface);
  centroidVelY.resize(numSurface);
  centroidVelZ.resize(numSurface);
@@ -4624,5 +4626,5 @@ void Simulator3D::setMassTransfer()
   vALE.Set(surfaceNode,vMassTransfer);
   wALE.Set(surfaceNode,wMassTransfer);
  }
-} // fecha metodo setInterface 
+} // fecha metodo setMassTransfer
 

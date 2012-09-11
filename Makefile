@@ -6,7 +6,7 @@
 
 # Compilers
 CXX = g++ 
-CXX = clang
+#CXX = clang
 
 # Flags
 CXXFLAGS = -g -fPIC

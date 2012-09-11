@@ -351,6 +351,20 @@ void Model3D::readMSH( const char* filename )
   }
  }
 
+ /* How many boundaries and interfaces do we have?
+  * 
+  * numBoundaries = number of walls (ex. wallInflow, wallOutflow etc)
+  * numInterfaces = number of interface (ex. bubble, bubble2 etc)
+  *
+  * */
+ for( int i=0;i<numberOfPhyNames;i++ )
+  if( surfMesh.phyNames[i].find("bubble") == 0 )
+  {
+   surfMesh.numBoundaries = i-1;
+   break;
+  }
+ surfMesh.numInterfaces = numberOfPhyNames - surfMesh.numBoundaries;
+
  while( ( !mshFile.eof())&&(strcmp(auxstr,"$Nodes") != 0) )
   mshFile >> auxstr;
 
@@ -9767,7 +9781,7 @@ void Model3D::setTriEdge()
 void Model3D::initMeshParameters()
 {
  // number of surfaces 
- int numSurface = surfMesh.elemIdRegion.Max()+1; 
+ int numSurface = surfMesh.numInterfaces+1;
  oper.resize(numSurface);
  opersurf.resize(numSurface);
 

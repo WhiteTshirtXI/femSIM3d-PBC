@@ -8727,6 +8727,16 @@ void Model3D::checkTriangleOrientationPerfect()
  *
  *
  * OBS: works only for convex shapes
+
+ * ALTERNATIVE: GMsh can verify the orientation of a triangle surface
+ * mesh. To do so, select TOOLS->OPTIONS->MESH-VISIBILITY and set a
+ * non-zero (10 or 100) value on the NORMAL BOX. It will be able to
+ * check the normal directions of each PHYSICAL SURFACE, with something
+ * is wrong, you can edit the .geo file and change the sign (+ or -) of the
+ * specific PHYSICAL SURFACE.
+ * 
+ * If GMsh delivers an oriented surface mesh, this method becomes
+ * obsolete.
  * */
 void Model3D::checkTriangleOrientation()
 {

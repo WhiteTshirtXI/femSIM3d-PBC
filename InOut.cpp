@@ -3370,7 +3370,7 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
-  sumKappa += kappa->Get(node);
+  sumKappa += surfMesh->curvature.Get(node);
  }
  real kappaAverage = sumKappa/surfacePoints;
 
@@ -3381,12 +3381,13 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
-  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
-                   (kappa->Get(node)-kappaAnalytic);
-  sumKappaSD += (kappa->Get(node)-kappaAverage)*
-                (kappa->Get(node)-kappaAverage);
+  sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
+                   (surfMesh->curvature.Get(node)-kappaAnalytic);
+  sumKappaSD += (surfMesh->curvature.Get(node)-kappaAverage)*
+                (surfMesh->curvature.Get(node)-kappaAverage);
   sumNeighbours += neighbourPoint->at(i).size();
-  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+  sumKappaSquare += surfMesh->curvature.Get(node)*
+                    surfMesh->curvature.Get(node);
   countK++;
  }
 
@@ -3506,8 +3507,9 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   if( (Y->Get(node)<0.75) && 
 	  (Y->Get(node)>-0.75) )
   {
-   sumKappa += kappa->Get(node);
-   sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+   sumKappa += surfMesh->curvature.Get(node);
+   sumKappaSquare += surfMesh->curvature.Get(node)*
+	                 surfMesh->curvature.Get(node);
    countK++;
   }
  }
@@ -3526,10 +3528,10 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   if( (Y->Get(node)<0.75) && 
 	  (Y->Get(node)>-0.75) )
   {
-   sumKappaError += (kappa->Get(node)-kappaAnalytic)*
-                    (kappa->Get(node)-kappaAnalytic);
-   sumKappaSD += (kappa->Get(node)-kappaAverage)*
-                 (kappa->Get(node)-kappaAverage);
+   sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
+                    (surfMesh->curvature.Get(node)-kappaAnalytic);
+   sumKappaSD += (surfMesh->curvature.Get(node)-kappaAverage)*
+                 (surfMesh->curvature.Get(node)-kappaAverage);
    sumNeighbours += neighbourPoint->at(i).size();
    countK++;
   }
@@ -3607,8 +3609,9 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
-  sumKappa += kappa->Get(node);
-  sumKappaSquare += kappa->Get(node)*kappa->Get(node);
+  sumKappa += surfMesh->curvature.Get(node);
+  sumKappaSquare += surfMesh->curvature.Get(node)*
+                    surfMesh->curvature.Get(node);
  }
  real kappaAverage = sumKappa/surfacePoints;
 
@@ -3694,10 +3697,10 @@ void InOut::saveKappaErrorTorus(const char* _dir)
   real kappaAnalytic = (1.0/radius1) + 
                         distance(xCenter2,yCenter2,
 	                             surfMesh->X.Get(node),surfMesh->Y.Get(node));
-  sumKappaError += (kappa->Get(node)-kappaAnalytic)*
-                   (kappa->Get(node)-kappaAnalytic);
-  sumKappaSD += (kappa->Get(node)-kappaAverage)*
-                (kappa->Get(node)-kappaAverage);
+  sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
+                   (surfMesh->curvature.Get(node)-kappaAnalytic);
+  sumKappaSD += (surfMesh->curvature.Get(node)-kappaAverage)*
+                (surfMesh->curvature.Get(node)-kappaAverage);
   sumNeighbours += neighbourPoint->at(i).size();
   countK++;
  }

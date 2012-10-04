@@ -3406,7 +3406,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   //for( int i=0;i<surfMesh.numVerts;i++ )
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
   {
-   clVector myVec = getNormalAndKappa(i,getNeighbourSurfacePoint(i));
+   clVector myVec = getNormalAndKappaByDesbrun(i,getNeighbourSurfacePoint(i));
    real curv = fabs(myVec.Get(0));
   //for( int i=0;i<surfMesh.numVerts;i++ )
    if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
@@ -3417,7 +3417,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
    }
   }
 
-  clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
+  clVector myVec = getNormalAndKappaByDesbrun(node,getNeighbourSurfacePoint(node));
   real xIn = surfMesh.X.Get(node)-0.1*triEdge[nb]*myVec.Get(1);
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
   real zIn = surfMesh.Z.Get(node)-0.1*triEdge[nb]*myVec.Get(3);
@@ -7954,7 +7954,12 @@ void Model3D::setNormalAndKappa()
  {
   int node = surface.Get(i);
 
-  clVector vec = getNormalAndKappa(node,
+//--------------------------------------------------
+//   clVector vec = getNormalAndKappa(node,
+// 	              getNeighbourSurfacePoint(node));
+//-------------------------------------------------- 
+
+  clVector vec = getNormalAndKappaByDesbrun(node,
 	              getNeighbourSurfacePoint(node));
 
   real pressure    = vec.Get(0);
@@ -9170,171 +9175,150 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 //  return vec;
 // } // fecha metodo getNormalAndKappaByGauss
 // 
-// clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
-// {
-//  real P0x = surfMesh.X.Get(_node);
-//  real P0y = surfMesh.Y.Get(_node);
-//  real P0z = surfMesh.Z.Get(_node);
-// 
-//  //int c1 = 0;
-//  real fx = 0;
-//  real fy = 0;
-//  real fz = 0;
-//  real sumArea = 0;
-//  real sumVoronoiArea = 0;
-//  real sumXCrossUnit = 0;
-//  real sumYCrossUnit = 0;
-//  real sumZCrossUnit = 0;
-// 
-//  int listSize = _myList.size();
-//  list<int>::iterator mele=_myList.begin();
-// 
-//  // adding 2nd vertex to the end of the list
-//  // old: 0 1 2 3 4 5 0 
-//  // new: 0 1 2 3 4 5 0 1
-//  list<int> li = _myList;
-//  list<int>::iterator mele2=li.begin();
-//  ++mele2;
-//  _myList.push_back(*mele2);
-// 
-//  for( int i=0;i<listSize-1;i++ )
-//  {
-//   int v1 = *mele;++mele;
-//   int v2 = *mele;++mele;
-//   int v3 = *mele;--mele;
-// 
-//   real P1x = surfMesh.X.Get(v1);
-//   real P1y = surfMesh.Y.Get(v1);
-//   real P1z = surfMesh.Z.Get(v1);
-//   real P2x = surfMesh.X.Get(v2);
-//   real P2y = surfMesh.Y.Get(v2);
-//   real P2z = surfMesh.Z.Get(v2);
-//   real P3x = surfMesh.X.Get(v3);
-//   real P3y = surfMesh.Y.Get(v3);
-//   real P3z = surfMesh.Z.Get(v3);
-// 
-//   // distance do ponto 0 ate metade do segmento 01
-//   real a = distance(P0x,P0y,P0z,P1x,P1y,P1z);
-// 
-//   // distance do ponto 0 ate metade do segmento 02
-//   real b = distance(P0x,P0y,P0z,P2x,P2y,P2z);
-// 
-//   // distance da metade do segmento 01 ate metade do segmento 02
-//   real c = distance(P0x,P0y,P0z,P3x,P3y,P3z);
-// 
-//   // distance da metade do segmento 01 ate metade do segmento 02
-//   real d = distance(P1x,P1y,P1z,P2x,P2y,P2z);
-// 
-//   // distance da metade do segmento 01 ate metade do segmento 02
-//   real e = distance(P2x,P2y,P2z,P3x,P3y,P3z);
-// 
-//   // vetores 
-//   real x1 = P1x-P0x;
-//   real y1 = P1y-P0y;
-//   real z1 = P1z-P0z;
-// 
-//   real x2 = P2x-P0x;
-//   real y2 = P2y-P0y;
-//   real z2 = P2z-P0z;
-// 
-//   real x3 = P3x-P0x;
-//   real y3 = P3y-P0y;
-//   real z3 = P3z-P0z;
-// 
-//   real x4 = P1x-P2x;
-//   real y4 = P1y-P2y;
-//   real z4 = P1z-P2z;
-// 
-//   real x5 = P2x-P3x;
-//   real y5 = P2y-P3y;
-//   real z5 = P2z-P3z;
-// 
-//   // vetores unitarios deslocados para origem do sistema (0,0,0)
-//   real x1Unit = x1/a;
-//   real y1Unit = y1/a;
-//   real z1Unit = z1/a;
-// 
-//   real x2Unit = x2/b;
-//   real y2Unit = y2/b;
-//   real z2Unit = z2/b;
-// 
-//   // normal to each triangular face
-//   clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
-// 
-//   // somatorio NAO ponderado pela area dos vetores unitarios normais 
-//   // aos triangulos encontrados na estrela do vertice
-//   sumXCrossUnit += cross.Get(0);
-//   sumYCrossUnit += cross.Get(1);
-//   sumZCrossUnit += cross.Get(2);
-// 
-//   clVector c1 = crossProd(x1,y1,z1,x2,y2,z2);
-//   clVector c2 = crossProd(x2,y2,z2,x3,y3,z3);
-// 
-//   real lenC1 = vectorLength( c1.Get(0),c1.Get(1),c1.Get(2) );
-//   real lenC2 = vectorLength( c2.Get(0),c2.Get(1),c2.Get(2) );
-// 
-//   // angles
-//   real alpha = asin( lenC1/(a*b) );
-//   real beta = asin( lenC2/(b*c) );
-// 
-//   real a1 = acos( (x1*x2 + y1*y2 + z1*z2)/(a*b) );
-//   real a2 = acos( (-x2*x4 + -y2*y4 + -z2*z4)/(b*d) );
-//   real a3 = acos( (-x4*-x1 + -y4*-y1 + -z4*-z1)/(d*a) );
-//   //real a3 = alpha;
-//   real a4 = acos( (-x3*x5 + -y3*y5 + -z3*z5)/(e*c) );
-//   //real a4 = beta;
-// 
-// //--------------------------------------------------
-// //   cout << a1 << " " << a2 << " " << " " << a3 << " " << a1+a2+a3 <<endl;
-// //   cout << a4 << " " << alpha << " " << beta <<endl;
-// //   cout << "----"<< endl;
-// //-------------------------------------------------- 
-// 
-//   fx += ( 1.0/tan(alpha)+1.0/tan(beta) )*x2;
-//   fy += ( 1.0/tan(alpha)+1.0/tan(beta) )*y2;
-//   fz += ( 1.0/tan(alpha)+1.0/tan(beta) )*z2;
-// 
-//   // 1/3 of area P0-Pm01-Pm02
-//   real area1 = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
-//   real area2 = getArea(P1x,P1y,P1z,P2x,P2y,P2z,P3x,P3y,P3z);
-//   sumArea += ( ( (1.0/3.0)*area1 )+( (1.0/3.0)*area2 ) )/2.0;
-// 
-//   // voronoi area
-//   if( a1 < 3.14/2.0 && a2 < 3.14/2.0 && a3 && 3.14/2.0 )
-//    sumVoronoiArea += (1.0/8.0)*( 1.0/tan(alpha)+1.0/tan(beta) )*b;
-//   else
-//    if( a1 > 3.14/2.0 )
-// 	sumVoronoiArea += area1/2.0;
-//    else
-// 	sumVoronoiArea += area1/4.0;
-//  }
-//  mele=_myList.end();
-// 
-//  real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
-//  real xNormalUnit = sumXCrossUnit/len;
-//  real yNormalUnit = sumYCrossUnit/len;
-//  real zNormalUnit = sumZCrossUnit/len;
-// 
-//  // intensidade da forca resultante
-//  real force = -sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
-// 
-//  // teste para saber o sentido correto de aplicacao da
-//  // pressao no noh.
-//  if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
-//   force = -force;
-// 
-//  real pressure = force/(4*sumArea);
-//  //real pressure = force/(2*sumVoronoiArea);
-// 
-//  clVector vec(4);
-//  vec.Set(0,pressure);
-//  vec.Set(1,xNormalUnit);
-//  vec.Set(2,yNormalUnit);
-//  vec.Set(3,zNormalUnit);
-// 
-//  return vec;
-// } // fecha metodo getNormalAndKappaByDesbrun
 //-------------------------------------------------- 
+clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
+{
+ real P0x = surfMesh.X.Get(_node);
+ real P0y = surfMesh.Y.Get(_node);
+ real P0z = surfMesh.Z.Get(_node);
+
+ //int c1 = 0;
+ real fx = 0;
+ real fy = 0;
+ real fz = 0;
+ real sumVoronoiArea = 0;
+ real sumXCrossUnit = 0;
+ real sumYCrossUnit = 0;
+ real sumZCrossUnit = 0;
+
+ int listSize = _myList.size();
+ list<int>::iterator mele=_myList.begin();
+
+ // adding 2nd vertex to the end of the list
+ // old: 0 1 2 3 4 5 0 
+ // new: 0 1 2 3 4 5 0 1
+ list<int> li = _myList;
+ list<int>::iterator mele2=li.begin();
+ ++mele2;
+ _myList.push_back(*mele2);
+
+ for( int i=0;i<listSize-1;i++ )
+ {
+  int v1 = *mele;++mele;
+  int v2 = *mele;++mele;
+  int v3 = *mele;--mele;
+
+  real P1x = surfMesh.X.Get(v1);
+  real P1y = surfMesh.Y.Get(v1);
+  real P1z = surfMesh.Z.Get(v1);
+  real P2x = surfMesh.X.Get(v2);
+  real P2y = surfMesh.Y.Get(v2);
+  real P2z = surfMesh.Z.Get(v2);
+  real P3x = surfMesh.X.Get(v3);
+  real P3y = surfMesh.Y.Get(v3);
+  real P3z = surfMesh.Z.Get(v3);
+
+  // distance from point 0 to 1  
+  real a = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+
+  // distance from point 0 to 2  
+  real b = distance(P0x,P0y,P0z,P2x,P2y,P2z);
+
+  // distance from point 0 to 3  
+  real c = distance(P0x,P0y,P0z,P3x,P3y,P3z);
+
+  // distance from point 1 to 2  
+  real d = distance(P1x,P1y,P1z,P2x,P2y,P2z);
+
+  // distance from point 2 to 3  
+  real e = distance(P2x,P2y,P2z,P3x,P3y,P3z);
+
+  // vetores 
+  real x1 = P1x-P0x;
+  real y1 = P1y-P0y;
+  real z1 = P1z-P0z;
+
+  real x2 = P2x-P0x;
+  real y2 = P2y-P0y;
+  real z2 = P2z-P0z;
+
+  // vetores unitarios deslocados para origem do sistema (0,0,0)
+  real x1Unit = x1/a;
+  real y1Unit = y1/a;
+  real z1Unit = z1/a;
+
+  real x2Unit = x2/b;
+  real y2Unit = y2/b;
+  real z2Unit = z2/b;
+
+  // normal to each triangular face
+  clVector cross = crossProd(x1Unit,y1Unit,z1Unit,x2Unit,y2Unit,z2Unit);
+
+  // somatorio NAO ponderado pela area dos vetores unitarios normais 
+  // aos triangulos encontrados na estrela do vertice
+  sumXCrossUnit += cross.Get(0);
+  sumYCrossUnit += cross.Get(1);
+  sumZCrossUnit += cross.Get(2);
+
+  // angles
+  real alpha = acos( (a*a+d*d-b*b)/(2*a*d) );
+  real beta = acos( (c*c+e*e-b*b)/(2*c*e) );
+
+  real a1 = acos( (b*b+a*a-d*d)/(2*a*b) );
+  real a2 = alpha;
+  real a3 = acos( (b*b+d*d-a*a)/(2*b*d) );
+
+//--------------------------------------------------
+//   cout << a1 << " " << a2 << " " << " " << a3 << " " << a1+a2+a3 <<endl;
+//   cout << a4 << " " << alpha << " " << beta <<endl;
+//   cout << "----"<< endl;
+//-------------------------------------------------- 
+
+  fx += ( 1.0/tan(alpha)+1.0/tan(beta) )*x2;
+  fy += ( 1.0/tan(alpha)+1.0/tan(beta) )*y2;
+  fz += ( 1.0/tan(alpha)+1.0/tan(beta) )*z2;
+
+  // area P0-P1-P2
+  real area1 = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+
+  // voronoi area
+  if( a1 < 3.14/2.0 && a2 < 3.14/2.0 && a3 && 3.14/2.0 )
+   sumVoronoiArea += (1.0/8.0)*( b*b*1.0/(tan(alpha)+a*a*1.0/(tan(a3))) );
+  else
+   if( a1 > 3.14/2.0 )
+	sumVoronoiArea += area1/2.0;
+   else
+	sumVoronoiArea += area1/4.0;
+ }
+ mele=_myList.end();
+
+ fx = fx/(2*sumVoronoiArea);
+ fy = fy/(2*sumVoronoiArea);
+ fz = fz/(2*sumVoronoiArea);
+
+ real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
+ real xNormalUnit = sumXCrossUnit/len;
+ real yNormalUnit = sumYCrossUnit/len;
+ real zNormalUnit = sumZCrossUnit/len;
+
+ // intensidade da forca resultante
+ real force = -sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+
+ // teste para saber o sentido correto de aplicacao da
+ // pressao no noh.
+ if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
+  force = -force;
+
+ real pressure = force/2.0;
+
+ clVector vec(4);
+ vec.Set(0,pressure);
+ vec.Set(1,xNormalUnit);
+ vec.Set(2,yNormalUnit);
+ vec.Set(3,zNormalUnit);
+
+ return vec;
+} // fecha metodo getNormalAndKappaByDesbrun
 
 clVector Model3D::getNormalElem(int _elem)
 {

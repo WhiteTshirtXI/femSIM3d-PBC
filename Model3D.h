@@ -254,7 +254,7 @@ class Model3D
   void setInterfaceDistance();
   clVector getNormalAndKappa(int _node,list<int> _myList);
   //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
-  //clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
+  clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);
   void setNormalAndKappa();
   clVector getNormalElem(int _elem);
   clVector getNormalElem(int _v1,int _v2,int _v3);

@@ -2169,12 +2169,12 @@ void Simulator3D::unCoupled()
   * */
  //clVector massTransfer = dt*invMcLumped*( heatFlux );
  //clVector massTransfer = ( invMcLumped*heatFlux );
- clVector massTransfer = dt*
+ clVector massTransfer = invC*
                          (1.0/rho_inAdimen - 1.0/rho_outAdimen)
 						 *heatFlux;
 
- b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
- //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
 
 
  // resolve sistema E pTilde = b2
@@ -4496,7 +4496,7 @@ void Simulator3D::setMassTransfer()
  // compute q
  //clVector q(numVerts);q.SetAll(-0.1);
  //clVector q = (-1.0)*invMcLumped*Kc*cSolOld;
- clVector q = (-1.0)*invC*Kc*cSolOld;
+ clVector q = (1.0)*Kc*cSolOld;
 //--------------------------------------------------
 //  for( int i=0;i<surface->Dim();i++ )
 //  {

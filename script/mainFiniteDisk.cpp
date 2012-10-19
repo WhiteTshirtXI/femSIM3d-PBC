@@ -44,6 +44,7 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
+ m1.setMapEdge(); 
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else

@@ -6113,8 +6113,6 @@ void Model3D::setMapEdge()
 
 void Model3D::setQuadElement()
 {
- setMapEdge();
-
  // atualizado vetores com numero total de nos
  numElems = numElems;
  numVerts = numVerts;

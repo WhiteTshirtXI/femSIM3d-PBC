@@ -663,20 +663,20 @@ void Simulator3D::assembleHeatTransfer()
 
   real muValue=0;
   real rhoValue=0;
-  real cpValue=0;
+  //real cpValue=0;
   real ktValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
-   cpValue = cp_outAdimen;
+   //cpValue = cp_outAdimen;
    ktValue = kt_outAdimen;
   }
   else
   {
    muValue = mu_inAdimen;
    rhoValue = rho_inAdimen;
-   cpValue = cp_inAdimen;
+   //cpValue = cp_inAdimen;
    ktValue = kt_inAdimen;
   }
 
@@ -2173,8 +2173,8 @@ void Simulator3D::unCoupled()
                          (1.0/rho_inAdimen - 1.0/rho_outAdimen)
 						 *heatFlux;
 
- //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
- b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
 
 
  // resolve sistema E pTilde = b2
@@ -2666,10 +2666,9 @@ void Simulator3D::setDtLagrangianNorberto()
 {
  clMatrix* mapEdge = m->getMapEdge();
 
- dtLagrangian = 0.1;
+ dtLagrangian = 1.0;
  for( int edge=0;edge<mapEdge->DimI();edge++ )
  {
-
   // v1
   int v1 = mapEdge->Get(edge,4);
   real p1x=X->Get(v1);
@@ -2714,8 +2713,44 @@ void Simulator3D::setDtLagrangianNorberto()
  * */
 void Simulator3D::setDtSemiLagrangian()
 {
- setDtLagrangianNorberto();
- dtSemiLagrangian=dtLagrangian;
+ clMatrix* mapEdge = m->getMapEdge();
+ clVector velU = uSolOld-uALE;
+ clVector velV = vSolOld-vALE;
+ clVector velW = wSolOld-wALE;
+
+ dtSemiLagrangian = 1.0;
+ for( int edge=0;edge<mapEdge->DimI();edge++ )
+ {
+  // v1
+  int v1 = mapEdge->Get(edge,4);
+  real p1x=X->Get(v1);
+  real p1y=Y->Get(v1);
+  real p1z=Z->Get(v1);
+
+  // v2
+  int v2 = mapEdge->Get(edge,5);
+  real p2x=X->Get(v2);
+  real p2y=Y->Get(v2);
+  real p2z=Z->Get(v2);
+
+  real length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+
+  // bubble.py - 146 iterations
+  real xVel = fabs(velU.Get(v1)) - fabs(velU.Get(v2));
+  real yVel = fabs(velV.Get(v1)) - fabs(velV.Get(v2));
+  real zVel = fabs(velW.Get(v1)) - fabs(velW.Get(v2));
+
+  real vel = vectorLength(xVel,yVel,zVel);
+  //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
+  //                    fabs(x),fabs(y),fabs(z));
+
+  real a = 0.2; // security parameter
+
+  real minDt = a*length/vel;
+
+  if( minDt < dtSemiLagrangian && minDt > 0 )
+   dtSemiLagrangian = minDt;
+ }
 }
 
 void Simulator3D::setDtGravity()
@@ -2730,6 +2765,7 @@ void Simulator3D::setDtGravity()
  * Set Dt of the current simulation.
  * Explicity terms:
  *  - Semi-Lagrangian;
+ *  - gravity
  *  */
 void Simulator3D::setDtEulerian()
 {
@@ -4515,7 +4551,7 @@ void Simulator3D::setMassTransfer()
 
  clVector GH = Gc*(*heaviside);
  //clVector GT = Gc*(cSolOld);
- clVector *vertIdRegion = m->getVertIdRegion();
+ //clVector *vertIdRegion = m->getVertIdRegion();
  for( int i=0;i<numVerts;i++ )
  {
   real aux = sqrt( GH.Get(i)*GH.Get(i) + 

@@ -22,7 +22,7 @@ int main(int argc, char **argv)
  int iter = 1;
  real Re = 1;
  real Sc = 2000;
- real cfl = 10;
+ real cfl = 100;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -41,6 +41,7 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
+ m1.setMapEdge(); 
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
+ save.printSimulationReport();
 
  int nIter = 1000;
  int nR = 5;
@@ -90,8 +92,10 @@ int main(int argc, char **argv)
  {
   for( int j=0;j<nR;j++ )
   {
-   cout << "____________________________________ Iteration: " 
-	    << i*nR+j+iter << endl;
+   cout << color(none,magenta,black);
+   cout << "____________________________________ Iteration: "
+	    << i*nR+j+iter << endl << endl;
+   cout << resetColor();
 
    /* dt variable */
    //s1.setDtEulerian();
@@ -113,8 +117,11 @@ int main(int argc, char **argv)
    save.saveConvergence(datFolder,"convergence");
 
    s1.saveOldData();
-   cout << "__________________________________________ End: " 
-	    << i*nR+j+iter << endl;
+
+   cout << color(none,magenta,black);
+   cout << "________________________________________ END of "
+	    << i*nR+j+iter << endl << endl;;
+   cout << resetColor();
   }
  }
 

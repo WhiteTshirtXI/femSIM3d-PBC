@@ -52,6 +52,7 @@ int main(int argc, char **argv)
  m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
  //m1.setSingleElement();
+ m1.setMapEdge(); 
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else

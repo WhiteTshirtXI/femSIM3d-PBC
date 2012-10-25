@@ -1631,6 +1631,35 @@ void Simulator3D::stepNoConvection()
  convC = cSolOld;
 } // fecha metodo stepSL 
 
+/* 
+ * This method should be used only to move the mesh, thus Navier-Stokes
+ * equations will not be solved. To do so, mainZalesak.cpp is an example
+ * of how-to.
+ *
+ * */
+void Simulator3D::stepImposedVortexField()
+{
+ real omega,aux;
+ for( int i=0;i<numVerts;i++ )
+ {
+  idbcu->AddItem(i);
+  idbcv->AddItem(i);
+  idbcw->AddItem(i);
+
+  omega=1.0;
+
+  aux = (-1.0)*Y->Get(i)*omega;
+  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
+  aux = X->Get(i)*omega;
+  vSol.Set(i,aux);
+  vSolOld.Set(i,aux);
+  aux = 0.0;
+  wSol.Set(i,aux);
+  wSolOld.Set(i,aux);
+ }
+} // fecha metodo stepSL 
+
 void Simulator3D::step()
 {
  Galerkin galerkin(*m,uSolOld,vSolOld,wSolOld,cSolOld,gx,gy,gz);

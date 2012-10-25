@@ -24,8 +24,8 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
  int iter = 1;
- real Re = 100;
- real We = 0.2;
+ real Re = 10;
+ real We = 10;
  real c1 = 0.0;  // lagrangian
  real c2 = 0.5;  // smooth vel
  real c3 = 3.0;  // smooth coord (fujiwara)
@@ -72,7 +72,6 @@ int main(int argc, char **argv)
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
- m1.setVortexFieldBC();
 
  s1(m1);
 
@@ -130,18 +129,10 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   //s1.stepALE();
+   s1.stepImposedVortexField();
    s1.stepALEVel();
    s1.movePoints();
-   s1.assemble();
-   s1.matMount();
-   s1.setUnCoupledBC();
-   s1.setRHS();
-   //s1.setGravity("-Z");
-   //s1.setInterface();
-   //s1.setInterfaceGeo();
-   s1.unCoupled();
+   s1.setInterfaceGeo();
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
@@ -197,7 +188,7 @@ int main(int argc, char **argv)
   //m1.insertPointsByInterfaceDistance();
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
-  m1.flipTriangleEdge();
+  //m1.flipTriangleEdge();
 
   m1.removePointByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();

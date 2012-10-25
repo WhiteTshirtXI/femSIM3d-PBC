@@ -197,7 +197,6 @@ class Model3D
   void setGenericBC(real _vel);
   void setWallBC();
   void setWallBC(real _vel);
-  void setVortexFieldBC();
   void setMovingWallBC();
   void setMovingWallBC(real _vel);
   void setMicroWallBC();

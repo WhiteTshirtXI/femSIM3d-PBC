@@ -1209,9 +1209,9 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   //insertSurfacePoint(edge,"flat");
+   insertSurfacePoint(edge,"flat");
    //insertSurfacePoint(edge,"curvature");
-   insertSurfacePoint(edge,"bi-curvature");
+   //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    isp[vertID]++;
@@ -5040,33 +5040,6 @@ void Model3D::setWallBC(real _vel)
   uc.Set(*it,aux-_vel);
   vc.Set(*it,aux);
   wc.Set(*it,aux);
- }
-}
-
-void Model3D::setVortexFieldBC()
-{
- real omega,aux;
- real radius;
-
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-  radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
-
-  idbcu.AddItem(i);
-  idbcv.AddItem(i);
-
-  omega=1.0;
-
-  aux = (-1.0)*Y.Get(i)*omega;
-  uc.Set(i,aux);
-  aux = X.Get(i)*omega;
-  vc.Set(i,aux);
  }
 }
 

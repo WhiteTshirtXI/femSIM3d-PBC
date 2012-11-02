@@ -39,21 +39,18 @@ set key box linestyle 7
 # ------------------------------------------------------------------------   #
 
 g=9.81
-#D=0.002
+D=0.002
 #D=0.003
 #D=0.004
 D=0.005
 mu=0.001
 rho=1000
-v_star=system("tail -n1 ../dat/volume1.dat | awk '{print $5}'")
 
-Re(x)=rho*v_star*sqrt(g*D)*D/mu
+if (D==0.002) v_exp_zun(x)=0.310; v_exp_pee(x)=0.289; fileObj = "../dat/2mmvolume1.dat"; 
+if (D==0.003) v_exp_zun(x)=0.280; v_exp_pee(x)=0.296; fileObj = "../dat/3mmvolume1.dat";
+if (D==0.004) v_exp_zun(x)=0.250; v_exp_pee(x)=0.256; fileObj = "../dat/4mmvolume1.dat";
+if (D==0.005) v_exp_zun(x)=0.235; v_exp_pee(x)=0.229; fileObj = "../dat/5mmvolume1.dat";
 
-if (D==0.002) v_exp(x)=0.;
-if (D==0.003) v_exp(x)=0.;
-if (D==0.004) v_exp(x)=0.;
-if (D==0.005) v_exp(x)=0.;
-
-fileObj = "../dat/volume1.dat"
 plot fileObj using 1:($8*sqrt(g*D)) title 'air water-sugar' with lines,\
-     v_exp(x)
+     v_exp_zun(x),\
+     v_exp_pee(x)

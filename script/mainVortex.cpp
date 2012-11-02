@@ -34,12 +34,12 @@ int main(int argc, char **argv)
  real alpha = 1;
 
  real mu_in = 1.0;
- real mu_out = 0.01;
+ real mu_out = 1.0;
 
  real rho_in = 1.0;
- real rho_out = 0.01;
+ real rho_out = 1.0;
 
- real cfl = 0.8;
+ real cfl = 0.5;
 
  string meshFile = "sphere.msh";
 
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepImposedVortexField();
+   s1.stepImposedPeriodicVortexField();
    s1.stepALEVel();
    s1.movePoints();
    s1.setInterfaceGeo();

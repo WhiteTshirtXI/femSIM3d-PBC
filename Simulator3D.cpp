@@ -1660,6 +1660,37 @@ void Simulator3D::stepImposedVortexField()
  }
 } // fecha metodo stepSL 
 
+/* 
+ * This method should be used only to move the mesh, thus Navier-Stokes
+ * equations will not be solved. To do so, mainVortex.cpp is an example
+ * of how-to.
+ *
+ * */
+void Simulator3D::stepImposedPeriodicVortexField()
+{
+ real aux;
+ for( int i=0;i<numVerts;i++ )
+ {
+  idbcu->AddItem(i);
+  idbcv->AddItem(i);
+  idbcw->AddItem(i);
+
+  aux = (-1.0)*sin(3.1415*X->Get(i))*
+               sin(3.1415*X->Get(i))*
+               sin(2*3.1415*Y->Get(i));
+  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
+  aux = sin(3.1415*Y->Get(i))*
+        sin(3.1415*Y->Get(i))*
+        sin(2*3.1415*X->Get(i));
+  vSol.Set(i,aux);
+  vSolOld.Set(i,aux);
+  aux = 0.0;
+  wSol.Set(i,aux);
+  wSolOld.Set(i,aux);
+ }
+} // fecha metodo stepSL 
+
 void Simulator3D::step()
 {
  Galerkin galerkin(*m,uSolOld,vSolOld,wSolOld,cSolOld,gx,gy,gz);

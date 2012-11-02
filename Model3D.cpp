@@ -1209,9 +1209,9 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   insertSurfacePoint(edge,"flat");
+   //insertSurfacePoint(edge,"flat");
    //insertSurfacePoint(edge,"curvature");
-   //insertSurfacePoint(edge,"bi-curvature");
+   insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    isp[vertID]++;

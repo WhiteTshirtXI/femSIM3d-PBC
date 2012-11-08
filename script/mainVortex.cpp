@@ -21,38 +21,26 @@
 
 int main(int argc, char **argv)
 {
- PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ PetscInitializeNoArguments();
  
  int iter = 1;
- real Re = 10;
- real We = 10;
  real c1 = 0.0;  // lagrangian
- real c2 = 0.5;  // smooth vel
- real c3 = 3.0;  // smooth coord (fujiwara)
+ real c2 = 1.0;  // smooth vel
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
 
- real mu_in = 1.0;
- real mu_out = 1.0;
+ real dt = 0.0012;
 
- real rho_in = 1.0;
- real rho_out = 1.0;
-
- real cfl = 0.5;
-
- string meshFile = "sphere.msh";
-
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
- Solver *solverC = new PetscSolver(KSPCG,PCICC);
+ //string meshFile = "sphere.msh";
+ string meshFile = "sphereCenter.msh";
 
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/sphere/zalesak/" + meshFile;
+ meshDir += "/gmsh/3d/sphere/vortex/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -75,23 +63,12 @@ int main(int argc, char **argv)
 
  s1(m1);
 
- s1.setRe(Re);
- s1.setWe(We);
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
  s1.setD1(d1);
  s1.setD2(d2);
- s1.setAlpha(alpha);
- //s1.setDtALETwoPhase(dt);
- s1.setMu(mu_in,mu_out);
- s1.setRho(rho_in,rho_out);
- s1.setCfl(cfl);
- s1.init();
- s1.setDtALETwoPhase();
- s1.setSolverPressure(solverP);
- s1.setSolverVelocity(solverV);
- s1.setSolverConcentration(solverC);
+ s1.setDt(dt);
 
  // Point's distribution
  Helmholtz3D h1(m1);
@@ -124,12 +101,10 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   s1.setDtALETwoPhase();
-
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepImposedPeriodicVortexField();
+   s1.stepImposedPeriodicField("3d");
    s1.stepALEVel();
    s1.movePoints();
    s1.setInterfaceGeo();
@@ -208,9 +183,6 @@ int main(int argc, char **argv)
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
   s1 = s2;
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();

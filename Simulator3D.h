@@ -68,8 +68,7 @@ class Simulator3D
   void step();
   void stepSL();
   void stepNoConvection();
-  void stepImposedVortexField();
-  void stepImposedPeriodicVortexField();
+  void stepImposedPeriodicField(const char* _name);
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();

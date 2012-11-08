@@ -1633,40 +1633,11 @@ void Simulator3D::stepNoConvection()
 
 /* 
  * This method should be used only to move the mesh, thus Navier-Stokes
- * equations will not be solved. To do so, mainZalesak.cpp is an example
- * of how-to.
- *
- * */
-void Simulator3D::stepImposedVortexField()
-{
- real omega,aux;
- for( int i=0;i<numVerts;i++ )
- {
-  idbcu->AddItem(i);
-  idbcv->AddItem(i);
-  idbcw->AddItem(i);
-
-  omega=1.0;
-
-  aux = (-1.0)*Y->Get(i)*omega;
-  uSol.Set(i,aux);
-  uSolOld.Set(i,aux);
-  aux = X->Get(i)*omega;
-  vSol.Set(i,aux);
-  vSolOld.Set(i,aux);
-  aux = 0.0;
-  wSol.Set(i,aux);
-  wSolOld.Set(i,aux);
- }
-} // fecha metodo stepSL 
-
-/* 
- * This method should be used only to move the mesh, thus Navier-Stokes
  * equations will not be solved. To do so, mainVortex.cpp is an example
  * of how-to.
  *
  * */
-void Simulator3D::stepImposedPeriodicVortexField()
+void Simulator3D::stepImposedPeriodicField(const char* _name)
 {
  real aux;
  for( int i=0;i<numVerts;i++ )
@@ -1675,21 +1646,71 @@ void Simulator3D::stepImposedPeriodicVortexField()
   idbcv->AddItem(i);
   idbcw->AddItem(i);
 
-  aux = (-1.0)*sin(3.1415*X->Get(i))*
-               sin(3.1415*X->Get(i))*
-               sin(2*3.1415*Y->Get(i));
-  uSol.Set(i,aux);
-  uSolOld.Set(i,aux);
-  aux = sin(3.1415*Y->Get(i))*
-        sin(3.1415*Y->Get(i))*
-        sin(2*3.1415*X->Get(i));
-  vSol.Set(i,aux);
-  vSolOld.Set(i,aux);
-  aux = 0.0;
-  wSol.Set(i,aux);
-  wSolOld.Set(i,aux);
+  if( strcmp( _name,"2d") == 0 || 
+	  strcmp( _name,"2D") == 0 )
+  {
+   aux = (-1.0)*sin(3.1415*X->Get(i))*
+	            sin(3.1415*X->Get(i))*
+				sin(2*3.1415*Y->Get(i));
+   uSol.Set(i,aux);
+   uSolOld.Set(i,aux);
+   aux = sin(3.1415*Y->Get(i))*
+	     sin(3.1415*Y->Get(i))*
+		 sin(2*3.1415*X->Get(i));
+   vSol.Set(i,aux);
+   vSolOld.Set(i,aux);
+   aux = 0.0;
+   wSol.Set(i,aux);
+   wSolOld.Set(i,aux);
+  }
+  else if( strcmp( _name,"3d") == 0 || 
+	       strcmp( _name,"3D") == 0 ) 
+  {
+   real T = 3.0;
+   aux = (2.0)*sin(3.1415*X->Get(i))*
+	           sin(3.1415*X->Get(i))*
+			   sin(2*3.1415*Y->Get(i))*
+			   sin(2*3.1415*Z->Get(i))*
+			   cos(3.1415*time/T);
+   uSol.Set(i,aux);
+   uSolOld.Set(i,aux);
+   aux = (-1.0)*sin(2*3.1415*X->Get(i))*
+	            sin(3.1415*Y->Get(i))*
+				sin(3.1415*Y->Get(i))*
+				sin(2*3.1415*Z->Get(i))*
+				cos(3.1415*time/T);
+   vSol.Set(i,aux);
+   vSolOld.Set(i,aux);
+   aux = (-1.0)*sin(2*3.1415*X->Get(i))*
+	            sin(2*3.1415*Y->Get(i))*
+				sin(3.1415*Z->Get(i))*
+				sin(3.1415*Z->Get(i))*
+				cos(3.1415*time/T);
+   wSol.Set(i,aux);
+   wSolOld.Set(i,aux);
+  }
+  else if( strcmp( _name,"rotating") == 0 || 
+	       strcmp( _name,"Rotating") == 0 ) 
+  {
+   real omega=1.0;
+
+   aux = (-1.0)*Y->Get(i)*omega;
+   uSol.Set(i,aux);
+   uSolOld.Set(i,aux);
+   aux = X->Get(i)*omega;
+   vSol.Set(i,aux);
+   vSolOld.Set(i,aux);
+   aux = 0.0;
+   wSol.Set(i,aux);
+   wSolOld.Set(i,aux);
+  }
+  else
+  {
+   cerr << "Periodic field not defined!" << endl;
+   exit(1);
+  }
  }
-} // fecha metodo stepSL 
+} // fecha metodo stepImposedPeriodicField
 
 void Simulator3D::step()
 {
@@ -2252,9 +2273,6 @@ void Simulator3D::unCoupled()
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao
 
- time = time + dt;
- iter++;
-
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
   setCentroidVelPos();
@@ -2314,6 +2332,9 @@ void Simulator3D::saveOldData()
  ktOld      = kt;
  hSmoothOld = hSmooth;
  heatFluxOld = heatFluxOld;
+
+ time = time + dt;
+ iter++;
 }
 
 /**

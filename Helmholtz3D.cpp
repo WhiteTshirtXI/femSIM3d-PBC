@@ -37,10 +37,76 @@ void Helmholtz3D::init()
  cSolOld.CopyFrom( 0,cc );
 }
 
+void Helmholtz3D::initImposedField()
+{
+ init();
+
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  real P0x = surfMesh->X.Get(i);
+  real P0y = surfMesh->Y.Get(i);
+  real P0z = surfMesh->Z.Get(i);
+
+  real sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   real P1x = surfMesh->X.Get(*vert);
+   real P1y = surfMesh->Y.Get(*vert);
+   real P1z = surfMesh->Z.Get(*vert);
+
+   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
+ }
+
+ /* loop at surfMesh.numVerts->numVerts: 
+  *
+  *
+  * */
+ clVector* vertIdRegion = m->getVertIdRegion();
+ real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real radius = 0.15; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 1.0*radius )
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   real aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
 void Helmholtz3D::initRisingBubble()
 {
  init();
 
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
@@ -95,6 +161,10 @@ void Helmholtz3D::initSessile()
 {
  init();
 
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
@@ -193,6 +263,10 @@ void Helmholtz3D::initSquareChannel()
 {
  init();
 
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
@@ -243,6 +317,10 @@ void Helmholtz3D::init2Bubbles()
 {
  init();
 
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {

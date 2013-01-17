@@ -1646,6 +1646,10 @@ void Simulator3D::stepImposedPeriodicField(const char* _name)
   idbcv->AddItem(i);
   idbcw->AddItem(i);
 
+  /*
+   * Reference:
+   *
+   * */
   if( strcmp( _name,"2d") == 0 || 
 	  strcmp( _name,"2D") == 0 )
   {
@@ -1663,32 +1667,42 @@ void Simulator3D::stepImposedPeriodicField(const char* _name)
    wSol.Set(i,aux);
    wSolOld.Set(i,aux);
   }
+  /* Front tracking with moving-least-squares surfaces
+   * Joao Paulo Gois, Anderson Nakano, Luis Gustavo Nonato, Gustavo C.
+   * Buscaglia
+   * */
   else if( strcmp( _name,"3d") == 0 || 
 	       strcmp( _name,"3D") == 0 ) 
   {
    real T = 3.0;
-   aux = (2.0)*sin(3.1415*X->Get(i))*
-	           sin(3.1415*X->Get(i))*
-			   sin(2*3.1415*Y->Get(i))*
-			   sin(2*3.1415*Z->Get(i))*
-			   cos(3.1415*time/T);
+   real pi = 3.14159265358;
+   aux = (2.0)*sin(pi*X->Get(i))*
+	           sin(pi*X->Get(i))*
+			   sin(2*pi*Y->Get(i))*
+			   sin(2*pi*Z->Get(i))*
+			   cos(pi*time/T);
    uSol.Set(i,aux);
    uSolOld.Set(i,aux);
-   aux = (-1.0)*sin(2*3.1415*X->Get(i))*
-	            sin(3.1415*Y->Get(i))*
-				sin(3.1415*Y->Get(i))*
-				sin(2*3.1415*Z->Get(i))*
-				cos(3.1415*time/T);
+   aux = (-1.0)*sin(2*pi*X->Get(i))*
+	            sin(pi*Y->Get(i))*
+				sin(pi*Y->Get(i))*
+				sin(2*pi*Z->Get(i))*
+				cos(pi*time/T);
    vSol.Set(i,aux);
    vSolOld.Set(i,aux);
-   aux = (-1.0)*sin(2*3.1415*X->Get(i))*
-	            sin(2*3.1415*Y->Get(i))*
-				sin(3.1415*Z->Get(i))*
-				sin(3.1415*Z->Get(i))*
-				cos(3.1415*time/T);
+   aux = (-1.0)*sin(2*pi*X->Get(i))*
+	            sin(2*pi*Y->Get(i))*
+				sin(pi*Z->Get(i))*
+				sin(pi*Z->Get(i))*
+				cos(pi*time/T);
    wSol.Set(i,aux);
    wSolOld.Set(i,aux);
   }
+
+  /*
+   * Reference:
+   *
+   * */
   else if( strcmp( _name,"rotating") == 0 || 
 	       strcmp( _name,"Rotating") == 0 ) 
   {
@@ -1887,6 +1901,7 @@ void Simulator3D::stepALEVel()
  //setAnnularALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
+ // comment if using mainVortex.cpp
  stepSL();
 } // fecha metodo stepALEVel
 

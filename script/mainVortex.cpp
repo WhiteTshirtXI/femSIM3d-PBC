@@ -27,10 +27,10 @@ int main(int argc, char **argv)
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
 
- real dt = 0.0012;
+ real dt = 0.003;
 
  //string meshFile = "sphere.msh";
  string meshFile = "sphereCenter.msh";
@@ -70,18 +70,20 @@ int main(int argc, char **argv)
  s1.setD2(d2);
  s1.setDt(dt);
 
- // Point's distribution
- Helmholtz3D h1(m1);
- h1.setBC();
- h1.initRisingBubble();
- h1.assemble();
- h1.setk(0.2);
- h1.matMountC();
- h1.setUnCoupledCBC(); 
- h1.setCRHS();
- h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
- h1.setModel3DEdgeSize();
+//--------------------------------------------------
+//  // Point's distribution
+//  Helmholtz3D h1(m1);
+//  h1.setBC();
+//  h1.initRisingBubble();
+//  h1.assemble();
+//  h1.setk(0.2);
+//  h1.matMountC();
+//  h1.setUnCoupledCBC(); 
+//  h1.setCRHS();
+//  h1.unCoupledC();
+//  //h1.saveVTK(vtkFolder,"edge");
+//  h1.setModel3DEdgeSize();
+//-------------------------------------------------- 
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -125,18 +127,20 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Helmholtz3D h2(m1,h1);
-  h2.setBC();
-  h2.initRisingBubble();
-  h2.assemble();
-  h2.setk(0.2);
-  h2.matMountC();
-  h2.setUnCoupledCBC(); 
-  h2.setCRHS();
-  h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
-  h2.saveChordalEdge(datFolder,"edge",iter-1);
-  h2.setModel3DEdgeSize();
+//--------------------------------------------------
+//   Helmholtz3D h2(m1,h1);
+//   h2.setBC();
+//   h2.initRisingBubble();
+//   h2.assemble();
+//   h2.setk(0.2);
+//   h2.matMountC();
+//   h2.setUnCoupledCBC(); 
+//   h2.setCRHS();
+//   h2.unCoupledC();
+//   h2.saveVTK(vtkFolder,"edge",iter-1);
+//   h2.saveChordalEdge(datFolder,"edge",iter-1);
+//   h2.setModel3DEdgeSize();
+//-------------------------------------------------- 
 
   Model3D mOld = m1; 
 
@@ -155,7 +159,7 @@ int main(int argc, char **argv)
   m1.delete3DPoints();
 
   // surface operations
-  m1.smoothPointsByCurvature();
+  //m1.smoothPointsByCurvature();
 
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
@@ -181,7 +185,7 @@ int main(int argc, char **argv)
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
+  //s2.applyLinearInterpolation(mOld);
   s1 = s2;
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao

@@ -375,7 +375,7 @@ class Model3D
   clVector closer,xCloser,yCloser,zCloser,closerViz;
   clVector interfaceDistance;
   clVector vertIdRegion,elemIdRegion;
-  clVector edgeSize;
+  clVector edgeSize; // edge lenght vector :: Dim = number of vertices
 
   int numVerts;                   // numero total de vertices da malha
   int numElems;                   // numero total de elementos da malha

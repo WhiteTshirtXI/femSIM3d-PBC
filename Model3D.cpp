@@ -1057,9 +1057,6 @@ void Model3D::mesh2Dto3D()
 
  in.initialize();
  out.initialize();
-
- // this is not the right place to init edgeSize!
- edgeSize.Dim(numVerts);
 }
 
 /*
@@ -1210,8 +1207,8 @@ void Model3D::insertPointsByLength()
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
    //insertSurfacePoint(edge,"flat");
-   //insertSurfacePoint(edge,"curvature");
-   insertSurfacePoint(edge,"bi-curvature");
+   insertSurfacePoint(edge,"curvature");
+   //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    isp[vertID]++;
@@ -3024,7 +3021,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   //real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 3.0*maxEdge && 
+  if( length > 5.0*maxEdge && 
 	//--------------------------------------------------
 	//   interfaceDistance.Get(v1) > 2*triEdge[1] &&
 	//   interfaceDistance.Get(v2) > 2*triEdge[1] &&
@@ -3603,6 +3600,7 @@ Mesh3D Model3D::convertTetgenToMesh3d(tetgenio &_tetmesh)
  * */
 void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
 {
+ int numVertsOld = numVerts;
  numElems = _tetmesh.numberoftetrahedra;
  numNodes = _tetmesh.numberofpoints+_tetmesh.numberoftetrahedra;
  numVerts = _tetmesh.numberofpoints;
@@ -3653,6 +3651,10 @@ void Model3D::convertTetgenToModel3D(tetgenio &_tetmesh)
    vertIdRegion.Set(i,0.5);
   }
  }
+
+ // updating edgeSize vector due to increasing of mesh points
+ clVector zeros(numVerts-numVertsOld);
+ edgeSize.Append(zeros);
 }
 
 /*
@@ -9773,17 +9775,30 @@ void Model3D::smoothPoint(int _node)
  surfMesh.Z.Set(_node,aux);
 }
 
-void Model3D::setTriEdge(vector< real > _triEdge)
-{
- initMeshParameters();
- triEdge = _triEdge;
-}
-
+/* This method sets triEdge value, which is used many times during the
+ * simulation: insert points, delete points, volume correction, define
+ * in and out regions in two-phase flows etc. Currently, triEdge is
+ * being set to the averageTriLength, which is the average length value
+ * of each region (elemIdRegion).
+ * surfMesh.elemIdRegion 0 = wall
+ * surfMesh.elemIdRegion 1 = surface 1
+ * surfMesh.elemIdRegion 2 = surface 2 (if it has more than 1 bubble)
+ * surfMesh.elemIdRegion 3 = surface 3 (if it has more than 2 bubbles)
+ * */
 void Model3D::setTriEdge()
 {
  initMeshParameters();
  triMeshStats();
  triEdge = averageTriLength;
+}
+
+/* This method sets the value of triEdge which will be used on many
+ * methods during the simulation.
+ * */
+void Model3D::setTriEdge(vector< real > _triEdge)
+{
+ initMeshParameters();
+ triEdge = _triEdge;
 }
 
 void Model3D::initMeshParameters()

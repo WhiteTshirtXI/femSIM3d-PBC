@@ -40,6 +40,7 @@ class Helmholtz3D
   void initRisingBubble();
   void initSessile();
   void init2Bubbles();
+  void initImposedField();
   void assemble();
   void matMountC();
 

@@ -215,6 +215,7 @@ class InOut
   void printSimulationReport();
   void bubbleWallDistance( const char* _dir,const char* _filename, int _iter );
   void saveFilmThickness(const char* _dir);
+  void savePoint( const char* _dir,int _point );
 
 private:
   Model3D *m;

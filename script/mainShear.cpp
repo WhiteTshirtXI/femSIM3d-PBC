@@ -47,14 +47,14 @@ int main(int argc, char **argv)
  real T = 3.0;
 
  //string meshFile = "sphere.msh";
- string meshFile = "sphereCenter.msh";
+ string meshFile = "sphere.msh";
 
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/sphere/vortex/" + meshFile;
+ meshDir += "/gmsh/3d/sphere/shear/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;

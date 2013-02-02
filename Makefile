@@ -42,7 +42,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureTorus curvatureAndPressureSphere \
 	       curvatureAndPressureCylinder curvatureAndPressureTorus\
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
-		   2Bubbles micro zalesak vortex curvatureTest
+		   2Bubbles micro zalesak vortex curvatureTest shear
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -93,6 +93,9 @@ zalesak: ${FEM3D_DIR}/script/mainZalesak.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 vortex: ${FEM3D_DIR}/script/mainVortex.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+shear: ${FEM3D_DIR}/script/mainShear.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 annular: ${FEM3D_DIR}/script/mainAnnular.o $(obj)

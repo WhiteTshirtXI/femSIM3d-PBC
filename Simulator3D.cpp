@@ -1637,92 +1637,121 @@ void Simulator3D::stepNoConvection()
  * of how-to.
  *
  * */
-void Simulator3D::stepImposedPeriodicField(const char* _name)
+void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
 {
  real aux;
- for( int i=0;i<numVerts;i++ )
+ real pi = 3.14159265358;
+ /*
+  * Reference:
+  *
+  * */
+ if( strcmp( _name,"2d") == 0 || 
+     strcmp( _name,"2D") == 0 )
  {
-  idbcu->AddItem(i);
-  idbcv->AddItem(i);
-  idbcw->AddItem(i);
-
-  /*
-   * Reference:
-   *
-   * */
-  if( strcmp( _name,"2d") == 0 || 
-	  strcmp( _name,"2D") == 0 )
+  for( int i=0;i<numVerts;i++ )
   {
-   aux = (-1.0)*sin(3.1415*X->Get(i))*
-	            sin(3.1415*X->Get(i))*
-				sin(2*3.1415*Y->Get(i));
+   aux = (-1.0)*sin(pi*X->Get(i))*
+	            sin(pi*X->Get(i))*
+				sin(2*pi*Y->Get(i))*
+				cos(time/T);
    uSol.Set(i,aux);
-   uSolOld.Set(i,aux);
-   aux = sin(3.1415*Y->Get(i))*
-	     sin(3.1415*Y->Get(i))*
-		 sin(2*3.1415*X->Get(i));
+   aux = sin(pi*Y->Get(i))*
+	     sin(pi*Y->Get(i))*
+		 sin(2*pi*X->Get(i))*
+		 cos(time/T);
    vSol.Set(i,aux);
-   vSolOld.Set(i,aux);
    aux = 0.0;
    wSol.Set(i,aux);
-   wSolOld.Set(i,aux);
   }
-  /* Front tracking with moving-least-squares surfaces
-   * Joao Paulo Gois, Anderson Nakano, Luis Gustavo Nonato, Gustavo C.
-   * Buscaglia
-   * */
-  else if( strcmp( _name,"3d") == 0 || 
-	       strcmp( _name,"3D") == 0 ) 
+ }
+ /* Front tracking with moving-least-squares surfaces
+  * Joao Paulo Gois, Anderson Nakano, Luis Gustavo Nonato, Gustavo C.
+  * Buscaglia
+  * */
+ else if( strcmp( _name,"3d") == 0 || 
+          strcmp( _name,"3D") == 0 ) 
+ {
+  for( int i=0;i<numVerts;i++ )
   {
-   real T = 3.0;
-   real pi = 3.14159265358;
    aux = (2.0)*sin(pi*X->Get(i))*
 	           sin(pi*X->Get(i))*
 			   sin(2*pi*Y->Get(i))*
 			   sin(2*pi*Z->Get(i))*
 			   cos(pi*time/T);
    uSol.Set(i,aux);
-   uSolOld.Set(i,aux);
    aux = (-1.0)*sin(2*pi*X->Get(i))*
 	            sin(pi*Y->Get(i))*
 				sin(pi*Y->Get(i))*
 				sin(2*pi*Z->Get(i))*
 				cos(pi*time/T);
    vSol.Set(i,aux);
-   vSolOld.Set(i,aux);
    aux = (-1.0)*sin(2*pi*X->Get(i))*
 	            sin(2*pi*Y->Get(i))*
 				sin(pi*Z->Get(i))*
 				sin(pi*Z->Get(i))*
 				cos(pi*time/T);
    wSol.Set(i,aux);
-   wSolOld.Set(i,aux);
   }
+ }
+ /* A simple package for front tracking
+  * Jian Du, Brian Fix, James Glimm, Xicheng Jia, Xiaolin Li, Yuanhua
+  * Li, Lingling Wu
+  * */
+ else if( strcmp( _name,"shear3d") == 0 || 
+          strcmp( _name,"shear3D") == 0 ) 
+ {
+  real R = 0.5;
+  real x0 = 0.5;
+  real y0 = 0.5;
+  for( int i=0;i<numVerts;i++ )
+  {
+   aux = sin(pi*X->Get(i))*
+		 sin(pi*X->Get(i))*
+		 sin(2.0*pi*Y->Get(i))*
+		 cos(pi*time/T);
+   uSol.Set(i,aux);
+   aux = (-1.0)*sin(2*pi*X->Get(i))*
+	            sin(pi*Y->Get(i))*
+				sin(pi*Y->Get(i))*
+				cos(pi*time/T);
+   vSol.Set(i,aux);
+   real r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)-
+	               (Y->Get(i)-y0)*(Y->Get(i)-y0) );
+   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*time/T);
+   wSol.Set(i,aux);
+  }
+ }
+ else if( strcmp( _name,"one") == 0 || 
+          strcmp( _name,"One") == 0 ) 
+ {
+  for( int i=0;i<numVerts;i++ )
+  {
+   aux = 1.0*cos(pi*time/T);
 
-  /*
-   * Reference:
-   *
-   * */
-  else if( strcmp( _name,"rotating") == 0 || 
-	       strcmp( _name,"Rotating") == 0 ) 
+   uSol.Set(i,aux);
+   vSol.Set(i,aux);
+   wSol.Set(i,aux);
+  }
+ }
+ else if( strcmp( _name,"rotating") == 0 || 
+          strcmp( _name,"Rotating") == 0 ) 
+ {
+  for( int i=0;i<numNodes;i++ )
   {
    real omega=1.0;
 
    aux = (-1.0)*Y->Get(i)*omega;
    uSol.Set(i,aux);
-   uSolOld.Set(i,aux);
    aux = X->Get(i)*omega;
    vSol.Set(i,aux);
-   vSolOld.Set(i,aux);
    aux = 0.0;
    wSol.Set(i,aux);
-   wSolOld.Set(i,aux);
   }
-  else
-  {
-   cerr << "Periodic field not defined!" << endl;
-   exit(1);
-  }
+ }
+ else
+ {
+  cerr << "Periodic field not defined!" << endl;
+  exit(1);
  }
 } // fecha metodo stepImposedPeriodicField
 
@@ -1753,10 +1782,14 @@ void Simulator3D::stepLagrangian()
  // impoe velocidade SolOld = 0 no contorno
  setLagrangianVelBC();
 
- convUVW.CopyFrom(0,uSolOld);
- convUVW.CopyFrom(numNodes,vSolOld);
- convUVW.CopyFrom(2*numNodes,wSolOld);
+ convUVW.CopyFrom(0,uSol);
+ convUVW.CopyFrom(numNodes,vSol);
+ convUVW.CopyFrom(2*numNodes,wSol);
  convC = cSolOld;
+
+ m->moveXPoints(uSol,dt);
+ m->moveYPoints(vSol,dt);
+ m->moveZPoints(wSol,dt);
 
 } // fecha metodo stepLagrangian
 

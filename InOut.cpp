@@ -4364,3 +4364,54 @@ void InOut::saveFilmThickness(const char* _dir)
   file.close();
  }
 }
+
+void InOut::savePoint( const char* _dir,int _point )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _point;
+ ss >> str;
+
+ // oscillating velocity
+ string fileAux = (string) _dir + "point-" + str + ".dat";
+ const char* filenamePoint = fileAux.c_str();
+
+ ifstream testFilePoint( filenamePoint );
+ ofstream filePoint( filenamePoint,ios::app );
+ if( testFilePoint )
+ {
+  testFilePoint.close();
+  cout << "appending on file point-" << _point << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file point-" << _point << ".dat" << endl;
+  filePoint << "#time" << setw(29) << "u" 
+                       << setw(18) << "v" 
+					   << setw(18) << "w" 
+					   << setw(18) << "p"
+					   << setw(18) << "rho"
+					   << setw(18) << "mu"
+					   << setw(18) << "x" 
+					   << setw(18) << "y" 
+					   << setw(18) << "z" 
+					   << setw(6) << "iter" 
+					   << endl;
+ }
+ 
+ filePoint << setprecision(10) << scientific; 
+ filePoint << setw(10) << simTime << " " 
+           << setw(17) << uSol->Get(_point) << " " 
+		   << setw(17) << vSol->Get(_point) << " " 
+		   << setw(17) << wSol->Get(_point) << " " 
+		   << setw(17) << pSol->Get(_point) << " " 
+		   << setw(17) << rho->Get(_point) << " " 
+		   << setw(17) << mu->Get(_point) << " " 
+		   << setw(17) << X->Get(_point) << " " 
+		   << setw(17) << Y->Get(_point) << " " 
+		   << setw(17) << Z->Get(_point) << " " 
+		   << setw(5) << setprecision(0) << fixed << iter 
+		   << endl;
+
+ filePoint.close();
+}

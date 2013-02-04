@@ -74,6 +74,7 @@ class Simulator3D
   void stepALE();
   void stepALEVel();
   void movePoints();
+  void movePoints2ndOrder();
   void stepSmooth();
   void setInterfaceVelocity();
 

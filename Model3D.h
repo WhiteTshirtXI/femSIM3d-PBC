@@ -228,6 +228,10 @@ class Model3D
   void moveXPoints(clVector &_vec,real _dt);
   void moveYPoints(clVector &_vec,real _dt);
   void moveZPoints(clVector &_vec,real _dt);
+  void movePoints2ndOrder(clVector &_uSol,
+                          clVector &_vSol,
+						  clVector &_wSol,
+						  real _dt,real _time);
   void setMiniElement();            
   void setCentroid();
   void centroidPositionCorrection();

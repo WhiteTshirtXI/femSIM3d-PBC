@@ -24,7 +24,7 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 0.0;  // lagrangian
+ real c1 = 1.0;  // lagrangian
  real c2 = 0.5;  // smooth vel
  real c3 = 3.0;  // smooth coord (fujiwara)
  real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
@@ -69,19 +69,6 @@ int main(int argc, char **argv)
  s1.setD2(d2);
  s1.setDt(dt);
 
- // Point's distribution
- Helmholtz3D h1(m1);
- h1.setBC();
- h1.initRisingBubble();
- h1.assemble();
- h1.setk(0.2);
- h1.matMountC();
- h1.setUnCoupledCBC(); 
- h1.setCRHS();
- h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
- h1.setModel3DEdgeSize();
-
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry");
@@ -103,7 +90,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepImposedPeriodicField("rotating");
+   s1.stepImposedPeriodicField("rotating",0.0);
    s1.stepALEVel();
    s1.movePoints();
    s1.setInterfaceGeo();
@@ -111,7 +98,6 @@ int main(int argc, char **argv)
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
-   save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
@@ -124,19 +110,6 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  Helmholtz3D h2(m1,h1);
-  h2.setBC();
-  h2.initRisingBubble();
-  h2.assemble();
-  h2.setk(0.2);
-  h2.matMountC();
-  h2.setUnCoupledCBC(); 
-  h2.setCRHS();
-  h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
-  h2.saveChordalEdge(datFolder,"edge",iter-1);
-  h2.setModel3DEdgeSize();
-
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */
@@ -177,11 +150,10 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
-  s2.applyLinearInterpolation(mOld);
   s1 = s2;
+  s1.setCentroidVelPos();
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();

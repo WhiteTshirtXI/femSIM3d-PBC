@@ -37,13 +37,13 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 1.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 0.0;  // smooth coord (fujiwara)
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.0;  // surface smooth cord (fujiwara)
+ real d2 = 0.1;  // surface smooth cord (fujiwara)
 
- real dt = 0.0003;
+ real dt = 0.01;
  real T = 3.0;
 
  //string meshFile = "sphere.msh";
@@ -90,18 +90,8 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- save.saveMSH(mshFolder,"newMesh",iter);
- save.saveVTK(vtkFolder,"sim",iter);
- save.saveVTKSurface(vtkFolder,"sim",iter);
- save.saveBubbleInfo(datFolder);
- save.savePoint(datFolder,0);
- save.savePoint(datFolder,1);
- save.savePoint(datFolder,2);
- save.savePoint(datFolder,3);
- iter++;
-
- int nIter = 1;
- int nReMesh = 10003;
+ int nIter = 301;
+ int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -116,9 +106,10 @@ int main(int argc, char **argv)
    save.printSimulationReport();
 
    s1.stepImposedPeriodicField("3d",T);
-   //s1.stepALEVel();
-   s1.stepLagrangian();
-   //s1.setInterfaceGeo();
+   s1.stepALEVel();
+   s1.movePoints2ndOrder();
+   //s1.stepLagrangian();
+   s1.setInterfaceGeo();
 
    real time = s1.getTime();
    real field = cos(3.14159265358*time/T);

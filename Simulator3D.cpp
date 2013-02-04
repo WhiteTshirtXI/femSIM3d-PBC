@@ -1629,7 +1629,7 @@ void Simulator3D::stepNoConvection()
  convUVW.CopyFrom(numNodes,vSolOld);
  convUVW.CopyFrom(2*numNodes,wSolOld);
  convC = cSolOld;
-} // fecha metodo stepSL 
+} // fecha metodo stepNoConvection
 
 /* 
  * This method should be used only to move the mesh, thus Navier-Stokes
@@ -1715,7 +1715,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
 				sin(pi*Y->Get(i))*
 				cos(pi*time/T);
    vSol.Set(i,aux);
-   real r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)-
+   real r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)+
 	               (Y->Get(i)-y0)*(Y->Get(i)-y0) );
    aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*time/T);
    wSol.Set(i,aux);
@@ -1782,14 +1782,15 @@ void Simulator3D::stepLagrangian()
  // impoe velocidade SolOld = 0 no contorno
  setLagrangianVelBC();
 
- convUVW.CopyFrom(0,uSol);
- convUVW.CopyFrom(numNodes,vSol);
- convUVW.CopyFrom(2*numNodes,wSol);
+ convUVW.CopyFrom(0,uSolOld);
+ convUVW.CopyFrom(numNodes,vSolOld);
+ convUVW.CopyFrom(2*numNodes,wSolOld);
  convC = cSolOld;
 
- m->moveXPoints(uSol,dt);
- m->moveYPoints(vSol,dt);
- m->moveZPoints(wSol,dt);
+ //m->movePoints2ndOrder(uSolOld,vSolOld,wSolOld,dt,time);
+ m->moveXPoints(uSolOld,dt);
+ m->moveYPoints(vSolOld,dt);
+ m->moveZPoints(wSolOld,dt);
 
 } // fecha metodo stepLagrangian
 
@@ -1799,7 +1800,7 @@ void Simulator3D::stepLagrangian()
 // utilizado o metodo explicito semi lagrangiano
 void Simulator3D::stepLagrangianZ()
 {
- m->moveZPoints(wSol,dt);
+ m->moveZPoints(wSolOld,dt);
  m->centroidPositionCorrection();
 
  SemiLagrangean sl(*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
@@ -1845,6 +1846,7 @@ void Simulator3D::stepALE()
  //setAnnularALEVelBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
+ // comment if using mainVortex.cpp
  stepSL();
 } // fecha metodo stepALE
 
@@ -1944,6 +1946,16 @@ void Simulator3D::movePoints()
  m->moveXPoints(uALE,dt);
  m->moveYPoints(vALE,dt);
  m->moveZPoints(wALE,dt);
+ m->centroidPositionCorrection();
+
+ // correcao do volume da bolha
+ m->applyBubbleVolumeCorrection();
+}
+
+void Simulator3D::movePoints2ndOrder()
+{
+ // movimentando os vertices pontos da malha com velocidade ALE
+ m->movePoints2ndOrder(uALE,vALE,wALE,dt,time);
  m->centroidPositionCorrection();
 
  // correcao do volume da bolha
@@ -4143,9 +4155,9 @@ void Simulator3D::setLagrangianVelBC()
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  uSolOld.Set(*it,0.0);
-  vSolOld.Set(*it,0.0);
-  wSolOld.Set(*it,0.0);
+  uSol.Set(*it,0.0);
+  vSol.Set(*it,0.0);
+  wSol.Set(*it,0.0);
  }
 }
 

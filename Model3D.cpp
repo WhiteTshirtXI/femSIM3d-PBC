@@ -7408,6 +7408,79 @@ void Model3D::moveZPoints(clVector &_vec,real _dt)
  }
 }
 
+void Model3D::movePoints2ndOrder(clVector &_uSol,
+                                 clVector &_vSol,
+                                 clVector &_wSol,
+								 real _dt,real _time)
+{
+ real T = 3.0;
+ real time = _time + _dt/2.0;
+ real pi = 3.14159265358;
+
+ //X = X + _vec*_dt;
+ for( int i=0;i<numVerts;i++ )
+ {
+  real Xp = X.Get(i)+(_uSol.Get(i)*_dt/2.0);
+  real Yp = Y.Get(i)+(_vSol.Get(i)*_dt/2.0);
+  real Zp = Z.Get(i)+(_wSol.Get(i)*_dt/2.0);
+
+  real up = (2.0)*sin(pi*Xp)*
+	              sin(pi*Xp)*
+			      sin(2*pi*Yp)*
+			      sin(2*pi*Zp)*
+			      cos(pi*time/T);
+  real xn = X.Get(i)+(up*_dt);
+  X.Set(i,xn);
+
+  real vp = (-1.0)*sin(2*pi*Xp)*
+	               sin(pi*Yp)*
+				   sin(pi*Yp)*
+				   sin(2*pi*Zp)*
+				   cos(pi*time/T);
+  real yn = Y.Get(i)+(vp*_dt);
+  Y.Set(i,yn);
+
+  real wp = (-1.0)*sin(2*pi*Xp)*
+	               sin(2*pi*Yp)*
+				   sin(pi*Zp)*
+				   sin(pi*Zp)*
+				   cos(pi*time/T);
+  real zn = Z.Get(i)+(wp*_dt);
+  Z.Set(i,zn);
+ }
+
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  real Xps = surfMesh.X.Get(i)+(_uSol.Get(i)*_dt/2.0);
+  real Yps = surfMesh.Y.Get(i)+(_vSol.Get(i)*_dt/2.0);
+  real Zps = surfMesh.Z.Get(i)+(_wSol.Get(i)*_dt/2.0);
+
+  real ups = (2.0)*sin(pi*Xps)*
+	               sin(pi*Xps)*
+		 	       sin(2*pi*Yps)*
+		 	       sin(2*pi*Zps)*
+			      cos(pi*time/T);
+  real xns = surfMesh.X.Get(i)+(ups*_dt);
+  surfMesh.X.Set(i,xns);
+
+  real vps = (-1.0)*sin(2*pi*Xps)*
+	                sin(pi*Yps)*
+					sin(pi*Yps)*
+					sin(2*pi*Zps)*
+					cos(pi*time/T);
+  real yns = surfMesh.Y.Get(i)+(vps*_dt);
+  surfMesh.Y.Set(i,yns);
+
+  real wps = (-1.0)*sin(2*pi*Xps)*
+	                sin(2*pi*Yps)*
+					sin(pi*Zps)*
+					sin(pi*Zps)*
+					cos(pi*time/T);
+  real zns = surfMesh.Z.Get(i)+(wps*_dt);
+  surfMesh.Z.Set(i,zns);
+ }
+}
+
 
 SurfaceMesh* Model3D::getSurfMesh(){ return &surfMesh; }
 SurfaceMesh* Model3D::getInterfaceMesh(){ return &interfaceMesh; }

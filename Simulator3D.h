@@ -69,12 +69,16 @@ class Simulator3D
   void stepSL();
   void stepNoConvection();
   void stepImposedPeriodicField(const char* _name, real T);
+  void stepTimeHalf(const char* _name, real T);
+  void copyALEtoSol();
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
   void stepALEVel();
   void movePoints();
-  void movePoints2ndOrder();
+  void movePoints(clVector &_uVel,
+                  clVector &_vVel,
+				  clVector &_wVel);
   void stepSmooth();
   void setInterfaceVelocity();
 

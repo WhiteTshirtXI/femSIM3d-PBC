@@ -1635,7 +1635,9 @@ void Simulator3D::stepNoConvection()
  * This method should be used only to move the mesh, thus Navier-Stokes
  * equations will not be solved. To do so, mainVortex.cpp is an example
  * of how-to.
- *
+
+ * input: X, Y and Z coordinates
+ * output: Sol velocity field
  * */
 void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
 {
@@ -1755,6 +1757,150 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
  }
 } // fecha metodo stepImposedPeriodicField
 
+/* 1/2 time step is computed from ALE velocity field
+ * 
+ * input:  SolOld velocity
+ * output: SolOld velocity
+ * */
+void Simulator3D::stepTimeHalf(const char* _name,real T)
+{
+ real aux;
+ real pi = 3.14159265358;
+ /*
+  * Reference:
+  *
+  * */
+ if( strcmp( _name,"2d") == 0 || 
+     strcmp( _name,"2D") == 0 )
+ {
+  for( int i=0;i<numVerts;i++ )
+  {
+   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   aux = (-1.0)*sin(pi*Xp)*
+	            sin(pi*Xp)*
+				sin(2*pi*Yp)*
+				cos(time/T);
+   uSol.Set(i,aux);
+   aux = sin(pi*Yp)*
+	     sin(pi*Yp)*
+		 sin(2*pi*Xp)*
+		 cos(time/T);
+   vSol.Set(i,aux);
+   aux = 0.0;
+   wSol.Set(i,aux);
+  }
+ }
+ /* Front tracking with moving-least-squares surfaces
+  * Joao Paulo Gois, Anderson Nakano, Luis Gustavo Nonato, Gustavo C.
+  * Buscaglia
+  * */
+ else if( strcmp( _name,"3d") == 0 || 
+          strcmp( _name,"3D") == 0 ) 
+ {
+  for( int i=0;i<numVerts;i++ )
+  {
+   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   aux = (2.0)*sin(pi*Xp)*
+	           sin(pi*Xp)*
+			   sin(2*pi*Yp)*
+			   sin(2*pi*Zp)*
+			   cos(pi*time/T);
+   uSol.Set(i,aux);
+   aux = (-1.0)*sin(2*pi*Xp)*
+	            sin(pi*Yp)*
+				sin(pi*Yp)*
+				sin(2*pi*Zp)*
+				cos(pi*time/T);
+   vSol.Set(i,aux);
+   aux = (-1.0)*sin(2*pi*Xp)*
+	            sin(2*pi*Yp)*
+				sin(pi*Zp)*
+				sin(pi*Zp)*
+				cos(pi*time/T);
+   wSol.Set(i,aux);
+  }
+ }
+ /* A simple package for front tracking
+  * Jian Du, Brian Fix, James Glimm, Xicheng Jia, Xiaolin Li, Yuanhua
+  * Li, Lingling Wu
+  * */
+ else if( strcmp( _name,"shear3d") == 0 || 
+          strcmp( _name,"shear3D") == 0 ) 
+ {
+  real R = 0.5;
+  real x0 = 0.5;
+  real y0 = 0.5;
+  for( int i=0;i<numVerts;i++ )
+  {
+   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   aux = sin(pi*Xp)*
+		 sin(pi*Xp)*
+		 sin(2.0*pi*Yp)*
+		 cos(pi*time/T);
+   uSol.Set(i,aux);
+   aux = (-1.0)*sin(2*pi*Xp)*
+	            sin(pi*Yp)*
+				sin(pi*Yp)*
+				cos(pi*time/T);
+   vSol.Set(i,aux);
+   real r0 = sqrt( (Xp-x0)*(Xp-x0)+
+	               (Yp-y0)*(Yp-y0) );
+   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*time/T);
+   wSol.Set(i,aux);
+  }
+ }
+ else if( strcmp( _name,"one") == 0 || 
+          strcmp( _name,"One") == 0 ) 
+ {
+  for( int i=0;i<numVerts;i++ )
+  {
+   //real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   //real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   aux = 1.0*cos(pi*time/T);
+
+   uSol.Set(i,aux);
+   vSol.Set(i,aux);
+   wSol.Set(i,aux);
+  }
+ }
+ else if( strcmp( _name,"rotating") == 0 || 
+          strcmp( _name,"Rotating") == 0 ) 
+ {
+  for( int i=0;i<numNodes;i++ )
+  {
+   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   real omega=1.0;
+
+   aux = (-1.0)*Yp*omega;
+   uSol.Set(i,aux);
+   aux = Xp*omega;
+   vSol.Set(i,aux);
+   aux = 0.0;
+   wSol.Set(i,aux);
+  }
+ }
+ else
+ {
+  cerr << "Periodic field not defined!" << endl;
+  exit(1);
+ }
+} // fecha metodo stepImposedPeriodicField
+
+void Simulator3D::copyALEtoSol()
+{
+ uSolOld = uSolOld-uALE;
+ vSolOld = vSolOld-vALE;
+ wSolOld = wSolOld-wALE;
+}
+
 void Simulator3D::step()
 {
  Galerkin galerkin(*m,uSolOld,vSolOld,wSolOld,cSolOld,gx,gy,gz);
@@ -1787,7 +1933,6 @@ void Simulator3D::stepLagrangian()
  convUVW.CopyFrom(2*numNodes,wSolOld);
  convC = cSolOld;
 
- //m->movePoints2ndOrder(uSolOld,vSolOld,wSolOld,dt,time);
  m->moveXPoints(uSolOld,dt);
  m->moveYPoints(vSolOld,dt);
  m->moveZPoints(wSolOld,dt);
@@ -1850,15 +1995,20 @@ void Simulator3D::stepALE()
  stepSL();
 } // fecha metodo stepALE
 
+/* compute ALE velocity according to mesh parameters c1,c2,c3,d1 and d3
+ * 
+ * input:  SolOld velocity
+ * output: ALE velocity
+ * */
 void Simulator3D::stepALEVel()
 {
  // vertice velocity (uVert,vVert)
  clVector uVert(numVerts);
  clVector vVert(numVerts);
  clVector wVert(numVerts);
- uSol.CopyTo(0,uVert);
- vSol.CopyTo(0,vVert);
- wSol.CopyTo(0,wVert);
+ uSolOld.CopyTo(0,uVert);
+ vSolOld.CopyTo(0,vVert);
+ wSolOld.CopyTo(0,wVert);
 
  setInterfaceVelocity();
  //setMassTransfer();
@@ -1937,9 +2087,14 @@ void Simulator3D::stepALEVel()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
- stepSL();
+ //stepSL();
 } // fecha metodo stepALEVel
 
+/* move nodes according to ALE velocity 
+ * 
+ * input:  ALE velocity
+ * output: ----
+ * */
 void Simulator3D::movePoints()
 {
  // movimentando os vertices pontos da malha com velocidade ALE
@@ -1952,14 +2107,23 @@ void Simulator3D::movePoints()
  m->applyBubbleVolumeCorrection();
 }
 
-void Simulator3D::movePoints2ndOrder()
+/* move nodes according to _?vel velocity, which are passed by the user
+ * 
+ * input:  _?Vel velocity
+ * output: ----
+ * */
+void Simulator3D::movePoints(clVector &_uVel,
+                             clVector &_vVel,
+							 clVector &_wVel)
 {
  // movimentando os vertices pontos da malha com velocidade ALE
- m->movePoints2ndOrder(uALE,vALE,wALE,dt,time);
- m->centroidPositionCorrection();
+ m->moveXPoints(_uVel,dt);
+ m->moveYPoints(_vVel,dt);
+ m->moveZPoints(_wVel,dt);
+ //m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- m->applyBubbleVolumeCorrection();
+ //m->applyBubbleVolumeCorrection();
 }
 
 void Simulator3D::setInterfaceVelocity()
@@ -2152,6 +2316,14 @@ void Simulator3D::setGravityBoussinesq(const char* _direction)
  va = va + gravity;
 }
 
+/* Set kappa vector according to Model3D's curvature vector:
+ *   kappa = curvature
+ * Compyute Surface Tension Force fint as: 
+ * fint = kappa*GH
+ * 
+ * input: X, Y and Z coordinates
+ * output: Sol velocity field
+ * */
 void Simulator3D::setInterfaceGeo()
 {
  m->setNormalAndKappa();
@@ -2375,22 +2547,22 @@ void Simulator3D::unCoupledC()
 
 void Simulator3D::saveOldData()
 {
- uSolOld = uSol;
- vSolOld = vSol;
- wSolOld = wSol;
- pSolOld = pSol;
- cSolOld = cSol;
- uALEOld    = uALE;
- vALEOld    = vALE;
- wALEOld    = wALE;
- fintOld    = fint;
- gravityOld = gravity;
- kappaOld   = kappa;
- muOld      = mu;
- rhoOld     = rho;
- cpOld      = cp;
- ktOld      = kt;
- hSmoothOld = hSmooth;
+ uSolOld     = uSol;
+ vSolOld     = vSol;
+ wSolOld     = wSol;
+ pSolOld     = pSol;
+ cSolOld     = cSol;
+ uALEOld     = uALE;
+ vALEOld     = vALE;
+ wALEOld     = wALE;
+ fintOld     = fint;
+ gravityOld  = gravity;
+ kappaOld    = kappa;
+ muOld       = mu;
+ rhoOld      = rho;
+ cpOld       = cp;
+ ktOld       = kt;
+ hSmoothOld  = hSmooth;
  heatFluxOld = heatFluxOld;
 
  time = time + dt;

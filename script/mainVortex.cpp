@@ -37,13 +37,13 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
+ real c1 = 0.0;   // lagrangian
+ real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
+ real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;   // surface smooth cord (fujiwara)
 
- real dt = 0.01;
+ real dt = 0.003;
  real T = 3.0;
 
  //string meshFile = "sphere.msh";
@@ -77,12 +77,13 @@ int main(int argc, char **argv)
 
  s1(m1);
 
+ s1.setDt(dt);
+
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
  s1.setD1(d1);
  s1.setD2(d2);
- s1.setDt(dt);
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 301;
+ int nIter = 1001;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -105,11 +106,22 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepImposedPeriodicField("3d",T);
-   s1.stepALEVel();
-   s1.movePoints2ndOrder();
-   //s1.stepLagrangian();
+   // time step: n+1/2 
+   Simulator3D s10(m1,s1);
+   s10 = s1;
+   s10.setTime(s1.getTime()+(dt/2.0));
+   s10.stepTimeHalf("3d",T); // SolOld(n) --> Sol(n+1/2)
+   s10.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
+   s10.stepALEVel();         // SolOld(n+1/2) --> ALE(n+1/2)
+
+
+   // time step: n 
+   s1.stepALEVel();  
+   s1.movePoints(*s10.getUALE(),
+                 *s10.getVALE(),
+				 *s10.getWALE());
    s1.setInterfaceGeo();
+   s1.stepImposedPeriodicField("3d",T); // X,Y and Z --> Sol(n+1)
 
    real time = s1.getTime();
    real field = cos(3.14159265358*time/T);
@@ -131,7 +143,7 @@ int main(int argc, char **argv)
    save.savePoint(datFolder,3);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
-   s1.saveOldData();
+   s1.saveOldData(); // Sol(n+1) --> SolOld(n)
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 

@@ -2688,10 +2688,10 @@ void Model3D::contractEdgeByLength()
  {
   int v3elem1 = mapEdgeTri.Get(edge,3);
   int v3elem2 = mapEdgeTri.Get(edge,4);
-  //real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
-  //real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
-  //real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
-  //real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
+  real curv1 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,1)));
+  real curv2 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,2)));
+  real curv3 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,3)));
+  real curv4 = fabs(surfMesh.curvature.Get(mapEdgeTri.Get(edge,4)));
   int elem1 = mapEdgeTri.Get(edge,5);
   int elem2 = mapEdgeTri.Get(edge,6);
   real edgeLength = mapEdgeTri.Get(edge,0);
@@ -2718,7 +2718,7 @@ void Model3D::contractEdgeByLength()
   if( elemID > 0 && 
 	  edgeLength < 0.5*triEdge[elemID] &&
 	  //angle > 0.0 &&
-	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) 
+	  (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) &&
 	  neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
 	  neighbourSurfaceElem.at( v3elem2 ).size() > 4   
 	 )
@@ -2740,26 +2740,50 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-   real P1x = surfMesh.X.Get(v1);
-   real P1y = surfMesh.Y.Get(v1);
-   real P1z = surfMesh.Z.Get(v1);
-
-   real P2x = surfMesh.X.Get(v2);
-   real P2y = surfMesh.Y.Get(v2);
-   real P2z = surfMesh.Z.Get(v2);
-
    markSurfElemForDeletion(elem1);
    markSurfElemForDeletion(elem2);
    deleteSurfaceElements();
 
-   // moving point to the middle of the edge
-   clVector mid = midPoint(P1x,P1y,P1z,P2x,P2y,P2z);
-   surfMesh.X.Set(v1, mid.Get(0) );
-   surfMesh.Y.Set(v1, mid.Get(1) );
-   surfMesh.Z.Set(v1, mid.Get(2) );
-   X.Set(v1, mid.Get(0) );
-   Y.Set(v1, mid.Get(1) );
-   Z.Set(v1, mid.Get(2) );
+   // flat
+   real XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+   real YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+   real ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+   surfMesh.X.Set(v1, XvAdd );
+   surfMesh.Y.Set(v1, YvAdd );
+   surfMesh.Z.Set(v1, ZvAdd );
+   X.Set(v1, XvAdd );
+   Y.Set(v1, YvAdd );
+   Z.Set(v1, ZvAdd );
+
+//--------------------------------------------------
+//    // using curvature
+//    clVector coordAdd = considerCurvature(v1,v2);
+//    real XvAdd = coordAdd.Get(0);
+//    real YvAdd = coordAdd.Get(1);
+//    real ZvAdd = coordAdd.Get(2);
+//    surfMesh.X.Set(v1, XvAdd );
+//    surfMesh.Y.Set(v1, YvAdd );
+//    surfMesh.Z.Set(v1, ZvAdd );
+//    X.Set(v1, XvAdd );
+//    Y.Set(v1, YvAdd );
+//    Z.Set(v1, ZvAdd );
+//-------------------------------------------------- 
+
+//--------------------------------------------------
+//    // using bi-curvature
+//    clVector coordAdd1 = considerCurvature(v1,v2);
+//    clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+//    real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+//    real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+//    real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+//    surfMesh.X.Set(v1, XvAdd );
+//    surfMesh.Y.Set(v1, YvAdd );
+//    surfMesh.Z.Set(v1, ZvAdd );
+//    X.Set(v1, XvAdd );
+//    Y.Set(v1, YvAdd );
+//    Z.Set(v1, ZvAdd );
+//-------------------------------------------------- 
+
 
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )
@@ -3985,10 +4009,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -7429,6 +7453,7 @@ void Model3D::movePoints2ndOrder(clVector &_uSol,
 			      sin(2*pi*Yp)*
 			      sin(2*pi*Zp)*
 			      cos(pi*time/T);
+  // ---> passar up em stepALEVel <---
   real xn = X.Get(i)+(up*_dt);
   X.Set(i,xn);
 

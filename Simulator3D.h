@@ -76,9 +76,9 @@ class Simulator3D
   void stepALE();
   void stepALEVel();
   void movePoints();
-  void movePoints(clVector &_uVel,
-                  clVector &_vVel,
-				  clVector &_wVel);
+  void movePoints(clVector *_uVel,
+                  clVector *_vVel,
+				  clVector *_wVel);
   void stepSmooth();
   void setInterfaceVelocity();
 

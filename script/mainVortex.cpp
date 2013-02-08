@@ -41,13 +41,13 @@ int main(int argc, char **argv)
  real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;   // surface smooth cord (fujiwara)
+ real d2 = 0.5;   // surface smooth cord (fujiwara)
 
- real dt = 0.003;
+ real dt = 0.01;
  real T = 3.0;
 
  //string meshFile = "sphere.msh";
- string meshFile = "sphereCenter.msh";
+ string meshFile = "sphereCenterLow.msh";
 
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 1001;
+ int nIter = 301;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -117,9 +117,9 @@ int main(int argc, char **argv)
 
    // time step: n 
    s1.stepALEVel();  
-   s1.movePoints(*s10.getUALE(),
-                 *s10.getVALE(),
-				 *s10.getWALE());
+   s1.movePoints(s10.getUALE(),
+                 s10.getVALE(),
+				 s10.getWALE());
    s1.setInterfaceGeo();
    s1.stepImposedPeriodicField("3d",T); // X,Y and Z --> Sol(n+1)
 

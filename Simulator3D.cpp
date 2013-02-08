@@ -2112,14 +2112,14 @@ void Simulator3D::movePoints()
  * input:  _?Vel velocity
  * output: ----
  * */
-void Simulator3D::movePoints(clVector &_uVel,
-                             clVector &_vVel,
-							 clVector &_wVel)
+void Simulator3D::movePoints(clVector *_uVel,
+                             clVector *_vVel,
+							 clVector *_wVel)
 {
  // movimentando os vertices pontos da malha com velocidade ALE
- m->moveXPoints(_uVel,dt);
- m->moveYPoints(_vVel,dt);
- m->moveZPoints(_wVel,dt);
+ m->moveXPoints(*_uVel,dt);
+ m->moveYPoints(*_vVel,dt);
+ m->moveZPoints(*_wVel,dt);
  //m->centroidPositionCorrection();
 
  // correcao do volume da bolha

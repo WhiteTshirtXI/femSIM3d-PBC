@@ -1206,8 +1206,8 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   //insertSurfacePoint(edge,"flat");
-   insertSurfacePoint(edge,"curvature");
+   insertSurfacePoint(edge,"flat");
+   //insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -2346,24 +2346,11 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 
  if( strcmp( _mode,"curvature") == 0 ) 
  {
-  real curv1 = fabs(surfMesh.curvature.Get(v1));
-  real curv2 = fabs(surfMesh.curvature.Get(v2));
-  real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
-  real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
-  if( curv1+curv2 < curv3+curv4 )
-  {
-   clVector coordAdd = considerCurvature(v1,v2);
-   XvAdd = coordAdd.Get(0);
-   YvAdd = coordAdd.Get(1);
-   ZvAdd = coordAdd.Get(2);
-  }
-  else // flat
-  {
-   // add point in the middle of a edge (not consider curvature)
-   XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-   YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-   ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-  }
+  clVector coordAdd = considerCurvature(v1,v2);
+  XvAdd = coordAdd.Get(0);
+  YvAdd = coordAdd.Get(1);
+  ZvAdd = coordAdd.Get(2);
+ }
 
 //--------------------------------------------------
 //   cout << "Flat: " << endl;
@@ -2377,7 +2364,6 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 //   cout << "z: " << ZvAdd << endl;
 //   cout << " ----------------- " << endl;
 //-------------------------------------------------- 
- }
 
 //--------------------------------------------------
 //  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;

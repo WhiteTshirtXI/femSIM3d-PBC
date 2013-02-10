@@ -47,6 +47,7 @@ class Simulator3D
   void getModel3DAttrib(Model3D &_m);
   void allocateMemoryToAttrib();
   void init();
+  void initAnnular();
   void initChannel();
   void initChannelSquare();
   void initHeatTransfer();

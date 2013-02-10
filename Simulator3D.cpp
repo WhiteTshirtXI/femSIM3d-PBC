@@ -358,6 +358,33 @@ void Simulator3D::init()
  cSolOld.CopyFrom( 0,*cc );
 }
 
+void Simulator3D::initAnnular()
+{
+ init();
+
+ real p1y = Y->Min();
+ real p2y = Y->Max();
+ real p1z = Z->Min();
+ real p2z = Z->Max();
+
+ for( int i=0;i<numNodes;i++ )
+ {
+  // gas
+  if( heaviside->Get(i) < 1.0 )
+  {
+   real aux = 1.0;
+   wSol.Set(i,aux);
+   wSolOld.Set(i,aux);
+  }
+  else
+  {
+   real aux = 2.5;
+   wSol.Set(i,aux);
+   wSolOld.Set(i,aux);
+  }
+ }
+}
+
 void Simulator3D::initChannel()
 {
  init();

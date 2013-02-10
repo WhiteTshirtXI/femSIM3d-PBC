@@ -11,6 +11,7 @@
 //                                                                     //
 // Model3D: insertPointsByLength()                                     //
 //           - no insertion at the boundaries Z.Max() and Z.Min()      //
+//           - uncomment real v2 = mapEdgeTri.Get(edge,2)              //
 //          setPolyhedron()                                            //
 //           - uncomment wSwap2 == node2 until break;                  //
 //          uncomment setNormalAndKappa2D()                            //
@@ -25,6 +26,7 @@
 #include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
+#include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
@@ -35,30 +37,21 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
- // set each bubble length
- vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 0.1; // wall
- triEdge[1] = 0.1; // bubble 1 
-
  int iter = 1;
- real Re = 100;
- real We = 5;
- real c1 = 0.00; // lagrangian
- real c2 = 1.00; // smooth vel
- real c3 = 1.00; // smooth coord (fujiwara)
+ real Re = 91;
+ real We = 0.23;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
- real beta = 1;
+ real alpha = 1.0;
 
- real sigma = 1.0;
+ real mu_in = 1.78E-5;
+ real mu_out = 1.0E-3;
 
- real mu_in = 1.0;
- real mu_out = 0.01;
-
- real rho_in = 1.0;
- real rho_out = 0.001;
+ real rho_in = 1.25;
+ real rho_out = 1000;
 
  real cfl = 0.5;
 
@@ -84,9 +77,8 @@ int main(int argc, char **argv)
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
+ m1.setTriEdge();
  m1.setWallInterfaceBC();
- m1.setTriEdge(triEdge);
- m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -97,7 +89,7 @@ int main(int argc, char **argv)
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
- m1.setWallAnnularBC();
+ m1.setGenericBC();
 
  s1(m1);
 
@@ -106,15 +98,13 @@ int main(int argc, char **argv)
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
- s1.setC4(c4);
+ s1.setD1(d1);
+ s1.setD2(d2);
  s1.setAlpha(alpha);
- s1.setBeta(beta);
- s1.setSigma(sigma);
- //s1.setDtALETwoPhase(dt);
  s1.setMu(mu_in,mu_out);
  s1.setRho(rho_in,rho_out);
  s1.setCfl(cfl);
- s1.init();
+ s1.initAnnular();
  s1.setDtALETwoPhase();
  s1.setSolverPressure(solverP);
  s1.setSolverVelocity(solverV);
@@ -150,6 +140,7 @@ int main(int argc, char **argv)
   s1.matMount();
   s1.setUnCoupledBC();
   s1.setRHS();
+  s1.setGravity("+Z");
   //s1.setInterface();
   s1.setInterfaceGeo();
   s1.unCoupled();
@@ -171,21 +162,24 @@ int main(int argc, char **argv)
   iter++;
  }
   Model3D mOld = m1; 
-  m1.setTriEdge(triEdge);
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
-  //m1.setNormalAndKappa();
+  m1.setNormalAndKappa();
+  m1.initMeshParameters();
 
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume(0.005);
+  m1.remove3dMeshPointsByDiffusion();
+  //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.delete3DPoints();
+  m1.remove3dMeshPointsByHeight();
+  m1.delete3DPoints();
 
   // surface operations
+  m1.smoothPointsByCurvature();
+
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
   //m1.removePointsByCurvature();
@@ -193,7 +187,9 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   //m1.flipTriangleEdge();
+
   //m1.removePointByNeighbourCheck();
+  //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();
@@ -205,7 +201,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallAnnularBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -216,12 +212,6 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }
 

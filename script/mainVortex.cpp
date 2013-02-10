@@ -41,9 +41,9 @@ int main(int argc, char **argv)
  real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.5;   // surface smooth cord (fujiwara)
+ real d2 = 0.3;   // surface smooth cord (fujiwara)
 
- real dt = 0.01;
+ real dt = 0.003;
  real T = 3.0;
 
  //string meshFile = "sphere.msh";
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 301;
+ int nIter = 1001;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {

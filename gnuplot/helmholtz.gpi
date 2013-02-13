@@ -16,8 +16,10 @@ unset grid
 set key at 1.0,0.45
 set key box linestyle 1
 
-set terminal postscript enhanced
-set output '| ps2pdf - ~/Desktop/helmholtz1.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,23"
+# set output '| ps2pdf - helmholtz.pdf'
+#-------------------------------------------------- 
 
 N = "last"
 obj1 = "../dat/edge1."

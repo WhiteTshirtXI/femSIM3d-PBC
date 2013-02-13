@@ -5,28 +5,30 @@ unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
 #set title "Falling Drop" 
-set xlabel "time"
-set ylabel "z-velocity"
+set xlabel "time (t)" offset 1,0
+set ylabel "drop velocity (w)" offset 1,0
 set label
-set xrange [0.0:0.8]
-#set yrange [0.5:3.5]
+set xrange [0.0:1.6]
+set xtics 0.2
+set yrange [-1.8:0.2]
+set ytics 0.2
 unset grid
 
-set key at 0.7,-1
+set key at 1.5,-0.0
 set key box linestyle 1
 
 #--------------------------------------------------
-# set terminal postscript enhanced
-# set output '| ps2pdf ~/Desktop/fallingVel.pdf'
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - fallingVel.pdf'
 #-------------------------------------------------- 
 
 #
 # Eq.: v = g*t
 #
-gravity = 1.0
-g(x)=0-gravity*x
+g = -1.0
+g(x)=g*x
 
 fileObj = "../dat/volume1.dat"
 
 plot fileObj using 1:($5) every 20 title 'numeric' with points ,\
- 	 g(x) title 'v(x)=0-9.81*x' with lines 
+ 	 g(x) title 'analytical' with lines 

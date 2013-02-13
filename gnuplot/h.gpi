@@ -13,6 +13,11 @@ set xrange [0.0:15.0]
 #set yrange [0.8:0.9]
 unset grid
 
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - h.pdf'
+#-------------------------------------------------- 
+
 N= "last"
 fileObj1 = "vk1."
 fileObj2 = "vk2."

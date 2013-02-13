@@ -5,26 +5,30 @@ unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
 #set title "Chordal Pressure among phases" 
-set xlabel "x-coordinate"
-set ylabel "nondimensional pressure"
-set xrange [-1.5:1.5]
+set xlabel "x"
+set ylabel "pressure (p)" offset 1,0
+set xrange [-1.0:1.0]
 set yrange [-3:23]
-set key right center
+set key at 0.3,6
+#set key outside font "Times-Roman,25"
 set key box linestyle 1
+set boxwidth 1
 unset grid
 
-set terminal postscript enhanced
-set output '~/Desktop/chordalPressure.ps'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - chordalPressure.pdf'
+#-------------------------------------------------- 
 
-fileObj1 = "~/projects/python/femSIM3d/staticDroplet1/dat/chordalPressure-last.dat"
-fileObj2 = "~/projects/python/femSIM3d/staticDroplet2/dat/chordalPressure-last.dat"
-fileObj3 = "~/projects/python/femSIM3d/staticDroplet3/dat/chordalPressure-last.dat"
-fileObj4 = "~/projects/python/femSIM3d/staticDroplet4/dat/chordalPressure-last.dat"
-fileObj5 = "~/projects/python/femSIM3d/staticDroplet5/dat/chordalPressure-last.dat"
+fileObj1 = "../chordalPressure1.dat"
+fileObj2 = "../chordalPressure2.dat"
+fileObj3 = "../chordalPressure3.dat"
+fileObj4 = "../chordalPressure4.dat"
+fileObj5 = "../chordalPressure5.dat"
 
-plot fileObj1 using 1:4 title '280 points' with lines,\
-     fileObj2 using 1:4 title '476 points' with lines,\
-     fileObj3 using 1:4 title '1024 points' with lines,\
-     fileObj4 using 1:4 title '1318 points' with lines,\
-     fileObj5 using 1:4 title '2054 points' with lines
+plot fileObj1 using 1:4 title 'h=0.10' with points ls 4 lw 1,\
+     fileObj3 using 1:4 title 'h=0.06' with points ls 5 lw 1,\
+     fileObj5 using 1:4 title 'h=0.03' with lines ls 1 lw 3
+
+
 

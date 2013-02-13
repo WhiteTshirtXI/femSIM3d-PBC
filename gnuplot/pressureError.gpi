@@ -9,10 +9,10 @@ set xlabel "surface edge length"
 set ylabel "kappa error[%]"
 unset grid
 
-#set terminal pdf
-#set output '~/Desktop/kappaError.pdf'
-#set terminal postscript enhanced
-#set output '~/Desktop/plot.ps'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,23"
+# set output '| ps2pdf - pressureError.pdf'
+#-------------------------------------------------- 
 
 set log xy
 

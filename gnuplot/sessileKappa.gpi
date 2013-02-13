@@ -4,21 +4,26 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set size ratio -1
-set title "Sessile Drop - curvature" 
-set xlabel "curvature"
-set ylabel "pressure"
+set xlabel "height (z)" font "Times-Roman,25" offset 0,0
+set ylabel "curvature ({/Symbol k})" font "Times-Roman,25" offset 1,0
 set label
-#set xrange [0.0:2.5]
-#set yrange [0.5:3.5]
+set xrange [-0.09:0.90]
+set xtics 0.2
+set yrange [0.00:6.2]
+set ytics 2
 unset grid
+set key at 0.85,1.5
+set key box linestyle 1
 
-set terminal pdf
-set output '~/Desktop/sessileKappa.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - sessileKappa.pdf'
+#-------------------------------------------------- 
 
-f(x) = -0.21*x+1.4821428342
+f(x) = 5.0-2.0*x
 
 fileObj = "~/projects/cpp/validations/dist.8000"
 
-plot fileObj using 5:6 every 1 title 'numeric' with points ,\
- 	 f(x) title 'f(x)=-0.21*x+1.482' with lines 
+plot fileObj using 5:6 every 1 title 'numeric'\
+             with points ls 4 lw 2,\
+ 	 f(x) title 'analytical' with lines ls 1 lw 4

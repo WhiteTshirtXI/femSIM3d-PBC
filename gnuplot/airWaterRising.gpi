@@ -4,19 +4,23 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set title "Bubble rise velocity" 
-set xlabel "time"
-set ylabel "velocity"
+#set title "Bubble rise velocity" 
+set xlabel "time (t)" offset 0,0
+set ylabel "bubble rising velocity (w)" offset 1,0
 set label
-#set xrange 
-#set yrange 
-unset grid
+#set xrange [0.0:8.2]
+set xtics 2.0
+set mxtics 4
+#set yrange [0.0:0.7]
+set ytics 0.1
+set grid
 set key right center
-set key box linestyle 7
+set key box linestyle 1
 
-#set terminal pdf
-#set terminal postscript enhanced
-#set output 'teste.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - airWaterRising.pdf'
+#-------------------------------------------------- 
 
 # -------------------------------------------------------------------------- #
 #         -- Experimental data from Zun (1981) and Peebles (1964) --         #
@@ -51,6 +55,7 @@ if (D==0.003) v_exp_zun(x)=0.280; v_exp_pee(x)=0.296; fileObj = "../dat/3mmvolum
 if (D==0.004) v_exp_zun(x)=0.250; v_exp_pee(x)=0.256; fileObj = "../dat/4mmvolume1.dat";
 if (D==0.005) v_exp_zun(x)=0.235; v_exp_pee(x)=0.229; fileObj = "../dat/5mmvolume1.dat";
 
-plot fileObj using 1:($8*sqrt(g*D)) title 'air water-sugar' with lines,\
-     v_exp_zun(x),\
-     v_exp_pee(x)
+plot fileObj using 1:($8*sqrt(g*D)) title 'air water'\
+             with lines ls 3 lw 4,\
+     v_exp_zun(x) with lines ls 1 lw 3,\
+     v_exp_pee(x) with lines ls 2 lw 3

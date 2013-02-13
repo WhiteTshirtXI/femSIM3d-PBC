@@ -12,8 +12,10 @@ set xrange [0.0:10.3]
 set yrange [-0.1:1.1]
 unset grid
 
-#set terminal pdf
-#set output 'teste.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - plot.pdf'
+#-------------------------------------------------- 
 
 N = "last"
 fileObj = "../sim/vk2."

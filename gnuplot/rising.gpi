@@ -4,19 +4,23 @@ unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
 set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
-set title "Bubble rise velocity" 
-set xlabel "time"
-set ylabel "velocity"
+#set title "Bubble rise velocity" 
+set xlabel "time (t)" offset 0,0
+set ylabel "bubble rising velocity (w)" offset 1,0
 set label
-#set xrange 
-#set yrange 
-unset grid
+#set xrange [0.0:8.2]
+set xtics 2.0
+set mxtics 4
+#set yrange [0.0:0.7]
+set ytics 0.1
+set grid
 set key right center
-set key box linestyle 7
+set key box linestyle 1
 
-#set terminal pdf
-#set terminal postscript enhanced
-#set output 'teste.pdf'
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - rising.pdf'
+#-------------------------------------------------- 
 
 # -------------------------------------------------------------------------- #
 #           -- Experimental data from Bhaga and Weber (1981) --              #
@@ -49,9 +53,9 @@ D=0.0261
 #mu=2.0370
 #mu=1.2771
 #mu=0.7728
-mu=0.5396
+#mu=0.5396
 #mu=0.2857
-#mu=0.1324
+mu=0.1324
 #mu=0.0875
 rho=1350
 v_star=system("tail -n1 ../dat/volume1.dat | awk '{print $5}'")
@@ -68,5 +72,6 @@ if (mu==0.1324) v_exp(x)=0.35330;
 if (mu==0.0875) v_exp(x)=0.37504;
 
 fileObj = "../dat/volume1.dat"
-plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar' with lines,\
-     v_exp(x)
+plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar'\
+             with lines ls 3 lw 4,\
+     v_exp(x) title 'Bhaga and Weber, 1981' with lines ls 1 lw 3

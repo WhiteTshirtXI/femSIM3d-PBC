@@ -2,33 +2,34 @@
 set   autoscale                        # scale axes automatically
 unset log                              # remove any log-scaling
 unset label                            # remove any previous labels
+#set xlabel 
 set xtic auto                          # set xtics automatically
+#set ylabel 
 set ytic auto                          # set ytics automatically
-set title "Kappa Error- Convergence Order" 
-set xlabel "surface edge length"
-set ylabel "kappa error[%]"
+#set title "Kappa Error- Convergence Order" 
+set xlabel "edge length (h)" offset 1,0
+set ylabel "curvature error" offset 1,0
+#set ylabel "curvature error ({/Symbol k}_e)" offset 1,0
+set format y "10^{%L}"
 unset grid
 
-#set terminal pdf
-#set output '~/Desktop/kappaError.pdf'
-#set terminal postscript enhanced
-#set output '~/Desktop/plot.ps'
+set key at 0.8,0.001
+set key box linestyle 1
+
+#--------------------------------------------------
+# set terminal postscript enhanced font "Times-Roman,25"
+# set output '| ps2pdf - kappaError.pdf'
+#-------------------------------------------------- 
 
 set log xy
 
-fileObj = '../dat/kappa.dat'
-
-Xmin=0.01
-Xmax=0.1
-Ymin=0.1
-Ymax=0.3
-set xrange [Xmin:Xmax]
-set yrange [Ymin:Ymax]
+fileObj = '../kappaSphere.dat'
 
 f(x)=x
 g(x)=x*x
+set samples 10
 
-plot fileObj using 6:4 title 'numeric' with lines,\
-     f(x) with lines,\
-	 g(x) with lines
+plot fileObj using 6:4 title 'numerical' with lines ls 1 lw 3,\
+     f(x) title 'first order'  with lp ls 4 lw 3,\
+	 g(x) title 'second order' with lp ls 5 lw 3
 

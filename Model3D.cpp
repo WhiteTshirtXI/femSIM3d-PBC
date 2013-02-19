@@ -9071,25 +9071,23 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
                    surfMesh.yNormal.Get(_v1),
                    surfMesh.zNormal.Get(_v1),
                    v1xUnit,v1yUnit,v1zUnit);
- x1 += rand()*1E-06;
+ x1 += rand()*1E-06; // perturbing vector
 
  real y1 = dotProd(surfMesh.xNormal.Get(_v1),
                    surfMesh.yNormal.Get(_v1),
                    surfMesh.zNormal.Get(_v1),
                    normalXUnit,normalYUnit,normalZUnit);
- y1 += rand()*1E-06;
+ y1 += rand()*1E-06; // perturbing vector
 
  real x2 = dotProd(surfMesh.xNormal.Get(_v2),
                    surfMesh.yNormal.Get(_v2),
                    surfMesh.zNormal.Get(_v2),
                    v1xUnit,v1yUnit,v1zUnit);
- x2 += rand()*1E-06;
 
  real y2 = dotProd(surfMesh.xNormal.Get(_v2),
                    surfMesh.yNormal.Get(_v2),
                    surfMesh.zNormal.Get(_v2),
                    normalXUnit,normalYUnit,normalZUnit);
- y2 += rand()*1E-06;
 
  /* Once defined a plane and having the 2 normal vectors associated to the
   * vertices v1 and v2 projected to this plane (normalUnit, v1Unit), we
@@ -9118,8 +9116,8 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
   *            det                              det
   *
   * */
- real det = (-1)*(x2/y2)+(x1/y1);
- real Xc = ( (x1/y1)*a )/det;
+ real det = (-1)*(x2/(y2+1E-06))+(x1/(y1+1E-06));
+ real Xc = ( (x1/(y1+1E-06))*a )/det;
  real Yc = a/det;
  real d1 = distance(Xc,Yc,0.0,0.0);
  real d2 = distance(Xc,Yc,a,0.0);

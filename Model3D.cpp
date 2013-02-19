@@ -1206,8 +1206,8 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   insertSurfacePoint(edge,"flat");
-   //insertSurfacePoint(edge,"curvature");
+   //insertSurfacePoint(edge,"flat");
+   insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -2617,12 +2617,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 
  // curvature is approx. the average between vertices
 //--------------------------------------------------
-real curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
-cout << "curv(v1):      " << surfMesh.curvature.Get(v1) << endl;
-cout << "curv(v2):      " << surfMesh.curvature.Get(v2) << endl;
-cout << "curv(v3elem1): " << surfMesh.curvature.Get(v3elem1) << endl;
-cout << "curv(v3elem2): " << surfMesh.curvature.Get(v3elem2) << endl;
-cout << "new curv:        " << curv << endl;
+//real curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
 //  surfMesh.curvature.AddItem(curv);
 //  curvature.AddItem(vAdd,curv);
 //-------------------------------------------------- 
@@ -2631,7 +2626,14 @@ cout << "new curv:        " << curv << endl;
                     getNeighbourSurfacePoint(vAdd));
  surfMesh.curvature.AddItem(myVec.Get(0));
  curvature.AddItem(vAdd,myVec.Get(0));
- cout << "calculated curv: " << myVec.Get(0) << endl;
+//--------------------------------------------------
+// cout << "curv(v1):      " << surfMesh.curvature.Get(v1) << endl;
+// cout << "curv(v2):      " << surfMesh.curvature.Get(v2) << endl;
+// cout << "curv(v3elem1): " << surfMesh.curvature.Get(v3elem1) << endl;
+// cout << "curv(v3elem2): " << surfMesh.curvature.Get(v3elem2) << endl;
+// cout << "new curv:        " << curv << endl;
+// cout << "calculated curv: " << myVec.Get(0) << endl;
+//-------------------------------------------------- 
 }
 
 void Model3D::removeSurfacePoint(int _node)
@@ -2760,30 +2762,30 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-   // flat
-   real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-   real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-   real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-   surfMesh.X.Set(v1, XvNew );
-   surfMesh.Y.Set(v1, YvNew );
-   surfMesh.Z.Set(v1, ZvNew );
-   X.Set(v1, XvNew );
-   Y.Set(v1, YvNew );
-   Z.Set(v1, ZvNew );
-
 //--------------------------------------------------
-//    // using curvature
-//    clVector coordAdd = considerCurvature(v1,v2);
-//    real XvAdd = coordAdd.Get(0);
-//    real YvAdd = coordAdd.Get(1);
-//    real ZvAdd = coordAdd.Get(2);
-//    surfMesh.X.Set(v1, XvAdd );
-//    surfMesh.Y.Set(v1, YvAdd );
-//    surfMesh.Z.Set(v1, ZvAdd );
-//    X.Set(v1, XvAdd );
-//    Y.Set(v1, YvAdd );
-//    Z.Set(v1, ZvAdd );
+//    // flat
+//    real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+//    real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+//    real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+//    surfMesh.X.Set(v1, XvNew );
+//    surfMesh.Y.Set(v1, YvNew );
+//    surfMesh.Z.Set(v1, ZvNew );
+//    X.Set(v1, XvNew );
+//    Y.Set(v1, YvNew );
+//    Z.Set(v1, ZvNew );
 //-------------------------------------------------- 
+
+   // using curvature
+   clVector coordAdd = considerCurvature(v1,v2);
+   real XvAdd = coordAdd.Get(0);
+   real YvAdd = coordAdd.Get(1);
+   real ZvAdd = coordAdd.Get(2);
+   surfMesh.X.Set(v1, XvAdd );
+   surfMesh.Y.Set(v1, YvAdd );
+   surfMesh.Z.Set(v1, ZvAdd );
+   X.Set(v1, XvAdd );
+   Y.Set(v1, YvAdd );
+   Z.Set(v1, ZvAdd );
 
 //--------------------------------------------------
 //    // using bi-curvature
@@ -8995,9 +8997,30 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
 
  // average global normal vector - vertex
  // normal defined outward the bubble
- real normalX = surfMesh.xNormal.Get(_v1)+surfMesh.xNormal.Get(_v2);
- real normalY = surfMesh.yNormal.Get(_v1)+surfMesh.yNormal.Get(_v2);
- real normalZ = surfMesh.zNormal.Get(_v1)+surfMesh.zNormal.Get(_v2);
+ real nX = surfMesh.xNormal.Get(_v1)+surfMesh.xNormal.Get(_v2);
+ real nY = surfMesh.yNormal.Get(_v1)+surfMesh.yNormal.Get(_v2);
+ real nZ = surfMesh.zNormal.Get(_v1)+surfMesh.zNormal.Get(_v2);
+
+ // eh preciso agora criar um vetor no plano formado por normalX,Y,Z que
+ // seja perpendicular ao vetor v1-v2.
+ // o problema eh que normalX,Y,Z nao eh perpendicular a v1Unit
+ // e neste ponto ele precisa ser!
+ // to be implemented!
+
+ // cross product of v1Unit and n vectors
+ clVector normalRes = crossProd(v1xUnit,v1yUnit,v1zUnit,
+                                nX,nY,nZ);
+ // cross product of normalRes and v1Unit to find perpendicular vector
+ // to v1Unit that is in the plane formed by v1Unit and nX,Y,Z.
+ clVector normalVec = crossProd(normalRes.Get(0),
+	                            normalRes.Get(1),
+								normalRes.Get(2),
+								v1xUnit,v1yUnit,v1zUnit);
+
+ // this vector is perpendicular to v1Unit
+ real normalX = normalVec.Get(0);
+ real normalY = normalVec.Get(1);
+ real normalZ = normalVec.Get(2);
 
  real len = vectorLength( normalX,normalY,normalZ );
 

@@ -2762,45 +2762,52 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-//--------------------------------------------------
-//    // flat
-//    real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-//    real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-//    real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-//    surfMesh.X.Set(v1, XvNew );
-//    surfMesh.Y.Set(v1, YvNew );
-//    surfMesh.Z.Set(v1, ZvNew );
-//    X.Set(v1, XvNew );
-//    Y.Set(v1, YvNew );
-//    Z.Set(v1, ZvNew );
-//-------------------------------------------------- 
+   const char* _mode = "curvature";
 
-   // using curvature
-   clVector coordAdd = considerCurvature(v1,v2);
-   real XvAdd = coordAdd.Get(0);
-   real YvAdd = coordAdd.Get(1);
-   real ZvAdd = coordAdd.Get(2);
-   surfMesh.X.Set(v1, XvAdd );
-   surfMesh.Y.Set(v1, YvAdd );
-   surfMesh.Z.Set(v1, ZvAdd );
-   X.Set(v1, XvAdd );
-   Y.Set(v1, YvAdd );
-   Z.Set(v1, ZvAdd );
+   if( strcmp( _mode,"flat") == 0 ) 
+   {
+	// flat
+	real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+	real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+	real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+	surfMesh.X.Set(v1, XvNew );
+	surfMesh.Y.Set(v1, YvNew );
+	surfMesh.Z.Set(v1, ZvNew );
+	X.Set(v1, XvNew );
+	Y.Set(v1, YvNew );
+	Z.Set(v1, ZvNew );
+   }
 
-//--------------------------------------------------
-//    // using bi-curvature
-//    clVector coordAdd1 = considerCurvature(v1,v2);
-//    clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
-//    real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
-//    real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
-//    real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
-//    surfMesh.X.Set(v1, XvAdd );
-//    surfMesh.Y.Set(v1, YvAdd );
-//    surfMesh.Z.Set(v1, ZvAdd );
-//    X.Set(v1, XvAdd );
-//    Y.Set(v1, YvAdd );
-//    Z.Set(v1, ZvAdd );
-//-------------------------------------------------- 
+   if( strcmp( _mode,"curvature") == 0 ) 
+   {
+	// using curvature
+	clVector coordAdd = considerCurvature(v1,v2);
+	real XvAdd = coordAdd.Get(0);
+	real YvAdd = coordAdd.Get(1);
+	real ZvAdd = coordAdd.Get(2);
+	surfMesh.X.Set(v1, XvAdd );
+	surfMesh.Y.Set(v1, YvAdd );
+	surfMesh.Z.Set(v1, ZvAdd );
+	X.Set(v1, XvAdd );
+	Y.Set(v1, YvAdd );
+	Z.Set(v1, ZvAdd );
+   }
+
+   if( strcmp( _mode,"bi-curvature") == 0 ) 
+   {
+	// using bi-curvature
+	clVector coordAdd1 = considerCurvature(v1,v2);
+	clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+	real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+	real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+	real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+	surfMesh.X.Set(v1, XvAdd );
+	surfMesh.Y.Set(v1, YvAdd );
+	surfMesh.Z.Set(v1, ZvAdd );
+	X.Set(v1, XvAdd );
+	Y.Set(v1, YvAdd );
+	Z.Set(v1, ZvAdd );
+   }
 
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )

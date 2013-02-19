@@ -9071,7 +9071,6 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
                    surfMesh.yNormal.Get(_v1),
                    surfMesh.zNormal.Get(_v1),
                    v1xUnit,v1yUnit,v1zUnit);
- x1 += rand()*1E-06; // perturbing vector
 
  real y1 = dotProd(surfMesh.xNormal.Get(_v1),
                    surfMesh.yNormal.Get(_v1),
@@ -9088,6 +9087,7 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
                    surfMesh.yNormal.Get(_v2),
                    surfMesh.zNormal.Get(_v2),
                    normalXUnit,normalYUnit,normalZUnit);
+ y1 += rand()*1E-06; // perturbing vector
 
  /* Once defined a plane and having the 2 normal vectors associated to the
   * vertices v1 and v2 projected to this plane (normalUnit, v1Unit), we

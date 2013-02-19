@@ -9115,7 +9115,7 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
   *
   * */
  real det = (-1)*(x2/(y2+1E-06))+(x1/(y1+1E-06));
- real Xc = ( (x1/y1)*a )/det;
+ real Xc = ( (x1/(y1+1E-06))*a )/det;
  real Yc = a/det;
  real d1 = distance(Xc,Yc,0.0,0.0);
  real d2 = distance(Xc,Yc,a,0.0);
@@ -9176,6 +9176,18 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
  real yMidNew1 = Yc + sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
  real yMidNew2 = Yc - sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
 
+ // find the closest vertex to the middle of the edge
+ real dist1 = dist(0.0,yMidNew1);
+ real dist2 = dist(0.0,yMidNew2);
+
+ // yMid will have the value of the point correction coord related to
+ // the circunfenrece
+ real yMid = 0.0;
+ if( dist1<dist2 ) // pick the closest new vertex 
+  yMid = yMidNew1;
+ else
+  yMid = yMidNew2;
+
  /* 
   *     3D coords         2D coords
   * X(v1),Y(v1),Z(v1) |---> (0,0)x(0,yUnit)
@@ -9187,39 +9199,9 @@ clVector Model3D::considerCurvature(int _v1,int _v2)
   *       (X,Y) |-----> P1 + v1Unit*xMid + normalUnit*yMidNew
   *
   * */
- real Xcurv1 = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMidNew1);
- real Ycurv1 = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMidNew1);
- real Zcurv1 = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMidNew1);
- real Xcurv2 = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMidNew2);
- real Ycurv2 = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMidNew2);
- real Zcurv2 = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMidNew2);
-
- // middle of an edge 
- real Xmid = P1x + (v1xUnit*a/2.0);
- real Ymid = P1y + (v1yUnit*a/2.0);
- real Zmid = P1z + (v1zUnit*a/2.0);
-
- real dist1 = distance(Xmid,Ymid,Zmid,Xcurv1,Ycurv1,Zcurv1);
- real dist2 = distance(Xmid,Ymid,Zmid,Xcurv2,Ycurv2,Zcurv2);
-
- //real up = dotProd(m1x,m1y,m1z,normalXUnit,normalYUnit,normalZUnit);
- //real down = dotProd(m2x,m2y,m2z,normalXUnit,normalYUnit,normalZUnit);
-
- real XvAdd=0;
- real YvAdd=0;
- real ZvAdd=0;
- if( dist1<dist2 ) // pick the the closest new vertex 
- {
-  XvAdd = Xcurv1;
-  YvAdd = Ycurv1;
-  ZvAdd = Zcurv1;
- }
- else
- {
-  XvAdd = Xcurv2;
-  YvAdd = Ycurv2;
-  ZvAdd = Zcurv2;
- }
+ real XvAdd = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMid);
+ real YvAdd = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMid);
+ real ZvAdd = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMid);
 
  clVector coordAdd(3);
  coordAdd.Set(0,XvAdd);

@@ -1206,8 +1206,8 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   //insertSurfacePoint(edge,"flat");
-   insertSurfacePoint(edge,"curvature");
+   insertSurfacePoint(edge,"flat");
+   //insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -1403,8 +1403,8 @@ void Model3D::insertPointsByCurvature()
   if( curv1*length > 2.5 || curv2*length > 2.5  )
   {
    cout << "----------- Inserting by curvature..." << endl;
-   //insertSurfacePoint(i,"flat");
-   insertSurfacePoint(i,"curvature");
+   insertSurfacePoint(i,"flat");
+   //insertSurfacePoint(i,"curvature");
    //insertSurfacePoint(i,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -1453,8 +1453,8 @@ void Model3D::insertPointsByInterfaceDistance()
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
 	  edgeLength > 4*dy )
   {
-   //insertSurfacePoint(i,"flat");
-   insertSurfacePoint(i,"curvature");
+   insertSurfacePoint(i,"flat");
+   //insertSurfacePoint(i,"curvature");
    //insertSurfacePoint(i,"bi-curvature");
   }
  }
@@ -2327,13 +2327,6 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  real XvAdd = 0.0;
  real YvAdd = 0.0;
  real ZvAdd = 0.0;
- if( strcmp( _mode,"flat") == 0 ) 
- {
-  // add point in the middle of a edge (not consider curvature)
-  XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-  YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-  ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
- }
 
  if( strcmp( _mode,"bi-curvature") == 0 ) 
  {
@@ -2343,14 +2336,21 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
   YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
   ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
  }
-
- if( strcmp( _mode,"curvature") == 0 ) 
+ else if( strcmp( _mode,"curvature") == 0 ) 
  {
   clVector coordAdd = considerCurvature(v1,v2);
   XvAdd = coordAdd.Get(0);
   YvAdd = coordAdd.Get(1);
   ZvAdd = coordAdd.Get(2);
  }
+ else // flat
+ {
+  // add point in the middle of a edge (not consider curvature)
+  XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+  YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+  ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+ }
+
 
 //--------------------------------------------------
 //   cout << "Flat: " << endl;
@@ -2762,21 +2762,7 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-   const char* _mode = "curvature";
-
-   if( strcmp( _mode,"flat") == 0 ) 
-   {
-	// flat
-	real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-	real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-	real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-	surfMesh.X.Set(v1, XvNew );
-	surfMesh.Y.Set(v1, YvNew );
-	surfMesh.Z.Set(v1, ZvNew );
-	X.Set(v1, XvNew );
-	Y.Set(v1, YvNew );
-	Z.Set(v1, ZvNew );
-   }
+   const char* _mode = "flat";
 
    if( strcmp( _mode,"curvature") == 0 ) 
    {
@@ -2792,8 +2778,7 @@ void Model3D::contractEdgeByLength()
 	Y.Set(v1, YvAdd );
 	Z.Set(v1, ZvAdd );
    }
-
-   if( strcmp( _mode,"bi-curvature") == 0 ) 
+   else if( strcmp( _mode,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
 	clVector coordAdd1 = considerCurvature(v1,v2);
@@ -2808,6 +2793,20 @@ void Model3D::contractEdgeByLength()
 	Y.Set(v1, YvAdd );
 	Z.Set(v1, ZvAdd );
    }
+   else // flat
+   {
+	// flat
+	real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+	real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+	real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+	surfMesh.X.Set(v1, XvNew );
+	surfMesh.Y.Set(v1, YvNew );
+	surfMesh.Z.Set(v1, ZvNew );
+	X.Set(v1, XvNew );
+	Y.Set(v1, YvNew );
+	Z.Set(v1, ZvNew );
+   }
+
 
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )

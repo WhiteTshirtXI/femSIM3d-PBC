@@ -58,9 +58,11 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
+ m1.setOFace();
+ m1.setVertNeighbour();
+ m1.setInOutVert();
  m1.setStepBC();
  m1.setCStepBC();
- m1.setOFace();
 
  Simulator3D s1(m1);
 
@@ -116,6 +118,7 @@ int main(int argc, char **argv)
    s1.setCRHS();
    s1.unCoupled();
    s1.unCoupledC();
+
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTU(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);

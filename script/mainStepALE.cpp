@@ -23,28 +23,22 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 1;
- real Re = 10;
- real Sc = 20;
+ real Re = 1000;
+ real Sc = 200;
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.0;  // lagrangian
+ real c1 = 0.3;  // lagrangian
  real c2 = 0.0;  // smooth vel
- real c3 = 0.0;  // smooth coord (fujiwara)
- real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.0;  // surface smooth cord (fujiwara)
- real cfl = 1;
+ real c3 = 5.0;  // smooth coord (fujiwara)
+ real cfl = 0.1;
  real mu_l = 1.0;
  real rho_l = 1.0;
- //Solver *solverP = new PCGSolver();
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
- //Solver *solverP = new PetscSolver(KSPLSQR,PCILU);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "circular.msh";
+ string meshFile = "backwardStep.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
@@ -91,10 +85,8 @@ int main(int argc, char **argv)
  s1.setC1(c1);
  s1.setC2(c2);
  s1.setC3(c3);
- s1.setD1(d1);
- s1.setD2(d2);
  s1.setCfl(cfl);
- s1.setDtEulerian();
+ s1.setDtALESinglePhase();
  s1.setMu(mu_l);
  s1.setRho(rho_l);
  s1.setSolverPressure(solverP);
@@ -149,6 +141,7 @@ int main(int argc, char **argv)
 
    s1.setDtALESinglePhase();
 
+   InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
    //s1.stepSL();
@@ -170,6 +163,7 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",iter);
 
    s1.saveOldData();
+   s1.setCfl(1.0);
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
@@ -226,8 +220,6 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }
 

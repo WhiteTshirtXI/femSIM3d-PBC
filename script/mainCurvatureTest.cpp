@@ -44,21 +44,7 @@ int main(int argc, char **argv)
 #endif
  m1.setOFace();
 
- m1.setVertNeighbour(); // neighbourVert (3D mesh)
- m1.setInOutVert(); // inVert e boundaryVert
- m1.setInOutElem(); // inElem e outElem
- m1.setSurface(); // surface e nonSurface
- m1.setInterfaceDistance();
- m1.setNeighbourSurfaceElem(); 
- m1.setNeighbourSurfacePoint();
- m1.setMapEdge(); 
- m1.setMapEdgeTri(); 
- m1.setNormalAndKappa();
-
- m1.setSurfaceVolume();
- m1.setSurfaceArea();
- //m1.triMeshStats();
- //m1.tetMeshStats();
+ m1.setSurfaceConfig();
 
  InOut i1(m1);
 

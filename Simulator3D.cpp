@@ -2114,7 +2114,7 @@ void Simulator3D::stepALEVel()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
- //stepSL();
+ stepSL();
 } // fecha metodo stepALEVel
 
 /* move nodes according to ALE velocity 

@@ -185,7 +185,7 @@ class InOut
   void copyLastFile(const char* _dir,const char* _filename,const char* _name);
 
   /* VTK Building Tools  */
-  void setCutPlaneTwoPhase(ofstream& _file);
+  void setCutPlane(ofstream& _file);
   void vtkHeader(ofstream& _file);
   void vtkHeader(ofstream& _file,int _iter);
   void vtkCoords(ofstream& _file);

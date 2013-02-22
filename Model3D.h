@@ -238,7 +238,6 @@ class Model3D
   void edgeMidPointPositionCorrection();
   void checkTetrahedronOrientation();
   void checkTriangleOrientation();
-  void checkTriangleOrientationPerfect();
   void setQuadElement();             
   void setNeighbour();
   void setNeighbourSurfaceElem();
@@ -256,6 +255,7 @@ class Model3D
   void setKappaSurface(clVector &_kappa);
   void setCloser();
   void setInterfaceDistance();
+  void restoreMappingArrays();
   clVector getNormalAndKappa(int _node,list<int> _myList);
   //clVector getNormalAndKappaByGauss(int _node,list<int> _myList);
   clVector getNormalAndKappaByDesbrun(int _node,list<int> _myList);

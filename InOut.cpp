@@ -483,8 +483,7 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
 
- if( surfMesh->numInterfaces > 0 )
-  setCutPlaneTwoPhase(vtkFile); // set cut plane functions
+ setCutPlane(vtkFile); // set cut plane functions
 
  if( uALE->Dim() > 0 )
   vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
@@ -2908,6 +2907,9 @@ void InOut::printSimulationReport()
 	  << " number:                                  " 
 	  << Fr << endl;
  cout << color(none,magenta,black)
+      << "          Schmidt" << resetColor()
+	  << " number:                                " << Sc << endl;
+ cout << color(none,magenta,black)
       << "          Webber/Eotvos" << resetColor()
 	  << " number:                          " << We << endl;
  cout << color(none,magenta,black)
@@ -4146,62 +4148,7 @@ void InOut::copyLastFile(const char* _dir,
  outFile.close();
 }
 
-//--------------------------------------------------
-// void InOut::setCutPlaneTwoPhase(ofstream& _file)
-// {
-//  real plane1 = ( X->Max()+X->Min() )/2.0;
-//  real plane2 = ( Y->Max()+Y->Min() )/2.0;
-//  real plane3 = ( Z->Max()+Z->Min() )/2.0;
-//  clVector cutPlaneX(numElems);
-//  clVector cutPlaneY(numElems);
-//  clVector cutPlaneZ(numElems);
-//  for( int i=0;i<numElems;i++ )
-//  {
-//   int v1 = IEN->Get(i,0);
-//   int v2 = IEN->Get(i,1);
-//   int v3 = IEN->Get(i,2);
-//   int v4 = IEN->Get(i,3);
-//   bool planeTestX = (X->Get( v1 ) <  plane1) && 
-//                     (X->Get( v2 ) <  plane1) && 
-// 					(X->Get( v3 ) <  plane1) && 
-// 					(X->Get( v4 ) <  plane1);
-// 
-//   bool planeTestY = (Y->Get( v1 ) <  plane2) && 
-//                     (Y->Get( v2 ) <  plane2) && 
-// 					(Y->Get( v3 ) <  plane2) && 
-// 					(Y->Get( v4 ) <  plane2);
-// 
-//   bool planeTestZ = (Z->Get( v1 ) <  plane3) && 
-//                     (Z->Get( v2 ) <  plane3) && 
-// 					(Z->Get( v3 ) <  plane3) && 
-// 					(Z->Get( v4 ) <  plane3);
-// 
-//   real hTest = heaviside->Get(v1)+heaviside->Get(v2)+
-// 	           heaviside->Get(v3)+heaviside->Get(v4) > 1.5;
-// 
-//   if( planeTestX || hTest )
-//    cutPlaneX.Set(i,1.0);
-//   else
-//    cutPlaneX.Set(i,0.0);
-// 
-//   if( planeTestY || hTest )
-//    cutPlaneY.Set(i,1.0);
-//   else
-//    cutPlaneY.Set(i,0.0);
-// 
-//   if( planeTestZ || hTest )
-//    cutPlaneZ.Set(i,1.0);
-//   else
-//    cutPlaneZ.Set(i,0.0);
-//  }
-// 
-//   vtkScalarCell(_file,"cutPlaneX",cutPlaneX);
-//   vtkScalarCell(_file,"cutPlaneY",cutPlaneY);
-//   vtkScalarCell(_file,"cutPlaneZ",cutPlaneZ);
-// }
-//-------------------------------------------------- 
-
-void InOut::setCutPlaneTwoPhase(ofstream& _file)
+void InOut::setCutPlane(ofstream& _file)
 {
  real plane1a = X->Min() +  ( X->Max()-X->Min() )/4.0;
  real plane1b = X->Min() +2*( X->Max()-X->Min() )/4.0;
@@ -4229,6 +4176,8 @@ void InOut::setCutPlaneTwoPhase(ofstream& _file)
   bool planeTestZb = (Z->Get( i ) >  plane3b); 
   bool planeTestZc = (Z->Get( i ) >  plane3c); 
 
+  // allows only the outter mesh for two-phase flows, 
+  // however it works for single phase flows too
   real hTest = heaviside->Get(i) > 0.0;
 
   if( planeTestXa || hTest )

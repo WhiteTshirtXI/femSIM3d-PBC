@@ -1847,6 +1847,8 @@ list<int> Model3D::getNeighbourSurfacePoint(int _node)
    myList.push_back(v2);
   }
  }
+ 
+ // to sort the surface neighbour list (see setPolyhedron)
  myList = setPolyhedron(myList);
  
  return myList;

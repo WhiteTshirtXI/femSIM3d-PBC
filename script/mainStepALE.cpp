@@ -28,10 +28,10 @@ int main(int argc, char **argv)
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.3;  // lagrangian
+ real c1 = 0.2;  // lagrangian
  real c2 = 0.0;  // smooth vel
- real c3 = 5.0;  // smooth coord (fujiwara)
- real cfl = 0.1;
+ real c3 = 1.0;  // smooth coord (fujiwara)
+ real cfl = 0.2;
  real mu_l = 1.0;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -55,8 +55,6 @@ int main(int argc, char **argv)
  m1.setTriEdge();
  m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
- //m1.setAdimenStep();
- //m1.setSingleElement();
  m1.setMapEdge(); 
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -64,16 +62,23 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
  m1.setOFace();
+
  m1.setVertNeighbour();
  m1.setInOutVert();
  m1.setMapEdge();
+
+ // required by Helmholtz3D
  m1.setNeighbourSurfaceElem(); 
  m1.setNeighbourSurfacePoint();
+
+ // mesh statistics info 
  m1.setInitSurfaceVolume();
  m1.setSurfaceVolume();
  m1.setInitSurfaceArea();
  m1.setSurfaceArea();
  m1.tetMeshStats();
+
+ // boundary conditions
  m1.setGenericBC();
  m1.setCStepBC();
 
@@ -163,7 +168,6 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",iter);
 
    s1.saveOldData();
-   s1.setCfl(1.0);
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 

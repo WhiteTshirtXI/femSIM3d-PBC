@@ -4354,9 +4354,18 @@ void Simulator3D::setLagrangianVelBC()
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  uSol.Set(*it,0.0);
-  vSol.Set(*it,0.0);
-  wSol.Set(*it,0.0);
+  if( surfMesh->phyBounds.at(*it) == "\"wallNormalU\"" )
+   uSolOld.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalV\"" )
+   vSolOld.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalW\"" )
+   wSolOld.Set(*it,0.0);
+  else
+  {
+   uSolOld.Set(*it,0.0);
+   vSolOld.Set(*it,0.0);
+   wSolOld.Set(*it,0.0);
+  }
  }
 }
 
@@ -4368,21 +4377,32 @@ void Simulator3D::setALEVelBC()
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  uALE.Set(*it,0.0);
-  vALE.Set(*it,0.0);
-  wALE.Set(*it,0.0);
+  if( surfMesh->phyBounds.at(*it) == "\"wallNormalU\"" )
+   uALE.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalV\"" )
+   vALE.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalW\"" )
+   wALE.Set(*it,0.0);
+  else
+  {
+   uALE.Set(*it,0.0);
+   vALE.Set(*it,0.0);
+   wALE.Set(*it,0.0);
+  }
  }
 }
 
 void Simulator3D::setAnnularALEVelBC()
 {
- real rMax = 1.0;
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  if( (Z->Get(*it) == Z->Max() || Z->Get(*it) == Z->Min() ) &&
-      (X->Get(*it)*X->Get(*it)+Y->Get(*it)*Y->Get(*it) < rMax*rMax - 0.001) )
+  if( surfMesh->phyBounds.at(*it) == "\"wallNormalU\"" )
+   uALE.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalV\"" )
+   vALE.Set(*it,0.0);
+  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalW\"" )
    wALE.Set(*it,0.0);
   else
   {

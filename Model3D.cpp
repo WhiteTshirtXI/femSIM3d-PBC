@@ -6888,16 +6888,17 @@ void Model3D::setSurfaceConfig()
  setVertNeighbour(); // neighbourVert (3D mesh)
  setInOutVert(); // inVert e boundaryVert
  setInOutElem(); // inElem e outElem
- setInterfaceDistance();
  setMapEdge(); 
 
  // update surface, edge matrix, surface neigh elems and points
  restoreMappingArrays();
 
+
  //setSurfaceTri(); // triang superficie - interfaceMesh
  //setConvexTri(); // triang parte externa do dominio - convexMesh
  //buildSurfMesh();
 
+ setInterfaceDistance();
  setNormalAndKappa();
 
  setSurfaceVolume();

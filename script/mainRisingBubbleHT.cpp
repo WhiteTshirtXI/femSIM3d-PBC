@@ -25,8 +25,6 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
- // set each bubble length
-
  int iter = 1;
  //real Re = 6.53; // case 1
  real Re = 13.8487; // case 2
@@ -36,13 +34,10 @@ int main(int argc, char **argv)
  real Fr = 1.0;
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
- real c3 = 0.0;  // smooth coord (fujiwara)
+ real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
- real beta = 1;
-
- real sigma = 0.078;
+ real alpha = 1.0;
 
  real mu_in = 0.0000178;
  real mu_out = 1.28;
@@ -50,7 +45,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out = 1350;
 
- real cfl = 1.0;
+ real cfl = 0.8;
 
  string meshFile = "bubble-tube5.msh";
  
@@ -82,7 +77,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -93,7 +87,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -107,8 +101,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
@@ -151,7 +143,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -191,7 +183,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -250,7 +242,7 @@ int main(int argc, char **argv)
  h1.setBC();
  h1.initRisingBubble();
  h1.assemble();
- h1.setk(0.7);
+ h1.setk(0.2);
  h1.matMountC();
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
@@ -336,12 +328,15 @@ int main(int argc, char **argv)
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume(0.005);
+  //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
 
   // surface operations
+  m1.smoothPointsByCurvature();
+
   m1.insertPointsByLength();
   //m1.insertPointsByCurvature();
   //m1.removePointsByCurvature();
@@ -349,7 +344,9 @@ int main(int argc, char **argv)
   m1.contractEdgeByLength();
   //m1.removePointsByLength();
   m1.flipTriangleEdge();
+
   m1.removePointByNeighbourCheck();
+  //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();
@@ -361,7 +358,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);
@@ -372,12 +369,6 @@ int main(int argc, char **argv)
 
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
-  saveEnd.saveMSH(mshFolder,"newMesh",iter-1);
-  saveEnd.saveVTK(vtkFolder,"sim",iter-1);
-  saveEnd.saveVTKSurface(vtkFolder,"sim",iter-1);
-  saveEnd.saveSol(binFolder,"sim",iter-1);
-  //saveEnd.saveVTU(vtkFolder,"sim",iter-1);
-  //saveEnd.saveSolTXT(binFolder,"sim",iter-1);
   saveEnd.saveMeshInfo(datFolder);
  }
 

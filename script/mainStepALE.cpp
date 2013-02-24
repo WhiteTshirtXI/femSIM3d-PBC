@@ -6,21 +6,23 @@
 
 #include <cmath>
 #include "Model3D.h"
+#include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
-#include "GMRes.h"
-#include "Simulator3D.h"
 #include "TElement.h"
+#include "GMRes.h"
 #include "InOut.h"
 #include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
+#include "colors.h"
 
 #define NUMPHASES 1
 
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //PetscInitializeNoArguments();
 
  int iter = 1;
  real Re = 1000;
@@ -31,7 +33,7 @@ int main(int argc, char **argv)
  real c1 = 0.2;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 1.0;  // smooth coord (fujiwara)
- real cfl = 0.2;
+ real cfl = 1.0;
  real mu_l = 1.0;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -39,10 +41,12 @@ int main(int argc, char **argv)
  Solver *solverC = new PCGSolver();
 
  string meshFile = "backwardStep.msh";
+ //string meshFile = "retangle.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
+ const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
  meshDir += "/gmsh/3d/singlePhase/" + meshFile;
@@ -53,19 +57,15 @@ int main(int argc, char **argv)
  m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
- m1.setMapEdge(); 
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
  m1.setOFace();
+ m1.setSurfaceConfig();
 
- m1.setVertNeighbour();
- m1.setInOutVert();
- m1.setMapEdge();
 
  // required by Helmholtz3D
  m1.setNeighbourSurfaceElem(); 
@@ -125,12 +125,14 @@ int main(int argc, char **argv)
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK("./vtk/","edge");
+ //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
- save.saveInfo("./","info",mesh);
+ save.saveVTKSurface(vtkFolder,"geometry");
+ save.saveMeshInfo(datFolder);
+ save.saveInfo(datFolder,"info",mesh);
 
  int nIter = 1000;
  int nReMesh = 1;
@@ -149,10 +151,8 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepSL();
    //s1.stepLagrangian();
-   //s1.stepALE();
-   s1.stepALEVel();
+   s1.stepALE();
    s1.movePoints();
    s1.assembleSlip();
    s1.matMount();
@@ -164,6 +164,7 @@ int main(int argc, char **argv)
    s1.unCoupled();
    s1.unCoupledC();
 
+   save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
 
@@ -184,18 +185,22 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK("./vtk/","edge",iter-1);
+  h2.saveVTK(vtkFolder,"edge",iter-1);
+  h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */
+  m1.initMeshParameters();
+
   // 3D operations
   //m1.insert3dMeshPointsByDiffusion();
   m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume(0.005);
+  //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
+  //m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
   /* **************************************** */
 
@@ -207,11 +212,7 @@ int main(int argc, char **argv)
   m1.setQuadElement();
 #endif
   m1.setOFace();
-  m1.setVertNeighbour();
-  m1.setInOutVert();
-  m1.setMapEdge();
-  m1.setSurfaceVolume();
-  m1.setSurfaceArea();
+  m1.setSurfaceConfig();
   m1.setGenericBC();
   m1.setCStepBC();
 

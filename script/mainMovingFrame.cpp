@@ -280,8 +280,7 @@ int main(int argc, char **argv)
    save.printSimulationReport();
 
    //s1.stepLagrangian();
-   //s1.stepALE();
-   s1.stepALEVel();
+   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();

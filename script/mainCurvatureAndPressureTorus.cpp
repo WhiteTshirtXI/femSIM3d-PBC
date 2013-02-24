@@ -153,8 +153,7 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   //s1.stepLagrangian();
-  //s1.stepALE();
-  s1.stepALEVel();
+  s1.stepALE();
   s1.setDtALETwoPhase();
   s1.movePoints();
   s1.assemble();

@@ -91,7 +91,7 @@ int main(int argc, char **argv)
    save.printSimulationReport();
 
    s1.stepImposedPeriodicField("rotating",0.0);
-   s1.stepALEVel();
+   s1.stepALE();
    s1.movePoints();
    s1.setInterfaceGeo();
 

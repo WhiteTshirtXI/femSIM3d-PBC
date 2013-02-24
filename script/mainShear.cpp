@@ -24,7 +24,7 @@ int main(int argc, char **argv)
  /* This test case applies a prescribed vortex field in a unit cube to
   * test the re-meshing techinique of the surface mesh. 
   *
-  * OBS.: - comment stepSL() on Simulator3D::stepALEVel
+  * OBS.: - comment stepSL() on Simulator3D::stepALE
   *       - switch to tetrahedralize( (char*) "QYYAp",&in,&out ) on
   *       Model3D::mesh3DPoints
   *
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
    save.printSimulationReport();
 
    s1.stepImposedPeriodicField("3d",T);
-   //s1.stepALEVel();
+   //s1.stepALE();
    s1.stepLagrangian();
    //s1.setInterfaceGeo();
 

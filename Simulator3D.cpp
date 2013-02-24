@@ -690,20 +690,20 @@ void Simulator3D::assembleHeatTransfer()
 
   real muValue=0;
   real rhoValue=0;
-  //real cpValue=0;
+  real cpValue=0;
   real ktValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
-   //cpValue = cp_outAdimen;
+   cpValue = cp_outAdimen;
    ktValue = kt_outAdimen;
   }
   else
   {
    muValue = mu_inAdimen;
    rhoValue = rho_inAdimen;
-   //cpValue = cp_inAdimen;
+   cpValue = cp_inAdimen;
    ktValue = kt_inAdimen;
   }
 
@@ -1988,46 +1988,12 @@ void Simulator3D::stepLagrangianZ()
  convUVW.CopyFrom(2*numNodes,wSol);
 } // fecha metodo stepLagragianZ
 
-void Simulator3D::stepALE()
-{
- setInterfaceVelocity();
-
- // smoothing - coordenadas
- MeshSmooth e1(*m,1.0); // criando objeto MeshSmooth
- e1.stepSmoothFujiwara();
-
-#if NUMGLEU == 5
-  uSmooth = setTetCentroid(*IEN,*e1.getUSmooth());
-  vSmooth = setTetCentroid(*IEN,*e1.getVSmooth());
-  wSmooth = setTetCentroid(*IEN,*e1.getWSmooth());
-#else
-  uSmooth = setTetQuad(*IEN,*e1.getUSmooth());
-  vSmooth = setTetQuad(*IEN,*e1.getVSmooth());
-  wSmooth = setTetQuad(*IEN,*e1.getWSmooth());
-#endif
-
- uALE = c1*uSolOld+c3*uSmoothCoord;
- vALE = c1*vSolOld+c3*vSmoothCoord;
- wALE = c1*wSolOld+c3*wSmoothCoord;
-
- // impoe velocidade (componente normal) do fluido na interface
- setInterfaceVelocity();
-
- // impoe velocidade ALE = 0 no contorno
- setALEVelBC();
- //setAnnularALEVelBC();
-
- // calcula velocidade do fluido atraves do metodo semi-lagrangeano
- // comment if using mainVortex.cpp
- stepSL();
-} // fecha metodo stepALE
-
 /* compute ALE velocity according to mesh parameters c1,c2,c3,d1 and d3
  * 
  * input:  SolOld velocity
  * output: ALE velocity
  * */
-void Simulator3D::stepALEVel()
+void Simulator3D::stepALE()
 {
  // vertice velocity (uVert,vVert)
  clVector uVert(numVerts);
@@ -2109,13 +2075,13 @@ void Simulator3D::stepALEVel()
 #endif
 
  // impoe velocidade ALE = 0 no contorno
- setALEVelBC();
- //setAnnularALEVelBC();
+ setALEBC();
+ //setAnnularALEBC();
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
  stepSL();
-} // fecha metodo stepALEVel
+} // fecha metodo stepALE
 
 /* move nodes according to ALE velocity 
  * 
@@ -3006,7 +2972,7 @@ void Simulator3D::setDtLagrangianNorberto()
 {
  clMatrix* mapEdge = m->getMapEdge();
 
- dtLagrangian = 1.0;
+ dtLagrangian = 0.1;
  for( int edge=0;edge<mapEdge->DimI();edge++ )
  {
   // v1
@@ -4354,45 +4320,27 @@ void Simulator3D::setLagrangianVelBC()
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  if( surfMesh->phyBounds.at(*it) == "\"wallNormalU\"" )
-   uSolOld.Set(*it,0.0);
-  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalV\"" )
-   vSolOld.Set(*it,0.0);
-  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalW\"" )
-   wSolOld.Set(*it,0.0);
-  else
-  {
-   uSolOld.Set(*it,0.0);
-   vSolOld.Set(*it,0.0);
-   wSolOld.Set(*it,0.0);
-  }
+  uSolOld.Set(*it,0.0);
+  vSolOld.Set(*it,0.0);
+  wSolOld.Set(*it,0.0);
  }
 }
 
 // impoe velocidade ALE = 0 no contorno
 //-------------------------------------------------- 
-void Simulator3D::setALEVelBC()
+void Simulator3D::setALEBC()
 {
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
 						  ++it)
  {
-  if( surfMesh->phyBounds.at(*it) == "\"wallNormalU\"" )
-   uALE.Set(*it,0.0);
-  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalV\"" )
-   vALE.Set(*it,0.0);
-  else if( surfMesh->phyBounds.at(*it) == "\"wallNormalW\"" )
-   wALE.Set(*it,0.0);
-  else
-  {
-   uALE.Set(*it,0.0);
-   vALE.Set(*it,0.0);
-   wALE.Set(*it,0.0);
-  }
+  uALE.Set(*it,0.0);
+  vALE.Set(*it,0.0);
+  wALE.Set(*it,0.0);
  }
 }
 
-void Simulator3D::setAnnularALEVelBC()
+void Simulator3D::setAnnularALEBC()
 {
  for (list<int>::iterator it=boundaryVert->begin(); 
                           it!=boundaryVert->end(); 
@@ -4559,6 +4507,7 @@ void Simulator3D::allocateMemoryToAttrib()
  rho.Dim( numVerts );
  cp.Dim( numVerts );
  kt.Dim( numVerts );
+ kappa.Dim( numNodes );
  hSmooth.Dim( numVerts );
  heatFlux.Dim( numVerts );
 

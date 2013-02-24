@@ -101,7 +101,7 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepALEVel();
+   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();

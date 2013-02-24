@@ -5,7 +5,7 @@
 //                                                                     //
 // Obs.: Annular flow setup:                                           //
 //                                                                     //
-// Simulator3D: setAnnularALEVelBC()                                   //
+// Simulator3D: setAnnularALEBC()                                      //
 //              mu and rho not zero for Z.Max() and Z.Min()            //
 //              turn off applyBubbleVolumeCorrection()                 //
 //                                                                     //
@@ -133,8 +133,7 @@ int main(int argc, char **argv)
   save.printSimulationReport();
 
   //s1.stepLagrangian();
-  //s1.stepALE();
-  s1.stepALEVel();
+  s1.stepALE();
   s1.movePoints();
   s1.assemble();
   s1.matMount();

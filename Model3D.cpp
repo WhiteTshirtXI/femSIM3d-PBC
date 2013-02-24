@@ -7195,7 +7195,7 @@ void Model3D::movePoints2ndOrder(clVector &_uSol,
 			      sin(2*pi*Yp)*
 			      sin(2*pi*Zp)*
 			      cos(pi*time/T);
-  // ---> passar up em stepALEVel <---
+  // ---> passar up em stepALE <---
   real xn = X.Get(i)+(up*_dt);
   X.Set(i,xn);
 

@@ -75,7 +75,6 @@ class Simulator3D
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
-  void stepALEVel();
   void movePoints();
   void movePoints(clVector *_uVel,
                   clVector *_vVel,
@@ -249,8 +248,8 @@ class Simulator3D
   void applyLinearInterpolation(Model3D &_mOld);
   void setCentroidVelPos();
   void setCentroidVelPosInterface();
-  void setALEVelBC();
-  void setAnnularALEVelBC();
+  void setALEBC();
+  void setAnnularALEBC();
   void setLagrangianVelBC();
 
   vector<real> getCentroidVelX();

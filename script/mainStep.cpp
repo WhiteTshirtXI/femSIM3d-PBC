@@ -27,7 +27,7 @@ int main(int argc, char **argv)
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real cfl = 5;
+ real cfl = 0.1;
  real mu_l = 1.0;
  real rho_l = 1.0;
  //Solver *solverP = new PCGSolver();
@@ -38,27 +38,30 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "step40-20-2.vtk";
+ string meshFile = "retangle.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
+ const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/mesh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/singlePhase/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshStep(40,20,2);
+ //m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
- //m1.setSingleElement();
- m1.setMapEdge(); 
+ m1.readMSH(mesh);
+ m1.setInterfaceBC();
+ m1.setTriEdge();
+ m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
  m1.setOFace();
+ m1.setMapEdge(); 
  m1.setVertNeighbour();
  m1.setInOutVert();
  m1.setStepBC();

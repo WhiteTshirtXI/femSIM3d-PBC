@@ -24,7 +24,7 @@ int main(int argc, char **argv)
  /* This test case applies a prescribed vortex field in a unit cube to
   * test the re-meshing techinique of the surface mesh. 
   *
-  * OBS.: - comment stepSL() on Simulator3D::stepALEVel
+  * OBS.: - comment stepSL() on Simulator3D::stepALE
   *       - switch to tetrahedralize( (char*) "QYYAp",&in,&out ) on
   *       Model3D::mesh3DPoints
   *
@@ -112,11 +112,11 @@ int main(int argc, char **argv)
    s10.setTime(s1.getTime()+(dt/2.0));
    s10.stepTimeHalf("3d",T); // SolOld(n) --> Sol(n+1/2)
    s10.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
-   s10.stepALEVel();         // SolOld(n+1/2) --> ALE(n+1/2)
+   s10.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
 
 
    // time step: n 
-   s1.stepALEVel();  
+   s1.stepALE();  
    s1.movePoints(s10.getUALE(),
                  s10.getVALE(),
 				 s10.getWALE());

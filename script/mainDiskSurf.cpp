@@ -113,8 +113,7 @@ int main(int argc, char **argv)
    //s1.setDtDisk();
 
    //s1.stepLagrangian();
-   s1.stepALEVel();
-   //s1.stepALE();
+   s1.stepALE();
    s1.assembleSlip();
    s1.matMount();
    s1.matMountC();

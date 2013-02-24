@@ -4178,7 +4178,12 @@ void InOut::setCutPlane(ofstream& _file)
 
   // allows only the outter mesh for two-phase flows, 
   // however it works for single phase flows too
-  real hTest = heaviside->Get(i) > 0.0;
+
+  real hTest;
+  if( surfMesh->numInterfaces > 0 )
+   hTest = heaviside->Get(i) > 0.0;
+  else 
+   hTest = false;
 
   if( planeTestXa || hTest )
    cutPlaneX.Set(i,1.0);

@@ -37,6 +37,7 @@ class Helmholtz3D
   void init();
   void initMicro();
   void initSquareChannel();
+  void initBackwardStep();
   void initRisingBubble();
   void initSessile();
   void init2Bubbles();
@@ -86,6 +87,7 @@ class Helmholtz3D
   clVector cTilde,b1c,ipc;
   clVector cSol,cSolOld;
   clVector closerWall;
+  clVector wallDistance;
 
   Solver *solver;
 };

@@ -376,7 +376,7 @@ class Model3D
   clVector surface,nonSurface;
   clMatrix mapEdge,mapEdgeTri;
   clVector xSurface,ySurface,zSurface;
-  clVector closer,xCloser,yCloser,zCloser,closerViz;
+  clVector closer,xCloser,yCloser,zCloser;
   clVector interfaceDistance;
   clVector vertIdRegion,elemIdRegion;
   clVector edgeSize; // edge lenght vector :: Dim = number of vertices

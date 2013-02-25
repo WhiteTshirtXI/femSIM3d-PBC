@@ -2832,8 +2832,8 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < 0.3*size && 
-  //if( length < 0.7*size && 
+  //if( length < 0.3*size && 
+  if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
 	mark3DPointForDeletion(minVert);
@@ -6023,8 +6023,9 @@ void Model3D::setVertNeighbour()
  }
 }
 
-// configura os vetores: 
-// surface and nonSurface
+/* finds the surface and non-surface nodes and the corresponding x,y,z
+ * coordinates (only for surface nodes).
+ * */
 void Model3D::setSurface()
 {
  list<int> plist;

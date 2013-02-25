@@ -313,6 +313,73 @@ void Helmholtz3D::initSquareChannel()
  }
 }
 
+void Helmholtz3D::initBackwardStep()
+{
+ init();
+
+ // init closer
+ setCloserWall();
+
+ // set wall distance for each 3D vertex
+ for( int i=0;i<numVerts;i++ )
+ {
+  real vert = closerWall.Get(i);
+  real xCloser = X->Get(vert);
+  real yCloser = Y->Get(vert);
+  real zCloser = Z->Get(vert);
+  real aux = distance( X->Get(i),Y->Get(i),Z->Get(i),
+	                   xCloser,yCloser,zCloser );
+  wallDistance.Set(i,aux);
+ }
+
+ // considering that the smaller distance is equivalent to the wall edge
+ // length (triEdge[0])
+ real minWallDistance = triEdge[0];
+
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->phyBounds.at(i).compare(5,6,"Normal") != 0 )
+  {
+   real P0x = surfMesh->X.Get(i);
+   real P0y = surfMesh->Y.Get(i);
+   real P0z = surfMesh->Z.Get(i);
+
+   real sumEdgeLength = 0;
+   int listSize = neighbourPoint->at(i).size();
+   list<int> plist = neighbourPoint->at(i);
+   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+   {
+	real P1x = surfMesh->X.Get(*vert);
+	real P1y = surfMesh->Y.Get(*vert);
+	real P1z = surfMesh->Z.Get(*vert);
+
+	real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+	sumEdgeLength += edgeLength;
+   }
+   convC.Set(i,sumEdgeLength/listSize);
+  }
+  else // apply same strategy for non-boundary vertics if it is
+       // NormalU,V,W c.c.
+  {
+   real ratio = wallDistance.Get(i)/minWallDistance;
+   real aux = triEdge[0]*ratio;
+   convC.Set(i,aux);
+  }
+ }
+
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  real ratio = wallDistance.Get(i)/minWallDistance;
+  real aux = triEdge[0]*ratio;
+  convC.Set(i,aux);
+ }
+}
+
 void Helmholtz3D::init2Bubbles()
 {
  init();
@@ -438,7 +505,8 @@ void Helmholtz3D::setBC()
  cc.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  if( surfMesh->Marker.Get(i) < 0.5 )
+  if( surfMesh->Marker.Get(i) < 0.5 &&
+	  surfMesh->phyBounds.at(i).compare(5,6,"Normal") != 0)
   {
    idbcc.AddItem(i);
 
@@ -551,6 +619,7 @@ void Helmholtz3D::allocateMemoryToAttrib()
 
  // closer
  closerWall.Dim( numVerts );
+ wallDistance.Dim( numVerts );
 
  // auxiliar vectors
  ipc.Dim( numVerts,1 );
@@ -598,10 +667,12 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
    count++;
  }
  
@@ -613,10 +684,12 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
   {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
@@ -633,17 +706,19 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   int v2 = IEN->Get(i,1);
   int v3 = IEN->Get(i,2);
   int v4 = IEN->Get(i,3);
-  if( (heaviside->Get(v1)+heaviside->Get(v2)+
-	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-    ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//--------------------------------------------------
+//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
+// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
+//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
+// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
+//-------------------------------------------------- 
    vtkFile << "10 ";
  }
 
  vtkFile << endl;
 
  vtkFile << "POINT_DATA " << numVerts << endl;
- vtkFile << "SCALARS edge-boundary double" << endl;
+ vtkFile << "SCALARS boundary double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(10) << scientific;
@@ -651,7 +726,15 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkFile << cc.Get(i) << endl;
 
  vtkFile << endl;
- vtkFile << "SCALARS edge-d double" << endl;
+ vtkFile << "SCALARS distance double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+  vtkFile << wallDistance.Get(i) << endl;
+
+ vtkFile << endl;
+ vtkFile << "SCALARS RHS double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(10) << scientific;
@@ -659,7 +742,7 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
   vtkFile << convC.Get(i) << endl;
 
  vtkFile << endl;
- vtkFile << "SCALARS edgeSol double" << endl;
+ vtkFile << "SCALARS solution double" << endl;
  vtkFile << "LOOKUP_TABLE default"  << endl;
 
  vtkFile << setprecision(10) << scientific;
@@ -746,10 +829,14 @@ real Helmholtz3D::getk(){return k;}
 
 void Helmholtz3D::setCloserWall()
 {
- // procurando vertices da parede
- clVector boundaryAux = surfMesh->Marker == 0.0;
- clVector boundary = boundaryAux.Find();
- 
+ // procurando vertices da parede que nao sao de c.c. de simetria
+ // (NormalU,V,W)
+ clVector boundary(0);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+  if( surfMesh->Marker(i) < 0.5 && 
+	  surfMesh->phyBounds.at(i).compare(5,6,"Normal") != 0)
+   boundary.AddItem(i);
+
  clVector xBoundary( boundary.Dim() );
  clVector yBoundary( boundary.Dim() );
  clVector zBoundary( boundary.Dim() );
@@ -761,7 +848,6 @@ void Helmholtz3D::setCloserWall()
   zBoundary.Set(i,Z->Get( surfaceNode ));
  }
 
- // xVert da malha nova
  clVector xVert(numVerts);
  clVector yVert(numVerts);
  clVector zVert(numVerts);

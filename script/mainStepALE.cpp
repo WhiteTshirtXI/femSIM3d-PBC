@@ -114,14 +114,14 @@ int main(int argc, char **argv)
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initSquareChannel();
+ h1.initBackwardStep();
  h1.assemble();
  h1.setk(0.7);
  h1.matMountC();
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
+ //h1.saveVTK(vtkFolder,"edge",0);
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 1000;
+ int nIter = 10000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
   }
   Helmholtz3D h2(m1,h1);
   h2.setBC();
-  h2.initSquareChannel();
+  h2.initBackwardStep();
   h2.assemble();
   h2.matMountC();
   h2.setUnCoupledCBC(); 

@@ -55,7 +55,7 @@ int main(int argc, char **argv)
  real rho_in = 1.225;
  real rho_out =1350; 
 
- real cfl = 0.8;
+ real cfl = 0.6;
 
  string meshFile = "bubble-tube5.msh";
  //string meshFile = "test.msh";

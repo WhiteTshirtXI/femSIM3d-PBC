@@ -2230,13 +2230,13 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  X.AddItem(vAdd,XvAdd);
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
- heaviside.AddItem(vAdd,0.5);
+ heaviside.AddItem(vAdd,heaviside.Get(v1));
  edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
  surfMesh.X.AddItem(XvAdd);
  surfMesh.Y.AddItem(YvAdd);
  surfMesh.Z.AddItem(ZvAdd);
- surfMesh.Marker.AddItem(0.5); // interface set up
+ surfMesh.Marker.AddItem(surfMesh.Marker.Get(v1)); 
  surfMesh.vertIdRegion.AddItem(surfMesh.vertIdRegion.Get(v1));
  surfMesh.phyBounds.push_back(surfMesh.phyBounds.at(v1));
 
@@ -2892,13 +2892,13 @@ void Model3D::insertPointsByArea()
    X.AddItem(v4,centroidX);
    Y.AddItem(v4,centroidY);
    Z.AddItem(v4,centroidZ);
-   heaviside.AddItem(v4,0.5); // interface set up
+   heaviside.AddItem(v4,heaviside.Get(v1)); 
    edgeSize.AddItem(v4,edgeSize.Get(v1));
 
    surfMesh.X.AddItem(v4,centroidX);
    surfMesh.Y.AddItem(v4,centroidY);
    surfMesh.Z.AddItem(v4,centroidZ);
-   surfMesh.Marker.AddItem(v4,0.5);
+   surfMesh.Marker.AddItem(v4,surfMesh.Marker.Get(v1));
    surfMesh.numVerts++;
 
    /* substitutes the original element to 3 smaller elements adding 1 

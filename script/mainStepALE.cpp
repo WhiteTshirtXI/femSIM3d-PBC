@@ -41,6 +41,7 @@ int main(int argc, char **argv)
  Solver *solverC = new PCGSolver();
 
  string meshFile = "backwardStep.msh";
+ //string meshFile = "backwardStepHole.msh";
  //string meshFile = "retangle.msh";
 
  //const char *txtFolder  = "./txt/";
@@ -65,11 +66,6 @@ int main(int argc, char **argv)
 #endif
  m1.setOFace();
  m1.setSurfaceConfig();
-
-
- // required by Helmholtz3D
- m1.setNeighbourSurfaceElem(); 
- m1.setNeighbourSurfacePoint();
 
  // mesh statistics info 
  m1.setInitSurfaceVolume();

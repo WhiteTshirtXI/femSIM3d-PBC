@@ -105,6 +105,7 @@ class Model3D
   void remove3dMeshPointsByDistance();
   void remove3dMeshPointsByDiffusion();
   void insert3dMeshPointsByDiffusion();
+  void insert3dMeshPointsByVolume();
   void removePointByVolume();
   void remove3dMeshPointsByHeight();
 
@@ -374,7 +375,7 @@ class Model3D
   clVector V; // vetor de volumes dos elementos de malha 
   clVector heaviside;
   clVector surface,nonSurface;
-  clMatrix mapEdge,mapEdgeTri;
+  clMatrix mapEdgeTri,mapEdge;  
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser;
   clVector interfaceDistance;

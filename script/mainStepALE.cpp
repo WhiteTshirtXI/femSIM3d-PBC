@@ -40,8 +40,8 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "backwardStep.msh";
- //string meshFile = "backwardStepHole.msh";
+ //string meshFile = "backwardStep.msh";
+ string meshFile = "backwardStepHole.msh";
  //string meshFile = "retangle.msh";
 
  //const char *txtFolder  = "./txt/";
@@ -76,7 +76,6 @@ int main(int argc, char **argv)
 
  // boundary conditions
  m1.setGenericBC();
- m1.setCStepBC();
 
  Simulator3D s1(m1);
 
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
  h1.setBC();
  h1.initBackwardStep();
  h1.assemble();
- h1.setk(0.7);
+ h1.setk(2.0);
  h1.matMountC();
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
@@ -182,7 +181,7 @@ int main(int argc, char **argv)
   h2.setCRHS();
   h2.unCoupledC();
   h2.saveVTK(vtkFolder,"edge",iter-1);
-  h2.saveChordalEdge(datFolder,"edge",iter-1);
+  //h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 
@@ -191,12 +190,12 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
+  m1.insert3dMeshPointsByVolume();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.remove3dMeshPointsByHeight();
+  m1.remove3dMeshPointsByHeight();
   m1.delete3DPoints();
   /* **************************************** */
 
@@ -210,7 +209,6 @@ int main(int argc, char **argv)
   m1.setOFace();
   m1.setSurfaceConfig();
   m1.setGenericBC();
-  m1.setCStepBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

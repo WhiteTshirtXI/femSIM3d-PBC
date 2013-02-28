@@ -2764,7 +2764,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   //real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 5.0*maxEdge && 
+  if( length > 1.4*maxEdge && 
 	//--------------------------------------------------
 	//   interfaceDistance.Get(v1) > 2*triEdge[1] &&
 	//   interfaceDistance.Get(v2) > 2*triEdge[1] &&
@@ -2809,12 +2809,13 @@ void Model3D::insert3dMeshPointsByDiffusion()
  * */
 void Model3D::remove3dMeshPointsByDiffusion()
 {
+ int vertID = 0;
  for( int e=0;e<mapEdge.DimI();e++ )
  {
   int v1 = mapEdge.Get(e,4);
   int v2 = mapEdge.Get(e,5);
 
-  int vertID = vertIdRegion.Get(v1);
+  vertID = vertIdRegion.Get(v1);
 
   real x1=X.Get(v1);
   real y1=Y.Get(v1);
@@ -2832,15 +2833,16 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  //if( length < 0.3*size && 
-  if( length < 0.7*size && 
+  if( length < 0.1*size && 
+  //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
-	mark3DPointForDeletion(minVert);
-	rpd[vertID]++;
+   cout << "  removed vert: " << minVert << endl;
+   mark3DPointForDeletion(minVert);
+   rpd[vertID]++;
   }
  }
- //cout << "  removed by diffusion: " << rpd[vertID] << endl;
+ cout << "  removed by diffusion: " << rpd[vertID] << endl;
 }
 
 /* 
@@ -3722,7 +3724,7 @@ void Model3D::mesh3DPoints()
  cout << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(blink,blue,black) 
+ cout << color(none,white,black) 
       << "                     | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
@@ -4266,6 +4268,7 @@ void Model3D::setGenericBC()
   
   // 1st. priority
   if( surfMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,19,"NoSlipConcentration") == 0 || 
       surfMesh.phyNames.at(id).compare(5,14,"NoSlipPressure") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
@@ -4473,6 +4476,20 @@ void Model3D::setGenericBC()
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,-1.0);
+  }
+  
+  // NoSlip with Concentration b.c.
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipConcentration\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+   idbcc.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+   cc.Set(*it,1.0);
   }
 
   // moving boundary U
@@ -9516,15 +9533,29 @@ void Model3D::initMeshParameters()
  fill(intet.begin(),intet.end(),0);
 }
 
+/* check and remove vertices that are too close to the surface mesh
+ * structure (boundary and interface vertices)
+ * In this method, besides the 3 vertices of a triangle surface mesh, 
+ * the midEdges and centroid vertices (total 6
+ * coordinates) are used to compare the distance to the wall/interface.
+ * If it is lower than a predefinided value (if statement in the end of
+ * the method), the 3D mesh vertex (vertID3D) is removed.
+ * 
+ * input: {X,Y,Z} and surfMesh{X,Y,Z}
+ * output: mark for deletion vertID3D
+ * requirements: neighbourVert
+ *
+ * */
 void Model3D::remove3dMeshPointsByHeight()
 {
+ // loop at all surface mesh vertices
  for( int elem=0;elem<surfMesh.numElems;elem++ )
  {
   int v1 = surfMesh.IEN.Get(elem,0);
   int v2 = surfMesh.IEN.Get(elem,1);
   int v3 = surfMesh.IEN.Get(elem,2);
 
-  // points
+  // vertices of the triangular surface mesh
   real P1x = surfMesh.X.Get(v1);
   real P1y = surfMesh.Y.Get(v1);
   real P1z = surfMesh.Z.Get(v1);
@@ -9592,8 +9623,8 @@ void Model3D::remove3dMeshPointsByHeight()
 	  )
 	  // vertID > 0)
 	{
-	 mark3DPointForDeletion(*vert);
-	 cout << "-----> deleting (" << *vert <<  ")" 
+	 mark3DPointForDeletion(vertID3d);
+	 cout << "-----> deleting (" << vertID3d <<  ")" 
 	      << "   " << minHeight << " < " << 0.4*triEdge[vertID] <<  endl;
 	 rph[vertID3d]++;
 	}
@@ -10125,4 +10156,61 @@ void Model3D::integralParabolic()
   }
  }
  cout << sumUArea/sumArea << endl;
+}
+
+/*
+ * Insert point(s) according to the solution of the diffusion equation
+ * given by the class Helmholtz3D.
+ *
+ * */
+void Model3D::insert3dMeshPointsByVolume()
+{
+ int vertID = 0;
+
+ for( int elem=0;elem<IEN.DimI();elem++ )
+ {
+  int v1 = (int) IEN.Get(elem,0);
+  int v2 = (int) IEN.Get(elem,1);
+  int v3 = (int) IEN.Get(elem,2);
+  int v4 = (int) IEN.Get(elem,3);
+
+  real vol = fabs(getVolume(elem));
+
+  int maxVert = max(v1,v2);
+  maxVert = max(maxVert,v3);
+  maxVert = max(maxVert,v4);
+
+  real edgeMean = ( edgeSize.Get(v1) +
+                    edgeSize.Get(v2) +
+					edgeSize.Get(v3) +
+					edgeSize.Get(v4) )/4.0;
+
+  real tet = edgeMean*edgeMean*edgeMean*sqrt(2.0)/12.0;
+
+  if( vol > 1.4*tet )
+  {
+   int vAdd = numVerts; // aditional vertice
+   real XvAdd = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )/4.0;
+   real YvAdd = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )/4.0;
+   real ZvAdd = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )/4.0;
+
+   cout << "- " << color(none,blue,black) 
+	            << "inserting vertex: "
+				<< resetColor() << vAdd << endl;
+
+   X.AddItem(vAdd,XvAdd);
+   Y.AddItem(vAdd,YvAdd);
+   Z.AddItem(vAdd,ZvAdd);
+   heaviside.AddItem(vAdd,0);
+   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //idRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   //edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
+
+   numVerts++;
+   dVerts++;
+   ipd[vertID]++;
+  }
+ }
+ cout << "  inserted by diffusion: " << ipd[vertID] << endl;
 }

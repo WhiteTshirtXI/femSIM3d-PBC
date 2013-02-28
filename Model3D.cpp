@@ -3221,6 +3221,15 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   else // in
    in.facetmarkerlist[i] = 30;
  }
+
+//--------------------------------------------------
+//  // hole in 3D mesh
+//  in.numberofholes = 1; 
+//  in.holelist = new REAL[3];
+//  in.holelist[0] = 5.0;
+//  in.holelist[1] = 5.0;
+//  in.holelist[2] = 5.0;
+//-------------------------------------------------- 
 }
 
 /* 

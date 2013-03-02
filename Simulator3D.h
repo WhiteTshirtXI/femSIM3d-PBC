@@ -61,7 +61,7 @@ class Simulator3D
   void assembleC();
   void assembleSlip();
   void assembleNuCte();
-  void assembleNuZ();
+  void assembleNuZ(const char* _name);
   void assembleNuC();
   void matMount();
   void matMountC();
@@ -99,8 +99,8 @@ class Simulator3D
   void setUnCoupledBC();
   void setUnCoupledCBC();
 
-  void setMuZ();
-  void setMuC();
+  void setNuZ(const char* _filename);
+  void setNuC();
   void setRe(real _Re);
   real getRe();
   void setSc(real _Sc);

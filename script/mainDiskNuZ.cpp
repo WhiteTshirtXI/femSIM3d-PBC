@@ -61,7 +61,12 @@ int main(int argc, char **argv)
 
  s1.init();
  s1.setDtEulerian();
- s1.assembleNuZ();
+
+ string solDir = (string) getenv("DATA_DIR");
+ solDir += "/baseState/nuZ/analiticoNuZ.dat";
+ const char *sol = solDir.c_str();
+ s1.assembleNuZ(sol);
+
  s1.matMount();
  s1.setUnCoupledBC(); 
 

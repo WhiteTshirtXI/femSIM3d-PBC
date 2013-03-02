@@ -1343,7 +1343,7 @@ void Simulator3D::assembleSlip()
  
 }; // fecha metodo ASSEMBLESLIP
 
-void Simulator3D::assembleNuZ()
+void Simulator3D::assembleNuZ(const char* _name)
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
@@ -1362,7 +1362,7 @@ void Simulator3D::assembleNuZ()
  clMatrix Dy( numVerts,numNodes );
  clMatrix Dz( numVerts,numNodes );
 
- setMuZ();      // carregando o arquivo de perfil nuZ
+ setNuZ(_name);      // carregando o arquivo de perfil nuZ
  setRho(rho_in);
  
 #if NUMGLEU == 5
@@ -3137,7 +3137,7 @@ void Simulator3D::setCSol(clVector &_cSol)
  cSol = _cSol;
 }
 
-void Simulator3D::setMuZ()
+void Simulator3D::setNuZ(const char* _filename)
 {
  // -- Leitura do perfil de nu variavel em Z para os nos da malha -- //
 
@@ -3145,7 +3145,6 @@ void Simulator3D::setMuZ()
  real dist1,dist2;
  clMatrix muFile(1002,2); // vetor super dimensionado!
 
- const char* _filename = "../../db/baseState/nuZ/nuZ.dat";
  ifstream file( _filename,ios::in );
 
  if( !file )
@@ -3180,9 +3179,8 @@ void Simulator3D::setMuZ()
  }
 }
 
-void Simulator3D::setMuC()
+void Simulator3D::setNuC()
 {
- // -- Leitura do perfil de nu variavel em Z para os nos da malha -- //
  for( int mele=0;mele<numElems;mele++ )
  {
   int v1 = (int) IEN->Get(mele,0);

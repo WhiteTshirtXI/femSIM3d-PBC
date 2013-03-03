@@ -2239,6 +2239,8 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 	         << setw(17) << "G_Error"
 			 << setw(18) << "H_Error" 
 			 << setw(20) << "FGH_Error" 
+			 << setw(20) << "numVerts" 
+			 << setw(20) << "numElems" 
 			 << endl;
 
    real sumFDiff = 0.0;
@@ -2299,10 +2301,12 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
              << setw(18) << sqrt(sumGDiff)/sqrt(sumG)
              << setw(18) << sqrt(sumHDiff)/sqrt(sumH)
              << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH)
+			 << fixed
+             << setw(13) << numVerts 
+             << setw(20) << numElems
 			 << endl;
 
    errorFile << endl;
-   errorFile << fixed; 
    errorFile << "Radius = " << X->Get(i) << endl;
 
    errorFile.close();

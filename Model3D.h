@@ -54,7 +54,6 @@ class Model3D
   void readVTKSurface( const char* filename );
   void readMSH( const char* filename );
   void readBC( const char* filename );
-  void readBaseStateNu(const char* _filename);
 
   void setSphere(real _xC,real _yC,real _zC,real _r,real _eps);
   void setCube(real _lim1,real _lim2,real _eps);

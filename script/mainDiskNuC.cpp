@@ -61,7 +61,10 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
  s1.setSolverConcentration(solverC);
- s1.init();
+
+ //s1.init();
+ s1.initDiskBaseState("../../db/baseState/nuC/Sc2000/","analiticoNuC.dat");
+
  s1.setDtEulerian();
  s1.assembleNuC();
 

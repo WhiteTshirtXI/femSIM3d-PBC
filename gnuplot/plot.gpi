@@ -18,17 +18,15 @@ unset grid
 #-------------------------------------------------- 
 
 N = "last"
-fileObj = "../sim/vk2."
-#fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
-fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
+fileObj = "../sim/vk4."
+fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
+#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 #fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
 plot fileObj .N using 1:2 title 'F' ,\
      fileObj .N using 1:3 title 'G' ,\
      fileObj .N using 1:4 title 'H' ,\
-     fileObj .N using 1:5 title 'C' ,\
 	 fileObjAnalytic using 1:2 title 'F' with lines ,\
 	 fileObjAnalytic using 1:3 title 'G' with lines ,\
-	 fileObjAnalytic using 1:4 title 'H' with lines ,\
-	 fileObjAnalytic using 1:5 title 'C' with lines 
+	 fileObjAnalytic using 1:4 title 'H' with lines 
 

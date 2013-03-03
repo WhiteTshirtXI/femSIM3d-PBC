@@ -49,7 +49,6 @@ int main(int argc, char **argv)
 #endif
  m1.setNuZDiskBC();;
  m1.setOFace();
- //m1.readBaseStateNu("NuCte");
 
  Simulator3D s1(m1);
 
@@ -59,7 +58,9 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
 
- s1.init();
+ //s1.init();
+ s1.initDiskBaseState("../../db/baseState/nuZ/","analiticoNuZ.dat");
+
  s1.setDtEulerian();
 
  string solDir = (string) getenv("DATA_DIR");

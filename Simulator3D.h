@@ -47,6 +47,7 @@ class Simulator3D
   void getModel3DAttrib(Model3D &_m);
   void allocateMemoryToAttrib();
   void init();
+  void initDiskBaseState( const char* _dir,const char* _filename );
   void initAnnular();
   void initChannel();
   void initChannelSquare();

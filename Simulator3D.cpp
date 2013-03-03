@@ -358,14 +358,75 @@ void Simulator3D::init()
  cSolOld.CopyFrom( 0,*cc );
 }
 
+void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
+{
+ init(); 
+
+ real aux = 0.0;
+ int lines = 2401; // number of lines on the file
+ clMatrix solMatrix(lines,5);
+
+
+ string file = (string) _dir + (string) _filename;
+ const char* filename = file.c_str();
+ ifstream solFile( filename,ios::in );
+
+ if( !solFile )
+ {
+  cout << solFile << endl;
+  cerr << "Missing base state file!" << endl;
+  exit(1);
+ }
+
+ for( int i=0;i<lines;i++ )
+ {
+  solFile >> aux;
+  solMatrix.Set(i,0,aux);
+  solFile >> aux;
+  solMatrix.Set(i,1,aux);
+  solFile >> aux;
+  solMatrix.Set(i,2,aux);
+  solFile >> aux;
+  solMatrix.Set(i,3,aux);
+  solFile >> aux;
+  solMatrix.Set(i,4,aux);
+ }
+
+ real dist1,dist2;
+ int j=0;
+ real omega=1.0;
+ for( int i=0;i<numNodes;i++ )
+ {
+  for( j=0;j<lines-1;j++ )
+  {
+   dist1 = fabs( Z->Get(i) - solMatrix.Get(j,0) );
+   dist2 = fabs( Z->Get(i) - solMatrix.Get(j+1,0) );
+   if( dist2 > dist1 ) break;
+  }
+  aux = ( solMatrix.Get(j,1)*X->Get(i)-solMatrix.Get(j,2)*Y->Get(i) )*omega;
+  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
+  aux = ( solMatrix.Get(j,2)*X->Get(i)-solMatrix.Get(j,1)*Y->Get(i) )*omega;
+  vSol.Set(i,aux);
+  vSolOld.Set(i,aux);
+  aux = (-1.0)*solMatrix.Get(j,3);
+  wSol.Set(i,aux);
+  wSolOld.Set(i,aux);
+  //aux = solMatrix.Get(j,4);
+  //cSol.Set(i,aux);
+  //cSolOld.Set(i,aux);
+ }
+}
+
+
 void Simulator3D::initAnnular()
 {
  init();
 
- real p1y = Y->Min();
- real p2y = Y->Max();
- real p1z = Z->Min();
- real p2z = Z->Max();
+ //real p1y = Y->Min();
+ //real p2y = Y->Max();
+ //real p1z = Z->Min();
+ //real p2z = Z->Max();
 
  for( int i=0;i<numNodes;i++ )
  {
@@ -3143,7 +3204,7 @@ void Simulator3D::setNuZ(const char* _filename)
 
  real aux;
  real dist1,dist2;
- clMatrix muFile(1002,2); // vetor super dimensionado!
+ clMatrix muFile(1001,2); // number of points in the file
 
  ifstream file( _filename,ios::in );
 
@@ -3156,7 +3217,7 @@ void Simulator3D::setNuZ(const char* _filename)
  // leitura do arquivo e transferencia para matriz
  if( !file.eof() )
  {
-  for( int i=0;i<1001;i++ )
+  for( int i=0;i<muFile.DimI();i++ )
   {
    file >> aux;
    muFile.Set(i,0,aux);
@@ -3168,7 +3229,7 @@ void Simulator3D::setNuZ(const char* _filename)
  int j;
  for( int i=0;i<numVerts;i++ )
  {
-  for( j=0;j<1001;j++ )
+  for( j=0;j<muFile.DimI()-1;j++ )
   {
    dist1 = fabs( Z->Get(i) - muFile(j,0) );
    dist2 = fabs( Z->Get(i) - muFile(j+1,0) );

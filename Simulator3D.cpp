@@ -412,9 +412,18 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
   aux = (-1.0)*solMatrix.Get(j,3);
   wSol.Set(i,aux);
   wSolOld.Set(i,aux);
-  //aux = solMatrix.Get(j,4);
-  //cSol.Set(i,aux);
-  //cSolOld.Set(i,aux);
+ }
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  for( j=0;j<lines-1;j++ )
+  {
+   dist1 = fabs( Z->Get(i) - solMatrix.Get(j,0) );
+   dist2 = fabs( Z->Get(i) - solMatrix.Get(j+1,0) );
+   if( dist2 > dist1 ) break;
+  }
+  aux = solMatrix.Get(j,4);
+  cSolOld.Set(i,aux);
  }
 }
 

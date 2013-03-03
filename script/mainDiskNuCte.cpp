@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 
  int iter = 1;
  real Re = 1;
- real cfl = 100;
+ real cfl = 10;
  real mu_l = 1.0;
  real rho_l = 1.0;
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCNONE);
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,12,40);
+ m1.setMeshDisk(6,10,10);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
 #if NUMGLEU == 5

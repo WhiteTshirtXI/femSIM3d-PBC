@@ -114,6 +114,7 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
+   save.saveDiskError(datFolder,"../../db/baseState/nuZ/analiticoNuZ.dat");
 
    s1.saveOldData();
 

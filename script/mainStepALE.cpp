@@ -36,7 +36,8 @@ int main(int argc, char **argv)
  real cfl = 1.0;
  real mu_l = 1.0;
  real rho_l = 1.0;
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
@@ -190,7 +191,7 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByVolume();
+  //m1.insert3dMeshPointsByVolume();
   m1.remove3dMeshPointsByDiffusion();
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();

@@ -2158,8 +2158,8 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 {
  real aux;
  real dist1,dist2;
- clMatrix solFile(1002,4); 
- //clMatrix solFile(1002,5); 
+ clMatrix solFile(2401,4); 
+ //clMatrix solFile(2401,5); 
  clVector solF(numVerts);
  clVector solG(numVerts);
  clVector solH(numVerts);
@@ -2176,7 +2176,7 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  // leitura do arquivo e transferencia para matriz
  if( !file.eof() )
  {
-  for( int i=0;i<1001;i++ )
+  for( int i=0;i<solFile.DimI();i++ )
   {
    file >> aux;
    solFile.Set(i,0,aux);
@@ -2194,7 +2194,7 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  int j;
  for( int i=0;i<numVerts;i++ )
  {
-  for( j=0;j<1001;j++ )
+  for( j=0;j<solFile.DimI()-1;j++ )
   {
    dist1 = fabs( Z->Get(i) - solFile(j,0) );
    dist2 = fabs( Z->Get(i) - solFile(j+1,0) );

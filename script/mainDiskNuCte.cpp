@@ -31,18 +31,18 @@ int main(int argc, char **argv)
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
- string meshFile = "disk6-10-20.vtk";
-
  const char *binFolder  = "./bin/";
  const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
+
+ string meshFile = "disk6-10-20.vtk";
  string meshDir = (string) getenv("DATA_DIR");
  meshDir += "/mesh/3d/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,6,8);
+ m1.setMeshDisk(6,12,40);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
 #if NUMGLEU == 5
@@ -54,7 +54,6 @@ int main(int argc, char **argv)
  m1.setNuCteDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");
  //m1.setCDiskBC();
- //m1.readBaseStateNu("NuCte");
 
  Simulator3D s1(m1);
 
@@ -64,7 +63,10 @@ int main(int argc, char **argv)
  s1.setRho(rho_l);
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
- s1.init();
+
+ //s1.init();
+ s1.initDiskBaseState("../../db/baseState/nuCte/","analiticoNuCte.dat");
+
  s1.setDtEulerian();
  s1.assembleNuCte();
  //s1.assembleC();
@@ -92,7 +94,7 @@ int main(int argc, char **argv)
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
  save.printSimulationReport();
- 
+
  int nIter = 1000;
  int nR = 10;
  for( int i=0;i<nIter;i++ )

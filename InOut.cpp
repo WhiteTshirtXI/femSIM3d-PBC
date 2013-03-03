@@ -483,7 +483,8 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  vtkScalar(vtkFile,"pressure",*pSol);
  vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
 
- setCutPlane(vtkFile); // set cut plane functions
+ // version 3.98 of Paraview has Crinkle Slice feature
+ //setCutPlane(vtkFile); // set cut plane functions
 
  if( uALE->Dim() > 0 )
   vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);

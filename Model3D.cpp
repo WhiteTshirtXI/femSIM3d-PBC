@@ -5992,6 +5992,14 @@ void Model3D::setNeighbour()
    neighbourElem.at( (int)IEN.Get(i,j) ).push_back(i);
 }
 
+/* create neighbourVert vector list, which is the mapping of neighbour
+ * vertices of each 3D mesh vertex (numVerts size). In this way, the
+ * vector is numVerts long and each entry of this vector is a list that
+ * can change the number of elements because the mesh is unstructured.
+ *
+ * input: neighbourElem
+ * output: neighbourVert
+ * */
 void Model3D::setVertNeighbour()
 {
  // cria lista de vizinhos para toda a malha
@@ -9456,51 +9464,60 @@ void Model3D::setTriEdge(vector< real > _triEdge)
  triEdge = _triEdge;
 }
 
+/* initialize index variables. These variables are set according to the
+ * region in the domain (surface, 3dmesh, inside bubble, outside
+ * bubble). They are not required on the calculations, however they keep
+ * important information about the remeshing process.
+ *
+ * input: index variables
+ * output: initialized index variables
+ *
+ * */
 void Model3D::initMeshParameters()
 {
  // number of surfaces 
  int numSurface = surfMesh.numInterfaces+1;
- oper.resize(numSurface);
- opersurf.resize(numSurface);
-
- isp.resize(numSurface);
- ispc.resize(numSurface);
- rsp.resize(numSurface);
- rspn.resize(numSurface);
- rspc.resize(numSurface);
- csp.resize(numSurface);
- flip.resize(numSurface);
- spc.resize(numSurface);
- spp.resize(numSurface);
-
- ip.resize(numSurface);
- ipd.resize(numSurface);
- rp.resize(numSurface);
- rpi.resize(numSurface);
- rpv.resize(numSurface);
- rpd.resize(numSurface);
- rpdist.resize(numSurface);
- rph.resize(numSurface);
- badtet.resize(numSurface);
-
- // set surface lengths
- averageTriLength.resize(numSurface); 
- averageTriArea.resize(numSurface); 
- averageTetVolume.resize(numSurface); 
- tetVol.resize(numSurface); 
- maxVolume.resize(numSurface); 
- minVolume.resize(numSurface); 
- idMaxVolume.resize(numSurface); 
- idMinVolume.resize(numSurface); 
- maxArea.resize(numSurface);
- minArea.resize(numSurface);
- idMaxArea.resize(numSurface);
- idMinArea.resize(numSurface);
- maxLength.resize(numSurface);
- minLength.resize(numSurface);
- numSurfElems.resize(numSurface);
- numSurfVerts.resize(numSurface);
- intet.resize(numSurface);
+ oper.resize(numSurface);    // oper: num of operations of time step
+ opersurf.resize(numSurface); // oper: num of operations on the surf
+                                      
+ isp.resize(numSurface);  // isp: num of inserted surface points by length
+ ispc.resize(numSurface); // ispc: num of inserted surface points by curv
+ rsp.resize(numSurface);  // rsp: num of removed surface points by length
+ rspn.resize(numSurface); // rspn: num of removed surface points by neigh check
+ rspc.resize(numSurface); // rspc: num of removed surface points by curv
+ csp.resize(numSurface);  // csp: num of contracted surface points
+ flip.resize(numSurface); // flip: flipping operations
+ spc.resize(numSurface);  // spc: smoothing operations                           
+ spp.resize(numSurface);  // spp: smoothing operations
+                                                                                  
+ ip.resize(numSurface);     // ip: num of inserted 3d mesh points
+ ipd.resize(numSurface);    // ipd: by diffusion 
+ rp.resize(numSurface);     // rp: num of removed 3d mesh points
+ rpi.resize(numSurface);    // rpi: by interface distance
+ rpv.resize(numSurface);    // rpv: by volume 
+ rpd.resize(numSurface);    // rpd: by diffusion 
+ rpdist.resize(numSurface); // rpd: by distance 
+ rph.resize(numSurface);    // rph: by height                                      
+ badtet.resize(numSurface); // num of shit tetrahedrons
+                                                                                            
+ // set surface lengths                
+ averageTriLength.resize(numSurface); // average surface triangle length
+ averageTriArea.resize(numSurface);   // average surface triangle area
+ averageTetVolume.resize(numSurface); // average tetrahedron volume
+ tetVol.resize(numSurface);  // recommended tet volume for each region
+ idMinVolume.resize(numSurface);  // ID of min tet volume
+ idMaxVolume.resize(numSurface);  // ID of max tet volume
+ minVolume.resize(numSurface);    // min tet volume
+ maxVolume.resize(numSurface);    // max tet volume     
+ idMaxArea.resize(numSurface);    // ID of min tri area   
+ idMinArea.resize(numSurface);    // ID of max tri area                            
+ maxArea.resize(numSurface);      // min triangle area    
+ minArea.resize(numSurface);      // max triangle area                                     
+ minLength.resize(numSurface);    // min triangle length
+ maxLength.resize(numSurface);    // max triangle length
+ numSurfElems.resize(numSurface); // number of surface elements
+ numSurfVerts.resize(numSurface); // number of surface points    
+ intet.resize(numSurface);        // number of tets with 4 surface nodes
 
  fill(oper.begin(),oper.end(),0);
  fill(opersurf.begin(),opersurf.end(),0);
@@ -9599,6 +9616,7 @@ void Model3D::remove3dMeshPointsByHeight()
   list<int> plist = neighbourVert.at(v1);
   for(list<int>::iterator vert=plist.begin(); vert != plist.end();++vert )
   {
+   // *vert cannot be a surface mesh vertex
    if( *vert > surfMesh.numVerts )
    {
 	int vertID = surfMesh.vertIdRegion.Get(v1);
@@ -9627,13 +9645,13 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.4*triEdge[vertID] //&& 
+	if( minHeight < 0.5*triEdge[vertID] //&& 
 	//if( minHeight < 0.4*edgeSize.Get(v1)  //&& 
 	  )
 	  // vertID > 0)
 	{
-	 mark3DPointForDeletion(vertID3d);
-	 cout << "-----> deleting (" << vertID3d <<  ")" 
+	 mark3DPointForDeletion(*vert);
+	 cout << "-----> deleting (" << *vert <<  ")" 
 	      << "   " << minHeight << " < " << 0.4*triEdge[vertID] <<  endl;
 	 rph[vertID3d]++;
 	}
@@ -9642,6 +9660,14 @@ void Model3D::remove3dMeshPointsByHeight()
  }
 }
 
+/* set normal and kappa vectors using 2D plane when the interface is
+ * part of the boundary. This calculation is similar to the 2D code and
+ * it is applied, for instance, on the two-phase annular flow, where the
+ * interface is also part of the boundary domain.
+ *
+ *
+ *
+ * */
 void Model3D::setNormalAndKappa2D()
 {
  vector< list<int> > neighbourLinePoint;  // 

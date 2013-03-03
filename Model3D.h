@@ -392,39 +392,39 @@ class Model3D
   real minEdgeTri;
 
   vector<int> oper,opersurf; // oper: num of operations of time step
-  vector<int> isp;         // isp: num of inserted surface points by length
-  vector<int> ispc;        // ispc: num of inserted surface points by curv
-  vector<int> rsp;         // rsp: num of removed surface points by length
-  vector<int> rspn;        // rspn: num of removed surface points by neigh check
-  vector<int> rspc;        // rspc: num of removed surface points by curv
-  vector<int> csp;         // csp: num of contracted surface points
-  vector<int> flip;        // flip: flipping operations
-  vector<int> spc;         // spc: smoothing operations
-  vector<int> spp;         // spp: smoothing operations
+  vector<int> isp;           // isp: num of inserted surface points by length
+  vector<int> ispc;          // ispc: num of inserted surface points by curv
+  vector<int> rsp;           // rsp: num of removed surface points by length
+  vector<int> rspn;          // rspn: num of removed surface points by neigh check
+  vector<int> rspc;          // rspc: num of removed surface points by curv
+  vector<int> csp;           // csp: num of contracted surface points
+  vector<int> flip;          // flip: flipping operations
+  vector<int> spc;           // spc: smoothing operations
+  vector<int> spp;           // spp: smoothing operations
+                            
+  vector<int> ip;            // ip: num of inserted 3d mesh points
+  vector<int> ipd;           // ipd: by diffusion 
+  vector<int> rp;            // rp: num of removed 3d mesh points
+  vector<int> rpi;           // rpi: by interface distance
+  vector<int> rpv;           // rpv: by volume 
+  vector<int> rpd;           // rpd: by diffusion 
+  vector<int> rpdist;        // rpd: by distance 
+  vector<int> rph;           // rph: by height 
+  vector<int> badtet;        // num of shit tetrahedrons
 
-  vector<int> ip;          // ip: num of inserted 3d mesh points
-  vector<int> ipd;         // ipd: by diffusion 
-  vector<int> rp;          // rp: num of removed 3d mesh points
-  vector<int> rpi;         // rpi: by interface distance
-  vector<int> rpv;         // rpv: by volume 
-  vector<int> rpd;         // rpd: by diffusion 
-  vector<int> rpdist;      // rpd: by distance 
-  vector<int> rph;         // rph: by height 
-  vector<int> badtet;      // num of shit tetrahedrons
-
-  vector<int> intet;       // csp: num of surface tetrahedrons 
-  vector<int> idMinVolume; // ID of min tet volume
-  vector<int> idMaxVolume; // ID of max tet volume
-  vector<real> minVolume;  // min tet volume
-  vector<real> maxVolume;  // max tet volume
-  vector<int> idMinArea;   // ID of min tri area 
-  vector<int> idMaxArea;   // ID of max tri area 
-  vector<real> minArea;    // min triangle area 
-  vector<real> maxArea;    // max triangle area
-  vector<real> minLength;  // min triangle length
-  vector<real> maxLength;  // max triangle length
-  vector<int> numSurfElems; // number of surface elements
-  vector<int> numSurfVerts; // number of surface points 
+  vector<int> intet;         // csp: num of surface tetrahedrons 
+  vector<int> idMinVolume;   // ID of min tet volume
+  vector<int> idMaxVolume;   // ID of max tet volume
+  vector<real> minVolume;    // min tet volume
+  vector<real> maxVolume;    // max tet volume
+  vector<int> idMinArea;     // ID of min tri area 
+  vector<int> idMaxArea;     // ID of max tri area 
+  vector<real> minArea;      // min triangle area 
+  vector<real> maxArea;      // max triangle area
+  vector<real> minLength;    // min triangle length
+  vector<real> maxLength;    // max triangle length
+  vector<int> numSurfElems;  // number of surface elements
+  vector<int> numSurfVerts;  // number of surface points                            
 
   vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
   vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais

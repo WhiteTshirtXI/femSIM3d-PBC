@@ -2158,12 +2158,11 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 {
  real aux;
  real dist1,dist2;
- clMatrix solFile(2401,4); 
- //clMatrix solFile(2401,5); 
+ clMatrix solFile(2401,5); 
  clVector solF(numVerts);
  clVector solG(numVerts);
  clVector solH(numVerts);
- //clVector solC(numVerts);
+ clVector solC(numVerts);
 
  ifstream file( _filename,ios::in );
 
@@ -2186,12 +2185,13 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    solFile.Set(i,2,aux);
    file >> aux;
    solFile.Set(i,3,aux);
-   //file >> aux;
-   //solFile.Set(i,4,aux);
+   file >> aux;
+   solFile.Set(i,4,aux);
   }
  }
 
  int j;
+ real omega = 1.0;
  for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
@@ -2200,14 +2200,14 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
    if( dist2 > dist1 ) break;
   }
-  aux = solFile(j,1); // F
+  aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
   solF.Set(i,aux); 
-  aux = solFile(j,2); // G
+  aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*X->Get(i) )*omega; // G
   solG.Set(i,aux);
-  aux = solFile(j,3); // H
+  aux = (-1.0)*solFile(j,3); // H
   solH.Set(i,aux);
-  //aux = solFile(j,4); // C
-  //solC.Set(i,aux);
+  aux = solFile(j,4); // C
+  solC.Set(i,aux);
  }
 
  // this loop retrives all the points with Y=0 and Z varying from 0 to
@@ -2239,7 +2239,9 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    errorFile << "#F_Error" 
 	         << setw(17) << "G_Error"
 			 << setw(18) << "H_Error" 
+			 << setw(18) << "C_Error" 
 			 << setw(20) << "FGH_Error" 
+			 << setw(20) << "FGHC_Error" 
 			 << setw(20) << "numVerts" 
 			 << setw(20) << "numElems" 
 			 << endl;
@@ -2247,15 +2249,15 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    real sumFDiff = 0.0;
    real sumGDiff = 0.0;
    real sumHDiff = 0.0;
-   //real sumCDiff = 0.0;
+   real sumcDiff = 0.0;
    real sumFGHDiff = 0.0;
-   //real sumFGHCDiff = 0.0;
+   real sumFGHcDiff = 0.0;
    real sumF = 0.0;
    real sumG = 0.0;
    real sumH = 0.0;
-   //real sumC = 0.0;
+   real sumc = 0.0;
    real sumFGH = 0.0;
-   //real sumFGHC = 0.0;
+   real sumFGHc = 0.0;
    for( int j=0;j<numVerts;j++ )
    {
 	if( X->Get(j) == X->Get(i) && 
@@ -2268,40 +2270,42 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 	 real F = (uSol->Get(vert)/radius);
 	 real G = (vSol->Get(vert)/radius);
      real H = (-1)*wSol->Get(vert);  
-	 //real c = cSol->Get(vert);
+	 real c = cSol->Get(vert);
 
 	 real FGH = F+G+H; 
-	 //real uvwc = u+v+w+c;
+	 real FGHc = F+G+H+c;
 
 	 real FExact = solF.Get(vert);
 	 real GExact = solG.Get(vert);
 	 real HExact = solH.Get(vert);
-	 //real cExact = solC.Get(vert);
+	 real cExact = solC.Get(vert);
 
 	 real FGHExact = FExact+GExact+HExact;
-	 //real uvwcExact = FExact+GExact+GExact+cExact;
+	 real FGHcExact = FExact+GExact+GExact+cExact;
 
 	 sumFDiff += fabs((F*F)-(FExact*FExact));
 	 sumGDiff += fabs((G*G)-(GExact*GExact));
 	 sumHDiff += fabs((H*H)-(HExact*HExact));
-	 //sumCDiff += fabs((c*c)-(cExact*cExact));
+	 sumcDiff += fabs((c*c)-(cExact*cExact));
 
 	 sumFGHDiff += fabs((FGH*FGH)-(FGHExact*FGHExact));
-	 //sumFGHCDiff += fabs((FGHc*FGHc)-(FGHcExact*FGHcExact));
+	 sumFGHcDiff += fabs((FGHc*FGHc)-(FGHcExact*FGHcExact));
 
 	 sumG += F*F; 
 	 sumF += G*G; 
 	 sumH += H*H; 
-	 //sumC += c*c; 
+	 sumc += c*c; 
 
 	 sumFGH += FGH; 
-	 //sumFGHC += FGHc; 
+	 sumFGHc += FGHc; 
 	}
    }
-   errorFile << sqrt(sumFDiff)/sqrt(sumF)
-             << setw(18) << sqrt(sumGDiff)/sqrt(sumG)
-             << setw(18) << sqrt(sumHDiff)/sqrt(sumH)
-             << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH)
+   errorFile << sqrt(sumFDiff)/sqrt(sumF+EPS)
+             << setw(18) << sqrt(sumGDiff)/sqrt(sumG+EPS)
+             << setw(18) << sqrt(sumHDiff)/sqrt(sumH+EPS)
+             << setw(18) << sqrt(sumcDiff)/sqrt(sumc+EPS)
+             << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
+             << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
 			 << fixed
              << setw(13) << numVerts 
              << setw(20) << numElems

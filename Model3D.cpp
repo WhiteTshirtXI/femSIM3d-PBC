@@ -9412,6 +9412,7 @@ void Model3D::initMeshParameters()
  badtet.resize(numSurface); // num of shit tetrahedrons
                                                                                             
  // set surface lengths                
+ triEdge.resize(numSurface); // surface triangle length by region
  averageTriLength.resize(numSurface); // average surface triangle length
  averageTriArea.resize(numSurface);   // average surface triangle area
  averageTetVolume.resize(numSurface); // average tetrahedron volume

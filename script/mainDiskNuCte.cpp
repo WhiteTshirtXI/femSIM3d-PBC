@@ -45,6 +45,7 @@ int main(int argc, char **argv)
  m1.setMeshDisk(6,10,10);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
+ m1.initMeshParameters();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else

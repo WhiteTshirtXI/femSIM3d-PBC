@@ -2154,6 +2154,176 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 
 } // fecha metodo saveConvergence
 
+//--------------------------------------------------
+// void InOut::saveDiskError(const char* _dir,const char* _filename )
+// {
+//  real aux;
+//  real dist1,dist2;
+//  clMatrix solFile(2401,5); 
+//  clVector solF(numVerts);
+//  clVector solG(numVerts);
+//  clVector solH(numVerts);
+//  clVector solC(numVerts);
+// 
+//  ifstream file( _filename,ios::in );
+// 
+//  if( !file )
+//  {
+//   cerr << "Esta faltando o arquivo de perfis!" << endl;
+//   exit(1);
+//  }
+// 
+//  // leitura do arquivo e transferencia para matriz
+//  if( !file.eof() )
+//  {
+//   for( int i=0;i<solFile.DimI();i++ )
+//   {
+//    file >> aux;
+//    solFile.Set(i,0,aux);
+//    file >> aux;
+//    solFile.Set(i,1,aux);
+//    file >> aux;
+//    solFile.Set(i,2,aux);
+//    file >> aux;
+//    solFile.Set(i,3,aux);
+//    file >> aux;
+//    solFile.Set(i,4,aux);
+//   }
+//  }
+// 
+//  int j;
+//  real omega = 1.0;
+//  for( int i=0;i<numVerts;i++ )
+//  {
+//   for( j=0;j<solFile.DimI()-1;j++ )
+//   {
+//    dist1 = fabs( Z->Get(i) - solFile(j,0) );
+//    dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
+//    if( dist2 > dist1 ) break;
+//   }
+//   aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+//   solF.Set(i,aux); 
+//   aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*X->Get(i) )*omega; // G
+//   solG.Set(i,aux);
+//   aux = (-1.0)*solFile(j,3); // H
+//   solH.Set(i,aux);
+//   aux = solFile(j,4); // C
+//   solC.Set(i,aux);
+//  }
+// 
+//  // this loop retrives all the points with Y=0 and Z varying from 0 to
+//  // Z.Max for all radius X 
+//  // count starts at 1 because 0 and the last radius are not used
+//  // (boundary nodes)
+//  int count = 1;
+//  for( int i=0;i<numVerts;i++ )
+//  {
+//   // removing radius = 0 (center of disk) and boundary nodes (X=radius) 
+//   // to the solution
+//   if( Z->Get(i) == Z->Min() && 
+// 	  Y->Get(i) == 0 &&
+// 	  X->Get(i) > 0.0 && 
+// 	  X->Get(i) < X->Max() )
+//   {
+//    stringstream ss1;  //convertendo int --> string
+//    string str1;
+//    ss1 << count;
+//    ss1 >> str1;
+// 
+//    string fileAux = (string) _dir + "diskError" + str1 + ".dat";
+//    const char* filename = fileAux.c_str();
+// 
+//    ofstream errorFile;
+//    errorFile.open( filename );
+// 
+//    errorFile << setprecision(10) << scientific; 
+//    errorFile << "#F_Error" 
+// 	         << setw(17) << "G_Error"
+// 			 << setw(18) << "H_Error" 
+// 			 << setw(18) << "C_Error" 
+// 			 << setw(20) << "FGH_Error" 
+// 			 << setw(19) << "FGHC_Error" 
+// 			 << setw(16) << "numVerts" 
+// 			 << setw(10) << "numElems" 
+// 			 << endl;
+// 
+//    real sumFDiff = 0.0;
+//    real sumGDiff = 0.0;
+//    real sumHDiff = 0.0;
+//    real sumcDiff = 0.0;
+//    real sumFGHDiff = 0.0;
+//    real sumFGHcDiff = 0.0;
+//    real sumF = 0.0;
+//    real sumG = 0.0;
+//    real sumH = 0.0;
+//    real sumc = 0.0;
+//    real sumFGH = 0.0;
+//    real sumFGHc = 0.0;
+//    for( int j=0;j<numVerts;j++ )
+//    {
+// 	if( X->Get(j) == X->Get(i) && 
+// 	    Y->Get(j) == 0 &&
+// 	    Z->Get(j) > Z->Min() )
+// 	{
+// 	 real radius = X->Get(i);
+// 	 int vert = j;
+// 
+// 	 real F = (uSol->Get(vert)/radius);
+// 	 real G = (vSol->Get(vert)/radius);
+//      real H = (-1)*wSol->Get(vert);  
+// 	 real c = cSol->Get(vert);
+// 
+// 	 real FGH = F+G+H; 
+// 	 real FGHc = F+G+H+c;
+// 
+// 	 real FExact = solF.Get(vert);
+// 	 real GExact = solG.Get(vert);
+// 	 real HExact = solH.Get(vert);
+// 	 real cExact = solC.Get(vert);
+// 
+// 	 real FGHExact = FExact+GExact+HExact;
+// 	 real FGHcExact = FExact+GExact+HExact+cExact;
+// 
+// 	 sumFDiff += fabs((F*F)-(FExact*FExact));
+// 	 sumGDiff += fabs((G*G)-(GExact*GExact));
+// 	 sumHDiff += fabs((H*H)-(HExact*HExact));
+// 	 sumcDiff += fabs((c*c)-(cExact*cExact));
+// 
+// 	 sumFGHDiff += fabs((FGH*FGH)-(FGHExact*FGHExact));
+// 	 sumFGHcDiff += fabs((FGHc*FGHc)-(FGHcExact*FGHcExact));
+// 
+// 	 sumG += F*F; 
+// 	 sumF += G*G; 
+// 	 sumH += H*H; 
+// 	 sumc += c*c; 
+// 
+// 	 sumFGH += FGH; 
+// 	 sumFGHc += FGHc; 
+// 	}
+//    }
+//    errorFile << sqrt(sumFDiff)/sqrt(sumF+EPS)
+//              << setw(18) << sqrt(sumGDiff)/sqrt(sumG+EPS)
+//              << setw(18) << sqrt(sumHDiff)/sqrt(sumH+EPS)
+//              << setw(18) << sqrt(sumcDiff)/sqrt(sumc+EPS)
+//              << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
+//              << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
+// 			 << fixed
+//              << setw(10) << numVerts 
+//              << setw(10) << numElems
+// 			 << endl;
+// 
+//    errorFile << endl;
+//    errorFile << "Radius = " << X->Get(i) << endl;
+// 
+//    errorFile.close();
+// 
+//    count++;
+//   }
+//  }
+//  cout << "relative error for disk saved in dat" << endl;
+// }
+//-------------------------------------------------- 
+
 void InOut::saveDiskError(const char* _dir,const char* _filename )
 {
  real aux;
@@ -2201,10 +2371,12 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    if( dist2 > dist1 ) break;
   }
   aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+  //aux = solFile(j,1); // F
   solF.Set(i,aux); 
-  aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*X->Get(i) )*omega; // G
+  aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*Y->Get(i) )*omega; // G
+  //aux = solFile(j,2); // G
   solG.Set(i,aux);
-  aux = (-1.0)*solFile(j,3); // H
+  aux = (-1)*solFile(j,3); // H (positive on file)
   solH.Set(i,aux);
   aux = solFile(j,4); // C
   solC.Set(i,aux);
@@ -2214,111 +2386,99 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  // Z.Max for all radius X 
  // count starts at 1 because 0 and the last radius are not used
  // (boundary nodes)
- int count = 1;
+ stringstream ss1;  //convertendo int --> string
+ string str1;
+
+ string fileAux = (string) _dir + "diskError" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ofstream errorFile;
+ errorFile.open( filename );
+
+ errorFile << setprecision(10) << scientific; 
+ errorFile << "#F_Error" 
+           << setw(17) << "G_Error"
+		   << setw(18) << "H_Error" 
+		   << setw(18) << "C_Error" 
+		   << setw(20) << "FGH_Error" 
+		   << setw(19) << "FGHC_Error" 
+		   << setw(16) << "numVerts" 
+		   << setw(10) << "numElems" 
+		   << endl;
+
+ real sumFDiff = 0.0;
+ real sumGDiff = 0.0;
+ real sumHDiff = 0.0;
+ real sumcDiff = 0.0;
+ real sumFGHDiff = 0.0;
+ real sumFGHcDiff = 0.0;
+ real sumF = 0.0;
+ real sumG = 0.0;
+ real sumH = 0.0;
+ real sumc = 0.0;
+ real sumFGH = 0.0;
+ real sumFGHc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
-  // removing radius = 0 (center of disk) and boundary nodes (X=radius) 
-  // to the solution
-  if( Z->Get(i) == Z->Min() && 
-	  Y->Get(i) == 0 &&
-	  X->Get(i) > 0.0 && 
-	  X->Get(i) < X->Max() )
-  {
-   stringstream ss1;  //convertendo int --> string
-   string str1;
-   ss1 << count;
-   ss1 >> str1;
+  real F = uSol->Get(i);
+  real G = vSol->Get(i);
+  real H = wSol->Get(i);  
+  real c = cSol->Get(i);
 
-   string fileAux = (string) _dir + "diskError" + str1 + ".dat";
-   const char* filename = fileAux.c_str();
+  real FExact = solF.Get(i);
+  real GExact = solG.Get(i);
+  real HExact = solH.Get(i);
+  real cExact = solC.Get(i);
 
-   ofstream errorFile;
-   errorFile.open( filename );
+  real FGH = F+G+H; 
+  real FGHc = F+G+H+c;
 
-   errorFile << setprecision(10) << scientific; 
-   errorFile << "#F_Error" 
-	         << setw(17) << "G_Error"
-			 << setw(18) << "H_Error" 
-			 << setw(18) << "C_Error" 
-			 << setw(20) << "FGH_Error" 
-			 << setw(19) << "FGHC_Error" 
-			 << setw(16) << "numVerts" 
-			 << setw(10) << "numElems" 
-			 << endl;
+  real FGHExact = FExact+GExact+HExact;
+  real FGHcExact = FExact+GExact+HExact+cExact;
 
-   real sumFDiff = 0.0;
-   real sumGDiff = 0.0;
-   real sumHDiff = 0.0;
-   real sumcDiff = 0.0;
-   real sumFGHDiff = 0.0;
-   real sumFGHcDiff = 0.0;
-   real sumF = 0.0;
-   real sumG = 0.0;
-   real sumH = 0.0;
-   real sumc = 0.0;
-   real sumFGH = 0.0;
-   real sumFGHc = 0.0;
-   for( int j=0;j<numVerts;j++ )
-   {
-	if( X->Get(j) == X->Get(i) && 
-	    Y->Get(j) == 0 &&
-	    Z->Get(j) > Z->Min() )
-	{
-	 real radius = X->Get(i);
-	 int vert = j;
+  sumFDiff += (F-FExact)*(F-FExact);
+  sumGDiff += (G-GExact)*(G-GExact);
+  sumHDiff += (H-HExact)*(H-HExact);
+  sumcDiff += (c-cExact)*(c-cExact);
 
-	 real F = (uSol->Get(vert)/radius);
-	 real G = (vSol->Get(vert)/radius);
-     real H = (-1)*wSol->Get(vert);  
-	 real c = cSol->Get(vert);
+  sumFGHDiff  += (FGH-FGHExact)*(FGH-FGHExact);
+  sumFGHcDiff += (FGHc-FGHcExact)*(FGHc-FGHcExact);
 
-	 real FGH = F+G+H; 
-	 real FGHc = F+G+H+c;
+  sumG += F*F; 
+  sumF += G*G; 
+  sumH += H*H; 
+  sumc += c*c; 
 
-	 real FExact = solF.Get(vert);
-	 real GExact = solG.Get(vert);
-	 real HExact = solH.Get(vert);
-	 real cExact = solC.Get(vert);
-
-	 real FGHExact = FExact+GExact+HExact;
-	 real FGHcExact = FExact+GExact+HExact+cExact;
-
-	 sumFDiff += fabs((F*F)-(FExact*FExact));
-	 sumGDiff += fabs((G*G)-(GExact*GExact));
-	 sumHDiff += fabs((H*H)-(HExact*HExact));
-	 sumcDiff += fabs((c*c)-(cExact*cExact));
-
-	 sumFGHDiff += fabs((FGH*FGH)-(FGHExact*FGHExact));
-	 sumFGHcDiff += fabs((FGHc*FGHc)-(FGHcExact*FGHcExact));
-
-	 sumG += F*F; 
-	 sumF += G*G; 
-	 sumH += H*H; 
-	 sumc += c*c; 
-
-	 sumFGH += FGH; 
-	 sumFGHc += FGHc; 
-	}
-   }
-   errorFile << sqrt(sumFDiff)/sqrt(sumF+EPS)
-             << setw(18) << sqrt(sumGDiff)/sqrt(sumG+EPS)
-             << setw(18) << sqrt(sumHDiff)/sqrt(sumH+EPS)
-             << setw(18) << sqrt(sumcDiff)/sqrt(sumc+EPS)
-             << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
-             << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
-			 << fixed
-             << setw(10) << numVerts 
-             << setw(10) << numElems
-			 << endl;
-
-   errorFile << endl;
-   errorFile << "Radius = " << X->Get(i) << endl;
-
-   errorFile.close();
-
-   count++;
-  }
+  sumFGH += FGH*FGH; 
+  sumFGHc += FGHc*FGHc; 
  }
+ /*  
+  *            (  sum( kappa[i] - kappa_a )^2    )
+  *  k_e = sqrt( -----------------------------   )
+  *            (        sum( kappa[i]^2 )        )
+  * */
+ real errorF = sqrt( sumFDiff/(sumF+EPS) );
+ real errorG = sqrt( sumGDiff/(sumG+EPS) );
+ real errorH = sqrt( sumHDiff/(sumH+EPS) );
+ real errorc = sqrt( sumcDiff/(sumc+EPS) );
+ real errorFGH = sqrt( sumFGHDiff/(sumFGH+EPS) );
+ real errorFGHc = sqrt( sumFGHcDiff/(sumFGHc+EPS) );
+
+ errorFile << errorF 
+           << setw(18) << errorG 
+		   << setw(18) << errorH 
+		   << setw(18) << errorc
+		   << setw(18) << errorFGH
+		   << setw(18) << errorFGHc
+		   << fixed
+		   << setw(10) << numVerts 
+		   << setw(10) << numElems
+		   << endl;
+
+
+ errorFile << endl;
+ errorFile.close();
+
  cout << "relative error for disk saved in dat" << endl;
 }
 

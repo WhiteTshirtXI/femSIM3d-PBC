@@ -2452,10 +2452,11 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
   sumFGH += FGH*FGH; 
   sumFGHc += FGHc*FGHc; 
  }
+
  /*  
-  *            (  sum( kappa[i] - kappa_a )^2    )
-  *  k_e = sqrt( -----------------------------   )
-  *            (        sum( kappa[i]^2 )        )
+  *           (  sum( sol[i] - sol_a )^2    )
+  *  _e = sqrt( --------------------------- )
+  *           (      sum( sol[i]^2 )        )
   * */
  real errorF = sqrt( sumFDiff/(sumF+EPS) );
  real errorG = sqrt( sumGDiff/(sumG+EPS) );

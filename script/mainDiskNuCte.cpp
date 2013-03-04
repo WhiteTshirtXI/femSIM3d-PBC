@@ -53,7 +53,6 @@ int main(int argc, char **argv)
 #endif
  m1.setOFace();
  m1.setNuCteDiskBC();
- //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");
  //m1.setCDiskBC();
 
  Simulator3D s1(m1);

@@ -2241,9 +2241,9 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 			 << setw(18) << "H_Error" 
 			 << setw(18) << "C_Error" 
 			 << setw(20) << "FGH_Error" 
-			 << setw(20) << "FGHC_Error" 
-			 << setw(20) << "numVerts" 
-			 << setw(20) << "numElems" 
+			 << setw(19) << "FGHC_Error" 
+			 << setw(16) << "numVerts" 
+			 << setw(10) << "numElems" 
 			 << endl;
 
    real sumFDiff = 0.0;
@@ -2281,7 +2281,7 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 	 real cExact = solC.Get(vert);
 
 	 real FGHExact = FExact+GExact+HExact;
-	 real FGHcExact = FExact+GExact+GExact+cExact;
+	 real FGHcExact = FExact+GExact+HExact+cExact;
 
 	 sumFDiff += fabs((F*F)-(FExact*FExact));
 	 sumGDiff += fabs((G*G)-(GExact*GExact));
@@ -2307,8 +2307,8 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
              << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
              << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
 			 << fixed
-             << setw(13) << numVerts 
-             << setw(20) << numElems
+             << setw(5) << numVerts 
+             << setw(11) << numElems
 			 << endl;
 
    errorFile << endl;

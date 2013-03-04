@@ -406,7 +406,7 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
   aux = ( solMatrix.Get(j,1)*X->Get(i)-solMatrix.Get(j,2)*Y->Get(i) )*omega;
   uSol.Set(i,aux);
   uSolOld.Set(i,aux);
-  aux = ( solMatrix.Get(j,2)*X->Get(i)-solMatrix.Get(j,1)*Y->Get(i) )*omega;
+  aux = ( solMatrix.Get(j,2)*X->Get(i)+solMatrix.Get(j,1)*Y->Get(i) )*omega;
   vSol.Set(i,aux);
   vSolOld.Set(i,aux);
   aux = (-1.0)*solMatrix.Get(j,3);

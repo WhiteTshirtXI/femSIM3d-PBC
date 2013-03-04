@@ -16,19 +16,17 @@ unset grid
 #set output 'teste' .N '.pdf'
 
 fileObj = "../sim/vk2."
+
 #fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
 fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
 
-plot fileObj .N using 1:2 title 'F' with lines ,\
-     fileObj .N using 1:3 title 'G' with lines ,\
-     fileObj .N using 1:4 title 'H' with lines ,\
-     fileObj .N using 1:5 title 'C' with lines ,\
-	 fileObjAnalytic using 1:2 title 'F' with lines ,\
-	 fileObjAnalytic using 1:3 title 'G' with lines ,\
-	 fileObjAnalytic using 1:4 title 'H' with lines ,\
-	 fileObjAnalytic using 1:5 title 'C' with lines 
-
-N=N+1
-print N
-load "animation.gpi"
+do for [i=1:290]{
+ plot fileObj .i using 1:2 title 'F' with lines ,\
+      fileObj .i using 1:3 title 'G' with lines ,\
+      fileObj .i using 1:4 title 'H' with lines ,\
+ 	  fileObjAnalytic using 1:2 title 'F' with lines ,\
+ 	  fileObjAnalytic using 1:3 title 'G' with lines ,\
+	  fileObjAnalytic using 1:4 title 'H' with lines 
+ print i
+}

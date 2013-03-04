@@ -810,7 +810,7 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
    {
 	if( X->Get(j) == X->Get(i) && Y->Get(j) == 0 )
 	{
-	 real radius = X->Get(i);
+	 real radius = X->Get(i)+EPS;
 	 int vert = j;
 
      vonKarmanFile << setw(16) <<  Z->Get(vert)  

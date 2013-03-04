@@ -808,18 +808,37 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
 
    for( int j=0;j<numVerts;j++ )
    {
-	if( X->Get(j) == X->Get(i) && Y->Get(j) == 0 )
+	if( X->Get(j) == X->Get(i) && Y->Get(j) == Y->Get(i) )
 	{
-	 real radius = X->Get(i)+EPS;
+	 real radius = sqrt( X->Get(i)*X->Get(i) +
+	                     Y->Get(i)*Y->Get(i) );
 	 int vert = j;
 
-     vonKarmanFile << setw(16) <<  Z->Get(vert)  
-	               << setw(18) <<  uSol->Get(vert)/radius  
-				   << setw(18) <<  vSol->Get(vert)/radius  
-				   << setw(18) <<  (-1)*wSol->Get(vert)  
-				   << setw(18) <<  cSol->Get(vert)  
-				   << setw(18) <<  pSol->Get(vert) 
-				   << setw(18) <<  mu->Get(vert) << endl;
+	 //      X*u      Y*v
+	 // F = ------ + ------
+	 //      R^2      R^2
+	 real F = X->Get(vert)*uSol->Get(vert)/(radius*radius)+  
+	          Y->Get(vert)*vSol->Get(vert)/(radius*radius);
+	 //      X*v      Y*u
+	 // G = ------ - ------
+	 //      R^2      R^2
+	 real G = X->Get(vert)*vSol->Get(vert)/(radius*radius)-  
+	          Y->Get(vert)*uSol->Get(vert)/(radius*radius);
+	 //      
+	 // H = -1*w
+	 //     
+	 real H = (-1)*wSol->Get(vert); 
+	 real c = cSol->Get(vert);
+	 real p = pSol->Get(vert);
+	 real muValue = mu->Get(vert);
+
+     vonKarmanFile << setw(16) << Z->Get(vert)  
+	               << setw(18) << F
+				   << setw(18) << G
+				   << setw(18) << H
+				   << setw(18) << c  
+				   << setw(18) << p 
+				   << setw(18) << muValue << endl;
 	}
    }
 
@@ -2106,30 +2125,31 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 				  << endl;
  }
 
+ // EPS to avoid division by 0
  real uDiff = ( (*uSol - *uSolOld).Abs() ).Sum();
  real uSum = ( uSol->Abs() ).Sum();
- real uError = (uDiff/uSum)/dt;
+ real uError = (uDiff/(uSum+EPS))/dt;
 
  real vDiff = ( (*vSol - *vSolOld).Abs() ).Sum();
  real vSum = ( vSol->Abs() ).Sum();
- real vError = (vDiff/vSum)/dt;
+ real vError = (vDiff/(vSum+EPS))/dt;
 
  real wDiff = ( (*wSol - *wSolOld).Abs() ).Sum();
  real wSum = ( wSol->Abs() ).Sum();
- real wError = (wDiff/wSum)/dt;
+ real wError = (wDiff/(wSum+EPS))/dt;
 
  real pDiff = ( (*pSol - *pSolOld).Abs() ).Sum();
  real pSum = ( pSol->Abs() ).Sum();
- real pError = (pDiff/pSum)/dt;
+ real pError = (pDiff/(pSum+EPS))/dt;
 
  real cDiff = ( (*cSol - *cSolOld).Abs() ).Sum();
  real cSum = ( cSol->Abs() ).Sum();
- real cError = (cDiff/cSum)/dt;
+ real cError = (cDiff/(cSum+EPS))/dt;
  
- real uvwError = ( (uDiff+vDiff+wDiff) / (uSum+vSum+wSum) ) / dt;
- real uvwpError = ( (uDiff+vDiff+wDiff+pDiff) / (uSum+vSum+wSum+pSum) )/dt;
+ real uvwError = ( (uDiff+vDiff+wDiff) / (uSum+vSum+wSum+EPS) ) / dt;
+ real uvwpError = ( (uDiff+vDiff+wDiff+pDiff) / (uSum+vSum+wSum+pSum+EPS) )/dt;
  real uvwpcError = ( (uDiff+vDiff+wDiff+pDiff+cDiff) /
-                     (uSum+vSum+wSum+pSum+cSum) ) / dt;
+                     (uSum+vSum+wSum+pSum+cSum+EPS) ) / dt;
 
  iter = s->getIter();
 
@@ -2155,7 +2175,7 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 } // fecha metodo saveConvergence
 
 //--------------------------------------------------
-// void InOut::saveDiskError(const char* _dir,const char* _filename )
+// void InOut::saveDiskError2(const char* _dir,const char* _filename )
 // {
 //  real aux;
 //  real dist1,dist2;
@@ -2192,7 +2212,6 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 //  }
 // 
 //  int j;
-//  real omega = 1.0;
 //  for( int i=0;i<numVerts;i++ )
 //  {
 //   for( j=0;j<solFile.DimI()-1;j++ )
@@ -2201,11 +2220,11 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 //    dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
 //    if( dist2 > dist1 ) break;
 //   }
-//   aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+//   aux = solFile(j,1); // F
 //   solF.Set(i,aux); 
-//   aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*X->Get(i) )*omega; // G
+//   aux = solFile(j,2); // G
 //   solG.Set(i,aux);
-//   aux = (-1.0)*solFile(j,3); // H
+//   aux = solFile(j,3); // H
 //   solH.Set(i,aux);
 //   aux = solFile(j,4); // C
 //   solC.Set(i,aux);
@@ -2215,22 +2234,7 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 //  // Z.Max for all radius X 
 //  // count starts at 1 because 0 and the last radius are not used
 //  // (boundary nodes)
-//  int count = 1;
-//  for( int i=0;i<numVerts;i++ )
-//  {
-//   // removing radius = 0 (center of disk) and boundary nodes (X=radius) 
-//   // to the solution
-//   if( Z->Get(i) == Z->Min() && 
-// 	  Y->Get(i) == 0 &&
-// 	  X->Get(i) > 0.0 && 
-// 	  X->Get(i) < X->Max() )
-//   {
-//    stringstream ss1;  //convertendo int --> string
-//    string str1;
-//    ss1 << count;
-//    ss1 >> str1;
-// 
-//    string fileAux = (string) _dir + "diskError" + str1 + ".dat";
+//    string fileAux = (string) _dir + "diskError2" + ".dat";
 //    const char* filename = fileAux.c_str();
 // 
 //    ofstream errorFile;
@@ -2259,67 +2263,81 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 //    real sumc = 0.0;
 //    real sumFGH = 0.0;
 //    real sumFGHc = 0.0;
-//    for( int j=0;j<numVerts;j++ )
+//    for( int i=0;i<numVerts;i++ )
 //    {
-// 	if( X->Get(j) == X->Get(i) && 
-// 	    Y->Get(j) == 0 &&
-// 	    Z->Get(j) > Z->Min() )
-// 	{
-// 	 real radius = X->Get(i);
-// 	 int vert = j;
+// 	 real radius = sqrt( X->Get(i)*X->Get(i) +
+// 	                     Y->Get(i)*Y->Get(i) )+EPS;
 // 
-// 	 real F = (uSol->Get(vert)/radius);
-// 	 real G = (vSol->Get(vert)/radius);
-//      real H = (-1)*wSol->Get(vert);  
-// 	 real c = cSol->Get(vert);
+// 	 //      X*u      Y*v
+// 	 // F = ------ + ------
+// 	 //      R^2      R^2
+// 	 real F = X->Get(i)*uSol->Get(i)/(radius*radius)+  
+// 	          Y->Get(i)*vSol->Get(i)/(radius*radius);
+// 	 //      X*v      Y*u
+// 	 // G = ------ - ------
+// 	 //      R^2      R^2
+// 	 real G = X->Get(i)*vSol->Get(i)/(radius*radius)-  
+// 	          Y->Get(i)*uSol->Get(i)/(radius*radius);
+// 	 //      
+// 	 // H = -1*w
+// 	 //     
+// 	 real H = (-1)*wSol->Get(i); 
+// 
+// 	 real c = cSol->Get(i);
 // 
 // 	 real FGH = F+G+H; 
 // 	 real FGHc = F+G+H+c;
 // 
-// 	 real FExact = solF.Get(vert);
-// 	 real GExact = solG.Get(vert);
-// 	 real HExact = solH.Get(vert);
-// 	 real cExact = solC.Get(vert);
+// 	 real FExact = solF.Get(i);
+// 	 real GExact = solG.Get(i);
+// 	 real HExact = solH.Get(i);
+// 	 real cExact = solC.Get(i);
 // 
 // 	 real FGHExact = FExact+GExact+HExact;
 // 	 real FGHcExact = FExact+GExact+HExact+cExact;
 // 
-// 	 sumFDiff += fabs((F*F)-(FExact*FExact));
-// 	 sumGDiff += fabs((G*G)-(GExact*GExact));
-// 	 sumHDiff += fabs((H*H)-(HExact*HExact));
-// 	 sumcDiff += fabs((c*c)-(cExact*cExact));
+// 	 sumFDiff += (F-FExact)*(F-FExact);
+// 	 sumGDiff += (G-GExact)*(G-GExact);
+// 	 sumHDiff += (H-HExact)*(H-HExact);
+// 	 sumcDiff += (c-cExact)*(c-cExact);
 // 
-// 	 sumFGHDiff += fabs((FGH*FGH)-(FGHExact*FGHExact));
-// 	 sumFGHcDiff += fabs((FGHc*FGHc)-(FGHcExact*FGHcExact));
+// 	 sumFGHDiff += (FGH-FGHExact)*(FGH-FGHExact);
+// 	 sumFGHcDiff += (FGHc-FGHcExact)*(FGHc-FGHcExact);
 // 
-// 	 sumG += F*F; 
-// 	 sumF += G*G; 
+// 	 sumF += F*F; 
+// 	 sumG += G*G; 
 // 	 sumH += H*H; 
 // 	 sumc += c*c; 
 // 
-// 	 sumFGH += FGH; 
-// 	 sumFGHc += FGHc; 
-// 	}
+// 	 sumFGH += FGH*FGH; 
+// 	 sumFGHc += FGHc*FGHc; 
 //    }
-//    errorFile << sqrt(sumFDiff)/sqrt(sumF+EPS)
-//              << setw(18) << sqrt(sumGDiff)/sqrt(sumG+EPS)
-//              << setw(18) << sqrt(sumHDiff)/sqrt(sumH+EPS)
-//              << setw(18) << sqrt(sumcDiff)/sqrt(sumc+EPS)
-//              << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
-//              << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
+//    /*  
+// 	*           (  sum( sol[i] - sol_a )^2    )
+// 	*  _e = sqrt( --------------------------- )
+// 	*           (      sum( sol[i]^2 )        )
+// 	* */
+//    real errorF = sqrt( sumFDiff/(sumF+EPS) );
+//    real errorG = sqrt( sumGDiff/(sumG+EPS) );
+//    real errorH = sqrt( sumHDiff/(sumH+EPS) );
+//    real errorc = sqrt( sumcDiff/(sumc+EPS) );
+//    real errorFGH = sqrt( sumFGHDiff/(sumFGH+EPS) );
+//    real errorFGHc = sqrt( sumFGHcDiff/(sumFGHc+EPS) );
+// 
+//    errorFile << errorF 
+//              << setw(18) << errorG 
+// 			 << setw(18) << errorH 
+// 			 << setw(18) << errorc
+// 			 << setw(18) << errorFGH
+// 			 << setw(18) << errorFGHc
 // 			 << fixed
-//              << setw(10) << numVerts 
-//              << setw(10) << numElems
+// 			 << setw(10) << numVerts 
+// 			 << setw(10) << numElems
 // 			 << endl;
 // 
 //    errorFile << endl;
-//    errorFile << "Radius = " << X->Get(i) << endl;
-// 
 //    errorFile.close();
 // 
-//    count++;
-//   }
-//  }
 //  cout << "relative error for disk saved in dat" << endl;
 // }
 //-------------------------------------------------- 
@@ -2373,7 +2391,7 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
   aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
   uExact.Set(i,aux); 
-  aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*Y->Get(i) )*omega; // G
+  aux = ( solFile(j,2)*X->Get(i)+solFile(j,1)*Y->Get(i) )*omega; // G
   //aux = solFile(j,2); // G
   vExact.Set(i,aux);
   aux = (-1)*solFile(j,3); // H (positive on file)
@@ -2420,8 +2438,13 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  real sumUVWc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
-  real UVW = uSol->Get(i)+vSol->Get(i)+wSol->Get(i); 
-  real UVWc = uSol->Get(i)+vSol->Get(i)+wSol->Get(i)+cSol->Get(i); 
+  real UVW = uSol->Get(i)+
+             vSol->Get(i)+
+			 wSol->Get(i); 
+  real UVWc = uSol->Get(i)+
+              vSol->Get(i)+
+			  wSol->Get(i)+
+			  cSol->Get(i); 
 
   real UVWExact = uExact.Get(i)+
                   vExact.Get(i)+

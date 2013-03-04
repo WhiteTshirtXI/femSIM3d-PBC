@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,10,10);
+ m1.setMeshDisk(6,6,6);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
  m1.initMeshParameters();

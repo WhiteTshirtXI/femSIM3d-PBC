@@ -230,6 +230,6 @@ deepclean:
 	@rm -f ./bin/*.bin
 	@rm -f ./*.dat
 	@rm -f ./dat/*.dat
-	@rm -f ./dat/vk*
+	@rm -f ./sim/vk*
 	@rm -f ./dat/edge.*
 

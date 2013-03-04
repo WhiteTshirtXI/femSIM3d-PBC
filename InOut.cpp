@@ -2307,8 +2307,8 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
              << setw(18) << sqrt(sumFGHDiff)/sqrt(sumFGH+EPS)
              << setw(18) << sqrt(sumFGHcDiff)/sqrt(sumFGHc+EPS)
 			 << fixed
-             << setw(5) << numVerts 
-             << setw(11) << numElems
+             << setw(10) << numVerts 
+             << setw(10) << numElems
 			 << endl;
 
    errorFile << endl;
@@ -2319,6 +2319,7 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
    count++;
   }
  }
+ cout << "relative error for disk saved in dat" << endl;
 }
 
 void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )

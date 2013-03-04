@@ -2329,10 +2329,10 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  real aux;
  real dist1,dist2;
  clMatrix solFile(2401,5); 
- clVector solF(numVerts);
- clVector solG(numVerts);
- clVector solH(numVerts);
- clVector solC(numVerts);
+ clVector uExact(numVerts);
+ clVector vExact(numVerts);
+ clVector wExact(numVerts);
+ clVector cExact(numVerts);
 
  ifstream file( _filename,ios::in );
 
@@ -2372,14 +2372,14 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
   }
   aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
-  solF.Set(i,aux); 
+  uExact.Set(i,aux); 
   aux = ( solFile(j,2)*X->Get(i)-solFile(j,1)*Y->Get(i) )*omega; // G
   //aux = solFile(j,2); // G
-  solG.Set(i,aux);
+  vExact.Set(i,aux);
   aux = (-1)*solFile(j,3); // H (positive on file)
-  solH.Set(i,aux);
+  wExact.Set(i,aux);
   aux = solFile(j,4); // C
-  solC.Set(i,aux);
+  cExact.Set(i,aux);
  }
 
  // this loop retrives all the points with Y=0 and Z varying from 0 to
@@ -2406,51 +2406,58 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
 		   << setw(10) << "numElems" 
 		   << endl;
 
- real sumFDiff = 0.0;
- real sumGDiff = 0.0;
- real sumHDiff = 0.0;
+ real sumUDiff = 0.0;
+ real sumVDiff = 0.0;
+ real sumWDiff = 0.0;
  real sumcDiff = 0.0;
- real sumFGHDiff = 0.0;
- real sumFGHcDiff = 0.0;
- real sumF = 0.0;
- real sumG = 0.0;
- real sumH = 0.0;
+ real sumUVWDiff = 0.0;
+ real sumUVWcDiff = 0.0;
+ real sumU = 0.0;
+ real sumV = 0.0;
+ real sumW = 0.0;
  real sumc = 0.0;
- real sumFGH = 0.0;
- real sumFGHc = 0.0;
+ real sumUVW = 0.0;
+ real sumUVWc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
-  real F = uSol->Get(i);
-  real G = vSol->Get(i);
-  real H = wSol->Get(i);  
-  real c = cSol->Get(i);
+  real UVW = uSol->Get(i)+vSol->Get(i)+wSol->Get(i); 
+  real UVWc = uSol->Get(i)+vSol->Get(i)+wSol->Get(i)+cSol->Get(i); 
 
-  real FExact = solF.Get(i);
-  real GExact = solG.Get(i);
-  real HExact = solH.Get(i);
-  real cExact = solC.Get(i);
+  real UVWExact = uExact.Get(i)+
+                  vExact.Get(i)+
+				  wExact.Get(i); 
+  real UVWcExact = uExact.Get(i)+
+                   vExact.Get(i)+
+				   wExact.Get(i)+
+				   cExact.Get(i); 
 
-  real FGH = F+G+H; 
-  real FGHc = F+G+H+c;
+  sumUDiff += (uSol->Get(i)-uExact.Get(i))*
+              (uSol->Get(i)-uExact.Get(i));
+  sumVDiff += (vSol->Get(i)-vExact.Get(i))*
+              (vSol->Get(i)-vExact.Get(i));
+  sumWDiff += (wSol->Get(i)-wExact.Get(i))*
+              (wSol->Get(i)-wExact.Get(i));
+  sumcDiff += (cSol->Get(i)-cExact.Get(i))*
+              (cSol->Get(i)-cExact.Get(i));
 
-  real FGHExact = FExact+GExact+HExact;
-  real FGHcExact = FExact+GExact+HExact+cExact;
+  sumUVWDiff += (UVW-UVWExact)*
+                (UVW-UVWExact);
+  sumUVWcDiff += (UVWc-UVWcExact)*
+                 (UVWc-UVWcExact);
 
-  sumFDiff += (F-FExact)*(F-FExact);
-  sumGDiff += (G-GExact)*(G-GExact);
-  sumHDiff += (H-HExact)*(H-HExact);
-  sumcDiff += (c-cExact)*(c-cExact);
+  sumU += uSol->Get(i)*
+          uSol->Get(i); 
+  sumV += vSol->Get(i)*
+          vSol->Get(i); 
+  sumW += wSol->Get(i)*
+          wSol->Get(i); 
+  sumc += cSol->Get(i)*
+          cSol->Get(i); 
 
-  sumFGHDiff  += (FGH-FGHExact)*(FGH-FGHExact);
-  sumFGHcDiff += (FGHc-FGHcExact)*(FGHc-FGHcExact);
-
-  sumG += F*F; 
-  sumF += G*G; 
-  sumH += H*H; 
-  sumc += c*c; 
-
-  sumFGH += FGH*FGH; 
-  sumFGHc += FGHc*FGHc; 
+  sumUVW += UVW*
+            UVW; 
+  sumUVWc += UVWc*
+             UVWc; 
  }
 
  /*  
@@ -2458,19 +2465,19 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
   *  _e = sqrt( --------------------------- )
   *           (      sum( sol[i]^2 )        )
   * */
- real errorF = sqrt( sumFDiff/(sumF+EPS) );
- real errorG = sqrt( sumGDiff/(sumG+EPS) );
- real errorH = sqrt( sumHDiff/(sumH+EPS) );
+ real errorU = sqrt( sumUDiff/(sumU+EPS) );
+ real errorV = sqrt( sumVDiff/(sumV+EPS) );
+ real errorW = sqrt( sumWDiff/(sumW+EPS) );
  real errorc = sqrt( sumcDiff/(sumc+EPS) );
- real errorFGH = sqrt( sumFGHDiff/(sumFGH+EPS) );
- real errorFGHc = sqrt( sumFGHcDiff/(sumFGHc+EPS) );
+ real errorUVW = sqrt( sumUVWDiff/(sumUVW+EPS) );
+ real errorUVWc = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
 
- errorFile << errorF 
-           << setw(18) << errorG 
-		   << setw(18) << errorH 
+ errorFile << errorU 
+           << setw(18) << errorV 
+		   << setw(18) << errorW 
 		   << setw(18) << errorc
-		   << setw(18) << errorFGH
-		   << setw(18) << errorFGHc
+		   << setw(18) << errorUVW
+		   << setw(18) << errorUVWc
 		   << fixed
 		   << setw(10) << numVerts 
 		   << setw(10) << numElems

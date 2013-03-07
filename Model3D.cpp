@@ -2833,7 +2833,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < 0.4*size && 
+  if( length < 0.3*size && 
   //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
@@ -3733,7 +3733,7 @@ void Model3D::mesh3DPoints()
  cout << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
- cout << color(none,white,black) 
+ cout << color(blink,blue,black) 
       << "                     | re-meshing 3D points... ";
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
@@ -9441,8 +9441,13 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	if( minHeight < 0.5*triEdge[vertID] //&& 
-	//if( minHeight < 0.4*edgeSize.Get(v1)  //&& 
+	bool pressureTest=(surfMesh.phyBounds.at(v1) == "\"wallOutflow\"" ) ||
+	                  (surfMesh.phyBounds.at(v2) == "\"wallOutflow\"" ) ||
+	                  (surfMesh.phyBounds.at(v3) == "\"wallOutflow\"" );
+
+	if( minHeight < 0.3*triEdge[vertID] && 
+	//if( minHeight < 0.4*edgeSize.Get(v1)  && 
+	    pressureTest 
 	  )
 	  // vertID > 0)
 	{

@@ -331,10 +331,11 @@ void Helmholtz3D::initBackwardStep()
 	                   xCloser,yCloser,zCloser );
   wallDistance.Set(i,aux);
  }
+ wallDistance = wallDistance.adimensionalize();
 
  // considering that the smaller distance is equivalent to the wall edge
  // length (triEdge[0])
- real minWallDistance = triEdge[0];
+ //real minWallDistance = triEdge[0];
 
  /* loop at surfMesh: for each vertex, an average value is set based on
   * the umbrella operator (neighbors) for distance. Thus, each vertex
@@ -366,16 +367,16 @@ void Helmholtz3D::initBackwardStep()
   else // apply same strategy for non-boundary vertics if it is
        // NormalU,V,W c.c.
   {
-   real ratio = wallDistance.Get(i)/minWallDistance;
-   real aux = triEdge[0]*ratio;
+  real ratio = triEdge[0]*wallDistance.Get(i)*4.0;
+  real aux = triEdge[0]+ratio;
    convC.Set(i,aux);
   }
  }
 
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real ratio = wallDistance.Get(i)/minWallDistance;
-  real aux = triEdge[0]*ratio;
+  real ratio = triEdge[0]*wallDistance.Get(i)*4.0;
+  real aux = triEdge[0]+ratio;
   convC.Set(i,aux);
  }
 }
@@ -657,63 +658,19 @@ void Helmholtz3D::saveVTK( const char* _dir,const char* _filename, int _iter )
 		  << Z->Get(i) << endl;
 
  vtkFile << endl;
-
- // conta numero de elementos
- real plane1 = ( X->Max()+X->Min() )/2.0;
- int count = 0;
- for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
-   count++;
- }
  
- vtkFile << "CELLS " << count << " " << 5*count << endl;
+ vtkFile << "CELLS " << numElems << " " << 5*numElems << endl;
  vtkFile << setprecision(0) << fixed; 
  for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
-  {
    vtkFile << "4 " << IEN->Get(i,0) << " "  
             	   << IEN->Get(i,1) << " " 
 				   << IEN->Get(i,2) << " " 
 				   << IEN->Get(i,3) << endl;
-  }
- }
  vtkFile << endl;
 
- vtkFile <<  "CELL_TYPES " << count << endl;
+ vtkFile <<  "CELL_TYPES " << numElems << endl;
  for( int i=0;i<numElems;i++ )
- {
-  int v1 = IEN->Get(i,0);
-  int v2 = IEN->Get(i,1);
-  int v3 = IEN->Get(i,2);
-  int v4 = IEN->Get(i,3);
-//--------------------------------------------------
-//   if( (heaviside->Get(v1)+heaviside->Get(v2)+
-// 	   heaviside->Get(v3)+heaviside->Get(v4) > 1.5) || 
-//     ( (X->Get( v1 ) <  plane1) && (X->Get( v2 ) <  plane1) && 
-// 	  (X->Get( v3 ) <  plane1) && (X->Get( v4 ) <  plane1) ) )
-//-------------------------------------------------- 
    vtkFile << "10 ";
- }
 
  vtkFile << endl;
 

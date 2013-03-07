@@ -75,6 +75,14 @@ Simulator3D::Simulator3D( Model3D &_m )
  allocateMemoryToAttrib();
 }
 
+/* the constructor will be initialize with &_sRight attributes and
+ * &_sRight.m attributes, i.e. copying the pointer from _sRight to the
+ * current object.
+ * 
+ * input: &_s
+ * output: Simulator3D &_sRight and &_sRight.m
+ *
+ * */
 Simulator3D::Simulator3D( const Simulator3D &_sRight )  
 {
  getModel3DAttrib(*_sRight.m);
@@ -256,90 +264,98 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  solverC = _sRight.solverC;
 }
 
-Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_s)  
+/* the constructor will be initialize with &_m attributes and &_sRight
+ * attributes. numVertsOld,numNodesOld and numElentsOld will be
+ * initialize with &_sRight.m attributes
+ * 
+ * input: &_m,&_s
+ * output: Simulator3D with &_m and &_s
+ *
+ * */
+Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_sRight)  
 {
  // mesh information vectors
  getModel3DAttrib(_m);
 
- Re    = _s.getRe();
- Sc    = _s.getSc();
- Fr    = _s.getFr();
- We    = _s.getWe();
- sigma = _s.getSigma();
- alpha = _s.getAlpha();
- beta  = _s.getBeta();
- dt    = _s.getDt();
- dtLagrangian = _s.getDtLagrangian();
- dtSemiLagrangian = _s.getDtSemiLagrangian();
- dtGravity = _s.getDtGravity();
- dtSurfaceTension = _s.getDtSurfaceTension();
- time  = _s.getTime();
- cfl   = _s.getCfl();
- g     = _s.getGrav();
- mu_in  = _s.getMu_in();
- mu_out  = _s.getMu_out();
- mu_inAdimen  = _s.getMu_inAdimen();
- mu_outAdimen  = _s.getMu_outAdimen();
- rho_in = _s.getRho_in();
- rho_out = _s.getRho_out();
- rho_inAdimen = _s.getRho_inAdimen();
- rho_outAdimen = _s.getRho_outAdimen();
- cp_in = _s.getCp_in();
- cp_out = _s.getCp_out();
- cp_inAdimen = _s.getCp_inAdimen();
- cp_outAdimen = _s.getCp_outAdimen();
- kt_in = _s.getKt_in();
- kt_out = _s.getKt_out();
- kt_inAdimen = _s.getKt_inAdimen();
- kt_outAdimen = _s.getKt_outAdimen();
- iter  = _s.getIter();
- c1    = _s.getC1();
- c2    = _s.getC2();
- c3    = _s.getC3();
- d1    = _s.getD1();
- d2    = _s.getD2();
+ Re    = _sRight.getRe();
+ Sc    = _sRight.getSc();
+ Fr    = _sRight.getFr();
+ We    = _sRight.getWe();
+ sigma = _sRight.getSigma();
+ alpha = _sRight.getAlpha();
+ beta  = _sRight.getBeta();
+ dt    = _sRight.getDt();
+ dtLagrangian = _sRight.getDtLagrangian();
+ dtSemiLagrangian = _sRight.getDtSemiLagrangian();
+ dtGravity = _sRight.getDtGravity();
+ dtSurfaceTension = _sRight.getDtSurfaceTension();
+ time  = _sRight.getTime();
+ cfl   = _sRight.getCfl();
+ g     = _sRight.getGrav();
+ mu_in  = _sRight.getMu_in();
+ mu_out  = _sRight.getMu_out();
+ mu_inAdimen  = _sRight.getMu_inAdimen();
+ mu_outAdimen  = _sRight.getMu_outAdimen();
+ rho_in = _sRight.getRho_in();
+ rho_out = _sRight.getRho_out();
+ rho_inAdimen = _sRight.getRho_inAdimen();
+ rho_outAdimen = _sRight.getRho_outAdimen();
+ cp_in = _sRight.getCp_in();
+ cp_out = _sRight.getCp_out();
+ cp_inAdimen = _sRight.getCp_inAdimen();
+ cp_outAdimen = _sRight.getCp_outAdimen();
+ kt_in = _sRight.getKt_in();
+ kt_out = _sRight.getKt_out();
+ kt_inAdimen = _sRight.getKt_inAdimen();
+ kt_outAdimen = _sRight.getKt_outAdimen();
+ iter  = _sRight.getIter();
+ c1    = _sRight.getC1();
+ c2    = _sRight.getC2();
+ c3    = _sRight.getC3();
+ d1    = _sRight.getD1();
+ d2    = _sRight.getD2();
 
- uRef = _s.getURef();
- vRef = _s.getVRef();
- wRef = _s.getWRef();
- xRef = _s.getXRef();
- yRef = _s.getYRef();
- zRef = _s.getZRef();
+ uRef = _sRight.getURef();
+ vRef = _sRight.getVRef();
+ wRef = _sRight.getWRef();
+ xRef = _sRight.getXRef();
+ yRef = _sRight.getYRef();
+ zRef = _sRight.getZRef();
 
- setSolverVelocity( new PCGSolver() );
- setSolverPressure( new PCGSolver() );
- setSolverConcentration( new PCGSolver() );
-
- numVertsOld = _s.m->getNumVerts();
- numNodesOld = _s.m->getNumNodes();
- numElemsOld = _s.m->getNumElems();
+ numVertsOld = _sRight.m->getNumVerts();
+ numNodesOld = _sRight.m->getNumNodes();
+ numElemsOld = _sRight.m->getNumElems();
 
  allocateMemoryToAttrib();
 
  // recuperando campo de velocidade e pressao da malha antiga
- uSolOld    = *_s.getUSol();
- vSolOld    = *_s.getVSol();
- wSolOld    = *_s.getWSol();
- pSolOld    = *_s.getPSol();
- cSolOld    = *_s.getCSol();
- uALEOld    = *_s.getUALE();
- vALEOld    = *_s.getVALE();
- wALEOld    = *_s.getWALE();
- kappaOld   = *_s.getKappa();
- fintOld    = *_s.getFint();
- gravityOld = *_s.getGravity();
- muOld      = *_s.getMu();
- rhoOld     = *_s.getRho();
- cpOld     = *_s.getCp();
- ktOld     = *_s.getKt();
- hSmoothOld = *_s.getHSmooth();
- heatFluxOld = *_s.getHeatFlux();
- centroidVelXOld = _s.getCentroidVelX();
- centroidVelYOld = _s.getCentroidVelY();
- centroidVelZOld = _s.getCentroidVelZ();
- centroidPosXOld = _s.getCentroidPosX();
- centroidPosYOld = _s.getCentroidPosY();
- centroidPosZOld = _s.getCentroidPosZ();
+ uSolOld    = *_sRight.getUSol();
+ vSolOld    = *_sRight.getVSol();
+ wSolOld    = *_sRight.getWSol();
+ pSolOld    = *_sRight.getPSol();
+ cSolOld    = *_sRight.getCSol();
+ uALEOld    = *_sRight.getUALE();
+ vALEOld    = *_sRight.getVALE();
+ wALEOld    = *_sRight.getWALE();
+ kappaOld   = *_sRight.getKappa();
+ fintOld    = *_sRight.getFint();
+ gravityOld = *_sRight.getGravity();
+ muOld      = *_sRight.getMu();
+ rhoOld     = *_sRight.getRho();
+ cpOld     = *_sRight.getCp();
+ ktOld     = *_sRight.getKt();
+ hSmoothOld = *_sRight.getHSmooth();
+ heatFluxOld = *_sRight.getHeatFlux();
+ centroidVelXOld = _sRight.getCentroidVelX();
+ centroidVelYOld = _sRight.getCentroidVelY();
+ centroidVelZOld = _sRight.getCentroidVelZ();
+ centroidPosXOld = _sRight.getCentroidPosX();
+ centroidPosYOld = _sRight.getCentroidPosY();
+ centroidPosZOld = _sRight.getCentroidPosZ();
+
+ solverV = _sRight.solverV;
+ solverP = _sRight.solverP;
+ solverC = _sRight.solverC;
 }
 
 Simulator3D::~Simulator3D()
@@ -760,20 +776,20 @@ void Simulator3D::assembleHeatTransfer()
 
   real muValue=0;
   real rhoValue=0;
-  real cpValue=0;
+  //real cpValue=0;
   real ktValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
-   cpValue = cp_outAdimen;
+   //cpValue = cp_outAdimen;
    ktValue = kt_outAdimen;
   }
   else
   {
    muValue = mu_inAdimen;
    rhoValue = rho_inAdimen;
-   cpValue = cp_inAdimen;
+   //cpValue = cp_inAdimen;
    ktValue = kt_inAdimen;
   }
 
@@ -2628,6 +2644,10 @@ void Simulator3D::saveOldData()
  hSmoothOld  = hSmooth;
  heatFluxOld = heatFluxOld;
 
+ numVertsOld = numVerts;
+ numNodesOld = numNodesOld;
+ numElemsOld = numElemsOld;
+
  time = time + dt;
  iter++;
 }
@@ -3752,30 +3772,7 @@ clVector Simulator3D::setCentroid(clVector &_vector)
 // Atribui o Simulator3D do argumento no corrente
 void Simulator3D::operator=(Simulator3D &_sRight) 
 {
- m = _sRight.m;
- numVerts = _sRight.numVerts;
- numNodes = _sRight.numNodes;
- numElems = _sRight.numElems;
- X = _sRight.X;
- Y = _sRight.Y;
- Z = _sRight.Z;
- uc = _sRight.uc;
- vc = _sRight.vc;
- wc = _sRight.wc;
- pc = _sRight.pc;
- cc = _sRight.cc;
- heaviside = _sRight.heaviside;
- idbcu = _sRight.idbcu;
- idbcv = _sRight.idbcv;
- idbcw = _sRight.idbcw;
- idbcp = _sRight.idbcp;
- idbcc = _sRight.idbcc;
- outflow = _sRight.outflow;
- surface = _sRight.surface;
- IEN = _sRight.IEN;
- interfaceDistance = _sRight.interfaceDistance;
- elemIdRegion = _sRight.elemIdRegion;
- triEdge = _sRight.triEdge;
+ getModel3DAttrib(*_sRight.m);
 
  Re = _sRight.Re;
  Sc = _sRight.Sc;
@@ -4429,6 +4426,12 @@ void Simulator3D::setAnnularALEBC()
  }
 }
 
+/* method to copy the pointer of each attribute of _m to the Simulator3D
+ * 
+ * input: &_m
+ * output: numVerts,Elems,Nodes,X,Y,Z,uc,vc,wc,pc,cc,heaviside etc.
+ *
+ * */
 void Simulator3D::getModel3DAttrib(Model3D &_m)
 {
  m = &_m;

@@ -30,9 +30,9 @@ int main(int argc, char **argv)
  real Fr = 10;
  //real alpha = 1;
  //real beta = 0;
- real c1 = 0.2;  // lagrangian
+ real c1 = 0.3;  // lagrangian
  real c2 = 0.0;  // smooth vel
- real c3 = 1.0;  // smooth coord (fujiwara)
+ real c3 = 2.0;  // smooth coord (fujiwara)
  real cfl = 1.0;
  real mu_l = 1.0;
  real rho_l = 1.0;
@@ -55,60 +55,90 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- //m1.setMeshStep(40,20,4);
- m1.readMSH(mesh);
- m1.setInterfaceBC();
- m1.setTriEdge();
- m1.mesh2Dto3D();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
- m1.setOFace();
- m1.setSurfaceConfig();
-
- // mesh statistics info 
- m1.setInitSurfaceVolume();
- m1.setSurfaceVolume();
- m1.setInitSurfaceArea();
- m1.setSurfaceArea();
- m1.tetMeshStats();
-
- // boundary conditions
- m1.setGenericBC();
-
- Simulator3D s1(m1);
-
- s1.setRe(Re);
- s1.setSc(Sc);
- s1.setFr(Fr);
- s1.setC1(c1);
- s1.setC2(c2);
- s1.setC3(c3);
- s1.setCfl(cfl);
- s1.setDtALESinglePhase();
- s1.setMu(mu_l);
- s1.setRho(rho_l);
- s1.setSolverPressure(solverP);
- s1.setSolverVelocity(solverV);
- s1.setSolverConcentration(solverC);
-
- s1.init();
+ Simulator3D s1;
 
  if( (*(argv+1)) == NULL )
  {
   cout << endl;
   cout << "--------------> STARTING FROM 0" << endl;
   cout << endl;
+
+  //m1.setMeshStep(40,20,4);
+  m1.readMSH(mesh);
+  m1.setInterfaceBC();
+  m1.setTriEdge();
+  m1.mesh2Dto3D();
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
+  m1.setOFace();
+  m1.setSurfaceConfig();
+
+  // mesh statistics info 
+  m1.setInitSurfaceVolume();
+  m1.setSurfaceVolume();
+  m1.setInitSurfaceArea();
+  m1.setSurfaceArea();
+  m1.tetMeshStats();
+
+  // boundary conditions
+  m1.setGenericBC();
+
+  s1(m1);
+
+  s1.setRe(Re);
+  s1.setSc(Sc);
+  s1.setFr(Fr);
+  s1.setC1(c1);
+  s1.setC2(c2);
+  s1.setC3(c3);
+  s1.setCfl(cfl);
+  s1.setDtALESinglePhase();
+  s1.setMu(mu_l);
+  s1.setRho(rho_l);
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
+  s1.init();
  }
  else if( strcmp( *(argv+1),"restart") == 0 )
  {
-  cout << endl;
-  cout << "--------------> RE-STARTING..." << endl;
-  cout << endl;
+  // load surface mesh
+  string aux = *(argv+2);
+  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
+  m1.setInterfaceBC();
+  m1.setTriEdge();
+  m1.mesh2Dto3D();
 
-  string file = (string) "sim-" + *(argv+2);
+  s1(m1);
+
+  // load 3D mesh
+  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
+  const char *vtkFile = file.c_str();
+
+  m1.readVTK(vtkFile);
+#if NUMGLEU == 5
+  m1.setMiniElement();
+#else
+  m1.setQuadElement();
+#endif
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
+  m1.setGenericBC();
+
+  s1(m1);
+
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
+
   iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
  }
  // Point's distribution
@@ -196,7 +226,7 @@ int main(int argc, char **argv)
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
+  m1.remove3dMeshPointsByHeight(); // pressure points
   m1.delete3DPoints();
   /* **************************************** */
 
@@ -208,7 +238,18 @@ int main(int argc, char **argv)
   m1.setQuadElement();
 #endif
   m1.setOFace();
+
+  // mesh statistics info 
+//--------------------------------------------------
+//   m1.setInitSurfaceVolume();
+//   m1.setSurfaceVolume();
+//   m1.setInitSurfaceArea();
+//   m1.setSurfaceArea();
+//   m1.tetMeshStats();
+//-------------------------------------------------- 
   m1.setSurfaceConfig();
+
+  // boundary conditions
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

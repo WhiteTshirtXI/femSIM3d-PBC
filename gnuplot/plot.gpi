@@ -19,9 +19,9 @@ unset grid
 
 N = "last"
 fileObj = "../sim/vk4."
-fileObjAnalytic = "../../../db/baseState/nuCte/analiticoNuCte.dat"
-#fileObjAnalytic = "../../../db/baseState/nuZ/analiticoNuZ.dat"
-#fileObjAnalytic = "../../../db/baseState/nuC/Sc2000/analiticoNuC.dat"
+fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuCte/analiticoNuCte.dat"
+#fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuZ/analiticoNuZ.dat"
+#fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuC/Sc2000/analiticoNuC.dat"
 
 plot fileObj .N using 1:2 title 'F' ,\
      fileObj .N using 1:3 title 'G' ,\

@@ -2,10 +2,11 @@
 *.dat
 *.swp
 .DS_Store
-2bubbles
+2Bubbles
 bubble
 step
 sphere
+sphereHMT
 cylinder
 diskNuC
 diskNuZ
@@ -28,6 +29,7 @@ curvatureAndPressureTorus
 curvatureCylinder
 curvatureSphere
 curvatureTorus
+curvatureTest
 finiteDisk
 oscillatingDrop
 stepALE

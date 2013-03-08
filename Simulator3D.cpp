@@ -2645,8 +2645,8 @@ void Simulator3D::saveOldData()
  heatFluxOld = heatFluxOld;
 
  numVertsOld = numVerts;
- numNodesOld = numNodesOld;
- numElemsOld = numElemsOld;
+ numNodesOld = numNodes;
+ numElemsOld = numElems;
 
  time = time + dt;
  iter++;

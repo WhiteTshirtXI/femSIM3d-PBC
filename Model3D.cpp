@@ -2212,17 +2212,6 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
   XvAdd = coordAdd.Get(0);
   YvAdd = coordAdd.Get(1);
   ZvAdd = coordAdd.Get(2);
-
-  cout << "Flat: " << endl;
-  cout << "x: " << ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5 << endl;
-  cout << "y: " << ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5 << endl;
-  cout << "z: " << ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5 << endl;
-  cout << endl;
-  cout << "curvature: " << endl;
-  cout << "x: " << XvAdd << endl;
-  cout << "y: " << YvAdd << endl;
-  cout << "z: " << ZvAdd << endl;
-  cout << " ----------------- " << endl;
  }
  else // flat
  {
@@ -2827,7 +2816,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   //real hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 1.4*maxEdge && 
+  if( length > 2.5*maxEdge && 
 	//--------------------------------------------------
 	//   interfaceDistance.Get(v1) > 2*triEdge[1] &&
 	//   interfaceDistance.Get(v2) > 2*triEdge[1] &&
@@ -2852,10 +2841,8 @@ void Model3D::insert3dMeshPointsByDiffusion()
    Y.AddItem(vAdd,YvAdd);
    Z.AddItem(vAdd,ZvAdd);
    heaviside.AddItem(vAdd,heaviside.Get(maxVert));
-   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //idRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
+   vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
+   edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
 
    numVerts++;
    dVerts++;
@@ -9839,7 +9826,7 @@ void Model3D::insert3dMeshPointsByVolume()
 
   real tet = edgeMean*edgeMean*edgeMean*sqrt(2.0)/12.0;
 
-  if( vol > 1.4*tet )
+  if( vol > 4.0*tet )
   {
    int vAdd = numVerts; // aditional vertice
    real XvAdd = ( X.Get(v1)+X.Get(v2)+X.Get(v3)+X.Get(v4) )/4.0;
@@ -9854,10 +9841,8 @@ void Model3D::insert3dMeshPointsByVolume()
    Y.AddItem(vAdd,YvAdd);
    Z.AddItem(vAdd,ZvAdd);
    heaviside.AddItem(vAdd,0);
-   //vertIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //elemIdRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //idRegion.AddItem(vAdd,vertIdRegion.Get(maxVert));
-   //edgeSize.AddItem(vAdd,edgeSize.Get(maxVert));
+   vertIdRegion.AddItem(vAdd,vertIdRegion.Get(v1));
+   edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
    numVerts++;
    dVerts++;

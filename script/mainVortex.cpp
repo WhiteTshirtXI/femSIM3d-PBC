@@ -46,8 +46,8 @@ int main(int argc, char **argv)
  real dt = 0.003;
  real T = 3.0;
 
- //string meshFile = "sphere.msh";
- string meshFile = "sphereCenter.msh";
+ string meshFile = "sphere.msh";
+ //string meshFile = "sphereCenter.msh";
 
  //const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";

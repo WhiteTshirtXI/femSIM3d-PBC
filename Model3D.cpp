@@ -1206,8 +1206,8 @@ void Model3D::insertPointsByLength()
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   insertSurfacePoint(edge,"flat");
-   //insertSurfacePoint(edge,"curvature");
+   //insertSurfacePoint(edge,"flat");
+   insertSurfacePoint(edge,"curvature");
    //insertSurfacePoint(edge,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -2176,18 +2176,53 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 
  if( strcmp( _mode,"bi-curvature") == 0 ) 
  {
-  clVector coordAdd1 = considerCurvature(v1,v2);
-  clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+  clVector coordAdd1 = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                              X.Get(v2),Y.Get(v2),Z.Get(v2),
+								  surfMesh.xNormal.Get(v1),
+								  surfMesh.yNormal.Get(v1),
+								  surfMesh.zNormal.Get(v1),
+								  surfMesh.xNormal.Get(v2),
+								  surfMesh.yNormal.Get(v2),
+								  surfMesh.zNormal.Get(v2) );
+
+  clVector coordAdd2 = fitCircle( X.Get(v3elem1),Y.Get(v3elem1),Z.Get(v3elem1),
+	                              X.Get(v3elem2),Y.Get(v3elem2),Z.Get(v3elem2),
+								  surfMesh.xNormal.Get(v3elem1),
+								  surfMesh.yNormal.Get(v3elem1),
+								  surfMesh.zNormal.Get(v3elem1),
+								  surfMesh.xNormal.Get(v3elem2),
+								  surfMesh.yNormal.Get(v3elem2),
+								  surfMesh.zNormal.Get(v3elem2) );
+
   XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
   YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
   ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
  }
  else if( strcmp( _mode,"curvature") == 0 ) 
  {
-  clVector coordAdd = considerCurvature(v1,v2);
+  clVector coordAdd = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                             X.Get(v2),Y.Get(v2),Z.Get(v2),
+								 surfMesh.xNormal.Get(v1),
+								 surfMesh.yNormal.Get(v1),
+								 surfMesh.zNormal.Get(v1),
+								 surfMesh.xNormal.Get(v2),
+								 surfMesh.yNormal.Get(v2),
+								 surfMesh.zNormal.Get(v2) );
+
   XvAdd = coordAdd.Get(0);
   YvAdd = coordAdd.Get(1);
   ZvAdd = coordAdd.Get(2);
+
+  cout << "Flat: " << endl;
+  cout << "x: " << ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5 << endl;
+  cout << "y: " << ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5 << endl;
+  cout << "z: " << ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5 << endl;
+  cout << endl;
+  cout << "curvature: " << endl;
+  cout << "x: " << XvAdd << endl;
+  cout << "y: " << YvAdd << endl;
+  cout << "z: " << ZvAdd << endl;
+  cout << " ----------------- " << endl;
  }
  else // flat
  {
@@ -2461,7 +2496,15 @@ void Model3D::contractEdgeByLength()
    if( strcmp( _mode,"curvature") == 0 ) 
    {
 	// using curvature
-	clVector coordAdd = considerCurvature(v1,v2);
+	clVector coordAdd = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                               X.Get(v2),Y.Get(v2),Z.Get(v2),
+								   surfMesh.xNormal.Get(v1),
+								   surfMesh.yNormal.Get(v1),
+								   surfMesh.zNormal.Get(v1),
+								   surfMesh.xNormal.Get(v2),
+								   surfMesh.yNormal.Get(v2),
+								   surfMesh.zNormal.Get(v2) );
+
 	real XvAdd = coordAdd.Get(0);
 	real YvAdd = coordAdd.Get(1);
 	real ZvAdd = coordAdd.Get(2);
@@ -2475,8 +2518,28 @@ void Model3D::contractEdgeByLength()
    else if( strcmp( _mode,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
-	clVector coordAdd1 = considerCurvature(v1,v2);
-	clVector coordAdd2 = considerCurvature(v3elem1,v3elem2);
+	clVector coordAdd1 = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                                X.Get(v2),Y.Get(v2),Z.Get(v2),
+									surfMesh.xNormal.Get(v1),
+									surfMesh.yNormal.Get(v1),
+									surfMesh.zNormal.Get(v1),
+									surfMesh.xNormal.Get(v2),
+									surfMesh.yNormal.Get(v2),
+									surfMesh.zNormal.Get(v2) );
+
+	clVector coordAdd2 = fitCircle( X.Get(v3elem1),
+	                                Y.Get(v3elem1),
+									Z.Get(v3elem1),
+									X.Get(v3elem2),
+									Y.Get(v3elem2),
+									Z.Get(v3elem2),
+									surfMesh.xNormal.Get(v3elem1),
+									surfMesh.yNormal.Get(v3elem1),
+									surfMesh.zNormal.Get(v3elem1),
+									surfMesh.xNormal.Get(v3elem2),
+									surfMesh.yNormal.Get(v3elem2),
+									surfMesh.zNormal.Get(v3elem2) );
+
 	real XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
 	real YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
 	real ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
@@ -8263,253 +8326,6 @@ clVector Model3D::computeConvexRegionCentroid(int _region)
  centroid.Set(2,zc);
 
  return centroid;
-}
-
-clVector Model3D::considerCurvature(int _v1,int _v2)
-{
- // points
- real P1x = surfMesh.X.Get(_v1);
- real P1y = surfMesh.Y.Get(_v1);
- real P1z = surfMesh.Z.Get(_v1);
-
- real P2x = surfMesh.X.Get(_v2);
- real P2y = surfMesh.Y.Get(_v2);
- real P2z = surfMesh.Z.Get(_v2);
-
- /* Defining 2D Plane located on the edge 1-2 */
- // vector v1-v2 to define 2D X axis
- real v1x = P2x-P1x;
- real v1y = P2y-P1y;
- real v1z = P2z-P1z;
- real a = distance(P1x,P1y,P1z,P2x,P2y,P2z);
- real v1xUnit = v1x/a;
- real v1yUnit = v1y/a;
- real v1zUnit = v1z/a;
-
- // average global normal vector - vertex
- // normal defined outward the bubble
- real nX = surfMesh.xNormal.Get(_v1)+surfMesh.xNormal.Get(_v2);
- real nY = surfMesh.yNormal.Get(_v1)+surfMesh.yNormal.Get(_v2);
- real nZ = surfMesh.zNormal.Get(_v1)+surfMesh.zNormal.Get(_v2);
-
- // eh preciso agora criar um vetor no plano formado por normalX,Y,Z que
- // seja perpendicular ao vetor v1-v2.
- // o problema eh que normalX,Y,Z nao eh perpendicular a v1Unit
- // e neste ponto ele precisa ser!
- // to be implemented!
-
- // cross product of v1Unit and n vectors
- clVector normalRes = crossProd(v1xUnit,v1yUnit,v1zUnit,
-                                nX,nY,nZ);
- // cross product of normalRes and v1Unit to find perpendicular vector
- // to v1Unit that is in the plane formed by v1Unit and nX,Y,Z.
- clVector normalVec = crossProd(normalRes.Get(0),
-	                            normalRes.Get(1),
-								normalRes.Get(2),
-								v1xUnit,v1yUnit,v1zUnit);
-
- // this vector is perpendicular to v1Unit
- real normalX = normalVec.Get(0);
- real normalY = normalVec.Get(1);
- real normalZ = normalVec.Get(2);
-
- real len = vectorLength( normalX,normalY,normalZ );
-
- // normal Unit to be used togheter with vector 1Unit and then create
- // the basis for the plan section (2D Y axis)
- real normalXUnit = normalX/len;
- real normalYUnit = normalY/len;
- real normalZUnit = normalZ/len;
-
- /* The following piece of code transform two 3D vectors
-  * (surfMesh.xNormal(v1),surfMesh.yNormal(v1),surfMesh.zNormal(v1) 
-  * and surfMesh.xNormal(v2),surfMesh.yNormal(v2),surfMesh.zNormal(v2) 
-  * in two 2D vectors (x1,y1 and x2,y2)
-  *
-  * - normalUnit and v1Unit define a plane. Then, the global vertex
-  * normal unit vector can be rebounded to this plan simple by the
-  * projections of this vector to the unit vectors that define the plane
-  * (normalUnit,v1Unit). 
-  *
-  *
-  *
-  *
-  *              ^  (x1,y1)                          ^ (x2,y2)
-  *               \                                 /
-  *                \                               / 
-  *                 \                             /
-  *                  x---------------------------x
-  *                (v1)                         (v2)
-  *                   
-  *                  |------------ a ------------|
-  *
-  *
-  *   normalUnit         
-  *       ^              
-  *       |              
-  *       |              
-  *       o------> v1Unit
-  *  
-  * */
- real x1 = dotProd(surfMesh.xNormal.Get(_v1),
-                   surfMesh.yNormal.Get(_v1),
-                   surfMesh.zNormal.Get(_v1),
-                   v1xUnit,v1yUnit,v1zUnit);
-
- real y1 = dotProd(surfMesh.xNormal.Get(_v1),
-                   surfMesh.yNormal.Get(_v1),
-                   surfMesh.zNormal.Get(_v1),
-                   normalXUnit,normalYUnit,normalZUnit);
- y1 += rand()*1E-06; // perturbing vector
-
- real x2 = dotProd(surfMesh.xNormal.Get(_v2),
-                   surfMesh.yNormal.Get(_v2),
-                   surfMesh.zNormal.Get(_v2),
-                   v1xUnit,v1yUnit,v1zUnit);
-
- real y2 = dotProd(surfMesh.xNormal.Get(_v2),
-                   surfMesh.yNormal.Get(_v2),
-                   surfMesh.zNormal.Get(_v2),
-                   normalXUnit,normalYUnit,normalZUnit);
- y1 += rand()*1E-06; // perturbing vector
-
- /* Once defined a plane and having the 2 normal vectors associated to the
-  * vertices v1 and v2 projected to this plane (normalUnit, v1Unit), we
-  * will find the intersection of these vectors (throught Cramer's
-  * rule), thus we will define the center of the circle (Xc,Yc)
-  *
-  *
-  * [            x1 ] |    |   |   |  a = dist between vertices
-  * [  1  (-1)* ----] | Xc |   | 0 |
-  * [            y1 ] |    | = |   |  Xc,Yc = circumference center
-  * [            x2 ] |    |   |   |
-  * [  1  (-1)* ----] | Yc |   | a |  x1,y1,x2,y2 = vector components on the
-  * [            y2 ] |    |   |   |                normalUnit and v1Unit
-  *                                             plane
-  *
-  * Cramer's rule:
-  *
-  *                x2          x1              x2     x1
-  * det = 1 * (-1)---- - (-1)*---- * 1 = (-1)*---- + ----  
-  *                y2          y1              y2     y1
-  *
-  *              x2          x1                               
-  *      0*(-1)*---- - (-1)*----*a           
-  *              y2          y1              1*a - 0*1      
-  * Xc = -------------------------      Yc = ---------
-  *            det                              det
-  *
-  * */
- real det = (-1)*(x2/(y2+1E-06))+(x1/(y1+1E-06));
- real Xc = ( (x1/(y1+1E-06))*a )/det;
- real Yc = a/det;
- real d1 = distance(Xc,Yc,0.0,0.0);
- real d2 = distance(Xc,Yc,a,0.0);
-
- /* on the case where the 2 vertex normals are parallel, x1 or y2 can be
-  * 0, so we add 1E-06 to avoid such a inf representation on real det.
-  * */
-
-//--------------------------------------------------
-//  cout << "v1: " << _v1 << " " << surfMesh.xNormal.Get(_v1) << " "
-//                              << surfMesh.yNormal.Get(_v1) << " "
-//                              << surfMesh.zNormal.Get(_v1) << endl;
-//  cout << "v2: " << _v2 << " " << surfMesh.xNormal.Get(_v2) << " "
-//                              << surfMesh.yNormal.Get(_v2) << " "
-//                              << surfMesh.zNormal.Get(_v2) << endl;
-//  cout << det << " " << d1 << " " << d2 << " " << Xc  << " " << Yc << endl;
-//-------------------------------------------------- 
-
- /* defining the principal vertex according to the distance between the
-  * 2D circumcenter and the vertex itself and calculating the normal 2D
-  * vector
-  * */ 
- real xMid2D = a/2.0;
- real r2D = 0;
- //real xUnit2D=0;
- //real yUnit2D=0;
- if( d1>d2 )
- {
-  r2D=d1;
-  //real dist2D = vectorLength(x1,y1);
-  //xUnit2D=x1/dist2D;
-  //yUnit2D=y1/dist2D;
- }
- else
- {
-  r2D=d2;
-  //real dist2D = vectorLength(x2,y2);
-  //xUnit2D=x2/dist2D;
-  //yUnit2D=y2/dist2D;
- }
-
- /*
-  * Circumference equation:
-  *
-  * (x-Xc)^2 + (y-Yc)^2 = r^2
-  *
-  * x = xMid and it is known
-  *
-  * (xMid-Xc)^2 + (y-Yc)^2 = r^2 :=> (y-Yc)^2 = r^2 - (xMid-Xc)^2
-  *
-  * y = Yc + sqrt( r^2 - (xMid-Xc)^2 ) :: z = sqrt( r^2 - (xMid-Xc)^2 )
-  *
-  * Possible solutions:
-  * y1 = Yc + z;
-  * y2 = Yc - z;
-  *
-  * */
- real yMidNew1 = Yc + sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
- real yMidNew2 = Yc - sqrt( fabs(r2D*r2D - (xMid2D-Xc)*(xMid2D-Xc)) );
-
- // find the closest vertex to the middle of the edge
- real dist1 = dist(0.0,yMidNew1);
- real dist2 = dist(0.0,yMidNew2);
-
- // yMid will have the value of the point correction coord related to
- // the circunfenrece
- real yMid = 0.0;
- if( dist1<dist2 ) // pick the closest new vertex 
-  yMid = yMidNew1;
- else
-  yMid = yMidNew2;
-
- /* 
-  *     3D coords         2D coords
-  * X(v1),Y(v1),Z(v1) |---> (0,0)x(0,yUnit)
-  * X(v2),Y(v2),Z(v2) |---> (a,0)x(a,yUnit)
-  *  
-  * Transforming from the 2D plane coordinates to the 3D global coords:
-  *
-  *     2D coords           3D coords
-  *       (X,Y) |-----> P1 + v1Unit*xMid + normalUnit*yMidNew
-  *
-  * */
- real XvAdd = P1x + (v1xUnit*xMid2D) + (normalXUnit*yMid);
- real YvAdd = P1y + (v1yUnit*xMid2D) + (normalYUnit*yMid);
- real ZvAdd = P1z + (v1zUnit*xMid2D) + (normalZUnit*yMid);
-
- clVector coordAdd(3);
- coordAdd.Set(0,XvAdd);
- coordAdd.Set(1,YvAdd);
- coordAdd.Set(2,ZvAdd);
-
-//--------------------------------------------------
-//  cout << "v1: " << v1 << " " << "v2: " << v2 << endl;
-//  cout << "1: " << Xcurv1 << " " << Ycurv1 << " " << Zcurv1 << endl;
-//  cout << "2: " << Xcurv2 << " " << Ycurv2 << " " << Zcurv2 << endl;
-//  cout << "add: " << XvAdd << " " << YvAdd << " " << ZvAdd << endl;
-//  cout << "radius: " << r2D << endl;
-//  cout << "xMid2D-Xc: " << xMid2D-Xc << endl;
-//  cout << "center: " << Xc << " " << Yc << endl;
-//  cout << "midNew: " << yMidNew1 << " " << yMidNew2 << endl;
-//  cout << "curvatures v1 - v2: " << surfMesh.curvature.Get(v1) << " " 
-//       << surfMesh.curvature.Get(v2) << endl;
-//  cout << "normal: " << normalXUnit << " " 
-//       << normalYUnit << " " << normalZUnit << endl;
-//-------------------------------------------------- 
-
- return coordAdd;
 }
 
 //--------------------------------------------------

@@ -2511,12 +2511,6 @@ void Simulator3D::coupled()
  u.CopyTo(numNodes,vSol);
  u.CopyTo(numNodes*2,wSol);
  u.CopyTo(numNodes*3,pSol);
-
- uSolOld = uSol;
- vSolOld = vSol;
- wSolOld = wSol;
- pSolOld = pSol;
- 
 } // fecha metodo coupled 
 
 void Simulator3D::unCoupled()

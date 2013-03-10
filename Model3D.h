@@ -89,7 +89,6 @@ class Model3D
   void deleteSurfaceElements();
   void insertSurfacePoint(int _edge,const char* _mode);
   void removeSurfacePoint(int _node);
-  clVector considerCurvature(int _v1,int _v2);
   void insertPointsBetweenBubblesByPosition();
   list<int> setPolyhedron(list<int> _myList);
   void flipTriangleEdge();

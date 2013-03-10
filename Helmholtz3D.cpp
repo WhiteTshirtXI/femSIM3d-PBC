@@ -367,7 +367,7 @@ void Helmholtz3D::initBackwardStep()
   else // apply same strategy for non-boundary vertics if it is
        // NormalU,V,W c.c.
   {
-  real ratio = triEdge[0]*wallDistance.Get(i)*4.0;
+  real ratio = triEdge[0]*wallDistance.Get(i)*2.5;
   real aux = triEdge[0]+ratio;
    convC.Set(i,aux);
   }
@@ -375,7 +375,7 @@ void Helmholtz3D::initBackwardStep()
 
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real ratio = triEdge[0]*wallDistance.Get(i)*4.0;
+  real ratio = triEdge[0]*wallDistance.Get(i)*2.5;
   real aux = triEdge[0]+ratio;
   convC.Set(i,aux);
  }

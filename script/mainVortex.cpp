@@ -41,13 +41,13 @@ int main(int argc, char **argv)
  real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.0;   // surface smooth cord (fujiwara)
+ real d2 = 0.3;   // surface smooth cord (fujiwara)
 
- real dt = 0.003;
+ real dt = 0.03;
  real T = 3.0;
 
+ //string meshFile = "sphereCenterLow.msh";
  string meshFile = "sphere.msh";
- //string meshFile = "sphereCenter.msh";
 
  //const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 1001;
+ int nIter = 101;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -106,20 +106,27 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   // time step: n+1/2 
+   // time step: n+1/4 
    Simulator3D s10(m1,s1);
-   s10 = s1;
-   s10.setTime(s1.getTime()+(dt/2.0));
-   s10.stepTimeHalf("3d",T); // SolOld(n) --> Sol(n+1/2)
+   real stepTime = dt/4.0;
+   s10.setTime(s1.getTime()+stepTime);
+   s10.stepImposedPeriodicField("3d",T,stepTime); // SolOld(n) --> Sol(n+1/2)
    s10.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
-   s10.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
+   //s10.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
+
+   // time step: n+1/2 
+   Simulator3D s20(m1,s10);
+   stepTime = dt/2.0;
+   s20.setTime(s1.getTime()+stepTime);
+   s20.stepImposedPeriodicField("3d",T,stepTime); // SolOld(n) --> Sol(n+1/2)
+   s20.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
+   s20.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
 
 
-   // time step: n 
-   s1.stepALE();  
-   s1.movePoints(s10.getUALE(),
-                 s10.getVALE(),
-				 s10.getWALE());
+   // time step: n using ALE(n+1/2)
+   s1.movePoints(s20.getUALE(),
+                 s20.getVALE(),
+				 s20.getWALE());
    s1.setInterfaceGeo();
    s1.stepImposedPeriodicField("3d",T); // X,Y and Z --> Sol(n+1)
 

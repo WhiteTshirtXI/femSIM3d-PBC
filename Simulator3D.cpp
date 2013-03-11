@@ -1875,7 +1875,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
  * input:  SolOld velocity
  * output: SolOld velocity
  * */
-void Simulator3D::stepTimeHalf(const char* _name,real T)
+void Simulator3D::stepImposedPeriodicField(const char* _name,real T,real _stepTime)
 {
  real aux;
  real pi = 3.14159265358;
@@ -1888,8 +1888,8 @@ void Simulator3D::stepTimeHalf(const char* _name,real T)
  {
   for( int i=0;i<numVerts;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   real Xp = X->Get(i)+(uSolOld.Get(i)*_stepTime);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*_stepTime);
    aux = (-1.0)*sin(pi*Xp)*
 	            sin(pi*Xp)*
 				sin(2*pi*Yp)*
@@ -1913,9 +1913,9 @@ void Simulator3D::stepTimeHalf(const char* _name,real T)
  {
   for( int i=0;i<numVerts;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
-   real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   real Xp = X->Get(i)+(uSolOld.Get(i)*_stepTime);
+   real Yp = Y->Get(i)+(vSolOld.Get(i)*_stepTime);
+   real Zp = Z->Get(i)+(wSolOld.Get(i)*_stepTime);
    aux = (2.0)*sin(pi*Xp)*
 	           sin(pi*Xp)*
 			   sin(2*pi*Yp)*

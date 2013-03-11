@@ -2357,10 +2357,14 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 //  curvature.AddItem(vAdd,curv);
 //-------------------------------------------------- 
 
+ // computing curvature
  clVector myVec = getNormalAndKappaByDesbrun(vAdd,
                     getNeighbourSurfacePoint(vAdd));
- surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
  curvature.AddItem(vAdd,myVec.Get(0));
+ surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
+ surfMesh.xNormal.AddItem(vAdd,myVec.Get(1));
+ surfMesh.yNormal.AddItem(vAdd,myVec.Get(2));
+ surfMesh.zNormal.AddItem(vAdd,myVec.Get(3));
 
 //--------------------------------------------------
 // cout << "curv(v1):      " << surfMesh.curvature.Get(v1) << endl;
@@ -2494,7 +2498,7 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-   const char* _mode = "flat";
+   const char* _mode = "curvature";
 
    if( strcmp( _mode,"curvature") == 0 ) 
    {
@@ -2567,7 +2571,6 @@ void Model3D::contractEdgeByLength()
 	Z.Set(v1, ZvNew );
    }
 
-
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )
 	for( int j=0;j<surfMesh.IEN.DimJ();j++ )
@@ -2587,8 +2590,11 @@ void Model3D::contractEdgeByLength()
 
    // computing curvature
    clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
-   surfMesh.curvature.Set(v1,myVec.Get(0));
    curvature.Set(v1,myVec.Get(0));
+   surfMesh.curvature.Set(v1,myVec.Get(0));
+   surfMesh.xNormal.Set(v1,myVec.Get(1));
+   surfMesh.yNormal.Set(v1,myVec.Get(2));
+   surfMesh.zNormal.Set(v1,myVec.Get(3));
 
    // removing low quality elements
    if( v3elem1 > v2 )
@@ -2610,6 +2616,12 @@ void Model3D::contractEdgeByLength()
    saveVTKSurface("./vtk/","surface",opersurf[elemID]);
    csp[elemID]++;
    opersurf[elemID]++;
+
+//--------------------------------------------------
+//    cout << "curv1: " << curv1  
+//         << "  curv2: " << curv2 
+//         << "  new: " <<  myVec.Get(0) << endl;
+//-------------------------------------------------- 
   }
  }
 }

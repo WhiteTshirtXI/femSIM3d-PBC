@@ -41,7 +41,7 @@ int main(int argc, char **argv)
  real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.3;   // surface smooth cord (fujiwara)
+ real d2 = 0.0;   // surface smooth cord (fujiwara)
 
  real dt = 0.003;
  real T = 3.0;

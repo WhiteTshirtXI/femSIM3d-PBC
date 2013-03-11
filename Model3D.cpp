@@ -1201,9 +1201,17 @@ void Model3D::insertPointsByLength()
   //real v2 = mapEdgeTri.Get(edge,2);
   real vertID = surfMesh.vertIdRegion.Get(v1); 
 
+//--------------------------------------------------
+//   real curv1 = fabs(surfMesh.curvature.Get(v1));
+//   real curv2 = fabs(surfMesh.curvature.Get(v2));
+//   real maxCurv = max(curv1,curv2);
+//   real erro = maxCurv*edgeLength;
+//-------------------------------------------------- 
+
   if( vertID > 0 &&
 	  //Z.Get(v1) != Z.Min() && Z.Get(v2) != Z.Min() &&
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
+      //erro > 0.7 )
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
    //insertSurfacePoint(edge,"flat");
@@ -2176,7 +2184,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 
  if( strcmp( _mode,"bi-curvature") == 0 ) 
  {
-  clVector coordAdd1 = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+  clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                              X.Get(v2),Y.Get(v2),Z.Get(v2),
 								  surfMesh.xNormal.Get(v1),
 								  surfMesh.yNormal.Get(v1),
@@ -2185,7 +2193,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 								  surfMesh.yNormal.Get(v2),
 								  surfMesh.zNormal.Get(v2) );
 
-  clVector coordAdd2 = fitCircle( X.Get(v3elem1),Y.Get(v3elem1),Z.Get(v3elem1),
+  clVector coordAdd2 = fitEllipse( X.Get(v3elem1),Y.Get(v3elem1),Z.Get(v3elem1),
 	                              X.Get(v3elem2),Y.Get(v3elem2),Z.Get(v3elem2),
 								  surfMesh.xNormal.Get(v3elem1),
 								  surfMesh.yNormal.Get(v3elem1),
@@ -2200,7 +2208,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  }
  else if( strcmp( _mode,"curvature") == 0 ) 
  {
-  clVector coordAdd = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+  clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                             X.Get(v2),Y.Get(v2),Z.Get(v2),
 								 surfMesh.xNormal.Get(v1),
 								 surfMesh.yNormal.Get(v1),
@@ -2351,8 +2359,9 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 
  clVector myVec = getNormalAndKappaByDesbrun(vAdd,
                     getNeighbourSurfacePoint(vAdd));
- surfMesh.curvature.AddItem(myVec.Get(0));
+ surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
  curvature.AddItem(vAdd,myVec.Get(0));
+
 //--------------------------------------------------
 // cout << "curv(v1):      " << surfMesh.curvature.Get(v1) << endl;
 // cout << "curv(v2):      " << surfMesh.curvature.Get(v2) << endl;
@@ -2431,10 +2440,10 @@ void Model3D::contractEdgeByLength()
   int v3elem1 = mapEdgeTri.Get(edge,3);
   int v3elem2 = mapEdgeTri.Get(edge,4);
 
-  //real curv1 = fabs(surfMesh.curvature.Get(v1));
-  //real curv2 = fabs(surfMesh.curvature.Get(v2));
-  //real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
-  //real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+  real curv1 = fabs(surfMesh.curvature.Get(v1));
+  real curv2 = fabs(surfMesh.curvature.Get(v2));
+  real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
   int elem1 = mapEdgeTri.Get(edge,5);
   int elem2 = mapEdgeTri.Get(edge,6);
   real edgeLength = mapEdgeTri.Get(edge,0);
@@ -2452,22 +2461,27 @@ void Model3D::contractEdgeByLength()
   // verifying the length of each surface edge
   int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(edge,5));
 
-  //real erro1 = curv1*edgeLength;
-  //real erro2 = curv2*edgeLength;
-  //real curv = min(curv1,curv2);
-  //real erroS = 4.0*triEdge[elemID];
+  //real minCurv = min(curv1,curv2);
+  //real erro = minCurv*edgeLength;
   
+  // angle test
+  // bool angleTest = angle > 0.0;
+
+  // elemID out of boudary
+  bool elemIDTest = elemID > 0;
+
+  // to avoid contraction at high curvature regions
+  bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
+
+  // to avoid 3 elem neighbors vertex
+  bool neighTest = (neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
+                    neighbourSurfaceElem.at( v3elem2 ).size() > 4);   
+
   //if( elemID > 0 && erro < 0.5*erroS )//&&
-  if( edgeLength < 0.5*triEdge[elemID] //&&
-	  //angle > 0.0 &&
-
-	  // to avoid contraction at high curvature regions
-	  //(curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40) &&
-
-	  // to avoid 3 elem neighbors vertex
-	  //neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
-	  //neighbourSurfaceElem.at( v3elem2 ).size() > 4   
-	 )
+  if( edgeLength < 0.5*triEdge[elemID] &&
+      //erro < 0.03 &&
+	  elemIDTest && curvTest && neighTest //&& angleTest 
+	)
   {
 //--------------------------------------------------
 //    cout << " ----------------- " << endl;
@@ -2485,7 +2499,7 @@ void Model3D::contractEdgeByLength()
    if( strcmp( _mode,"curvature") == 0 ) 
    {
 	// using curvature
-	clVector coordAdd = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                               X.Get(v2),Y.Get(v2),Z.Get(v2),
 								   surfMesh.xNormal.Get(v1),
 								   surfMesh.yNormal.Get(v1),
@@ -2507,7 +2521,7 @@ void Model3D::contractEdgeByLength()
    else if( strcmp( _mode,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
-	clVector coordAdd1 = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                                X.Get(v2),Y.Get(v2),Z.Get(v2),
 									surfMesh.xNormal.Get(v1),
 									surfMesh.yNormal.Get(v1),
@@ -2516,7 +2530,7 @@ void Model3D::contractEdgeByLength()
 									surfMesh.yNormal.Get(v2),
 									surfMesh.zNormal.Get(v2) );
 
-	clVector coordAdd2 = fitCircle( X.Get(v3elem1),
+	clVector coordAdd2 = fitEllipse( X.Get(v3elem1),
 	                                Y.Get(v3elem1),
 									Z.Get(v3elem1),
 									X.Get(v3elem2),
@@ -2571,11 +2585,10 @@ void Model3D::contractEdgeByLength()
    // update surface, edge matrix, surface neigh elems and points
    restoreMappingArrays();
 
-
    // computing curvature
    clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
-   surfMesh.curvature.AddItem(myVec.Get(0));
-   curvature.AddItem(v1,myVec.Get(0));
+   surfMesh.curvature.Set(v1,myVec.Get(0));
+   curvature.Set(v1,myVec.Get(0));
 
    // removing low quality elements
    if( v3elem1 > v2 )

@@ -71,7 +71,7 @@ class Simulator3D
   void stepSL();
   void stepNoConvection();
   void stepImposedPeriodicField(const char* _name, real T);
-  void stepImposedPeriodicField(const char* _name,real T,real _stepTime);
+  void stepImposedPeriodicField(const char* _name,real T,real _dt);
   void copyALEtoSol();
   void stepLagrangian();
   void stepLagrangianZ();

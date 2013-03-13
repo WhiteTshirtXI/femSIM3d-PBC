@@ -3814,10 +3814,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;

@@ -91,7 +91,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 101;
+ int nIter = T/dt;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -106,24 +106,51 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   // time step: n+1/4 
-   Simulator3D s10(m1,s1);
-   real stepTime = dt/4.0;
-   s10.setTime(s1.getTime()+stepTime);
-   s10.stepImposedPeriodicField("3d",T,stepTime); // SolOld(n) --> Sol(n+1/2)
-   s10.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
-   //s10.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
+//--------------------------------------------------
+//    /* predictor-corrector */
+//    Simulator3D s20(m1,s1);
+//    s20.setDt(dt/2.0);
+//    s20.setTime(s1.getTime()+dt/2.0);
+//    // in: SolOld^(n),X^(n)
+//    // out: Sol^(n+1/2)
+//    s20.stepImposedPeriodicField("3d",T,dt/2.0); 
+//    s20.saveOldData();
+//    s20.stepALE();
+//-------------------------------------------------- 
 
-   // time step: n+1/2 
-   Simulator3D s20(m1,s10);
-   stepTime = dt/2.0;
-   s20.setTime(s1.getTime()+stepTime);
-   s20.stepImposedPeriodicField("3d",T,stepTime); // SolOld(n) --> Sol(n+1/2)
-   s20.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
-   s20.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
+   /* predictor-multicorrector */
+   // points at position n
+   // compute velocity of time step: n+1/2 
+   Model3D m10(m1);
+   Simulator3D s10(m10,s1);
+   s10.setTime(s1.getTime()+dt/4.0); // t^(n+1/4)
+   // in: SolOld(n)
+   // out: Sol(n+1/2)
+   s10.stepImposedPeriodicField("3d",T,dt/4.0); // SolOld(n) --> Sol(n+1/4)
+   s10.saveOldData();        // Sol(n+1/4) --> SolOld(n+1/4),t=t^(n+1/4)+1/4
+   s10.setDt(dt/2.0);        // compute X^(n+1/2) from X^(n+1/4)
+   s10.stepALE();            // 1st) SolOld(n+1/4) --> ALE(n+1/4)
+   // time step: n+1/2 using ALE(n+1/4)
+   // 2nd) result: X^(n+1/2) using dt/2
+   s10.movePoints(s10.getUALE(),
+                  s10.getVALE(),
+				  s10.getWALE());
+
+   // points at X^(n+1/2)
+   // compute velocity at time step: n+1/4 
+   Model3D m20(m10);
+   Simulator3D s20(m20,s10);
+   s20.setTime(s10.getTime()+dt/4.0); // t^(n+3/4)
+   // in: SolOld(n+1/2),X^(n+1/2)
+   // out: Sol(n+3/4)
+   s20.stepImposedPeriodicField("3d",T,dt/4.0); 
+   s20.saveOldData();   // Sol(n+3/4) --> SolOld(n+3/4)
+   s20.setDt(dt/2.0);   // compute X^(n) from X^(n+1/2)
+   s20.stepALE();       // SolOld(n+3/4) --> ALE(n+3/4)
 
 
-   // time step: n using ALE(n+1/2)
+   // with ALE(n+3/4)
+   // compute velocity at time step: n+1 using dt
    s1.movePoints(s20.getUALE(),
                  s20.getVALE(),
 				 s20.getWALE());

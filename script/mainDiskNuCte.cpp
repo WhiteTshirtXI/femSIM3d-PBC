@@ -42,16 +42,24 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,10,10);
+ m1.setMeshDisk(6,6,8);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
- m1.initMeshParameters();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
  m1.setOFace();
+
+ m1.setTriEdge();
+ m1.setMapEdgeTri();
+ m1.setInitSurfaceArea();
+ m1.setSurfaceArea();
+ m1.setInitSurfaceVolume();
+ m1.setSurfaceVolume();
+ m1.tetMeshStats();
+
  m1.setNuCteDiskBC();
  //m1.setCDiskBC();
 
@@ -89,7 +97,7 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
  }
- 
+
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
@@ -121,8 +129,6 @@ int main(int argc, char **argv)
    s1.unCoupled();
    //s1.unCoupledC();
    save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
-   save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
    save.saveDiskError(datFolder,"../../db/baseState/nuCte/analiticoNuCte.dat");
 
@@ -132,8 +138,12 @@ int main(int argc, char **argv)
    cout << "________________________________________ END of "
 	    << i*nR+j+iter << endl << endl;;
    cout << resetColor();
-
   }
+  save.saveVTK(vtkFolder,"sim",(i+1)*nR+iter-1);
+  //save.saveVTKSurface(vtkFolder,"sim",(nR-1)+i*nR+iter-1);
+  save.saveSol(binFolder,"sim",(i+1)*nR+iter-1);
+  save.printMeshReport();
+  save.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

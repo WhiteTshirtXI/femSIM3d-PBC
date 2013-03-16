@@ -1724,7 +1724,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  if( edgeSize->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
- if( kappa->Dim() > 0 )
+ if( surfMesh->numInterfaces > 0 )
  {
   vtkSurfaceScalar(vtkFile,"kappa",*kappa);
   vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);

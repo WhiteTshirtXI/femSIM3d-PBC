@@ -650,6 +650,44 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
   }
  }
 
+ // boundary surface configuration
+ surfMesh.numVerts = out.numberofpoints;
+ surfMesh.numElems = out.numberoftrifaces;
+ surfMesh.IEN.Dim(surfMesh.numElems,3);
+ surfMesh.X.Dim(surfMesh.numVerts);
+ surfMesh.Y.Dim(surfMesh.numVerts);
+ surfMesh.Z.Dim(surfMesh.numVerts);
+ for(int i=0; i<out.numberoftrifaces; i++ )
+ {
+  int v1 = out.trifacelist[3*i+0];
+  int v2 = out.trifacelist[3*i+1];
+  int v3 = out.trifacelist[3*i+2];
+  surfMesh.IEN.Set(i,0,v1);
+  surfMesh.IEN.Set(i,1,v3);
+  surfMesh.IEN.Set(i,2,v2);
+  surfMesh.X.Set(v1,out.pointlist[3*v1+0]);
+  surfMesh.Y.Set(v1,out.pointlist[3*v1+1]);
+  surfMesh.Z.Set(v1,out.pointlist[3*v1+2]);
+  surfMesh.X.Set(v2,out.pointlist[3*v2+0]);
+  surfMesh.Y.Set(v2,out.pointlist[3*v2+1]);
+  surfMesh.Z.Set(v2,out.pointlist[3*v2+2]);
+  surfMesh.X.Set(v3,out.pointlist[3*v3+0]);
+  surfMesh.Y.Set(v3,out.pointlist[3*v3+1]);
+  surfMesh.Z.Set(v3,out.pointlist[3*v3+2]);
+ }
+ surfMesh.vertIdRegion.Dim(numVerts,0.0);
+ surfMesh.elemIdRegion.Dim(numElems,0.0);
+ surfMesh.Marker.Dim(numVerts,0.0);
+ surfMesh.numInterfaces = 0;
+ //surfMesh.numBoundaries 3;
+
+
+ // elemIdRegion and vertIdRegion for single-phase flow is 0, however it
+ // is required to be initialized.
+ vertIdRegion.Dim(numVerts,0.0);
+ elemIdRegion.Dim(numElems,0.0);
+ heaviside.Dim(numVerts,0.0);
+
  in.initialize();
  out.initialize();
 }
@@ -996,6 +1034,44 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
    IEN.Set(i,j,vertice);
   }
  }
+
+ // boundary surface configuration
+ surfMesh.numVerts = out.numberofpoints;
+ surfMesh.numElems = out.numberoftrifaces;
+ surfMesh.IEN.Dim(surfMesh.numElems,3);
+ surfMesh.X.Dim(surfMesh.numVerts);
+ surfMesh.Y.Dim(surfMesh.numVerts);
+ surfMesh.Z.Dim(surfMesh.numVerts);
+ for(int i=0; i<out.numberoftrifaces; i++ )
+ {
+  int v1 = out.trifacelist[3*i+0];
+  int v2 = out.trifacelist[3*i+1];
+  int v3 = out.trifacelist[3*i+2];
+  surfMesh.IEN.Set(i,0,v1);
+  surfMesh.IEN.Set(i,1,v3);
+  surfMesh.IEN.Set(i,2,v2);
+  surfMesh.X.Set(v1,out.pointlist[3*v1+0]);
+  surfMesh.Y.Set(v1,out.pointlist[3*v1+1]);
+  surfMesh.Z.Set(v1,out.pointlist[3*v1+2]);
+  surfMesh.X.Set(v2,out.pointlist[3*v2+0]);
+  surfMesh.Y.Set(v2,out.pointlist[3*v2+1]);
+  surfMesh.Z.Set(v2,out.pointlist[3*v2+2]);
+  surfMesh.X.Set(v3,out.pointlist[3*v3+0]);
+  surfMesh.Y.Set(v3,out.pointlist[3*v3+1]);
+  surfMesh.Z.Set(v3,out.pointlist[3*v3+2]);
+ }
+ surfMesh.vertIdRegion.Dim(numVerts,0.0);
+ surfMesh.elemIdRegion.Dim(numElems,0.0);
+ surfMesh.Marker.Dim(numVerts,0.0);
+ surfMesh.numInterfaces = 0;
+ //surfMesh.numBoundaries 3;
+
+
+ // elemIdRegion and vertIdRegion for single-phase flow is 0, however it
+ // is required to be initialized.
+ vertIdRegion.Dim(numVerts,0.0);
+ elemIdRegion.Dim(numElems,0.0);
+ heaviside.Dim(numVerts,0.0);
  
  // como nao ha regiao predefinida, este metodo nao funciona aqui!
  //mesh3d = convertTetgenToMesh3d(out);
@@ -1204,6 +1280,8 @@ void Model3D::insertPointsByLength()
 //--------------------------------------------------
 //   real curv1 = fabs(surfMesh.curvature.Get(v1));
 //   real curv2 = fabs(surfMesh.curvature.Get(v2));
+//-------------------------------------------------- 
+//--------------------------------------------------
 //   real maxCurv = max(curv1,curv2);
 //   real erro = maxCurv*edgeLength;
 //-------------------------------------------------- 
@@ -2186,25 +2264,22 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  {
   clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                              X.Get(v2),Y.Get(v2),Z.Get(v2),
-								  surfMesh.xNormal.Get(v1),
-								  surfMesh.yNormal.Get(v1),
-								  surfMesh.zNormal.Get(v1),
-								  surfMesh.xNormal.Get(v2),
-								  surfMesh.yNormal.Get(v2),
-								  surfMesh.zNormal.Get(v2) );
-
-  clVector coordAdd2 = fitEllipse( X.Get(v3elem1),Y.Get(v3elem1),Z.Get(v3elem1),
-	                              X.Get(v3elem2),Y.Get(v3elem2),Z.Get(v3elem2),
+								  surfMesh.xNormal.Get(v1)+
 								  surfMesh.xNormal.Get(v3elem1),
+								  surfMesh.yNormal.Get(v1)+
 								  surfMesh.yNormal.Get(v3elem1),
+								  surfMesh.zNormal.Get(v1)+
 								  surfMesh.zNormal.Get(v3elem1),
+								  surfMesh.xNormal.Get(v2)+
 								  surfMesh.xNormal.Get(v3elem2),
+								  surfMesh.yNormal.Get(v2)+
 								  surfMesh.yNormal.Get(v3elem2),
+								  surfMesh.zNormal.Get(v2)+
 								  surfMesh.zNormal.Get(v3elem2) );
 
-  XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
-  YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
-  ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+  XvAdd = coordAdd1.Get(0);
+  YvAdd = coordAdd1.Get(1);
+  ZvAdd = coordAdd1.Get(2);
  }
  else if( strcmp( _mode,"curvature") == 0 ) 
  {
@@ -2482,7 +2557,7 @@ void Model3D::contractEdgeByLength()
                     neighbourSurfaceElem.at( v3elem2 ).size() > 4);   
 
   //if( elemID > 0 && erro < 0.5*erroS )//&&
-  if( edgeLength < 0.5*triEdge[elemID] &&
+  if( edgeLength < 0.7*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && curvTest && neighTest //&& angleTest 
 	)
@@ -3814,10 +3889,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ //tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;

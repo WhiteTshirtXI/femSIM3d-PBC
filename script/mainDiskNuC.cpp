@@ -22,36 +22,44 @@ int main(int argc, char **argv)
  int iter = 1;
  real Re = 1;
  real Sc = 2000;
- real cfl = 100;
+ real cfl = 10;
  real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- string meshFile = "disk6-10-20.vtk";
-
  const char *binFolder  = "./bin/";
  const char *datFolder  = "./dat/";
  const char *vtkFolder  = "./vtk/";
  const char *simFolder  = "./sim/";
+
+ string meshFile = "disk6-10-20.vtk";
  string meshDir = (string) getenv("DATA_DIR");
  meshDir += "/mesh/3d/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,10,20);
+ m1.setMeshDisk(6,6,8);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
- m1.initMeshParameters();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
+ m1.setOFace();
+
+ m1.setTriEdge();
+ m1.setMapEdgeTri();
+ m1.setInitSurfaceArea();
+ m1.setSurfaceArea();
+ m1.setInitSurfaceVolume();
+ m1.setSurfaceVolume();
+ m1.tetMeshStats();
+
  m1.setNuCDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuC/Sc2000/","p");
  m1.setCDiskBC();
- m1.setOFace();
 
  Simulator3D s1(m1);
 
@@ -116,9 +124,8 @@ int main(int argc, char **argv)
    s1.unCoupledC();
    s1.assembleK();
    save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
-   save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
-   save.saveSol(binFolder,"sim",i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
+   save.saveDiskError(datFolder,"../../db/baseState/nuC/Sc2000/analiticoNuC.dat");
 
    s1.saveOldData();
 
@@ -127,6 +134,11 @@ int main(int argc, char **argv)
 	    << i*nR+j+iter << endl << endl;;
    cout << resetColor();
   }
+  save.saveVTK(vtkFolder,"sim",(i+1)*nR+iter-1);
+  //save.saveVTKSurface(vtkFolder,"sim",(nR-1)+i*nR+iter-1);
+  save.saveSol(binFolder,"sim",(i+1)*nR+iter-1);
+  save.printMeshReport();
+  save.saveMeshInfo(datFolder);
  }
 
  PetscFinalize();

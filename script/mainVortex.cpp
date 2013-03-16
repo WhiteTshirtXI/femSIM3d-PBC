@@ -41,16 +41,17 @@ int main(int argc, char **argv)
  real c2 = 1.0;   // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.3;   // surface smooth cord (fujiwara)
+ real d2 = 0.1;   // surface smooth cord (fujiwara)
 
- real dt = 0.03;
+ real dt = 0.003;
  real T = 3.0;
 
- //string meshFile = "sphereCenterLow.msh";
- string meshFile = "sphere.msh";
+ string meshFile = "sphereCenterLow.msh";
+ //string meshFile = "sphere.msh";
 
  //const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
+ const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
@@ -59,6 +60,12 @@ int main(int argc, char **argv)
 
  Model3D m1;
  Simulator3D s1;
+
+ if( (*(argv+1)) == NULL )
+ {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
 
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
@@ -84,6 +91,44 @@ int main(int argc, char **argv)
  s1.setC3(c3);
  s1.setD1(d1);
  s1.setD2(d2);
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+
+  // load surface mesh
+  string aux = *(argv+2);
+  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
+  m1.setInterfaceBC();
+  m1.setTriEdge();
+  m1.mesh2Dto3D();
+
+  s1(m1);
+
+  // load 3D mesh
+  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
+  const char *vtkFile = file.c_str();
+
+  m1.readVTK(vtkFile);
+#if NUMGLEU == 5
+  m1.setMiniElement();
+#else
+  m1.setQuadElement();
+#endif
+  m1.readVTKHeaviside(vtkFile);
+  m1.setOFace();
+  m1.setSurfaceConfig();
+  m1.setInitSurfaceVolume();
+  m1.setInitSurfaceArea();
+
+  s1(m1);
+
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
+ }
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -91,7 +136,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = T/dt;
+ int nIter = (T/dt);
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -106,50 +151,17 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-//--------------------------------------------------
-//    /* predictor-corrector */
-//    Simulator3D s20(m1,s1);
-//    s20.setDt(dt/2.0);
-//    s20.setTime(s1.getTime()+dt/2.0);
-//    // in: SolOld^(n),X^(n)
-//    // out: Sol^(n+1/2)
-//    s20.stepImposedPeriodicField("3d",T,dt/2.0); 
-//    s20.saveOldData();
-//    s20.stepALE();
-//-------------------------------------------------- 
+   /* predictor-corrector */
+   Simulator3D s20(m1,s1);
+   s20.setDt(dt/2.0);
+   s20.setTime(s1.getTime()+dt/2.0);
+   // in: SolOld^(n),X^(n)
+   // out: Sol^(n+1/2)
+   s20.stepImposedPeriodicField("3d",T,dt/2.0); 
+   s20.saveOldData();
+   s20.stepALE();
 
-   /* predictor-multicorrector */
-   // points at position n
-   // compute velocity of time step: n+1/2 
-   Model3D m10(m1);
-   Simulator3D s10(m10,s1);
-   s10.setTime(s1.getTime()+dt/4.0); // t^(n+1/4)
-   // in: SolOld(n)
-   // out: Sol(n+1/2)
-   s10.stepImposedPeriodicField("3d",T,dt/4.0); // SolOld(n) --> Sol(n+1/4)
-   s10.saveOldData();        // Sol(n+1/4) --> SolOld(n+1/4),t=t^(n+1/4)+1/4
-   s10.setDt(dt/2.0);        // compute X^(n+1/2) from X^(n+1/4)
-   s10.stepALE();            // 1st) SolOld(n+1/4) --> ALE(n+1/4)
-   // time step: n+1/2 using ALE(n+1/4)
-   // 2nd) result: X^(n+1/2) using dt/2
-   s10.movePoints(s10.getUALE(),
-                  s10.getVALE(),
-				  s10.getWALE());
-
-   // points at X^(n+1/2)
-   // compute velocity at time step: n+1/4 
-   Model3D m20(m10);
-   Simulator3D s20(m20,s10);
-   s20.setTime(s10.getTime()+dt/4.0); // t^(n+3/4)
-   // in: SolOld(n+1/2),X^(n+1/2)
-   // out: Sol(n+3/4)
-   s20.stepImposedPeriodicField("3d",T,dt/4.0); 
-   s20.saveOldData();   // Sol(n+3/4) --> SolOld(n+3/4)
-   s20.setDt(dt/2.0);   // compute X^(n) from X^(n+1/2)
-   s20.stepALE();       // SolOld(n+3/4) --> ALE(n+3/4)
-
-
-   // with ALE(n+3/4)
+   // with ALE(n+1/2)
    // compute velocity at time step: n+1 using dt
    s1.movePoints(s20.getUALE(),
                  s20.getVALE(),
@@ -169,6 +181,7 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
+   save.saveSol(binFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    save.savePoint(datFolder,0);
@@ -206,6 +219,7 @@ int main(int argc, char **argv)
   //m1.smoothPointsByCurvature();
 
   m1.insertPointsByLength();
+
   //m1.insertPointsByCurvature();
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance();
@@ -213,7 +227,7 @@ int main(int argc, char **argv)
   //m1.removePointsByLength();
   //m1.flipTriangleEdge();
 
-  //m1.removePointByNeighbourCheck();
+  m1.removePointByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

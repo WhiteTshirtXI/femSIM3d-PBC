@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.6;
 
- string meshFile = "bubble-tube5.msh";
+ string meshFile = "airWaterSugar.msh";
  //string meshFile = "test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);

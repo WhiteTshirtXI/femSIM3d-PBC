@@ -439,6 +439,7 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
    if( dist2 > dist1 ) break;
   }
   aux = solMatrix.Get(j,4);
+  cSol.Set(i,aux);
   cSolOld.Set(i,aux);
  }
 }

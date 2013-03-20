@@ -57,7 +57,8 @@ int main(int argc, char **argv)
  m1.setSurfaceVolume();
  m1.tetMeshStats();
 
- m1.setNuCDiskBC();
+ // F, G and H
+ m1.setInfiniteDiskBC(1.3690760e-04,1.7819422e-04,8.8528405e-01);
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuC/Sc2000/","p");
  m1.setCDiskBC();
 

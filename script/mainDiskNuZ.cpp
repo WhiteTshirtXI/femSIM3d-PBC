@@ -57,7 +57,8 @@ int main(int argc, char **argv)
  m1.setSurfaceVolume();
  m1.tetMeshStats();
 
- m1.setNuZDiskBC();;
+ // F, G and H
+ m1.setInfiniteDiskBC(0.11735664E-03,0.17501519E-03,0.10193840E+01);
 
  Simulator3D s1(m1);
 

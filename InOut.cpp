@@ -421,7 +421,6 @@ void InOut::saveVTK( const char* _dir,const char* _filename )
 {
  IEN = m->getIEN();
  numElems = m->getNumElems();
- simTime = s->getTime();
 
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + ".vtk";

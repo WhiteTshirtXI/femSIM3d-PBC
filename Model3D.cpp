@@ -966,16 +966,16 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  Z.Dim(numVerts);
 
  real z = 0;
- real dz = 0;
  real points3d = 0;
  for( int jz=0;jz<nZ;jz++ )
  {
   real jzNorm = (real) jz/(nZ-1);
 
-  //dz = jzNorm;                  // linear
-  //dz = jzNorm*jzNorm;           // quadratic
-  //dz = jzNorm*jzNorm*jzNorm;    // cubic
-  dz = exp(jzNorm);               // exponential
+  z = jzNorm;                  // linear
+  //z = jzNorm*jzNorm;           // quadratic
+  //z = jzNorm*jzNorm*jzNorm;    // cubic
+  //z = exp(jzNorm)-1;             // exponential
+  //z = exp(4*jzNorm)-1; // exponential (6 points conc boundary layer)
    
   for( int jCirc=1;jCirc<=xCirc.Dim();jCirc++ )
   {
@@ -988,7 +988,6 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
 
    points3d++;
   }
-  z=z+dz;
  }
 
  // clean and init tetgen mesh object
@@ -1480,8 +1479,8 @@ void Model3D::insertPointsByCurvature()
   if( curv1*length > 2.5 || curv2*length > 2.5  )
   {
    cout << "----------- Inserting by curvature..." << endl;
-   insertSurfacePoint(i,"flat");
-   //insertSurfacePoint(i,"curvature");
+   //insertSurfacePoint(i,"flat");
+   insertSurfacePoint(i,"curvature");
    //insertSurfacePoint(i,"bi-curvature");
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
@@ -1530,8 +1529,8 @@ void Model3D::insertPointsByInterfaceDistance()
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
 	  edgeLength > 4*dy )
   {
-   insertSurfacePoint(i,"flat");
-   //insertSurfacePoint(i,"curvature");
+   //insertSurfacePoint(i,"flat");
+   insertSurfacePoint(i,"curvature");
    //insertSurfacePoint(i,"bi-curvature");
   }
  }
@@ -2433,7 +2432,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
 //-------------------------------------------------- 
 
  // computing curvature
- clVector myVec = getNormalAndKappaByDesbrun(vAdd,
+ clVector myVec = getNormalAndKappa(vAdd,
                     getNeighbourSurfacePoint(vAdd));
  curvature.AddItem(vAdd,myVec.Get(0));
  surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
@@ -2557,7 +2556,7 @@ void Model3D::contractEdgeByLength()
                     neighbourSurfaceElem.at( v3elem2 ).size() > 4);   
 
   //if( elemID > 0 && erro < 0.5*erroS )//&&
-  if( edgeLength < 0.7*triEdge[elemID] &&
+  if( edgeLength < 0.5*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && curvTest && neighTest //&& angleTest 
 	)
@@ -2664,7 +2663,7 @@ void Model3D::contractEdgeByLength()
    restoreMappingArrays();
 
    // computing curvature
-   clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
+   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
    curvature.Set(v1,myVec.Get(0));
    surfMesh.curvature.Set(v1,myVec.Get(0));
    surfMesh.xNormal.Set(v1,myVec.Get(1));
@@ -3298,7 +3297,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   //for( int i=0;i<surfMesh.numVerts;i++ )
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
   {
-   clVector myVec = getNormalAndKappaByDesbrun(i,getNeighbourSurfacePoint(i));
+   clVector myVec = getNormalAndKappa(i,getNeighbourSurfacePoint(i));
    real curv = fabs(myVec.Get(0));
   //for( int i=0;i<surfMesh.numVerts;i++ )
    if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
@@ -3309,7 +3308,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
    }
   }
 
-  clVector myVec = getNormalAndKappaByDesbrun(node,getNeighbourSurfacePoint(node));
+  clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
   real xIn = surfMesh.X.Get(node)-0.1*triEdge[nb]*myVec.Get(1);
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
   real zIn = surfMesh.Z.Get(node)-0.1*triEdge[nb]*myVec.Get(3);
@@ -3889,10 +3888,10 @@ void Model3D::mesh3DPoints()
  //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYRCApa",&in,&out );
  //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- //tetrahedralize( (char*) "QYYApa",&in,&out ); 
+ tetrahedralize( (char*) "QYYApa",&in,&out ); 
  //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
  //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
- tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -3986,10 +3985,9 @@ void Model3D::setDiskCouetteBC()
  }
 }
 
-void Model3D::setNuCteDiskBC()
+void Model3D::setInfiniteDiskBC(real _F,real _G, real _H)
 {
- real omega,aux;
- real radius;
+ real omega,aux,radius;
  rMax = Y.Max();
 
 #if NUMGLEU == 5
@@ -4006,91 +4004,12 @@ void Model3D::setNuCteDiskBC()
   {
    idbcu.AddItem(i);
    idbcv.AddItem(i);
-   //idbcp.AddItem(i); // caso com c.c. livre em w
-   idbcw.AddItem(i);
-
-   //uc.Set(i,radius*2.5666593e-02); // Z=4
-   //vc.Set(i,radius*3.4943977e-02); // Z=4
-   //wc.Set(i,-8.2505646e-01); // Z=4
-
-   //uc.Set(i,radius*4.5487756e-03); // Z=6
-   //vc.Set(i,radius*5.9598499e-03); // Z=6
-   //wc.Set(i,-8.7414071e-01); // Z=6
-
-   uc.Set(i,radius*1.3326987e-04); // Z=10
-   vc.Set(i,radius*1.7327920e-04); // Z=10
-   wc.Set(i,-8.8416563E-01); // Z=10
-   
-   //uc.Set(i,0.0); // Z=12
-   //vc.Set(i,0.0); // Z=12
-   //pc.Set(i,-0.391141); // caso com c.c. livre em w
-  }
-
-  if( Z.Get(i) == Z.Min() )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   omega=1.0;
-
-   aux = (-1.0)*Y.Get(i)*omega;
-   uc.Set(i,aux);
-   aux = X.Get(i)*omega;
-   vc.Set(i,aux);
-   aux = 0.0;
-   wc.Set(i,aux);
-  }
-
- }
-
- for( int i=0;i<numVerts;i++ )
- {
-  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
-	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
-  {
-   idbcp.AddItem(i);
-   aux = 0.0;
-   pc.Set(i,aux);
-   outflow.Set(i,aux);
-  }
- }
-}
-
-void Model3D::setNuCDiskBC()
-{
- real omega,aux,radius;
- rMax = Y.Max();
-
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-  if( Z.Get(i) == Z.Max() )
-  {
-   radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
-
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
    idbcw.AddItem(i);
    ////idbcp.AddItem(i); // caso com c.c. livre em w
 
-   //uc.Set(i,radius*2.6505291e-02); // Sc = 2000 Z = 4
-   //vc.Set(i,radius*3.6178208e-02); // Sc = 2000 Z = 4
-   //wc.Set(i,-8.2427145e-01); // Sc = 2000 Z = 4
-
-   uc.Set(i,radius*1.3690760e-04); // Sc = 2000 Z = 10
-   vc.Set(i,radius*1.7819422e-04); // Sc = 2000 Z = 10
-   wc.Set(i,-8.8528405e-01); // Sc = 2000 Z = 10
-   ////pc.Set(i,0.0); // caso com c.c. livre em w
-   
-   //wc.Set(i,-8.8559326E-01); // Sc = 2000
-   //wc.Set(i,-9.1044679e-01); // Sc = 10
-   //wc.Set(i,-9.2281563e-01); // Sc = 5
+   uc.Set(i,radius*_F); // Z=10
+   vc.Set(i,radius*_G); // Z=10
+   wc.Set(i,(-1.0)*_H); // Z=10
   }
 
   if( Z.Get(i) == Z.Min() )
@@ -4107,22 +4026,19 @@ void Model3D::setNuCDiskBC()
    vc.Set(i,aux);
    aux = 0.0;
    wc.Set(i,aux);
-
   }
 
   if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
-	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
+	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)> (rMax*rMax - 0.001) ) )
+  {
    outflow.Set(i,aux);
 
- }
- for( int i=0;i<numVerts;i++ )
- {
-  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
-	( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)>rMax*rMax - 0.001) )
-  {
-   idbcp.AddItem(i);
-   aux = 0.0;
-   pc.Set(i,aux);
+   if( i < numVerts )
+   {
+	idbcp.AddItem(i);
+	aux = 0.0;
+	pc.Set(i,aux);
+   }
   }
  }
 }
@@ -5168,73 +5084,6 @@ void Model3D::setCube(real _xlimInf,real _xlimSup,
       (Z.Get(i)<zlimSup-eps2) && (Z.Get(i)>zlimInf+eps2) )
   {
    heaviside.Set(i,1.0);
-  }
- }
-}
-
-void Model3D::setNuZDiskBC()
-{
- real omega,aux,radius;
- rMax = Y.Max();
-
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-  radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
-
-  if( Z.Get(i) == Z.Max() )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-   ////idbcp.AddItem(i); // caso com c.c. livre em w
-
-   //uc.Set(i,radius*4.8979239E-02); // Z=4
-   //vc.Set(i,radius*7.9371092E-02); // Z=4
-   //wc.Set(i,-9.1936908E-01); // Z=4
-
-   //uc.Set(i,radius*6.8574756E-03); // Z=6
-   //vc.Set(i,radius*1.0335366E-02); // Z=6
-   //wc.Set(i,-0.10196142E+01); // Z=6
-
-   uc.Set(i,radius*0.11735664E-03); // Z=10
-   vc.Set(i,radius*0.17501519E-03); // Z=10
-   wc.Set(i,-0.10193840E+01); // Z=10
-   /////pc.Set(i,0.0); // Z=10 // caso com c.c. livre em w
-  }
-
-  if( Z.Get(i) == Z.Min() )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   omega=1.0;
-
-   aux = (-1.0)*Y.Get(i)*omega;
-   uc.Set(i,aux);
-   aux = X.Get(i)*omega;
-   vc.Set(i,aux);
-   aux = 0.0;
-   wc.Set(i,aux);
-  }
-
-  if( Z.Get(i)<Z.Max() && Z.Get(i)>Z.Min() && 
-	(X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i)> (rMax*rMax - 0.001) ) )
-  {
-   outflow.Set(i,aux);
-
-   if( i < numVerts )
-   {
-	idbcp.AddItem(i);
-	aux = 0.0;
-	pc.Set(i,aux);
-   }
   }
  }
 }
@@ -7154,80 +7003,6 @@ void Model3D::moveZPoints(clVector &_vec,real _dt)
  }
 }
 
-void Model3D::movePoints2ndOrder(clVector &_uSol,
-                                 clVector &_vSol,
-                                 clVector &_wSol,
-								 real _dt,real _time)
-{
- real T = 3.0;
- real time = _time + _dt/2.0;
- real pi = 3.14159265358;
-
- //X = X + _vec*_dt;
- for( int i=0;i<numVerts;i++ )
- {
-  real Xp = X.Get(i)+(_uSol.Get(i)*_dt/2.0);
-  real Yp = Y.Get(i)+(_vSol.Get(i)*_dt/2.0);
-  real Zp = Z.Get(i)+(_wSol.Get(i)*_dt/2.0);
-
-  real up = (2.0)*sin(pi*Xp)*
-	              sin(pi*Xp)*
-			      sin(2*pi*Yp)*
-			      sin(2*pi*Zp)*
-			      cos(pi*time/T);
-  // ---> passar up em stepALE <---
-  real xn = X.Get(i)+(up*_dt);
-  X.Set(i,xn);
-
-  real vp = (-1.0)*sin(2*pi*Xp)*
-	               sin(pi*Yp)*
-				   sin(pi*Yp)*
-				   sin(2*pi*Zp)*
-				   cos(pi*time/T);
-  real yn = Y.Get(i)+(vp*_dt);
-  Y.Set(i,yn);
-
-  real wp = (-1.0)*sin(2*pi*Xp)*
-	               sin(2*pi*Yp)*
-				   sin(pi*Zp)*
-				   sin(pi*Zp)*
-				   cos(pi*time/T);
-  real zn = Z.Get(i)+(wp*_dt);
-  Z.Set(i,zn);
- }
-
- for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  real Xps = surfMesh.X.Get(i)+(_uSol.Get(i)*_dt/2.0);
-  real Yps = surfMesh.Y.Get(i)+(_vSol.Get(i)*_dt/2.0);
-  real Zps = surfMesh.Z.Get(i)+(_wSol.Get(i)*_dt/2.0);
-
-  real ups = (2.0)*sin(pi*Xps)*
-	               sin(pi*Xps)*
-		 	       sin(2*pi*Yps)*
-		 	       sin(2*pi*Zps)*
-			      cos(pi*time/T);
-  real xns = surfMesh.X.Get(i)+(ups*_dt);
-  surfMesh.X.Set(i,xns);
-
-  real vps = (-1.0)*sin(2*pi*Xps)*
-	                sin(pi*Yps)*
-					sin(pi*Yps)*
-					sin(2*pi*Zps)*
-					cos(pi*time/T);
-  real yns = surfMesh.Y.Get(i)+(vps*_dt);
-  surfMesh.Y.Set(i,yns);
-
-  real wps = (-1.0)*sin(2*pi*Xps)*
-	                sin(2*pi*Yps)*
-					sin(pi*Zps)*
-					sin(pi*Zps)*
-					cos(pi*time/T);
-  real zns = surfMesh.Z.Get(i)+(wps*_dt);
-  surfMesh.Z.Set(i,zns);
- }
-}
-
 
 SurfaceMesh* Model3D::getSurfMesh(){ return &surfMesh; }
 SurfaceMesh* Model3D::getInterfaceMesh(){ return &interfaceMesh; }
@@ -7786,7 +7561,7 @@ void Model3D::setNormalAndKappa()
 // 	              getNeighbourSurfacePoint(node));
 //-------------------------------------------------- 
 
-  clVector vec = getNormalAndKappaByDesbrun(node,
+  clVector vec = getNormalAndKappa(node,
 	              getNeighbourSurfacePoint(node));
 
   real pressure    = vec.Get(0);
@@ -9344,13 +9119,15 @@ void Model3D::remove3dMeshPointsByHeight()
 	minHeight = min(minHeight,height6);
 	minHeight = min(minHeight,height7);
 
-	bool pressureTest=(surfMesh.phyBounds.at(v1) == "\"wallOutflow\"" ) ||
-	                  (surfMesh.phyBounds.at(v2) == "\"wallOutflow\"" ) ||
-	                  (surfMesh.phyBounds.at(v3) == "\"wallOutflow\"" );
+	//--------------------------------------------------
+	// bool pressureTest=(surfMesh.phyBounds.at(v1) == "\"wallOutflow\"" ) ||
+	//                   (surfMesh.phyBounds.at(v2) == "\"wallOutflow\"" ) ||
+	//                   (surfMesh.phyBounds.at(v3) == "\"wallOutflow\"" );
+	//-------------------------------------------------- 
 
-	if( minHeight < 0.3*triEdge[vertID] && 
+	if( minHeight < 0.4*triEdge[vertID] //&& 
 	//if( minHeight < 0.4*edgeSize.Get(v1)  && 
-	    pressureTest 
+	    //pressureTest 
 	  )
 	  // vertID > 0)
 	{

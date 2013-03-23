@@ -3342,6 +3342,10 @@ void InOut::printSimulationReport()
 	  << ":                                            " 
 	  << dt << endl;
  cout << color(none,magenta,black)
+      << "   iteration" << resetColor() 
+	  << ":                                            " 
+	  << iter << endl;
+ cout << color(none,magenta,black)
       << "          time" << resetColor() 
 	  << ":                                          " 
 	  << simTime << endl;
@@ -4413,10 +4417,11 @@ void InOut::saveTimeError(const char* _dir)
  else
  {
   cout << "Creating file time.dat" << endl;
-  file << "#time" << setw(30) << "lagrangian" 
-                  << setw(17) << "semi-lagrangian" 
+  file << "#time" << setw(29) << "lagrangian" 
+                  << setw(18) << "semi-lagrangian" 
                   << setw(18) << "gravity"
                   << setw(18) << "surface tension"
+                  << setw(18) << "dt"
                   << setw(6) << "cfl" 
 		   		  << setw(7)  << "iter" 
 		  		  << endl;
@@ -4428,6 +4433,7 @@ void InOut::saveTimeError(const char* _dir)
           << setw(17) << s->getDtSemiLagrangian() << " " 
           << setw(17) << s->getDtGravity() << " " 
           << setw(17) << s->getDtSurfaceTension() << " " 
+          << setw(17) << s->getDt() << " " 
           << setw(5) << setprecision(2) << fixed << s->getCfl() << " " 
 	      << setw(6) << setprecision(0) << fixed << iter 
 	 	  << endl;

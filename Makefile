@@ -12,8 +12,8 @@ CXX = clang
 CXXFLAGS = -g -fPIC
 
 # Libraries and includes
-LIBS += -lm -L/usr/lib -lgsl -lgslcblas
-LIBS += -L. -L${TETGEN_DIR} -ltet
+LIBS += -lm 
+LIBS += -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I${FEMLIB_DIR} 
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
@@ -24,7 +24,6 @@ src += ${FEMLIB_DIR}/clVector.cpp
 src += ${FEMLIB_DIR}/clMatrix.cpp
 src += ${FEMLIB_DIR}/clDMatrix.cpp
 src += ${FEMLIB_DIR}/PCGSolver.cpp
-src += ${FEMLIB_DIR}/GMRes.cpp
 src += ${FEMLIB_DIR}/PetscSolver.cpp
 src += ${FEMLIB_DIR}/FEMLinElement3D.cpp
 src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp

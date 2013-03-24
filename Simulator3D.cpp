@@ -4762,9 +4762,23 @@ void Simulator3D::setCentroidVelPosInterface()
 
  for( int elem=0;elem<surfMesh->numElems;elem++ ) 
  {
+  // P1
   int v1 = surfMesh->IEN.Get(elem,0);
+  real p1x = surfMesh->X.Get(v1);
+  real p1y = surfMesh->Y.Get(v1);
+  real p1z = surfMesh->Z.Get(v1);
+
+  // P2
   int v2 = surfMesh->IEN.Get(elem,1);
+  real p2x = surfMesh->X.Get(v2);
+  real p2y = surfMesh->Y.Get(v2);
+  real p2z = surfMesh->Z.Get(v2);
+
+  // P3
   int v3 = surfMesh->IEN.Get(elem,2);
+  real p3x = surfMesh->X.Get(v3);
+  real p3y = surfMesh->Y.Get(v3);
+  real p3z = surfMesh->Z.Get(v3);
 
   int elemID = surfMesh->elemIdRegion.Get(elem);
 
@@ -4792,7 +4806,7 @@ void Simulator3D::setCentroidVelPosInterface()
                    surfMesh->Z.Get(v2)+
 				   surfMesh->Z.Get(v3) )/3.0;
 
-  area[elemID] = m->getAreaElem(elem);
+  area[elemID] = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
 
   sumXVelArea[elemID] += velX[elemID] * area[elemID];
   sumYVelArea[elemID] += velY[elemID] * area[elemID];

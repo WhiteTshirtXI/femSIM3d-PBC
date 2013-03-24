@@ -28,13 +28,13 @@ int main(int argc, char **argv)
  int iter = 1;
  //real Re = sqrt(42.895); // case 1
  //real Re = 13.8487; // case 2
- real Re = 32.78; // case 3
+ real Re = 33.0413; // case 3
  //real Re = sqrt(3892.856); // case 6
  //real Re = sqrt(18124.092); // case 7
  //real Re = sqrt(41505.729); // case 8 (extream)
  //real Re = 79.88; // case 3
  real Sc = 1;
- real We = 116;
+ real We = 115.662;
  real Fr = 1.0;
  real c1 = 0.0;  // lagrangian
  real c2 = 1.0;  // smooth vel
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
  //real mu_out = 2.73;
  //real mu_out = 1.28; 
- real mu_out = 0.54; // case 3
+ real mu_out = 0.5396; // case 3
  //real mu_out = 0.2857; // case 6
  //real mu_out = 0.1324; // case 7
  //real mu_out = 0.0875134907735; // extream

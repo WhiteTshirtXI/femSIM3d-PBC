@@ -94,7 +94,6 @@ class Model3D
   void flipTriangleEdge();
   void contractEdgeByLength();
   int findEdge(int _v1,int _v2);
-  real triangleQualityMeasure(int _v1,int _v2, int _v3);
 
   // 3D points treatment
   void mark3DPointForDeletion(int _vert);
@@ -104,7 +103,7 @@ class Model3D
   void remove3dMeshPointsByDiffusion();
   void insert3dMeshPointsByDiffusion();
   void insert3dMeshPointsByVolume();
-  void removePointByVolume();
+  void remove3dMeshPointsByVolume();
   void remove3dMeshPointsByHeight();
 
   void breakup();
@@ -311,9 +310,6 @@ class Model3D
   int getNumElems();
   real getVolume(int _v1,int _v2,int _v3,int _v4);
   real getVolume(int _elem);
-  real getAreaVert(int _v1,int _v2,int _v3);
-  real getAreaElem(int _elem);
-  real getAreaHeron(int _elem);
   real getLength(int _v1,int _v2);
   clMatrix* getOFace();
   clVector* getSurface();

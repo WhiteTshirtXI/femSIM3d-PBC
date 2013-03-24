@@ -3334,6 +3334,10 @@ void InOut::printSimulationReport()
 	  << dtGravity << endl;
  cout << endl;
  cout << color(none,magenta,black)
+      << "          iteration" << resetColor() 
+	  << ":                                     " 
+	  << iter << endl;
+ cout << color(none,magenta,black)
       << "          CFL" << resetColor()
 	  << " number:                                    " 
 	  << cfl << endl;
@@ -3341,10 +3345,6 @@ void InOut::printSimulationReport()
       << "          dt" << resetColor() 
 	  << ":                                            " 
 	  << dt << endl;
- cout << color(none,magenta,black)
-      << "   iteration" << resetColor() 
-	  << ":                                            " 
-	  << iter << endl;
  cout << color(none,magenta,black)
       << "          time" << resetColor() 
 	  << ":                                          " 

@@ -43,10 +43,11 @@ int main(int argc, char **argv)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;   // surface smooth cord (fujiwara)
 
- real dt = 0.003;
+ real dt = 0.01;
  real T = 3.0;
+ real time = 0;
 
- string meshFile = "sphereCenterLow.msh";
+ string meshFile = "sphere.msh";
  //string meshFile = "sphere.msh";
 
  //const char *binFolder  = "./bin/";
@@ -136,9 +137,9 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = (T/dt);
+
  int nReMesh = 1;
- for( int i=1;i<=nIter;i++ )
+ while( time <= T )
  {
   for( int j=0;j<nReMesh;j++ )
   {
@@ -161,6 +162,11 @@ int main(int argc, char **argv)
    s20.saveOldData();
    s20.stepALE();
 
+   // dt variavel
+   //s20.setDtALESinglePhase()
+   //dt = s20.getDt()
+   //s1.setDt(dt)
+
    // with ALE(n+1/2)
    // compute velocity at time step: n+1 using dt
    s1.movePoints(s20.getUALE(),
@@ -169,7 +175,7 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.stepImposedPeriodicField("3d",T); // X,Y and Z --> Sol(n+1)
 
-   real time = s1.getTime();
+   time = s1.getTime();
    real field = cos(3.14159265358*time/T);
    cout << endl;
    cout << "                             | T:        " << T << endl;

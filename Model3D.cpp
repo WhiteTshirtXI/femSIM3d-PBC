@@ -1272,8 +1272,10 @@ void Model3D::insertPointsByLength()
  {
   // edge length
   real edgeLength = mapEdgeTri.Get(edge,0);
-  real v1 = mapEdgeTri.Get(edge,1);
-  //real v2 = mapEdgeTri.Get(edge,2);
+  int v1 = mapEdgeTri.Get(edge,1); // v1
+  //int v2 = mapEdgeTri.Get(edge,2); // v2
+  //int v3elem1 = mapEdgeTri.Get(edge,3); // v3elem1
+  //int v3elem2 = mapEdgeTri.Get(edge,4); // v3elem2
   real vertID = surfMesh.vertIdRegion.Get(v1); 
 
 //--------------------------------------------------
@@ -1284,11 +1286,22 @@ void Model3D::insertPointsByLength()
 //   real maxCurv = max(curv1,curv2);
 //   real erro = maxCurv*edgeLength;
 //-------------------------------------------------- 
+  // this works, but is not consistent!!! CHANGE IT SOON!
+//--------------------------------------------------
+//   real curv1 = fabs(surfMesh.curvature.Get(v1));
+//   real curv2 = fabs(surfMesh.curvature.Get(v2));
+//   real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+//   real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+//-------------------------------------------------- 
+
+  // to avoid contraction at high curvature regions
+  //bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
 
   if( vertID > 0 &&
 	  //Z.Get(v1) != Z.Min() && Z.Get(v2) != Z.Min() &&
 	  //Z.Get(v1) != Z.Max() && Z.Get(v2) != Z.Max() &&
       //erro > 0.7 )
+      //curvTest &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
    //insertSurfacePoint(edge,"flat");
@@ -1698,7 +1711,21 @@ clVector Model3D::triangleQuality(int _v)
   vert2 = *point;++point;
   vert3 = *point;--point;
 
-  real q = triangleQualityMeasure(vert1,vert2,vert3);
+  real P1x = surfMesh.X.Get(vert1);
+  real P1y = surfMesh.Y.Get(vert1);
+  real P1z = surfMesh.Z.Get(vert1);
+
+  real P2x = surfMesh.X.Get(vert2);
+  real P2y = surfMesh.Y.Get(vert2);
+  real P2z = surfMesh.Z.Get(vert2);
+
+  real P3x = surfMesh.X.Get(vert3);
+  real P3y = surfMesh.Y.Get(vert3);
+  real P3z = surfMesh.Z.Get(vert3);
+
+  real q = triangleQualityMeasure(P1x,P1y,P1z,
+	                              P2x,P2y,P2z,
+			    				  P3x,P3y,P3z);
 
   if( qMax<q )
   {
@@ -2025,32 +2052,48 @@ void Model3D::flipTriangleEdge()
   real P3elem2z = surfMesh.Z.Get(v3elem2);
 
   // elem1
-  real area1 = getAreaVert(v1,v3elem1,v2);
-  real q1 = triangleQualityMeasure(v1,v3elem1,v2);
+  real area1 = getArea(P1x,P1y,P1z,
+	                   P3elem1x,P3elem1y,P3elem1z,
+					   P2x,P2y,P2z);
+  real q1 = triangleQualityMeasure(P1x,P1y,P1z,
+	                               P3elem1x,P3elem1y,P3elem1z,
+								   P2x,P2y,P2z);
   real c1 = getCircumRadius(P1x,P1y,P1z,
 	                        P3elem1x,P3elem1y,P3elem1z,
 							P2x,P2y,P2z);
   clVector normalElem1 = getNormalElem(elem1);
 
   // elem2
-  real area2 = getAreaVert(v2,v3elem2,v1);
-  real q2 = triangleQualityMeasure(v2,v3elem2,v1);
+  real area2 = getArea(P2x,P2y,P2z,
+	                   P3elem2x,P3elem2y,P3elem2z,
+					   P1x,P1y,P1z);
+  real q2 = triangleQualityMeasure(P2x,P2y,P2z,
+	                               P3elem2x,P3elem2y,P3elem2z,
+								   P1x,P1y,P1z);
   real c2 = getCircumRadius(P2x,P2y,P2z,
 	                        P3elem2x,P3elem2y,P3elem2z,
 							P1x,P1y,P1z);
   clVector normalElem2 = getNormalElem(elem2);
 
   // elem3 (new elem1)
-  real area3 = getAreaVert(v1,v3elem1,v3elem2);
-  real q3 = triangleQualityMeasure(v1,v3elem1,v3elem2);
+  real area3 = getArea(P1x,P1y,P1z,
+	                   P3elem1x,P3elem1y,P3elem1z,
+					   P3elem2x,P3elem2y,P3elem2z);
+  real q3 = triangleQualityMeasure(P1x,P1y,P1z,
+	                               P3elem1x,P3elem1y,P3elem1z,
+	                               P3elem2x,P3elem2y,P3elem2z);
   real c3 = getCircumRadius(P1x,P1y,P1z,
 	                        P3elem1x,P3elem1y,P3elem1z,
 	                        P3elem2x,P3elem2y,P3elem2z);
   clVector normalElem3 = getNormalElem(v1,v3elem1,v3elem2);
 
   // elem4 (new elem2)
-  real area4 = getAreaVert(v2,v3elem2,v3elem1);
-  real q4 = triangleQualityMeasure(v2,v3elem2,v3elem1);
+  real area4 = getArea(P2x,P2y,P2z,
+	                   P3elem2x,P3elem2y,P3elem2z,
+					   P3elem1x,P3elem1y,P3elem1z);
+  real q4 = triangleQualityMeasure(P2x,P2y,P2z,
+	                               P3elem2x,P3elem2y,P3elem2z,
+	                               P3elem1x,P3elem1y,P3elem1z);
   real c4 = getCircumRadius(P2x,P2y,P2z,
 	                        P3elem2x,P3elem2y,P3elem2z,
 	                        P3elem1x,P3elem1y,P3elem1z);
@@ -2124,8 +2167,15 @@ void Model3D::flipTriangleEdge()
   // this works, but is not consistent!!! CHANGE IT SOON!
   //real curv1 = fabs(surfMesh.curvature.Get(v1));
   //real curv2 = fabs(surfMesh.curvature.Get(v2));
-  //real curv3_1 = fabs(surfMesh.curvature.Get(v3elem1));
-  //real curv3_2 = fabs(surfMesh.curvature.Get(v3elem2));
+  //real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  //real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+
+  // to avoid contraction at high curvature regions
+  //bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
+
+  // to avoid 3 elem neighbors vertex
+  bool neighTest = (neighbourSurfaceElem.at( v1 ).size() > 4 &&  
+                    neighbourSurfaceElem.at( v2 ).size() > 4);   
 
   /* FLIPPING requirements:
    * - sum of quality of old triangles < sum of quality of new triangles
@@ -2136,26 +2186,22 @@ void Model3D::flipTriangleEdge()
    *   new triangles
    * */
   if( surfMesh.Marker.Get(v1) == 0.5 && 
-	q1+q2 < q3+q4 && // quality sum
-	//--------------------------------------------------
-	// (curv1 < 40 && curv2 < 40) && // curvature
-	// (curv3_1 < 40 && curv3_2 < 40) && // curvature
-	//-------------------------------------------------- 
-	area1+area2  > area3+area4 && // area sum
-	//angleNew < angleOld &&
-    neighbourSurfaceElem.at( v1 ).size() > 4 &&  
-    neighbourSurfaceElem.at( v2 ).size() > 4 &&  
-	c1+c2 > c3+c4 ) // circum radius
+	  q1+q2 < q3+q4 &&              // quality sum
+	  area1+area2  > area3+area4 && // area sum
+	  c1+c2 > c3+c4 &&              // circum radius
+	  //angleNew < angleOld &&
+	  //curvTest &&
+	  neighTest ) 
   {
    cout << "------------- " << color(none,green,black) 
-	<< "flipping edge at (" << resetColor()
-	<< surfMesh.elemIdRegion.Get(elem1)
-	<< color(none,green,black) 
-	<< "): " << resetColor() 
-	<< v1 << " " << v2 
-	<< color(none,green,black) 
-	<< " --> " << resetColor()
-	<< v3elem1 << " " << v3elem2 << endl;
+	    << "flipping edge at (" << resetColor()
+		<< surfMesh.elemIdRegion.Get(elem1)
+		<< color(none,green,black) 
+		<< "): " << resetColor() 
+		<< v1 << " " << v2 
+		<< color(none,green,black) 
+		<< " --> " << resetColor()
+		<< v3elem1 << " " << v3elem2 << endl;
 
    // new elem1
    surfMesh.IEN.Set(elem1,0,v1);
@@ -2558,7 +2604,10 @@ void Model3D::contractEdgeByLength()
   //if( elemID > 0 && erro < 0.5*erroS )//&&
   if( edgeLength < 0.5*triEdge[elemID] &&
       //erro < 0.03 &&
-	  elemIDTest && curvTest && neighTest //&& angleTest 
+	  elemIDTest && 
+	  curvTest && 
+	  neighTest //&& 
+	  //angleTest 
 	)
   {
 //--------------------------------------------------
@@ -3028,10 +3077,25 @@ void Model3D::insertPointsByArea()
  real test = 0.008;
  for( int i=0;i<surfMesh.numElems;i++ )
  {
+  // P1
   int v1 = surfMesh.IEN.Get(i,0);
+  real p1x = surfMesh.X.Get(v1);
+  real p1y = surfMesh.Y.Get(v1);
+  real p1z = surfMesh.Z.Get(v1);
+
+  // P2
   int v2 = surfMesh.IEN.Get(i,1);
+  real p2x = surfMesh.X.Get(v2);
+  real p2y = surfMesh.Y.Get(v2);
+  real p2z = surfMesh.Z.Get(v2);
+
+  // P3
   int v3 = surfMesh.IEN.Get(i,2);
-  if( getAreaElem(i) > test )
+  real p3x = surfMesh.X.Get(v3);
+  real p3y = surfMesh.Y.Get(v3);
+  real p3z = surfMesh.Z.Get(v3);
+
+  if(  getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z) > test )
   {
    int v4 = surfMesh.numVerts;
 
@@ -3618,11 +3682,12 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  * deleted.
  *
  * */
-void Model3D::removePointByVolume()
+void Model3D::remove3dMeshPointsByVolume()
 {
  real vSum;
  real vertSum;
  int v[NUMGLE];
+ int elemID;
  int vert=0;
 
  tetVol.clear();
@@ -3643,7 +3708,7 @@ void Model3D::removePointByVolume()
   real hSum = heaviside.Get(v[0])+heaviside.Get(v[1])+
               heaviside.Get(v[2])+heaviside.Get(v[3]);
 
-  int elemID = elemIdRegion.Get(elem);
+  elemID = elemIdRegion.Get(elem);
 
   real maxVol = max(1.0E-05,0.01*tetVol[elemIdRegion.Get(elem)]);
 
@@ -3685,7 +3750,7 @@ void Model3D::removePointByVolume()
    }
   }
  }
- //cout << "  removed by volume: " << rpv[elemID] << endl;
+ cout << "  removed by volume: " << rpv[elemID] << endl;
 }
 
 /*
@@ -3767,7 +3832,7 @@ void Model3D::triMeshStats()
   real auxMaxLength = max( length12,length13 );
   auxMaxLength = max( auxMaxLength,length23 );
 
-  real area = fabs(getAreaElem(e));
+  real area = fabs(getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z));
   sumArea[elemID] += area;
 
   // areas
@@ -6852,69 +6917,6 @@ real Model3D::getVolume(int _elem)
 						   -Y.Get(v2)*X.Get(v3) ) );
 }
 
-real Model3D::getAreaVert(int _v1,int _v2,int _v3)
-{
- // vectors
- real x1 = X.Get(_v2) - X.Get(_v1);
- real y1 = Y.Get(_v2) - Y.Get(_v1);
- real z1 = Z.Get(_v2) - Z.Get(_v1);
-
- real x2 = X.Get(_v3) - X.Get(_v1);
- real y2 = Y.Get(_v3) - Y.Get(_v1);
- real z2 = Z.Get(_v3) - Z.Get(_v1);
-
- real crossX = (y1*z2)-(z1*y2);
- real crossY = -( (x1*z2)-(z1*x2) );
- real crossZ = (x1*y2)-(y1*x2);
-
- return 0.5*vectorLength(crossX,crossY,crossZ);
-}
-
-real Model3D::getAreaElem(int _elem)
-{
- int v1=(int) surfMesh.IEN.Get(_elem,0);
- int v2=(int) surfMesh.IEN.Get(_elem,1);
- int v3=(int) surfMesh.IEN.Get(_elem,2);
-
- // vectors
- real x1 = surfMesh.X.Get(v2) - surfMesh.X.Get(v1);
- real y1 = surfMesh.Y.Get(v2) - surfMesh.Y.Get(v1);
- real z1 = surfMesh.Z.Get(v2) - surfMesh.Z.Get(v1);
-
- real x2 = surfMesh.X.Get(v3) - surfMesh.X.Get(v1);
- real y2 = surfMesh.Y.Get(v3) - surfMesh.Y.Get(v1);
- real z2 = surfMesh.Z.Get(v3) - surfMesh.Z.Get(v1);
-
- real crossX = (y1*z2)-(z1*y2);
- real crossY = -( (x1*z2)-(z1*x2) );
- real crossZ = (x1*y2)-(y1*x2);
-
- return 0.5*vectorLength(crossX,crossY,crossZ);
-}
-
-real Model3D::getAreaHeron(int _elem)
-{
- int v1=(int) surfMesh.IEN.Get(_elem,0);
- int v2=(int) surfMesh.IEN.Get(_elem,1);
- int v3=(int) surfMesh.IEN.Get(_elem,2);
-
- real a = sqrt( (X.Get(v2) - X.Get(v1))*(X.Get(v2) - X.Get(v1)) +
-                (Y.Get(v2) - Y.Get(v1))*(Y.Get(v2) - Y.Get(v1)) +
-				(Z.Get(v2) - Z.Get(v1))*(Z.Get(v2) - Z.Get(v1)) );
-
- real b = sqrt( (X.Get(v3) - X.Get(v1))*(X.Get(v3) - X.Get(v1)) +
-                (Y.Get(v3) - Y.Get(v1))*(Y.Get(v3) - Y.Get(v1)) +
-				(Z.Get(v3) - Z.Get(v1))*(Z.Get(v3) - Z.Get(v1)) );
-
- real c = sqrt( (X.Get(v3) - X.Get(v2))*(X.Get(v3) - X.Get(v2)) +
-                (Y.Get(v3) - Y.Get(v2))*(Y.Get(v3) - Y.Get(v2)) +
-				(Z.Get(v3) - Z.Get(v2))*(Z.Get(v3) - Z.Get(v2)) );
-
- real s = (a+b+c)/2.0;
-
- return sqrt( s*(s-a)*(s-b)*(s-c) );
-}
-
 void Model3D::clearBC()
 {
  uc.Dim(numNodes);
@@ -7878,7 +7880,27 @@ real Model3D::getSurfaceArea(int _region)
  real sumArea = 0;
  for(int tri=0;tri<surfMesh.numElems;tri++ )
   if( surfMesh.elemIdRegion.Get(tri) == _region )
-   sumArea += getAreaElem(tri);
+  {
+   // P1
+   int v1 = surfMesh.IEN.Get(tri,0);
+   real p1x = surfMesh.X.Get(v1);
+   real p1y = surfMesh.Y.Get(v1);
+   real p1z = surfMesh.Z.Get(v1);
+
+   // P2
+   int v2 = surfMesh.IEN.Get(tri,1);
+   real p2x = surfMesh.X.Get(v2);
+   real p2y = surfMesh.Y.Get(v2);
+   real p2z = surfMesh.Z.Get(v2);
+
+   // P3
+   int v3 = surfMesh.IEN.Get(tri,2);
+   real p3x = surfMesh.X.Get(v3);
+   real p3y = surfMesh.Y.Get(v3);
+   real p3z = surfMesh.Z.Get(v3);
+
+   sumArea += getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+  }
  return sumArea;
 }
 
@@ -8548,49 +8570,6 @@ clVector Model3D::getNormalElem(int _v1,int _v2,int _v3)
  // unit normal to each triangular face
  return normal/length;
 } // fecha metodo getNormalElem
-
-real Model3D::triangleQualityMeasure(int _v1,int _v2, int _v3)
-{
- real P0x = surfMesh.X.Get(_v1);
- real P0y = surfMesh.Y.Get(_v1);
- real P0z = surfMesh.Z.Get(_v1);
-
- real P1x = surfMesh.X.Get(_v2);
- real P1y = surfMesh.Y.Get(_v2);
- real P1z = surfMesh.Z.Get(_v2);
-
- real P2x = surfMesh.X.Get(_v3);
- real P2y = surfMesh.Y.Get(_v3);
- real P2z = surfMesh.Z.Get(_v3);
-
- // Triangle quality measure;
- real length12 = distance(P0x,P0y,P0z,P1x,P1y,P1z);
- real length13 = distance(P0x,P0y,P0z,P2x,P2y,P2z);
- real length23 = distance(P1x,P1y,P1z,P2x,P2y,P2z);
-
- real semiPerimeter = 0.5*(length12+length13+length23);
- real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
- real inRadius = area/semiPerimeter;
-
- /* Triangle quality measure;
-  *
-  *        6          r(t)       r -> in-radius
-  * q = -------- * --------- 
-  *      sqrt(3)      h(t)       h -> longest edge length
-  *
-  * Frey,P.,Borouchaki,H.:Surfacemeshevaluation.In:Intl. Mesh-ing
-  * Roundtable, pp. 363:374 (1997)
-  * */
-
- real h = length12;
- if( h<length13 )
-  h = length13;
- if( h<length23 )
-  h = length23;
-
- // triangle measure quality q = 3.4641*inRadius/h;
- return 3.4641*inRadius/h;
-}
 
 /*
  * Loop over all the surface edges, checking the angle between normal
@@ -9659,14 +9638,22 @@ void Model3D::integralParabolic()
   int v3 = surfMesh.IEN.Get(i,2);
 
   real P1x = surfMesh.X.Get(v1);
+  real P1y = surfMesh.Y.Get(v1);
+  real P1z = surfMesh.Z.Get(v1);
+
   real P2x = surfMesh.X.Get(v2);
+  real P2y = surfMesh.Y.Get(v2);
+  real P2z = surfMesh.Z.Get(v2);
+
   real P3x = surfMesh.X.Get(v3); 
+  real P3y = surfMesh.Y.Get(v3); 
+  real P3z = surfMesh.Z.Get(v3); 
 
   if( P1x == X.Max() &&
       P2x == X.Max() && 
       P3x == X.Max() )
   {
-   real area = getAreaElem(i);
+   real area = getArea(P1x,P1y,P1z,P2x,P2y,P2z,P3x,P3y,P3z);
    sumArea += area;
    sumUArea += area*(uc.Get(v1)+uc.Get(v2)+uc.Get(v3))/3.0;
   }

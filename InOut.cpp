@@ -29,6 +29,7 @@ InOut::InOut( Model3D &_m )
  idbcp = m->getIdbcp();
  idbcc = m->getIdbcc();
  outflow = m->getOutflow();
+
  IEN = m->getIEN();
  surface = m->getSurface();
  surfMesh = m->getSurfMesh();
@@ -42,9 +43,13 @@ InOut::InOut( Model3D &_m )
  neighbourPoint = m->getNeighbourPoint();
  averageTriLength = m->getAverageTriLength();
  initSurfaceArea = m->getInitSurfaceArea();
- initSurfaceVolume = m->getInitSurfaceVolume();
  surfaceArea = m->getSurfaceArea();
+ errorArea = m->getErrorArea();
+ dArea = m->getDArea();
+ initSurfaceVolume = m->getInitSurfaceVolume();
  surfaceVolume = m->getSurfaceVolume();
+ errorVolume = m->getErrorVolume();
+ dVolume = m->getDVolume();
 
  // surface mesh indexes:
  isp = m->getISP();
@@ -64,7 +69,6 @@ InOut::InOut( Model3D &_m )
  minLength = m->getMinLength();
  numSurfElems = m->getNumSurfElems();
  numSurfVerts = m->getNumSurfVerts();
- surfaceArea = m->getSurfaceArea();
 
  // volumetric mesh indexes:
  ip = m->getIP();
@@ -115,6 +119,14 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  elemIdRegion = m->getElemIdRegion();
  neighbourPoint = m->getNeighbourPoint();
  averageTriLength = m->getAverageTriLength();
+ initSurfaceArea = m->getInitSurfaceArea();
+ surfaceArea = m->getSurfaceArea();
+ errorArea = m->getErrorArea();
+ dArea = m->getDArea();
+ initSurfaceVolume = m->getInitSurfaceVolume();
+ surfaceVolume = m->getSurfaceVolume();
+ errorVolume = m->getErrorVolume();
+ dVolume = m->getDVolume();
 
  // surface mesh indexes:
  isp = m->getISP();
@@ -132,10 +144,6 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  idMinArea = m->getIdMinArea();
  maxLength = m->getMaxLength();
  minLength = m->getMinLength();
- initSurfaceArea = m->getInitSurfaceArea();
- initSurfaceVolume = m->getInitSurfaceVolume();
- surfaceArea = m->getSurfaceArea();
- surfaceVolume = m->getSurfaceVolume();
 
  // volumetric mesh indexes:
  ip = m->getIP();
@@ -3043,6 +3051,7 @@ void InOut::saveBubbleInfo(const char* _dir)
  //saveKappaErrorTorus(_dir);     // kappa torus
  savePressureError(_dir);       // pressure 
  saveVolumeError(_dir);         // bubble volume
+ saveVolumeCorrection(_dir);    // volume correction
  saveTimeError(_dir);           // time step
  //saveParasiticCurrent(_dir);   // velocity
  saveFilmThickness(_dir);    // oscillating velocity and diameter
@@ -4257,6 +4266,48 @@ void InOut::saveVolumeError(const char* _dir)
        << setw(17) << s->getXRef() << " " 
        << setw(17) << s->getYRef() << " " 
        << setw(17) << s->getZRef() << " " 
+       << setw(5) << setprecision(0) << fixed << iter 
+       << endl;
+  file.close();
+ }
+}
+
+void InOut::saveVolumeCorrection(const char* _dir)
+{
+ for(int nb=0;nb<=elemIdRegion->Max();nb++ )
+ {
+  stringstream ss;  //convertendo int --> string
+  string str;
+  ss << nb;
+  ss >> str;
+
+  string fileAux = (string) _dir + "correctedVolume" + str + ".dat";
+  const char* filename = fileAux.c_str();
+ 
+  ifstream testFile( filename );
+  ofstream file( filename,ios::app );
+  if( testFile )
+  {
+   testFile.close();
+   cout << "appending on file correctedVolume" << nb << ".dat" << endl;
+  }
+  else
+  {
+   cout << "Creating file volume" << nb << ".dat" << endl;
+   file << "#time" << setw(29) << "volume" 
+                   << setw(18) << "errorVolume" 
+                   << setw(18) << "area" 
+                   << setw(18) << "errorArea" 
+              	   << setw(6)  << "iter" 
+     			   << endl;
+  }
+ 
+  file << setprecision(10) << scientific; 
+  file << setw(10) << simTime << " " 
+       << setw(17) << m->getSurfaceVolume()[nb] << " " 
+       << setw(17) << m->getErrorVolume()[nb] << " " 
+       << setw(17) << m->getSurfaceArea()[nb] << " " 
+       << setw(17) << m->getErrorArea()[nb] << " " 
        << setw(5) << setprecision(0) << fixed << iter 
        << endl;
   file.close();

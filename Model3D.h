@@ -336,7 +336,11 @@ class Model3D
   vector<real> getInitSurfaceArea();
   vector<real> getInitSurfaceVolume();
   vector<real> getSurfaceArea();
+  vector<real> getDArea();
+  vector<real> getErrorArea();
   vector<real> getSurfaceVolume();
+  vector<real> getDVolume();
+  vector<real> getErrorVolume();
   void setSingleElement();
   void setTwoElements();
   void setThreeElements();
@@ -412,8 +416,10 @@ class Model3D
   vector<int> numSurfElems;  // number of surface elements
   vector<int> numSurfVerts;  // number of surface points                            
 
-  vector<real> initSurfaceVolume,surfaceVolume;  // vector de volumes iniciais
-  vector<real> initSurfaceArea,surfaceArea;      // vector de areas iniciais
+  vector<real> initSurfaceVolume,surfaceVolume; // vector de volumes iniciais
+  vector<real> dVolume,errorVolume;  
+  vector<real> initSurfaceArea,surfaceArea; // vector de areas iniciais
+  vector<real> dArea,errorArea;  
   vector<real> triEdge;               // vector de tamanho de aresta 
   vector<real> averageTriLength;    // vector de tamanho de aresta medio
   vector<real> averageTriArea;      // vector de tamanho de aresta medio

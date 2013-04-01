@@ -4371,7 +4371,27 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  //setCentroidVelPosInterface();
 
  // updating old data vectors with the new mesh.
- saveOldData();
+ uSolOld     = uSol;
+ vSolOld     = vSol;
+ wSolOld     = wSol;
+ pSolOld     = pSol;
+ cSolOld     = cSol;
+ uALEOld     = uALE;
+ vALEOld     = vALE;
+ wALEOld     = wALE;
+ fintOld     = fint;
+ gravityOld  = gravity;
+ kappaOld    = kappa;
+ muOld       = mu;
+ rhoOld      = rho;
+ cpOld       = cp;
+ ktOld       = kt;
+ hSmoothOld  = hSmooth;
+ heatFluxOld = heatFluxOld;
+
+ numVertsOld = numVerts;
+ numNodesOld = numNodes;
+ numElemsOld = numElems;
 } // fecha metodo applyLinearInterpolation
 
 

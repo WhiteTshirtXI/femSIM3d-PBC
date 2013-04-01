@@ -180,6 +180,7 @@ class InOut
   void saveKappaErrorTorus(const char* _dir);
   void savePressureError(const char* _dir);
   void saveVolumeError(const char* _dir);
+  void saveVolumeCorrection(const char* _dir);
   void saveOscillatingError(const char* _dir);
   void saveTimeError(const char* _dir);
   void saveParasiticCurrent(const char* _dir);
@@ -246,6 +247,8 @@ private:
   vector<int> numSurfElems,numSurfVerts;
   vector<real> initSurfaceVolume,initSurfaceArea,initSurfaceRadius;
   vector<real> surfaceVolume,surfaceArea,surfaceRadius;
+  vector<real> errorVolume,errorArea;
+  vector<real> dVolume,dArea;
 
   Simulator3D *s;
   real Re,Sc,We,Fr,alpha,beta,simTime;

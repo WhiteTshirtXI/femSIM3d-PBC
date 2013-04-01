@@ -113,8 +113,12 @@ Model3D::Model3D(const Model3D &_mRight)
   // STL: list and vectors
   initSurfaceVolume = _mRight.initSurfaceVolume;
   surfaceVolume = _mRight.surfaceVolume;
+  dVolume = _mRight.dVolume;
+  errorVolume = _mRight.errorVolume;
   initSurfaceArea = _mRight.initSurfaceArea;
   surfaceArea = _mRight.surfaceArea;
+  dArea = _mRight.dArea;
+  errorArea = _mRight.errorArea;
   neighbourElem = _mRight.neighbourElem; 
   neighbourVert = _mRight.neighbourVert;
   neighbourFace = _mRight.neighbourFace;
@@ -7072,7 +7076,11 @@ vector<real> Model3D::getAverageTetVolume(){ return averageTetVolume; }
 
 vector<real> Model3D::getInitSurfaceArea(){return initSurfaceArea;}
 vector<real> Model3D::getInitSurfaceVolume(){return initSurfaceVolume;}
+vector<real> Model3D::getDArea(){return dArea;}
+vector<real> Model3D::getErrorArea(){return errorArea;}
 vector<real> Model3D::getSurfaceArea(){return surfaceArea;}
+vector<real> Model3D::getDVolume(){return dVolume;}
+vector<real> Model3D::getErrorVolume(){return errorVolume;}
 vector<real> Model3D::getSurfaceVolume(){return surfaceVolume;}
 clVector* Model3D::getCloser(){ return &closer; }
 
@@ -8958,14 +8966,22 @@ void Model3D::initMeshParameters()
  averageTriArea.resize(numSurface);   // average surface triangle area
  averageTetVolume.resize(numSurface); // average tetrahedron volume
  tetVol.resize(numSurface);  // recommended tet volume for each region
+ //initSurfaceVolume.resize(numSurface);  // init surface volume
+ //surfaceVolume.resize(numSurface);  // surface volume
  idMinVolume.resize(numSurface);  // ID of min tet volume
  idMaxVolume.resize(numSurface);  // ID of max tet volume
  minVolume.resize(numSurface);    // min tet volume
  maxVolume.resize(numSurface);    // max tet volume     
+ dVolume.resize(numSurface);      // delta volume     
+ errorVolume.resize(numSurface);  // error volume     
+ //initSurfaceArea.resize(numSurface);  // init surface area 
+ //surfaceArea.resize(numSurface);  // surface area 
  idMaxArea.resize(numSurface);    // ID of min tri area   
  idMinArea.resize(numSurface);    // ID of max tri area                            
  maxArea.resize(numSurface);      // min triangle area    
  minArea.resize(numSurface);      // max triangle area                                     
+ dArea.resize(numSurface);        // delta area 
+ errorArea.resize(numSurface);    // error area 
  minLength.resize(numSurface);    // min triangle length
  maxLength.resize(numSurface);    // max triangle length
  numSurfElems.resize(numSurface); // number of surface elements
@@ -8997,14 +9013,22 @@ void Model3D::initMeshParameters()
  fill(averageTriArea.begin(),averageTriArea.end(),0);
  fill(averageTetVolume.begin(),averageTetVolume.end(),0);
  fill(tetVol.begin(),tetVol.end(),0);
+ //fill(initSurfaceVolume.begin(),initSurfaceVolume.end(),0);
+ //fill(surfaceVolume.begin(),surfaceVolume.end(),0);
  fill(maxVolume.begin(),maxVolume.end(),1.0E-20);
  fill(minVolume.begin(),minVolume.end(),1.0E+20);
  fill(idMaxVolume.begin(),idMaxVolume.end(),0);
  fill(idMinVolume.begin(),idMinVolume.end(),0);
+ fill(dVolume.begin(),dVolume.end(),0);
+ fill(errorVolume.begin(),errorVolume.end(),0);
+ //fill(initSurfaceArea.begin(),initSurfaceArea.end(),0);
+ //fill(surfaceArea.begin(),surfaceArea.end(),0);
  fill(maxArea.begin(),maxArea.end(),1.0E-20);
  fill(minArea.begin(),minArea.end(),1.0E+20);
  fill(idMaxArea.begin(),idMaxArea.end(),0);
  fill(idMinArea.begin(),idMinArea.end(),0);
+ fill(dArea.begin(),dArea.end(),0);
+ fill(errorArea.begin(),errorArea.end(),0);
  fill(maxLength.begin(),maxLength.end(),1.0E-20);
  fill(minLength.begin(),minLength.end(),1.0E+20);
  fill(numSurfElems.begin(),numSurfElems.end(),0);
@@ -9404,96 +9428,6 @@ void Model3D::checkLineOrientation()
  }
 }
 
-//--------------------------------------------------
-// void Model3D::applyBubbleVolumeCorrection()
-// {
-//  // surfMesh.elemIdRegion == 0 --> wall
-//  // surfMesh.elemIdRegion == 1 --> bubble 1
-//  // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
-//  for( int nb=1;nb<=surfMesh.elemIdRegion.Max();nb++ )
-//  {
-//   real aux = 0;
-// 
-//   real da = (initSurfaceArea[nb] - surfaceArea[nb]);
-//   real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-// 
-//   real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-//   real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
-// 
-//   real TOL = initSurfaceVolume[nb]*0.00000001;
-// 
-//   int count = 0;
-//   //while( fabs(dv) > 1E-06 )
-//   //while( fabs(da) > 1E-06 )
-//   //while( fabs(dv) > TOL && count < 30 )
-//   while( fabs(errov) > TOL && count < 30 )
-//   {
-//    for( int i=0;i<surface.Dim();i++ )
-//    {
-// 	int surfaceNode = surface.Get(i);
-// 
-// 	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
-// 	{
-// 	 aux = surfMesh.X.Get(surfaceNode) + 
-// 	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
-// 	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-// 	 X.Set(surfaceNode,aux);
-// 	 surfMesh.X.Set(surfaceNode,aux);
-// 
-// 	 aux = surfMesh.Y.Get(surfaceNode) + 
-// 	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
-// 	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-// 	 Y.Set(surfaceNode,aux);
-// 	 surfMesh.Y.Set(surfaceNode,aux);
-// 
-// 	 aux = surfMesh.Z.Get(surfaceNode) + 
-// 	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
-// 	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
-// 	 Z.Set(surfaceNode,aux);
-// 	 surfMesh.Z.Set(surfaceNode,aux);
-// 	}
-//    }
-//    surfaceVolume[nb] = getSurfaceVolume(nb);
-//    surfaceArea[nb] = getSurfaceArea(nb);
-//    da = (initSurfaceArea[nb] - surfaceArea[nb]);
-//    dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-//    erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-//    errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
-//    count++;
-//    //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
-//   }
-//   cout << endl;
-//   cout << setw(20) << color(none,red,black) 
-//                    << "|--------- VOLUME CORRECTION ---------|" << endl;
-//   cout << setw(33) << color(none,white,black) << "|initial: " 
-//                    << initSurfaceVolume[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|final: " << surfaceVolume[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|dv: " << dv << endl;
-//   cout << setw(26) << color(none,white,black) 
-//                    << "volume |error: " << fabs(errov) << endl;
-//   cout << setw(21) << color(none,red,black) 
-//                    << "     ---------------------------- " << endl;
-//   cout << setw(33) << color(none,white,black) << "|initial: " 
-//                    << initSurfaceArea[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|final: " << surfaceArea[nb] << endl;
-//   cout << setw(33) << color(none,white,black) 
-//                    << "|da: " << da << endl;
-//   cout << setw(26) << color(none,white,black) 
-//                    << "  area |error: " << fabs(erroa) << endl;
-//   cout << setw(21) << color(none,red,black) 
-//                    << "     ---------------------------- " << endl;
-//   cout << setw(28) << color(none,white,black) 
-//                    << "number of iterations: " << count << endl;
-//   cout << setw(20) << color(none,red,black) 
-//                    << "|-------------------------------------|" << endl;
-//   cout << resetColor() << endl;
-//  }
-// }
-//-------------------------------------------------- 
-
 /* 
  * Bubble volume correction, print screen and save in file with
  * iteratios
@@ -9510,7 +9444,7 @@ void Model3D::applyBubbleVolumeCorrection()
   ss << nb;
   ss >> str;
 
-  string fileAux = "dat/updateVolume" + str + ".dat";
+  string fileAux = "updateVolume" + str + ".dat";
   const char* filename = fileAux.c_str();
   ifstream testFile( filename );
   ofstream file( filename,ios::app );
@@ -9524,8 +9458,8 @@ void Model3D::applyBubbleVolumeCorrection()
    cout << "Creating file updateVolume" << nb << ".dat" << endl;
    file << "#count" << setw(19) << "volume" 
                     << setw(18) << "area" 
-                    << setw(18) << "errov" 
-                    << setw(18) << "erroa" 
+                    << setw(18) << "errorv" 
+                    << setw(18) << "errora" 
                     << setw(18) << "dv" 
                     << setw(18) << "da" 
      			    << endl;
@@ -9533,28 +9467,28 @@ void Model3D::applyBubbleVolumeCorrection()
 
   real aux = 0;
 
-  real da = (initSurfaceArea[nb] - surfaceArea[nb]);
-  real dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+  dArea[nb] = (initSurfaceArea[nb] - surfaceArea[nb]);
+  dVolume[nb] = (initSurfaceVolume[nb] - surfaceVolume[nb]);
 
-  real erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-  real errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+  errorArea[nb] = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+  errorVolume[nb] = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
 
   real TOL = initSurfaceVolume[nb]*0.00000001;
 
   int count = 0;
-  //while( fabs(dv) > 1E-06 )
-  //while( fabs(da) > 1E-06 )
-  //while( fabs(dv) > TOL && count < 30 )
-  while( fabs(errov) > TOL && count < 30 )
+  //while( fabs(dVolume[nb]) > 1E-06 )
+  //while( fabs(dArea[nb]) > 1E-06 )
+  //while( fabs(dVolume[nb]) > TOL && count < 30 )
+  while( fabs(errorVolume[nb]) > TOL && count < 30 )
   {
   file << setprecision(20) << scientific; 
   file << setw(10) << count << " " 
        << setw(17) << surfaceVolume[nb] << " " 
        << setw(17) << surfaceArea[nb] << " " 
-       << setw(17) << errov << " " 
-       << setw(17) << erroa << " " 
-       << setw(17) << dv << " " 
-       << setw(17) << da << " " 
+       << setw(17) << errorVolume[nb] << " " 
+       << setw(17) << errorArea[nb] << " " 
+       << setw(17) << dVolume[nb] << " " 
+       << setw(17) << dArea[nb] << " " 
        << setw(5) << setprecision(0) << fixed  
        << endl;
 
@@ -9565,33 +9499,33 @@ void Model3D::applyBubbleVolumeCorrection()
 	if( surfMesh.vertIdRegion.Get(surfaceNode) == nb )
 	{
 	 aux = surfMesh.X.Get(surfaceNode) + 
-	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	       surfMesh.xNormal.Get(surfaceNode)*triEdge[nb]*errorVolume[nb];
+	       //surfMesh.xNormal.Get(surfaceNode)*1.1*(dVolume[nb]/fabs(dArea[nb]));
 	 X.Set(surfaceNode,aux);
 	 surfMesh.X.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Y.Get(surfaceNode) + 
-	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	       surfMesh.yNormal.Get(surfaceNode)*triEdge[nb]*errorVolume[nb];
+	       //surfMesh.yNormal.Get(surfaceNode)*1.1*(dVolume[nb]/fabs(dArea[nb]));
 	 Y.Set(surfaceNode,aux);
 	 surfMesh.Y.Set(surfaceNode,aux);
 
 	 aux = surfMesh.Z.Get(surfaceNode) + 
-	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errov;
-	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dv/fabs(da));
+	       surfMesh.zNormal.Get(surfaceNode)*triEdge[nb]*errorVolume[nb];
+	       //surfMesh.zNormal.Get(surfaceNode)*1.1*(dVolume[nb]/fabs(dArea[nb]));
 	 Z.Set(surfaceNode,aux);
 	 surfMesh.Z.Set(surfaceNode,aux);
 	}
    }
    surfaceVolume[nb] = getSurfaceVolume(nb);
    surfaceArea[nb] = getSurfaceArea(nb);
-   da = (initSurfaceArea[nb] - surfaceArea[nb]);
-   dv = (initSurfaceVolume[nb] - surfaceVolume[nb]);
-   erroa = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
-   errov = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
+   dArea[nb] = (initSurfaceArea[nb] - surfaceArea[nb]);
+   dVolume[nb] = (initSurfaceVolume[nb] - surfaceVolume[nb]);
+   errorArea[nb] = (1.0 - surfaceArea[nb]/initSurfaceArea[nb]);
+   errorVolume[nb] = (1.0 - surfaceVolume[nb]/initSurfaceVolume[nb]);
 
    count++;
-   //cout << nb << " " << dv << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
+   //cout << nb << " " << dVolume[nb] << " " << initSurfaceVolume[nb] << " " << surfaceVolume[nb] << endl;
    
   }
   file.close();
@@ -9604,9 +9538,9 @@ void Model3D::applyBubbleVolumeCorrection()
   cout << setw(33) << color(none,white,black) 
                    << "|final: " << surfaceVolume[nb] << endl;
   cout << setw(33) << color(none,white,black) 
-                   << "|dv: " << dv << endl;
+                   << "|dv: " << dVolume[nb] << endl;
   cout << setw(26) << color(none,white,black) 
-                   << "volume |error: " << fabs(errov) << endl;
+                   << "volume |error: " << fabs(errorVolume[nb]) << endl;
   cout << setw(21) << color(none,red,black) 
                    << "     ---------------------------- " << endl;
   cout << setw(33) << color(none,white,black) << "|initial: " 
@@ -9614,9 +9548,9 @@ void Model3D::applyBubbleVolumeCorrection()
   cout << setw(33) << color(none,white,black) 
                    << "|final: " << surfaceArea[nb] << endl;
   cout << setw(33) << color(none,white,black) 
-                   << "|da: " << da << endl;
+                   << "|da: " << dArea[nb] << endl;
   cout << setw(26) << color(none,white,black) 
-                   << "  area |error: " << fabs(erroa) << endl;
+                   << "  area |error: " << fabs(errorArea[nb]) << endl;
   cout << setw(21) << color(none,red,black) 
                    << "     ---------------------------- " << endl;
   cout << setw(28) << color(none,white,black) 

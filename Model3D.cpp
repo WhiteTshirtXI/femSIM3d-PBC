@@ -9444,7 +9444,7 @@ void Model3D::applyBubbleVolumeCorrection()
   ss << nb;
   ss >> str;
 
-  string fileAux = "updateVolume" + str + ".dat";
+  string fileAux = "dat/updateVolume" + str + ".dat";
   const char* filename = fileAux.c_str();
   ifstream testFile( filename );
   ofstream file( filename,ios::app );

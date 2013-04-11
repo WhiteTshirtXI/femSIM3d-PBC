@@ -127,10 +127,10 @@ int main(int argc, char **argv)
    save.saveVonKarman(simFolder,"vk");
    save.saveDiskRadiusError(simFolder,
 	                        "vkError",
-							"../../db/baseState/nuCte/analiticoNuC.dat");
+							"../../db/baseState/nuC/Sc2000/analiticoNuC.dat");
    save.saveDiskError(datFolder,
 	                  "diskError",
-					  "../../db/baseState/nuCte/analiticoNuC.dat");
+					  "../../db/baseState/nuC/Sc2000/analiticoNuC.dat");
    save.saveConvergence(datFolder,"convergence");
 
    s1.saveOldData();

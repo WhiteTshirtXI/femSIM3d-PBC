@@ -117,9 +117,15 @@ int main(int argc, char **argv)
    //s1.setCRHS();
    s1.unCoupled();
    //s1.unCoupledC();
-   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveVonKarman(simFolder,"vk");
+   save.saveDiskRadiusError(simFolder,
+	                        "vkError",
+							"../../db/baseState/nuCte/analiticoNuCte.dat");
+   save.saveDiskError(datFolder,
+	                  "diskError",
+					  "../../db/baseState/nuCte/analiticoNuCte.dat");
    save.saveConvergence(datFolder,"convergence");
 
    s1.saveOldData();

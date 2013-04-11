@@ -464,7 +464,6 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
 {
  IEN = m->getIEN();
  numElems = m->getNumElems();
- simTime = s->getTime();
 
  stringstream ss;  //convertendo int --> string
  string str;
@@ -782,16 +781,17 @@ void InOut::matrixPrint( clDMatrix &_m,const char* _filename )
  matrixFile.close();
 } // fecha metodo matrixPrint para matrizes diagonais
 
-void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
+void InOut::saveVonKarman(const char* _dir,const char* _filename)
 {
  int count = 0;
+ int iter = s->getIter();
  for( int i=0;i<numVerts;i++ )
  {
   if( Z->Get(i) == Z->Min() && Y->Get(i) == 0 )
   {
    stringstream ss1,ss2;  //convertendo int --> string
    string str1,str2;
-   ss1 << _iter;
+   ss1 << iter;
    ss1 >> str1;
    ss2 << count;
    ss2 >> str2;
@@ -870,17 +870,18 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
    count++;
   }
  }
- cout << "von Karman num. " << _iter << " saved in ASCII" << endl;
+ cout << "von Karman num. " << iter << " saved in ASCII" << endl;
 }
 
 void InOut::saveDiskRadiusError(const char* _dir,
                                 const char* _filename,
-								const char* _fileAnalytic,
-								int _iter)
+								const char* _fileAnalytic)
 {
+ int iter = s->getIter();
+
  stringstream ss1;  //convertendo int --> string
  string str1;
- ss1 << _iter;
+ ss1 << iter;
  ss1 >> str1;
 
  string file = _dir;
@@ -1058,7 +1059,7 @@ void InOut::saveDiskRadiusError(const char* _dir,
   inFile.close();
   outFile.close();
   /* ------------------------------------------------ */
- cout << "disk radius num. " << _iter << " saved in ASCII" << endl;
+ cout << "disk radius num. " << iter << " saved in ASCII" << endl;
 }
 
 void InOut::savePert(const char* _dir,const char* _filename,int _iter,
@@ -1167,7 +1168,7 @@ void InOut::saveVortX(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << simTime << endl;
+ vtkFile << s->getTime() << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1248,7 +1249,7 @@ void InOut::saveVortY(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << simTime << endl;
+ vtkFile << s->getTime() << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1329,7 +1330,7 @@ void InOut::saveVortZ(const char* _dir,const char* _filename,int _iter)
  vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
  vtkFile << "FIELD FieldData 2" << endl;
  vtkFile << "TIME 1 1 double" << endl;
- vtkFile << simTime << endl;
+ vtkFile << s->getTime() << endl;
  vtkFile << "ITERATION 1 1 int" << endl;
  vtkFile << _iter << endl;
  vtkFile << endl;
@@ -1396,7 +1397,7 @@ void InOut::saveSimTime(int _iter)
   exit(1);
  }
 
- file << _iter << " " << simTime << endl;
+ file << _iter << " " << s->getTime() << endl;
  file << endl;
 }
 
@@ -1414,7 +1415,7 @@ void InOut::saveSimTime( const char* _dir,const char* _filename, int _iter )
  const char* filename = file.c_str();
 
  ofstream datFile( filename ); 
- datFile << _iter << " " << simTime << endl;
+ datFile << _iter << " " << s->getTime() << endl;
  datFile << endl;
 }
 
@@ -1573,7 +1574,7 @@ void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
  real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << pointX << " " 
                   << pointY << " " 
                   << pointZ << " " 
@@ -1607,7 +1608,7 @@ void InOut::oscillating(int point1,int point2,int point3,const char* _filename)
  real pointZ = wSol->Get(point3);
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << pointX << " " 
                   << pointY << " " 
                   << pointZ << " " 
@@ -1649,7 +1650,7 @@ void InOut::oscillatingD(int point1,int point2,int point3,int point4,
  real diameterZ = fabs( pointZ1-pointZ2 );
                  
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << diameterX << " " 
                   << diameterY << " " 
                   << diameterZ << " " 
@@ -1725,7 +1726,7 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
  real diameterZ = zMax - zMin; 
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << diameterX << " " 
                   << diameterY << " " 
                   << diameterZ << " " 
@@ -1761,7 +1762,7 @@ void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
  real kappaAverage = aux/kappa->Dim();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << kappaAverage << " " 
 				  << setprecision(0) << fixed << _iter 
 				  << endl;
@@ -1969,8 +1970,6 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
 				  << endl;
  }
 
- simTime = s->getTime();
-
  real Ymax1=100;
  real Ymin1=-100;
  real Ymax2=-100;
@@ -1997,7 +1996,7 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
  real dist2 = Ymax2-Ymax1;
 
  file << setprecision(10) << scientific; 
- file << setw(9) <<  simTime << " " << Ymin1 << " " << Ymax1 << " " 
+ file << setw(9) <<  s->getTime() << " " << Ymin1 << " " << Ymax1 << " " 
                                      << Ymin2 << " " << Ymax2 << " " 
 							    	 << dist1 << " " << dist2 << " "
 									 << _iter << endl;
@@ -2141,7 +2140,6 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
 {
  IEN = m->getIEN();
  numElems = m->getNumElems();
- simTime = s->getTime();
 
  stringstream ss;  //convertendo int --> string
  string str;
@@ -2167,7 +2165,7 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
  vtuFile << "FIELD FieldData 2 " << endl;
  vtuFile << "TIME 1 1 double " << endl;
  vtuFile << setprecision(10) << scientific;
- vtuFile << simTime << endl;
+ vtuFile << s->getTime() << endl;
  vtuFile << "ITERATION 1 1 int " << endl;
  vtuFile << setprecision(0) << fixed;
  vtuFile << _iter << endl;
@@ -2313,10 +2311,10 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 				  << setw(17) << "wError" 
 				  << setw(17) << "pError" 
 				  << setw(17) << "cError" 
-				  << setw(17) << "uvwError" 
-				  << setw(17) << "uvwpError" 
-				  << setw(17) << "uvwpcError" 
-				  << setw(10) << "iter" 
+				  << setw(19) << "uvwError" 
+				  << setw(18) << "uvwpError" 
+				  << setw(18) << "uvwpcError" 
+				  << setw(12) << "iter" 
 				  << endl;
  }
 
@@ -2349,7 +2347,7 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
  iter = s->getIter();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
                   << uError << " " 
                   << vError << " " 
                   << wError << " " 
@@ -2357,8 +2355,8 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
                   << cError << " " 
                   << uvwError << " " 
                   << uvwpError << " " 
-                  << uvwpcError << " " 
-                  << iter << " " 
+                  << uvwpcError  
+                  << setw(6) << iter 
 				  << endl;
 
  file.close();
@@ -2537,38 +2535,42 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 // }
 //-------------------------------------------------- 
 
-void InOut::saveDiskError(const char* _dir,const char* _filename )
+void InOut::saveDiskError(const char* _dir,
+                          const char* _filename,const
+						  char* _fileAnalytic)
 {
+ int iter = s->getIter();
  real aux;
  real dist1,dist2;
  clMatrix solFile(2401,5); 
  clVector uExact(numVerts);
  clVector vExact(numVerts);
  clVector wExact(numVerts);
+ //clVector pExact(numVerts);
  clVector cExact(numVerts);
 
- ifstream file( _filename,ios::in );
+ ifstream fileA( _fileAnalytic,ios::in );
 
- if( !file )
+ if( !fileA )
  {
   cerr << "Esta faltando o arquivo de perfis!" << endl;
   exit(1);
  }
 
  // leitura do arquivo e transferencia para matriz
- if( !file.eof() )
+ if( !fileA.eof() )
  {
   for( int i=0;i<solFile.DimI();i++ )
   {
-   file >> aux;
+   fileA >> aux;
    solFile.Set(i,0,aux);
-   file >> aux;
+   fileA >> aux;
    solFile.Set(i,1,aux);
-   file >> aux;
+   fileA >> aux;
    solFile.Set(i,2,aux);
-   file >> aux;
+   fileA >> aux;
    solFile.Set(i,3,aux);
-   file >> aux;
+   fileA >> aux;
    solFile.Set(i,4,aux);
   }
  }
@@ -2599,55 +2601,70 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
  // Z.Max for all radius X 
  // count starts at 1 because 0 and the last radius are not used
  // (boundary nodes)
- stringstream ss1;  //convertendo int --> string
- string str1;
 
- string fileAux = (string) _dir + "diskError" + ".dat";
+ // concatenando nomes para o nome do arquivo final
+ string fileAux = (string) _dir + (string) _filename + ".dat";
  const char* filename = fileAux.c_str();
 
- ofstream errorFile;
- errorFile.open( filename );
-
- errorFile << setprecision(10) << scientific; 
- errorFile << "#F_Error" 
-           << setw(17) << "G_Error"
-		   << setw(18) << "H_Error" 
-		   << setw(18) << "C_Error" 
-		   << setw(20) << "FGH_Error" 
-		   << setw(19) << "FGHC_Error" 
-		   << setw(16) << "numVerts" 
-		   << setw(10) << "numElems" 
-		   << endl;
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  file << "#time" << setw(18) << "uError" 
+				  << setw(17) << "vError"
+				  << setw(17) << "wError" 
+				  //<< setw(17) << "pError" 
+				  << setw(17) << "cError" 
+				  << setw(19) << "uvwError" 
+				  //<< setw(19) << "uvwpError" 
+				  << setw(18) << "uvwcError" 
+				  //<< setw(18) << "uvwpcError" 
+				  << setw(17) << "numVerts" 
+				  << setw(10) << "numNodes" 
+				  << setw(10) << "numElems" 
+				  << setw(8) << "iter" 
+				  << endl;
+ }
 
  real sumUDiff = 0.0;
  real sumVDiff = 0.0;
  real sumWDiff = 0.0;
+ //real sumpDiff = 0.0;
  real sumcDiff = 0.0;
  real sumUVWDiff = 0.0;
+ //real sumUVWpDiff = 0.0;
  real sumUVWcDiff = 0.0;
+ //real sumUVWpcDiff = 0.0;
  real sumU = 0.0;
  real sumV = 0.0;
  real sumW = 0.0;
+ //real sump = 0.0;
  real sumc = 0.0;
  real sumUVW = 0.0;
+ //real sumUVWp = 0.0;
  real sumUVWc = 0.0;
+ //real sumUVWpc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
   real UVW = uSol->Get(i)+
              vSol->Get(i)+
 			 wSol->Get(i); 
-  real UVWc = uSol->Get(i)+
-              vSol->Get(i)+
-			  wSol->Get(i)+
-			  cSol->Get(i); 
+  //real UVWp = UVW + pSol->Get(i); 
+  real UVWc = UVW + cSol->Get(i); 
+  //real UVWpc = UVWp + cSol->Get(i); 
 
   real UVWExact = uExact.Get(i)+
                   vExact.Get(i)+
 				  wExact.Get(i); 
-  real UVWcExact = uExact.Get(i)+
-                   vExact.Get(i)+
-				   wExact.Get(i)+
-				   cExact.Get(i); 
+  //real UVWpExact = UVWExact+pExact.Get(i); 
+  real UVWcExact = UVWExact+cExact.Get(i); 
+  //real UVWpcExact = UVWpExact+cExact.Get(i); 
 
   sumUDiff += (uSol->Get(i)-uExact.Get(i))*
               (uSol->Get(i)-uExact.Get(i));
@@ -2655,13 +2672,19 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
               (vSol->Get(i)-vExact.Get(i));
   sumWDiff += (wSol->Get(i)-wExact.Get(i))*
               (wSol->Get(i)-wExact.Get(i));
+  //sumpDiff += (pSol->Get(i)-pExact.Get(i))*
+  //            (pSol->Get(i)-pExact.Get(i));
   sumcDiff += (cSol->Get(i)-cExact.Get(i))*
               (cSol->Get(i)-cExact.Get(i));
 
   sumUVWDiff += (UVW-UVWExact)*
                 (UVW-UVWExact);
+  //sumUVWpDiff += (UVWp-UVWpExact)*
+  //               (UVWp-UVWpExact);
   sumUVWcDiff += (UVWc-UVWcExact)*
                  (UVWc-UVWcExact);
+  //sumUVWpcDiff += (UVWpc-UVWpcExact)*
+  //                (UVWpc-UVWpcExact);
 
   sumU += uSol->Get(i)*
           uSol->Get(i); 
@@ -2669,13 +2692,19 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
           vSol->Get(i); 
   sumW += wSol->Get(i)*
           wSol->Get(i); 
+  //sump += pSol->Get(i)*
+  //        pSol->Get(i); 
   sumc += cSol->Get(i)*
           cSol->Get(i); 
 
   sumUVW += UVW*
             UVW; 
+  //sumUVWp += UVWp*
+  //           UVWp; 
   sumUVWc += UVWc*
              UVWc; 
+  //sumUVWpc += UVWpc*
+  //            UVWpc; 
  }
 
  /*  
@@ -2683,27 +2712,37 @@ void InOut::saveDiskError(const char* _dir,const char* _filename )
   *  _e = sqrt( --------------------------- )
   *           (      sum( sol[i]^2 )        )
   * */
- real errorU = sqrt( sumUDiff/(sumU+EPS) );
- real errorV = sqrt( sumVDiff/(sumV+EPS) );
- real errorW = sqrt( sumWDiff/(sumW+EPS) );
- real errorc = sqrt( sumcDiff/(sumc+EPS) );
- real errorUVW = sqrt( sumUVWDiff/(sumUVW+EPS) );
- real errorUVWc = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
+ real uError = sqrt( sumUDiff/(sumU+EPS) );
+ real vError = sqrt( sumVDiff/(sumV+EPS) );
+ real wError = sqrt( sumWDiff/(sumW+EPS) );
+ //real pError = sqrt( sumpDiff/(sump+EPS) );
+ real cError = sqrt( sumcDiff/(sumc+EPS) );
+ real uvwError = sqrt( sumUVWDiff/(sumUVW+EPS) );
+ //real uvwpError = sqrt( sumUVWpDiff/(sumUVWp+EPS) );
+ real uvwcError = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
+ //real uvwpcError = sqrt( sumUVWpcDiff/(sumUVWpc+EPS) );
 
- errorFile << errorU 
-           << setw(18) << errorV 
-		   << setw(18) << errorW 
-		   << setw(18) << errorc
-		   << setw(18) << errorUVW
-		   << setw(18) << errorUVWc
-		   << fixed
-		   << setw(10) << numVerts 
-		   << setw(10) << numElems
-		   << endl;
+ iter = s->getIter();
 
+ file << setprecision(10) << scientific; 
+ file << setw(10) << s->getTime() << " " 
+                  << uError << " " 
+                  << vError << " " 
+                  << wError << " " 
+ //                 << pError << " " 
+                  << cError << " " 
+                  << uvwError << " " 
+ //                 << uvwpError << " " 
+                  << uvwcError << " " 
+ //                 << uvwpcError << " " 
+				  << fixed
+				  << setw(9) << numVerts 
+				  << setw(10) << numNodes
+				  << setw(10) << numElems
+				  << setw(8) << iter  
+				  << endl;
 
- errorFile << endl;
- errorFile.close();
+ file.close();
 
  cout << "relative error for disk saved in dat" << endl;
 }
@@ -2841,7 +2880,7 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
  _file << "DATASET UNSTRUCTURED_GRID" << endl;
  _file << "FIELD FieldData 8" << endl;
  _file << "TIME 1 3 double" << endl;
- _file << dt << " " << cfl << " " << simTime << endl;
+ _file << dt << " " << cfl << " " << s->getTime() << endl;
  _file << "ITERATION 1 1 int" << endl;
  _file << _iter << endl;
  _file << "NODES 1 3 int" << endl;
@@ -3545,7 +3584,7 @@ void InOut::printSimulationReport()
  cout << color(none,magenta,black)
       << "          time" << resetColor() 
 	  << ":                                          " 
-	  << simTime << endl;
+	  << s->getTime() << endl;
  cout << "   |                                                                       |" 
       << endl;
  cout << "   |-----------------------------------------------------------------------|" 
@@ -3753,7 +3792,7 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  real fluidArea = totalArea - bubbleArea;
  real voidFraction = bubbleArea/totalArea;
  voidFile << setprecision(10) << scientific;
- voidFile << setw(10) << simTime << " " 
+ voidFile << setw(10) << s->getTime() << " " 
                       << totalArea << " " 
 					  << bubbleArea << " " 
 					  << fluidArea << " " 
@@ -3979,7 +4018,7 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
       << setw(17) << kappaAverage << " " 
       << setw(17) << kappaAnalytic << " " 
       << setw(17) << kappaError << " " 
@@ -4115,7 +4154,7 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
  averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
       << setw(17) << kappaAverage << " " 
       << setw(17) << kappaAnalytic << " " 
       << setw(17) << kappaError << " " 
@@ -4275,7 +4314,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  averageTriLength = m->getAverageTriLength();
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
       << setw(17) << kappaAverage << " " 
       << setw(17) << "spec for each point" << " " 
       << setw(17) << kappaError << " " 
@@ -4387,7 +4426,7 @@ void InOut::savePressureError(const char* _dir)
  real dp = averagePIn-averagePOut;
 
  filePressure << setprecision(10) << scientific; 
- filePressure << setw(10) << simTime << " " 
+ filePressure << setw(10) << s->getTime() << " " 
               << setw(17) << averagePIn << " " 
               << setw(17) << averagePOut << " " 
               << setw(17) << dp << " " 
@@ -4440,7 +4479,7 @@ void InOut::saveVolumeError(const char* _dir)
   }
  
   file << setprecision(10) << scientific; 
-  file << setw(10) << simTime << " " 
+  file << setw(10) << s->getTime() << " " 
        << setw(17) << m->getSurfaceVolume()[nb] << " " 
        << setw(17) << s->getCentroidVelX()[nb] << " " 
        << setw(17) << s->getCentroidVelY()[nb] << " " 
@@ -4491,7 +4530,7 @@ void InOut::saveVolumeCorrection(const char* _dir)
   }
  
   file << setprecision(10) << scientific; 
-  file << setw(10) << simTime << " " 
+  file << setw(10) << s->getTime() << " " 
        << setw(17) << m->getSurfaceVolume()[nb] << " " 
        << setw(17) << m->getErrorVolume()[nb] << " " 
        << setw(17) << m->getSurfaceArea()[nb] << " " 
@@ -4573,7 +4612,7 @@ void InOut::saveOscillatingError(const char* _dir)
  }
 
  fileVel << setprecision(10) << scientific; 
- fileVel << setw(10) << simTime << " " 
+ fileVel << setw(10) << s->getTime() << " " 
          << setw(17) << uMax << " " 
          << setw(17) << uMin << " " 
 		 << setw(17) << vMax << " " 
@@ -4623,7 +4662,7 @@ void InOut::saveOscillatingError(const char* _dir)
  real diameterZ = zMax - zMin; 
 
  fileD << setprecision(10) << scientific; 
- fileD << setw(10) << simTime << " " 
+ fileD << setw(10) << s->getTime() << " " 
        << setw(17) << diameterX << " " 
 	   << setw(17) << diameterY << " " 
 	   << setw(17) << diameterZ << " " 
@@ -4667,7 +4706,7 @@ void InOut::saveTimeError(const char* _dir)
  }
 
  file << setprecision(10) << scientific; 
- file << setw(16) << simTime << " " 
+ file << setw(16) << s->getTime() << " " 
           << setw(17) << s->getDtLagrangian() << " " 
           << setw(17) << s->getDtSemiLagrangian() << " " 
           << setw(17) << s->getDtGravity() << " " 
@@ -4715,7 +4754,7 @@ void InOut::saveParasiticCurrent(const char* _dir)
  uvwMax = max(uvwMax,wMax);
 
  file << setprecision(10) << scientific; 
- file << setw(10) << simTime << " " 
+ file << setw(10) << s->getTime() << " " 
       << setw(17) << uMax << " " 
 	  << setw(17) << vMax << " " 
 	  << setw(17) << wMax << " " 
@@ -4898,7 +4937,7 @@ void InOut::saveFilmThickness(const char* _dir)
  real maxFilmZ = fabs(zMax-zdMax);
 
   file << setprecision(10) << scientific; 
-  file << setw(10) << simTime << " " 
+  file << setw(10) << s->getTime() << " " 
        << setw(17) << minFilmX << " " 
        << setw(17) << minFilmY << " " 
        << setw(17) << minFilmZ << " " 
@@ -4958,7 +4997,7 @@ void InOut::savePoint( const char* _dir,int _point )
  }
  
  filePoint << setprecision(10) << scientific; 
- filePoint << setw(10) << simTime << " " 
+ filePoint << setw(10) << s->getTime() << " " 
            << setw(17) << uSol->Get(_point) << " " 
 		   << setw(17) << vSol->Get(_point) << " " 
 		   << setw(17) << wSol->Get(_point) << " " 

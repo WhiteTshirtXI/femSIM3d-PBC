@@ -124,9 +124,14 @@ int main(int argc, char **argv)
    s1.unCoupled();
    s1.unCoupledC();
    s1.assembleK();
-   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
+   save.saveVonKarman(simFolder,"vk");
+   save.saveDiskRadiusError(simFolder,
+	                        "vkError",
+							"../../db/baseState/nuCte/analiticoNuC.dat");
+   save.saveDiskError(datFolder,
+	                  "diskError",
+					  "../../db/baseState/nuCte/analiticoNuC.dat");
    save.saveConvergence(datFolder,"convergence");
-   save.saveDiskError(datFolder,"../../db/baseState/nuC/Sc2000/analiticoNuC.dat");
 
    s1.saveOldData();
 

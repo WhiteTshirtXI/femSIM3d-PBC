@@ -74,8 +74,8 @@ int main(int argc, char **argv)
  s1.setSolverVelocity(solverV);
  s1.setSolverPressure(solverP);
 
- //s1.init();
- s1.initDiskBaseState("../../db/baseState/nuCte/","analiticoNuCte.dat");
+ s1.init();
+ //s1.initDiskBaseState("../../db/baseState/nuCte/","analiticoNuCte.dat");
 
  s1.setDtEulerian();
  s1.assembleNuCte();
@@ -130,13 +130,14 @@ int main(int argc, char **argv)
    //s1.setCRHS();
    s1.unCoupled();
    //s1.unCoupledC();
-   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
+   save.saveVonKarman(simFolder,"vk");
    save.saveDiskRadiusError(simFolder,
 	                        "vkError",
-							"../../db/baseState/nuCte/analiticoNuCte.dat",
-							i*nR+j+iter);
+							"../../db/baseState/nuCte/analiticoNuCte.dat");
+   save.saveDiskError(datFolder,
+	                  "diskError",
+					  "../../db/baseState/nuCte/analiticoNuCte.dat");
    save.saveConvergence(datFolder,"convergence");
-   save.saveDiskError(datFolder,"../../db/baseState/nuCte/analiticoNuCte.dat");
 
    s1.saveOldData();
 

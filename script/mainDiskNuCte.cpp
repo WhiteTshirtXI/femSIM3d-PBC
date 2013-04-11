@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,6,8);
+ m1.setMeshDisk(6,8,12);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
 #if NUMGLEU == 5
@@ -131,6 +131,10 @@ int main(int argc, char **argv)
    s1.unCoupled();
    //s1.unCoupledC();
    save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
+   save.saveDiskRadiusError(simFolder,
+	                        "vkError",
+							"../../db/baseState/nuCte/analiticoNuCte.dat",
+							i*nR+j+iter);
    save.saveConvergence(datFolder,"convergence");
    save.saveDiskError(datFolder,"../../db/baseState/nuCte/analiticoNuCte.dat");
 

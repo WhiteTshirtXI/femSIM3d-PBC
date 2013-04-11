@@ -147,6 +147,10 @@ class InOut
   void matrixPrint( clDMatrix &_m,const char* _filename );
 
   void saveVonKarman(const char* _dir,const char* _filename,int _iter );
+  void saveDiskRadiusError(const char* _dir,
+                           const char* _filename,
+						   const char* _filename,
+						   int _iter);
   void savePert( const char* _dir,const char* _filename,int _iter, int vertice);
 
   void saveVortX(const char* _dir,const char* _filename,int _iter);

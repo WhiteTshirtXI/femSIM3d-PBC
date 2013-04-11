@@ -121,11 +121,16 @@ int main(int argc, char **argv)
    s1.stepSL();
    s1.setRHS();
    s1.unCoupled();
-   save.saveVonKarman(simFolder,"vk",i*nR+j+iter);
    save.saveVTK(vtkFolder,"sim",i*nR+j+iter);
    save.saveSol(binFolder,"sim",i*nR+j+iter);
+   save.saveVonKarman(simFolder,"vk");
+   save.saveDiskRadiusError(simFolder,
+	                        "vkError",
+							"../../db/baseState/nuCte/analiticoNuZ.dat");
+   save.saveDiskError(datFolder,
+	                  "diskError",
+					  "../../db/baseState/nuCte/analiticoNuZ.dat");
    save.saveConvergence(datFolder,"convergence");
-   save.saveDiskError(datFolder,"../../db/baseState/nuZ/analiticoNuZ.dat");
 
    s1.saveOldData();
 

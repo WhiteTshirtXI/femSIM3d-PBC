@@ -146,11 +146,13 @@ class InOut
    **/
   void matrixPrint( clDMatrix &_m,const char* _filename );
 
-  void saveVonKarman(const char* _dir,const char* _filename,int _iter );
+  void saveVonKarman(const char* _dir,const char* _filename);
+  void saveDiskError(const char* _dir,
+                     const char* _filename,
+					 const char* _fileAnalytic);
   void saveDiskRadiusError(const char* _dir,
                            const char* _filename,
-						   const char* _filename,
-						   int _iter);
+						   const char* _fileAnalytic);
   void savePert( const char* _dir,const char* _filename,int _iter, int vertice);
 
   void saveVortX(const char* _dir,const char* _filename,int _iter);
@@ -172,7 +174,6 @@ class InOut
   void bubblesDistance(const char* _dir,const char* _filename,int _iter);
   void saveMeshInfo(const char* _dir);
   void saveConvergence(const char* _dir,const char* _filename);
-  void saveDiskError(const char* _dir,const char* _filename );
   void chordalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPressure( const char* _dir,const char* _filename, int _iter );
   void crossSectionalPlane(const char* _dir,const char* _filename, int _iter);

@@ -71,7 +71,10 @@ if (mu==0.2857) v_exp(x)=0.34224;
 if (mu==0.1324) v_exp(x)=0.35330;
 if (mu==0.0875) v_exp(x)=0.37504;
 
-fileObj = "../dat/volume1.dat"
+fileObj = "`echo $FEM3D_DIR`/dat/volume1.dat"
+fileObj2 = "`echo $HOME`/projects/python/femSIM3d/bhaga5/dat/volume1.dat"
 plot fileObj using 1:($5*sqrt(g*D)) title 'air water-sugar'\
              with lines ls 3 lw 4,\
+     fileObj2 using 1:($5*sqrt(g*D)) title 'air water-sugar'\
+             with lines ls 2 lw 4,\
      v_exp(x) title 'Bhaga and Weber, 1981' with lines ls 1 lw 3

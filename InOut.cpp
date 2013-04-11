@@ -2611,6 +2611,27 @@ void InOut::saveDiskError(const char* _dir,
   cExact.Set(i,aux);
  }
 
+ // average edge length for the 3D mesh
+ clMatrix *mapEdge = m->getMapEdge();
+ real length = 0;
+ for( int edge=0;edge<mapEdge->DimI();edge++ )
+ {
+  // v1
+  int v1 = mapEdge->Get(edge,4);
+  real p1x=X->Get(v1);
+  real p1y=Y->Get(v1);
+  real p1z=Z->Get(v1);
+
+  // v2
+  int v2 = mapEdge->Get(edge,5);
+  real p2x=X->Get(v2);
+  real p2y=Y->Get(v2);
+  real p2z=Z->Get(v2);
+
+  length += distance(p1x,p1y,p1z,p2x,p2y,p2z);
+ }
+ real avgLength = length/(mapEdge->DimI());
+
  // this loop retrives all the points with Y=0 and Z varying from 0 to
  // Z.Max for all radius X 
  // count starts at 1 because 0 and the last radius are not used
@@ -2639,7 +2660,8 @@ void InOut::saveDiskError(const char* _dir,
 				  //<< setw(19) << "uvwpError" 
 				  << setw(18) << "uvwcError" 
 				  //<< setw(18) << "uvwpcError" 
-				  << setw(17) << "numVerts" 
+				  << setw(18) << "avg_length" 
+				  << setw(16) << "numVerts" 
 				  << setw(10) << "numNodes" 
 				  << setw(10) << "numElems" 
 				  << setw(8) << "iter" 
@@ -2666,59 +2688,65 @@ void InOut::saveDiskError(const char* _dir,
  //real sumUVWpc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
-  real UVW = uSol->Get(i)+
-             vSol->Get(i)+
-			 wSol->Get(i); 
-  //real UVWp = UVW + pSol->Get(i); 
-  real UVWc = UVW + cSol->Get(i); 
-  //real UVWpc = UVWp + cSol->Get(i); 
-
-  real UVWExact = uExact.Get(i)+
-                  vExact.Get(i)+
-				  wExact.Get(i); 
-  //real UVWpExact = UVWExact+pExact.Get(i); 
-  real UVWcExact = UVWExact+cExact.Get(i); 
-  //real UVWpcExact = UVWpExact+cExact.Get(i); 
-
-  sumUDiff += (uSol->Get(i)-uExact.Get(i))*
-              (uSol->Get(i)-uExact.Get(i));
-  sumVDiff += (vSol->Get(i)-vExact.Get(i))*
-              (vSol->Get(i)-vExact.Get(i));
-  sumWDiff += (wSol->Get(i)-wExact.Get(i))*
-              (wSol->Get(i)-wExact.Get(i));
-  //sumpDiff += (pSol->Get(i)-pExact.Get(i))*
-  //            (pSol->Get(i)-pExact.Get(i));
-  sumcDiff += (cSol->Get(i)-cExact.Get(i))*
-              (cSol->Get(i)-cExact.Get(i));
-
-  sumUVWDiff += (UVW-UVWExact)*
-                (UVW-UVWExact);
-  //sumUVWpDiff += (UVWp-UVWpExact)*
-  //               (UVWp-UVWpExact);
-  sumUVWcDiff += (UVWc-UVWcExact)*
-                 (UVWc-UVWcExact);
-  //sumUVWpcDiff += (UVWpc-UVWpcExact)*
-  //                (UVWpc-UVWpcExact);
-
-  sumU += uSol->Get(i)*
-          uSol->Get(i); 
-  sumV += vSol->Get(i)*
-          vSol->Get(i); 
-  sumW += wSol->Get(i)*
-          wSol->Get(i); 
-  //sump += pSol->Get(i)*
-  //        pSol->Get(i); 
-  sumc += cSol->Get(i)*
-          cSol->Get(i); 
-
-  sumUVW += UVW*
-            UVW; 
-  //sumUVWp += UVWp*
-  //           UVWp; 
-  sumUVWc += UVWc*
-             UVWc; 
-  //sumUVWpc += UVWpc*
-  //            UVWpc; 
+  real radius = sqrt( X->Get(i)*X->Get(i) +
+                      Y->Get(i)*Y->Get(i) );
+  // neglecting the solution for radius > 60% of radius_max
+  if( radius < 0.6*Y->Max() )
+  {
+   real UVW = uSol->Get(i)+
+              vSol->Get(i)+
+     		 wSol->Get(i); 
+   //real UVWp = UVW + pSol->Get(i); 
+   real UVWc = UVW + cSol->Get(i); 
+   //real UVWpc = UVWp + cSol->Get(i); 
+   
+   real UVWExact = uExact.Get(i)+
+                   vExact.Get(i)+
+     			  wExact.Get(i); 
+   //real UVWpExact = UVWExact+pExact.Get(i); 
+   real UVWcExact = UVWExact+cExact.Get(i); 
+   //real UVWpcExact = UVWpExact+cExact.Get(i); 
+   
+   sumUDiff += (uSol->Get(i)-uExact.Get(i))*
+               (uSol->Get(i)-uExact.Get(i));
+   sumVDiff += (vSol->Get(i)-vExact.Get(i))*
+               (vSol->Get(i)-vExact.Get(i));
+   sumWDiff += (wSol->Get(i)-wExact.Get(i))*
+               (wSol->Get(i)-wExact.Get(i));
+   //sumpDiff += (pSol->Get(i)-pExact.Get(i))*
+   //            (pSol->Get(i)-pExact.Get(i));
+   sumcDiff += (cSol->Get(i)-cExact.Get(i))*
+               (cSol->Get(i)-cExact.Get(i));
+   
+   sumUVWDiff += (UVW-UVWExact)*
+                 (UVW-UVWExact);
+   //sumUVWpDiff += (UVWp-UVWpExact)*
+   //               (UVWp-UVWpExact);
+   sumUVWcDiff += (UVWc-UVWcExact)*
+                  (UVWc-UVWcExact);
+   //sumUVWpcDiff += (UVWpc-UVWpcExact)*
+   //                (UVWpc-UVWpcExact);
+   
+   sumU += uSol->Get(i)*
+           uSol->Get(i); 
+   sumV += vSol->Get(i)*
+           vSol->Get(i); 
+   sumW += wSol->Get(i)*
+           wSol->Get(i); 
+   //sump += pSol->Get(i)*
+   //        pSol->Get(i); 
+   sumc += cSol->Get(i)*
+           cSol->Get(i); 
+   
+   sumUVW += UVW*
+             UVW; 
+   //sumUVWp += UVWp*
+   //           UVWp; 
+   sumUVWc += UVWc*
+              UVWc; 
+   //sumUVWpc += UVWpc*
+   //            UVWpc; 
+  }
  }
 
  /*  
@@ -2749,6 +2777,7 @@ void InOut::saveDiskError(const char* _dir,
  //                 << uvwpError << " " 
                   << uvwcError << " " 
  //                 << uvwpcError << " " 
+				  << avgLength << " " 
 				  << fixed
 				  << setw(9) << numVerts 
 				  << setw(10) << numNodes

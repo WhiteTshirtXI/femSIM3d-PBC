@@ -873,6 +873,194 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename,int _iter )
  cout << "von Karman num. " << _iter << " saved in ASCII" << endl;
 }
 
+void InOut::saveDiskRadiusError(const char* _dir,
+                                const char* _filename,
+								const char* _fileAnalytic,
+								int _iter)
+{
+ stringstream ss1;  //convertendo int --> string
+ string str1;
+ ss1 << _iter;
+ ss1 >> str1;
+
+ string file = _dir;
+ string aux = _filename;
+ file += aux + "." + str1;
+ const char* filename = file.c_str();
+
+ ofstream vonKarmanFile;
+ vonKarmanFile.open( filename );
+ vonKarmanFile << "#radius" << setw(10)
+               << "U_error" << setw(18)
+               << "V_error" << setw(18)
+               << "W_error" << setw(18)
+               << "c_error" << setw(20)
+               << "UVW_error" << setw(19)
+               << "UVWc_error" << endl;
+
+
+ real auxA;
+ real dist1,dist2;
+ clMatrix solFile(2401,5); 
+ clVector uExact(numVerts);
+ clVector vExact(numVerts);
+ clVector wExact(numVerts);
+ clVector cExact(numVerts);
+
+ ifstream fileA( _fileAnalytic,ios::in );
+
+ if( !fileA )
+ {
+  cerr << "Esta faltando o arquivo de perfis!" << endl;
+  exit(1);
+ }
+
+ // leitura do arquivo e transferencia para matriz
+ if( !fileA.eof() )
+ {
+  for( int i=0;i<solFile.DimI();i++ )
+  {
+   fileA >> auxA;
+   solFile.Set(i,0,auxA);
+   fileA >> auxA;
+   solFile.Set(i,1,auxA);
+   fileA >> auxA;
+   solFile.Set(i,2,auxA);
+   fileA >> auxA;
+   solFile.Set(i,3,auxA);
+   fileA >> auxA;
+   solFile.Set(i,4,auxA);
+  }
+ }
+
+ int j;
+ real omega = 1.0;
+ for( int i=0;i<numVerts;i++ )
+ {
+  for( j=0;j<solFile.DimI()-1;j++ )
+  {
+   dist1 = fabs( Z->Get(i) - solFile(j,0) );
+   dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
+   if( dist2 > dist1 ) break;
+  }
+  auxA = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+  //aux = solFile(j,1); // F
+  uExact.Set(i,auxA); 
+  auxA = ( solFile(j,2)*X->Get(i)+solFile(j,1)*Y->Get(i) )*omega; // G
+  //aux = solFile(j,2); // G
+  vExact.Set(i,auxA);
+  auxA = (-1)*solFile(j,3); // H (positive on file)
+  wExact.Set(i,auxA);
+  auxA = solFile(j,4); // C
+  cExact.Set(i,auxA);
+ }
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( Z->Get(i) == Z->Min() && 
+	  Y->Get(i) == 0 )
+  {
+   real radius = sqrt( X->Get(i)*X->Get(i) +
+                       Y->Get(i)*Y->Get(i) );
+   if( radius > 0 )
+   {
+    real sumUDiff = 0.0;
+    real sumVDiff = 0.0;
+    real sumWDiff = 0.0;
+    real sumcDiff = 0.0;
+    real sumUVWDiff = 0.0;
+    real sumUVWcDiff = 0.0;
+    real sumU = 0.0;
+    real sumV = 0.0;
+    real sumW = 0.0;
+    real sumc = 0.0;
+    real sumUVW = 0.0;
+    real sumUVWc = 0.0;
+    for( int j=0;j<numVerts;j++ )
+    {
+     if( X->Get(j) == X->Get(i) && 
+         Y->Get(j) == Y->Get(i) )
+     {
+      real UVW = uSol->Get(j)+
+                 vSol->Get(j)+
+				 wSol->Get(j); 
+   
+      real UVWc = UVW+cSol->Get(j); 
+     
+      real UVWExact = uExact.Get(j)+
+                      vExact.Get(j)+
+					  wExact.Get(j); 
+   
+      real UVWcExact = UVWExact+cExact.Get(j); 
+     
+      sumUDiff += (uSol->Get(j)-uExact.Get(j))*
+                  (uSol->Get(j)-uExact.Get(j));
+      sumVDiff += (vSol->Get(j)-vExact.Get(j))*
+                  (vSol->Get(j)-vExact.Get(j));
+      sumWDiff += (wSol->Get(j)-wExact.Get(j))*
+                  (wSol->Get(j)-wExact.Get(j));
+      sumcDiff += (cSol->Get(j)-cExact.Get(j))*
+                  (cSol->Get(j)-cExact.Get(j));
+     
+      sumUVWDiff += (UVW-UVWExact)*
+                    (UVW-UVWExact);
+      sumUVWcDiff += (UVWc-UVWcExact)*
+                     (UVWc-UVWcExact);
+     
+      sumU += uSol->Get(j)*
+              uSol->Get(j); 
+      sumV += vSol->Get(j)*
+              vSol->Get(j); 
+      sumW += wSol->Get(j)*
+              wSol->Get(j); 
+      sumc += cSol->Get(j)*
+              cSol->Get(j); 
+     
+      sumUVW += UVW*
+                UVW; 
+      sumUVWc += UVWc*
+                 UVWc; 
+     }
+    }
+    /*  
+     *           (  sum( sol[i] - sol_a )^2    )
+     *  _e = sqrt( --------------------------- )
+     *           (      sum( sol[i]^2 )        )
+     * */
+    real errorU = sqrt( sumUDiff/(sumU+EPS) );
+    real errorV = sqrt( sumVDiff/(sumV+EPS) );
+    real errorW = sqrt( sumWDiff/(sumW+EPS) );
+    real errorc = sqrt( sumcDiff/(sumc+EPS) );
+    real errorUVW = sqrt( sumUVWDiff/(sumUVW+EPS) );
+    real errorUVWc = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
+   
+    vonKarmanFile << setprecision(4) << fixed; 
+    vonKarmanFile << setw(8) << X->Get(i);
+    vonKarmanFile << setprecision(10) << scientific; 
+    vonKarmanFile << setw(18) << errorU 
+                  << setw(18) << errorV 
+                  << setw(18) << errorW 
+                  << setw(18) << errorc 
+                  << setw(18) << errorUVW
+                  << setw(18) << errorUVWc << endl;
+   
+   }
+  }
+ }
+  vonKarmanFile.close();
+  /* ----------- copying to file vk?.last ----------- */
+  ifstream inFile( filename,ios::binary ); 
+
+  string fileCopy = (string) _dir + (string) _filename + "." + "last";
+  const char* filenameCopy = fileCopy.c_str();
+  ofstream outFile( filenameCopy,ios::binary ); 
+
+  outFile << inFile.rdbuf();
+  inFile.close();
+  outFile.close();
+  /* ------------------------------------------------ */
+ cout << "disk radius num. " << _iter << " saved in ASCII" << endl;
+}
+
 void InOut::savePert(const char* _dir,const char* _filename,int _iter,
                      int vertice)
 {

@@ -36,8 +36,8 @@ export TETGEN_DIR=$HOME/Programs/tetgen/1.4.3
 -------------------------- OPTIONAL INSTALL ----------------------------
 # download and install Boost (http://www.boost.org)
 check if python-dev package is installed
-./bootstrap.sh --prefix=$HOME/Programs/boost/1.47.0/;./bjam install
-export BOOST_DIR=$HOME/Programs/boost/1.47.0
+./bootstrap.sh --prefix=$HOME/Programs/boost/1.52.0/;./bjam install
+export BOOST_DIR=$HOME/Programs/boost/1.52.0
 export DYLD_LIBRARY_PATH=${BOOST_DIR}/lib:DYLD_LIBRARY_PATH (Mac OS X)
 export LD_LIBRARY_PATH=${BOOST_DIR}/lib:LD_LIBRARY_PATH (Linux)
 
@@ -50,7 +50,7 @@ $HOME/projects/cpp/femSIM3d
 $HOME/projects/cpp/lib
 $HOME/Programs/petsc/petsc-dev
 $HOME/Programs/tetgen/1.4.3
-$HOME/Programs/boost/1.47.0
+$HOME/Programs/boost/1.52.0
 $HOME/Programs/triangle
 
 # defining some important bash variables (Linux example)

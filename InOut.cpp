@@ -873,6 +873,12 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename)
  cout << "von Karman num. " << iter << " saved in ASCII" << endl;
 }
 
+/* save relative error file by comparing the numerical solution of each
+ * radius to the exact solution given by the semi-analytic result from
+ * Pontes and Mangiavacchi 1D code. The error is given by u,v,w,c,uvw
+ * and uvwc
+ *
+ * */
 void InOut::saveDiskRadiusError(const char* _dir,
                                 const char* _filename,
 								const char* _fileAnalytic)
@@ -2289,7 +2295,10 @@ void InOut::saveVTU( const char* _dir,const char* _filename, int _iter )
 
 } // fecha metodo saveVTU
 
-
+/* save relative error convergence file by comparing two consecutive
+ * time step solution for u,v,w,p,c,uvw,uvwc,uvwp and uvwpc
+ *
+ * */
 void InOut::saveConvergence(const char* _dir,const char* _filename)
 {
  // concatenando nomes para o nome do arquivo final
@@ -2535,6 +2544,11 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 // }
 //-------------------------------------------------- 
 
+/* save relative error file by comparing the numerical solution to the
+ * exact solution given by the semi-analytic result from Pontes and
+ * Mangiavacchi 1D code. The error is given by u,v,w,c,uvw and uvwc
+ *
+ * */
 void InOut::saveDiskError(const char* _dir,
                           const char* _filename,const
 						  char* _fileAnalytic)

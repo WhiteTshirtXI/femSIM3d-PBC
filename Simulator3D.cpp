@@ -2098,14 +2098,12 @@ void Simulator3D::stepALE()
  setInterfaceVelocity();
  //setMassTransfer();
 
-//--------------------------------------------------
-//  // smoothing - velocidade
-//  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
-//  e1.stepSmooth(uALE,vALE,wALE);
-//  uSmooth = *e1.getUSmooth();
-//  vSmooth = *e1.getVSmooth();
-//  wSmooth = *e1.getWSmooth();
-//-------------------------------------------------- 
+ // smoothing - velocidade
+ MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+ e1.stepSmooth(uALE,vALE,wALE);
+ uSmooth = *e1.getUSmooth();
+ vSmooth = *e1.getVSmooth();
+ wSmooth = *e1.getWSmooth();
 
  uSmooth=uALE;
  vSmooth=vALE;
@@ -2182,14 +2180,7 @@ void Simulator3D::stepALE()
  * */
 void Simulator3D::movePoints()
 {
- // movimentando os vertices pontos da malha com velocidade ALE
- m->moveXPoints(uALE,dt);
- m->moveYPoints(vALE,dt);
- m->moveZPoints(wALE,dt);
- m->centroidPositionCorrection();
-
- // correcao do volume da bolha
- m->applyBubbleVolumeCorrection();
+ movePoints(&uALE,&vALE,&wALE);
 }
 
 /* move nodes according to _?vel velocity, which are passed by the user
@@ -2205,10 +2196,10 @@ void Simulator3D::movePoints(clVector *_uVel,
  m->moveXPoints(*_uVel,dt);
  m->moveYPoints(*_vVel,dt);
  m->moveZPoints(*_wVel,dt);
- //m->centroidPositionCorrection();
+ m->centroidPositionCorrection();
 
  // correcao do volume da bolha
- //m->applyBubbleVolumeCorrection();
+ m->applyBubbleVolumeCorrection();
 }
 
 void Simulator3D::setInterfaceVelocity()

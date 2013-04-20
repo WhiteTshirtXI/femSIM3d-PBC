@@ -115,6 +115,7 @@ int main(int argc, char **argv)
    s1.setVALE(s30.getVALE());
    s1.setWALE(s30.getWALE());
    s1.movePoints();
+   m1.setNormalAndKappa();
 
    real field = cos(3.14159265358*time/T);
    cout << endl;
@@ -145,7 +146,6 @@ int main(int argc, char **argv)
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
-  m1.setNormalAndKappa();
   m1.initMeshParameters();
 
   // surface operations
@@ -162,6 +162,9 @@ int main(int argc, char **argv)
 
   m1.setMiniElement();
   m1.restoreMappingArrays();
+  m1.setSurfaceVolume();
+  m1.setSurfaceArea();
+  m1.triMeshStats();
 
   // computing velocity field X^(n+1),time+1 at new nodes too!
   Simulator3D s2(m1,s1);

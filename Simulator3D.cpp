@@ -1753,7 +1753,9 @@ void Simulator3D::stepNoConvection()
  * input: X, Y and Z coordinates
  * output: Sol velocity field
  * */
-void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
+void Simulator3D::stepImposedPeriodicField(const char* _name,
+                                           real _T,
+										   real _time)
 {
  real aux;
  real pi = 3.14159265358;
@@ -1769,12 +1771,12 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
    aux = (-1.0)*sin(pi*X->Get(i))*
 	            sin(pi*X->Get(i))*
 				sin(2*pi*Y->Get(i))*
-				cos(time/T);
+				cos(_time/_T);
    uSol.Set(i,aux);
    aux = sin(pi*Y->Get(i))*
 	     sin(pi*Y->Get(i))*
 		 sin(2*pi*X->Get(i))*
-		 cos(time/T);
+		 cos(_time/_T);
    vSol.Set(i,aux);
    aux = 0.0;
    wSol.Set(i,aux);
@@ -1793,19 +1795,19 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
 	           sin(pi*X->Get(i))*
 			   sin(2*pi*Y->Get(i))*
 			   sin(2*pi*Z->Get(i))*
-			   cos(pi*time/T);
+			   cos(pi*_time/_T);
    uSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*X->Get(i))*
 	            sin(pi*Y->Get(i))*
 				sin(pi*Y->Get(i))*
 				sin(2*pi*Z->Get(i))*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    vSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*X->Get(i))*
 	            sin(2*pi*Y->Get(i))*
 				sin(pi*Z->Get(i))*
 				sin(pi*Z->Get(i))*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    wSol.Set(i,aux);
   }
  }
@@ -1824,16 +1826,16 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
    aux = sin(pi*X->Get(i))*
 		 sin(pi*X->Get(i))*
 		 sin(2.0*pi*Y->Get(i))*
-		 cos(pi*time/T);
+		 cos(pi*_time/_T);
    uSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*X->Get(i))*
 	            sin(pi*Y->Get(i))*
 				sin(pi*Y->Get(i))*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    vSol.Set(i,aux);
    real r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)+
 	               (Y->Get(i)-y0)*(Y->Get(i)-y0) );
-   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*time/T);
+   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*_time/_T);
    wSol.Set(i,aux);
   }
  }
@@ -1842,7 +1844,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
  {
   for( int i=0;i<numVerts;i++ )
   {
-   aux = 1.0*cos(pi*time/T);
+   aux = 1.0*cos(pi*_time/_T);
 
    uSol.Set(i,aux);
    vSol.Set(i,aux);
@@ -1877,7 +1879,8 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,real T)
  * output: SolOld velocity
  * */
 void Simulator3D::stepImposedPeriodicField(const char* _name,
-                                           real T,
+                                           real _T,
+										   real _time,
 										   real _dt)
 {
  real aux;
@@ -1896,12 +1899,12 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
    aux = (-1.0)*sin(pi*Xp)*
 	            sin(pi*Xp)*
 				sin(2*pi*Yp)*
-				cos(time/T);
+				cos(_time/_T);
    uSol.Set(i,aux);
    aux = sin(pi*Yp)*
 	     sin(pi*Yp)*
 		 sin(2*pi*Xp)*
-		 cos(time/T);
+		 cos(_time/_T);
    vSol.Set(i,aux);
    aux = 0.0;
    wSol.Set(i,aux);
@@ -1923,19 +1926,19 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
 	           sin(pi*Xp)*
 			   sin(2*pi*Yp)*
 			   sin(2*pi*Zp)*
-			   cos(pi*time/T);
+			   cos(pi*_time/_T);
    uSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*Xp)*
 	            sin(pi*Yp)*
 				sin(pi*Yp)*
 				sin(2*pi*Zp)*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    vSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*Xp)*
 	            sin(2*pi*Yp)*
 				sin(pi*Zp)*
 				sin(pi*Zp)*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    wSol.Set(i,aux);
   }
  }
@@ -1957,16 +1960,16 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
    aux = sin(pi*Xp)*
 		 sin(pi*Xp)*
 		 sin(2.0*pi*Yp)*
-		 cos(pi*time/T);
+		 cos(pi*_time/_T);
    uSol.Set(i,aux);
    aux = (-1.0)*sin(2*pi*Xp)*
 	            sin(pi*Yp)*
 				sin(pi*Yp)*
-				cos(pi*time/T);
+				cos(pi*_time/_T);
    vSol.Set(i,aux);
    real r0 = sqrt( (Xp-x0)*(Xp-x0)+
 	               (Yp-y0)*(Yp-y0) );
-   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*time/T);
+   aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*_time/_T);
    wSol.Set(i,aux);
   }
  }
@@ -1978,7 +1981,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
    //real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
    //real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
    //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
-   aux = 1.0*cos(pi*time/T);
+   aux = 1.0*cos(pi*_time/_T);
 
    uSol.Set(i,aux);
    vSol.Set(i,aux);
@@ -2644,7 +2647,10 @@ void Simulator3D::saveOldData()
  numVertsOld = numVerts;
  numNodesOld = numNodes;
  numElemsOld = numElems;
+}
 
+void Simulator3D::timeStep()
+{
  time = time + dt;
  iter++;
 }
@@ -3687,13 +3693,16 @@ real Simulator3D::getKt_outAdimen(){return kt_outAdimen;}
 real Simulator3D::getTime(){return time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
-void Simulator3D::setUSol(clVector &_uSol){uSol = _uSol;}
+void Simulator3D::setUSol(clVector *_uSol){uSol = *_uSol;}
+void Simulator3D::setUALE(clVector *_uALE){uALE = *_uALE;}
 clVector* Simulator3D::getVSol(){return &vSol;} 
 clVector* Simulator3D::getVSolOld(){return &vSolOld;} 
-void Simulator3D::setVSol(clVector &_vSol){vSol = _vSol;}
+void Simulator3D::setVSol(clVector *_vSol){vSol = *_vSol;}
+void Simulator3D::setVALE(clVector *_vALE){vALE = *_vALE;}
 clVector* Simulator3D::getWSol(){return &wSol;}
 clVector* Simulator3D::getWSolOld(){return &wSolOld;}
-void Simulator3D::setWSol(clVector &_wSol){wSol = _wSol;}
+void Simulator3D::setWSol(clVector *_wSol){wSol = *_wSol;}
+void Simulator3D::setWALE(clVector *_wALE){wALE = *_wALE;}
 clVector* Simulator3D::getPSol(){return &pSol;}
 clVector* Simulator3D::getPSolOld(){return &pSolOld;}
 clVector* Simulator3D::getCSol(){return &cSol;}

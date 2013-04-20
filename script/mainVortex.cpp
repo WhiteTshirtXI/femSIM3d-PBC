@@ -37,22 +37,17 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 0.0;   // lagrangian
- real c2 = 1.0;   // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
  real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;   // surface smooth cord (fujiwara)
+ real d2 = 0.0;   // surface smooth cord (fujiwara)
 
- real dt = 0.01;
+ real dt = 0.02;
  real T = 3.0;
  real time = 0;
 
  string meshFile = "sphere.msh";
  //string meshFile = "sphere.msh";
 
- //const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
@@ -61,12 +56,6 @@ int main(int argc, char **argv)
 
  Model3D m1;
  Simulator3D s1;
-
- if( (*(argv+1)) == NULL )
- {
-  cout << endl;
-  cout << "--------------> STARTING FROM 0" << endl;
-  cout << endl;
 
  const char *mesh1 = mesh;
  m1.readMSH(mesh1);
@@ -87,167 +76,97 @@ int main(int argc, char **argv)
 
  s1.setDt(dt);
 
- s1.setC1(c1);
- s1.setC2(c2);
- s1.setC3(c3);
  s1.setD1(d1);
  s1.setD2(d2);
- }
- else if( strcmp( *(argv+1),"restart") == 0 )
- {
-  cout << endl;
-  cout << "--------------> RE-STARTING..." << endl;
-  cout << endl;
 
-  // load surface mesh
-  string aux = *(argv+2);
-  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3D();
-
-  s1(m1);
-
-  // load 3D mesh
-  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-
-  m1.readVTK(vtkFile);
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.readVTKHeaviside(vtkFile);
-  m1.setOFace();
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-
-  s1(m1);
-
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
- }
-
- InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTK(vtkFolder,"geometry");
- save.saveVTKSurface(vtkFolder,"geometry");
- save.saveMeshInfo(datFolder);
- save.saveInfo(datFolder,"info",mesh);
-
+ // initial conditions
+ s1.stepImposedPeriodicField("3d",T,s1.getTime()); // X,Y and Z --> Sol(n+1)
 
  int nReMesh = 1;
- while( time <= T )
+ while( time < T )
  {
   for( int j=0;j<nReMesh;j++ )
   {
-
    cout << color(none,magenta,black);
-   cout << "____________________________________ Iteration: " 
-	    << iter << endl << endl;
+   cout << "____________________________________ Iteration: "
+	<< iter << endl << endl;
    cout << resetColor();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   /* predictor-corrector */
-   Simulator3D s20(m1,s1);
-   s20.setDt(dt/2.0);
-   s20.setTime(s1.getTime()+dt/2.0);
-   // in: SolOld^(n),X^(n)
-   // out: Sol^(n+1/2)
-   s20.stepImposedPeriodicField("3d",T,dt/2.0); 
-   s20.saveOldData();
-   s20.stepALE();
-
-   // dt variavel
-   //s20.setDtALESinglePhase()
-   //dt = s20.getDt()
-   //s1.setDt(dt)
-
-   // with ALE(n+1/2)
-   // compute velocity at time step: n+1 using dt
-   s1.movePoints(s20.getUALE(),
-                 s20.getVALE(),
-				 s20.getWALE());
-   s1.setInterfaceGeo();
-   s1.stepImposedPeriodicField("3d",T); // X,Y and Z --> Sol(n+1)
-
    time = s1.getTime();
+
+   // time step: n+1/4
+   Simulator3D s20(m1,s1);
+   real stepTime = dt/4.0;
+   s20.stepImposedPeriodicField("3d",T,time+stepTime,stepTime); // SolOld(n) --> Sol(n+1/2)
+   s20.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
+
+   // time step: n+1/2
+   Simulator3D s30(m1,s20);
+   stepTime = dt/2.0;
+   s30.stepImposedPeriodicField("3d",T,time+stepTime,stepTime); // SolOld(n) --> Sol(n+1/2)
+   s30.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
+   s30.stepALE();         // SolOld(n+1/2) --> ALE(n+1/2)
+
+   // time step: n using ALE(n+1/2)
+   s1.setUALE(s30.getUALE());
+   s1.setVALE(s30.getVALE());
+   s1.setWALE(s30.getWALE());
+   s1.movePoints();
+
    real field = cos(3.14159265358*time/T);
    cout << endl;
    cout << "                             | T:        " << T << endl;
    cout << "                             | dt:       " << dt << endl;
    cout << "                             | time:     " << time << endl;
    cout << "                             | iter:     " << iter << endl;
-   cout << "                             | field:    " << field << endl;  
+   cout << "                             | field:    " << field << endl;
    cout << endl;
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveSol(binFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   save.savePoint(datFolder,0);
-   save.savePoint(datFolder,1);
-   save.savePoint(datFolder,2);
-   save.savePoint(datFolder,3);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData(); // Sol(n+1) --> SolOld(n)
 
+   s1.timeStep();
+
    cout << color(none,magenta,black);
-   cout << "________________________________________ END of " 
-	    << iter << endl << endl;;
+   cout << "________________________________________ END of "
+	<< iter << endl << endl;;
    cout << resetColor();
 
    iter++;
   }
-  Model3D mOld = m1; 
+  Model3D mOld = m1;
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
   m1.setNormalAndKappa();
   m1.initMeshParameters();
 
-  // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
-  //m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume();
-  //m1.removePointsByInterfaceDistance();
-  //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
-  m1.delete3DPoints();
-
   // surface operations
   //m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength();
-
-  //m1.insertPointsByCurvature();
-  //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance();
-  m1.contractEdgeByLength();
+  m1.insertPointsByLength("flat");
+  m1.contractEdgesByLength("flat");
   //m1.removePointsByLength();
-  //m1.flipTriangleEdge();
+  //m1.flipTriangleEdges();
 
-  m1.removePointByNeighbourCheck();
+  //m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
-  m1.setSurfaceConfig();
+  m1.setMiniElement();
+  m1.restoreMappingArrays();
 
+  // computing velocity field X^(n+1),time+1 at new nodes too!
   Simulator3D s2(m1,s1);
+  s2.stepImposedPeriodicField("3d",T,time); // X,Y and Z --> Sol(n+1)
+  s2.saveOldData();
   s1 = s2;
   s1.setCentroidVelPos();
 
@@ -255,6 +174,7 @@ int main(int argc, char **argv)
   saveEnd.printMeshReport();
   saveEnd.saveMeshInfo(datFolder);
  }
+
 
  PetscFinalize();
  return 0;

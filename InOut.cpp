@@ -1826,7 +1826,6 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
  vtkSurfaceScalarHeader(vtkFile);
  vtkSurfaceScalar(vtkFile,"pressure",*pc);
- vtkSurfaceScalar(vtkFile,"concentration",*cc);
  vtkSurfaceVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
@@ -1912,7 +1911,6 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkSurfaceScalarHeader(vtkFile);
  vtkSurfaceScalar(vtkFile,"pressure",*pSol);
- vtkSurfaceScalar(vtkFile,"concentration",*cSol);
  vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
  vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
@@ -1928,7 +1926,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  if( surfMesh->numInterfaces > 0 )
  {
-  vtkSurfaceScalar(vtkFile,"kappa",*kappa);
+  vtkSurfaceScalar(vtkFile,"kappa",surfMesh->curvature);
   vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
   vtkSurfaceVector(vtkFile,"surface_force",*fint);
@@ -3319,12 +3317,12 @@ void InOut::saveBubbleInfo(const char* _dir)
  saveKappaErrorSphere(_dir);       // kappa sphere
  //saveKappaErrorCylinder(_dir);  // kappa cylinder
  //saveKappaErrorTorus(_dir);     // kappa torus
- savePressureError(_dir);       // pressure 
+ //savePressureError(_dir);       // pressure 
  saveVolumeError(_dir);         // bubble volume
  saveVolumeCorrection(_dir);    // volume correction
  saveTimeError(_dir);           // time step
  //saveParasiticCurrent(_dir);   // velocity
- saveFilmThickness(_dir);    // oscillating velocity and diameter
+ //saveFilmThickness(_dir);    // oscillating velocity and diameter
 }
 
 /*

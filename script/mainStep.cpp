@@ -128,6 +128,8 @@ int main(int argc, char **argv)
 
    s1.saveOldData();
 
+   s1.timeStep();
+
    cout << "________________________________________ END of "
 	    << iter << endl;
 

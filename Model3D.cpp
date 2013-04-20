@@ -495,6 +495,9 @@ void Model3D::setInterfaceBC()
  surfMesh.vertIdRegion.Dim(surfMesh.numVerts);
  surfMesh.Marker.Dim(surfMesh.numVerts);
 
+ // mudar para surfMesh.boundary
+ boundaryVert.resize (0);
+
  for( int i=0;i<surfMesh.numElems;i++ )
  {
   int v1 = surfMesh.IEN.Get(i,0);
@@ -512,7 +515,21 @@ void Model3D::setInterfaceBC()
    surfMesh.Marker.Set(v2,aux);
    surfMesh.Marker.Set(v3,aux);
   }
+  else
+  {
+   boundaryVert.push_back(v1);
+   boundaryVert.push_back(v2);
+   boundaryVert.push_back(v3);
+  }
  }
+ boundaryVert.sort();
+ boundaryVert.unique();
+//--------------------------------------------------
+//  cout << "boundaryVert contains:";
+//  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+//   cout << " " << *it;
+//  cout << endl;
+//-------------------------------------------------- 
 }
 
 /**
@@ -1267,7 +1284,7 @@ int Model3D::findEdge(int _v1,int _v2)
  return aux;
 }
 
-void Model3D::insertPointsByLength()
+void Model3D::insertPointsByLength(const char* _interpolation)
 {
  // surfMesh.elemIdRegion == 0 --> wall
  // surfMesh.elemIdRegion == 1 --> bubble 1
@@ -1308,9 +1325,7 @@ void Model3D::insertPointsByLength()
       //curvTest &&
 	  edgeLength > 1.4*triEdge[vertID] ) 
   {
-   //insertSurfacePoint(edge,"flat");
-   insertSurfacePoint(edge,"curvature");
-   //insertSurfacePoint(edge,"bi-curvature");
+   insertSurfacePoint(edge,_interpolation);
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    isp[vertID]++;
@@ -1479,7 +1494,7 @@ void Model3D::removePointsByCurvature()
 // }
 //-------------------------------------------------- 
 
-void Model3D::insertPointsByCurvature()
+void Model3D::insertPointsByCurvature(const char* _interpolation)
 {
  for( int i=0;i<mapEdgeTri.DimI();i++ )
  {
@@ -1496,9 +1511,7 @@ void Model3D::insertPointsByCurvature()
   if( curv1*length > 2.5 || curv2*length > 2.5  )
   {
    cout << "----------- Inserting by curvature..." << endl;
-   //insertSurfacePoint(i,"flat");
-   insertSurfacePoint(i,"curvature");
-   //insertSurfacePoint(i,"bi-curvature");
+   insertSurfacePoint(i,_interpolation);
 
    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
    ispc[vertID]++;
@@ -1507,7 +1520,7 @@ void Model3D::insertPointsByCurvature()
  }
 }
 
-void Model3D::insertPointsByInterfaceDistance()
+void Model3D::insertPointsByInterfaceDistance(const char* _interpolation)
 {
  real Ymax1=100;
  real Ymin1=-100;
@@ -1546,9 +1559,7 @@ void Model3D::insertPointsByInterfaceDistance()
 	  surfMesh.Y.Get(mapEdgeTri.Get(i,1)) > -1.0*aux &&
 	  edgeLength > 4*dy )
   {
-   //insertSurfacePoint(i,"flat");
-   insertSurfacePoint(i,"curvature");
-   //insertSurfacePoint(i,"bi-curvature");
+   insertSurfacePoint(i,_interpolation);
   }
  }
 }
@@ -1749,6 +1760,7 @@ void Model3D::deleteSurfacePoint(int _v)
  Y.Delete(_v);
  Z.Delete(_v);
  heaviside.Delete(_v);
+ curvature.Delete(_v);
  edgeSize.Delete(_v);
  numVerts--;
 
@@ -1760,6 +1772,13 @@ void Model3D::deleteSurfacePoint(int _v)
  surfMesh.zNormal.Delete(_v);
  surfMesh.vertIdRegion.Delete(_v);
  surfMesh.phyBounds.erase(surfMesh.phyBounds.begin()+_v);
+
+ // Eh preciso atualizar os valores de boundaryVert que sao maios que _v
+ // caso _v < boundaryVert.Dimension
+ // pois boundaryVert nao eh uma lista continua de valores.
+ if( (unsigned int) _v < boundaryVert.max_size() )
+ setInterfaceBC();
+
  surfMesh.Marker.Delete(_v);
  surfMesh.numVerts--;
 
@@ -2002,7 +2021,7 @@ void Model3D::setNeighbourSurfacePoint()
   *                 v2                                  v2 
   *
   * */
-void Model3D::flipTriangleEdge()
+void Model3D::flipTriangleEdges()
 {
  /* Triangle quality measure;
   *
@@ -2268,7 +2287,7 @@ void Model3D::flipTriangleEdge()
   *        v1       vAdd      v2         v1                 v2
   *       
   * */
-void Model3D::insertSurfacePoint(int _edge,const char* _mode)
+void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
 {
  int vAdd = surfMesh.numVerts; // aditional vertice
 
@@ -2309,7 +2328,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  real YvAdd = 0.0;
  real ZvAdd = 0.0;
 
- if( strcmp( _mode,"bi-curvature") == 0 ) 
+ if( strcmp( _interpolation,"bi-curvature") == 0 ) 
  {
   clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                              X.Get(v2),Y.Get(v2),Z.Get(v2),
@@ -2330,7 +2349,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
   YvAdd = coordAdd1.Get(1);
   ZvAdd = coordAdd1.Get(2);
  }
- else if( strcmp( _mode,"curvature") == 0 ) 
+ else if( strcmp( _interpolation,"curvature") == 0 ) 
  {
   clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                             X.Get(v2),Y.Get(v2),Z.Get(v2),
@@ -2387,6 +2406,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _mode)
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
  heaviside.AddItem(vAdd,heaviside.Get(v1));
+ curvature.AddItem(vAdd,heaviside.Get(v1));
  edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
  surfMesh.X.AddItem(XvAdd);
@@ -2555,7 +2575,7 @@ void Model3D::removeSurfacePoint(int _node)
  *                v3elem2                          v3elem2                    
  *    
  * */
-void Model3D::contractEdgeByLength()
+void Model3D::contractEdgesByLength(const char* _interpolation)
 {
  // surfMesh.elemIdRegion == 0 --> wall
  // surfMesh.elemIdRegion == 1 --> bubble 1
@@ -2606,7 +2626,7 @@ void Model3D::contractEdgeByLength()
                     neighbourSurfaceElem.at( v3elem2 ).size() > 4);   
 
   //if( elemID > 0 && erro < 0.5*erroS )//&&
-  if( edgeLength < 0.5*triEdge[elemID] &&
+  if( edgeLength < 0.6*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && 
 	  curvTest && 
@@ -2625,9 +2645,7 @@ void Model3D::contractEdgeByLength()
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-   const char* _mode = "curvature";
-
-   if( strcmp( _mode,"curvature") == 0 ) 
+   if( strcmp( _interpolation,"curvature") == 0 ) 
    {
 	// using curvature
 	clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
@@ -2649,7 +2667,7 @@ void Model3D::contractEdgeByLength()
 	Y.Set(v1, YvAdd );
 	Z.Set(v1, ZvAdd );
    }
-   else if( strcmp( _mode,"bi-curvature") == 0 ) 
+   else if( strcmp( _interpolation,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
 	clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
@@ -2686,7 +2704,6 @@ void Model3D::contractEdgeByLength()
    }
    else // flat
    {
-	// flat
 	real XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
 	real YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
 	real ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
@@ -6272,19 +6289,6 @@ SurfaceMesh Model3D::arrangeMesh(SurfaceMesh _tetmesh,int _nVerts,int _begin)
 void Model3D::setInOutVert()
 {
  inVert.resize (0);
- boundaryVert.resize (0);
-
- for(int i=0;i<freeFace.DimI();i++ )
- {
-  int v1 = freeFace.Get(i,2);
-  int v2 = freeFace.Get(i,3);
-  int v3 = freeFace.Get(i,4);
-  boundaryVert.push_back(v1);
-  boundaryVert.push_back(v2);
-  boundaryVert.push_back(v3);
- }
- boundaryVert.sort();
- boundaryVert.unique();
 
  // retira de inVert todos os vertices presents em boundaryVert.
  list<int>::iterator it;
@@ -6798,6 +6802,7 @@ void Model3D::setSurfaceConfig()
 
  setInterfaceDistance();
  setNormalAndKappa();
+ setKappaSurface();
 
  setSurfaceVolume();
  setSurfaceArea();
@@ -8702,64 +8707,10 @@ void Model3D::checkAngleBetweenPlanes()
  * creates these problematic local mesh. Such a point should be
  * removed to avoid mesh problems.
  * */
-void Model3D::removePointByNeighbourCheck()
+void Model3D::removePointsByNeighbourCheck()
 {
  for( int i=0;i<surfMesh.numVerts;i++ )
- {
-  int vertID = surfMesh.vertIdRegion.Get(i);
-  int elemListSize = neighbourSurfaceElem.at( i ).size();
-
-  if( elemListSize < 3 )
-  {
-   removeSurfacePoint(i);
-   cout << "------------- " << color(none,red,black) 
-	<< "removing fake triangle: " << resetColor() 
-	<< i << endl;
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
-   rspn[vertID]++;
-   opersurf[vertID]++;
-  }
-
-  /*
-   * This if removes a surface point when the number of its neighbours
-   * are equal. Usually these points demage the mesh
-   * quality and breaks the simulation flow. 
-   * */
-  if( elemListSize == 3 )
-  {
-   removeSurfacePoint(i);
-
-   cout << "------------- " << color(none,red,black) 
-	<< "removing low-quality point cluster: " << resetColor() 
-	<< i << endl;
-
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
-   rspn[vertID]++;
-   opersurf[vertID]++;
-  }
-
-//--------------------------------------------------
-//   if( elemListSize == 4 && surfMesh.curvature.Get(i) > 50 )
-//   {
-//    removeSurfacePoint(i);
-// 
-//    cout << "------------- " << color(none,magenta,black) 
-// 	    << "removing low-quality triangle with curvature (" 
-// 		<< resetColor() << surfMesh.curvature.Get(i)
-// 		<< color(none,magenta,black) 
-// 		<< ") at (" 
-// 		<< resetColor()
-// 		<< surfMesh.vertIdRegion.Get(i)
-// 		<< color(none,magenta,black) 
-// 		<< "): "
-// 		 << resetColor() << i << endl;
-// 
-//    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
-//    rspn[vertID]++;
-//    opersurf[vertID]++;
-//   }
-//-------------------------------------------------- 
- }
+  removePointByNeighbourCheck(i);
 }
 
 void Model3D::removePointByNeighbourCheck(int _node)

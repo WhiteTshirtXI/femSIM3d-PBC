@@ -69,6 +69,8 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",i*10+j);
 
    s1.saveOldData();
+
+   s1.timeStep();
   }
   //save.saveVTK(vtkFolder,"sim",i*10+j);
   //save.saveSol(binFolder,"bin",i*10+j);

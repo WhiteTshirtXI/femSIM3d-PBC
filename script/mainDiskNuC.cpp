@@ -135,6 +135,8 @@ int main(int argc, char **argv)
 
    s1.saveOldData();
 
+   s1.timeStep();
+
    cout << color(none,magenta,black);
    cout << "________________________________________ END of "
 	    << i*nR+j+iter << endl << endl;;

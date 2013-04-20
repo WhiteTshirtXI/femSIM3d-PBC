@@ -69,15 +69,15 @@ class Model3D
   SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
-  void insertPointsByLength();
-  void insertPointsByCurvature();
+  void insertPointsByLength(const char* _interpolation);
+  void insertPointsByCurvature(const char* _interpolation);
   void removePointsByCurvature();
   void smoothPoint(int _node);
   void smoothPointsByCurvature();
   void checkAngleBetweenPlanes();
-  void insertPointsByInterfaceDistance();
+  void insertPointsByInterfaceDistance(const char* _interpolation);
   void removePointsByLength();
-  void removePointByNeighbourCheck();
+  void removePointsByNeighbourCheck();
   void removePointByNeighbourCheck(int _node);
   void insertPointsByArea();
   void surfaceTriangulator(int _v);
@@ -87,12 +87,12 @@ class Model3D
   void deleteSurfacePoint(int _v);
   void markSurfElemForDeletion(int _elem);
   void deleteSurfaceElements();
-  void insertSurfacePoint(int _edge,const char* _mode);
+  void insertSurfacePoint(int _edge,const char* _interpolation);
   void removeSurfacePoint(int _node);
   void insertPointsBetweenBubblesByPosition();
   list<int> setPolyhedron(list<int> _myList);
-  void flipTriangleEdge();
-  void contractEdgeByLength();
+  void flipTriangleEdges();
+  void contractEdgesByLength(const char* _interpolation);
   int findEdge(int _v1,int _v2);
 
   // 3D points treatment

@@ -70,8 +70,8 @@ class Simulator3D
   void step();
   void stepSL();
   void stepNoConvection();
-  void stepImposedPeriodicField(const char* _name, real T);
-  void stepImposedPeriodicField(const char* _name,real T,real _dt);
+  void stepImposedPeriodicField(const char* _name, real T,real _time);
+  void stepImposedPeriodicField(const char* _name,real T,real _time,real _dt);
   void copyALEtoSol();
   void stepLagrangian();
   void stepLagrangianZ();
@@ -95,6 +95,7 @@ class Simulator3D
   void unCoupledC();
 
   void saveOldData();
+  void timeStep();
 
   void setCoupledBC();
   void setUnCoupledBC();
@@ -195,9 +196,12 @@ class Simulator3D
   real getRho_outAdimen();
   void setUAnt(clVector &_uAnt);
   void setCSol(clVector &_cSol);
-  void setUSol(clVector &_uSol);
-  void setVSol(clVector &_vSol);
-  void setWSol(clVector &_wSol);
+  void setUSol(clVector *_uSol);
+  void setVSol(clVector *_vSol);
+  void setWSol(clVector *_wSol);
+  void setUALE(clVector *_uALE);
+  void setVALE(clVector *_vALE);
+  void setWALE(clVector *_wALE);
   void updateIEN();
   clVector setCentroid(clVector &_vector);
   void setUSol(real _vel);

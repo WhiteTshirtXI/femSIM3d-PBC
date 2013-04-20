@@ -119,6 +119,8 @@ int main(int argc, char **argv)
 
    s1.saveOldData();
 
+   s1.timeStep();
+
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << iter << endl << endl;;
@@ -153,11 +155,11 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength();
-  m1.contractEdgeByLength();
-  m1.flipTriangleEdge();
+  m1.insertPointsByLength("flat");
+  m1.contractEdgesByLength("flat");
+  m1.flipTriangleEdges();
 
-  m1.removePointByNeighbourCheck();
+  m1.removePointsByNeighbourCheck();
   m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

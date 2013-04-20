@@ -31,10 +31,10 @@ int main(int argc, char **argv)
  real d2 = 0.1;  // surface smooth cord (fujiwara)
 
  real dt = 0.01;
+ real time = 0.0;
 
  string meshFile = "sphere.msh";
 
- const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
@@ -90,7 +90,9 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   s1.stepImposedPeriodicField("rotating",0.0);
+   time = s1.getTime();
+
+   s1.stepImposedPeriodicField("rotating",0.0,time);
    s1.stepALE();
    s1.movePoints();
    s1.setInterfaceGeo();
@@ -129,15 +131,15 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength();
-  //m1.insertPointsByCurvature();
+  m1.insertPointsByLength("flat");
+  //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance();
-  m1.contractEdgeByLength();
+  //m1.insertPointsByInterfaceDistance("flat");
+  m1.contractEdgesByLength("flat");
   //m1.removePointsByLength();
-  //m1.flipTriangleEdge();
+  //m1.flipTriangleEdges();
 
-  m1.removePointByNeighbourCheck();
+  m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

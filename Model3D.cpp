@@ -2188,13 +2188,13 @@ void Model3D::flipTriangleEdges()
 //-------------------------------------------------- 
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  //real curv1 = fabs(surfMesh.curvature.Get(v1));
-  //real curv2 = fabs(surfMesh.curvature.Get(v2));
-  //real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
-  //real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+  real curv1 = fabs(surfMesh.curvature.Get(v1));
+  real curv2 = fabs(surfMesh.curvature.Get(v2));
+  real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
 
   // to avoid contraction at high curvature regions
-  //bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
+  bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
 
   // to avoid 3 elem neighbors vertex
   bool neighTest = (neighbourSurfaceElem.at( v1 ).size() > 4 &&  
@@ -2213,7 +2213,7 @@ void Model3D::flipTriangleEdges()
 	  area1+area2  > area3+area4 && // area sum
 	  c1+c2 > c3+c4 &&              // circum radius
 	  //angleNew < angleOld &&
-	  //curvTest &&
+	  curvTest &&
 	  neighTest ) 
   {
    cout << "------------- " << color(none,green,black) 
@@ -2772,34 +2772,59 @@ void Model3D::contractEdgesByLength(const char* _interpolation)
 
 void Model3D::removePointsByLength()
 {
-  for( int i=0;i<mapEdgeTri.DimI();i++ )
-  {
-   // edge vertices
-   int v1 = mapEdgeTri.Get(i,1);
-   int v2 = mapEdgeTri.Get(i,2);
-   int vertID = surfMesh.vertIdRegion.Get(v1);
-
-   // verifying the length of each surface edge
-   if( mapEdgeTri.Get(i,0) < 0.2*triEdge[vertID] ) //&&
+ for( int i=0;i<mapEdgeTri.DimI();i++ )
+ {
+  // edge vertices
+  real edgeLength = mapEdgeTri.Get(i,0);
+  int v1 = mapEdgeTri.Get(i,1);
+  int v2 = mapEdgeTri.Get(i,2);
+  //int v3elem1 = mapEdgeTri.Get(i,3);
+  //int v3elem2 = mapEdgeTri.Get(i,4);
+  int elemID = surfMesh.elemIdRegion.Get(mapEdgeTri.Get(i,5));
+  int vertID = surfMesh.vertIdRegion.Get(v1);
+  //real curv1 = fabs(surfMesh.curvature.Get(v1));
+  //real curv2 = fabs(surfMesh.curvature.Get(v2));
+  //real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  //real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+ 
+  //real minCurv = min(curv1,curv2);
+  //real erro = minCurv*edgeLength;
+  
+  // angle test
+  // bool angleTest = angle > 0.0;
+ 
+  // elemID out of boudary
+  bool elemIDTest = elemID > 0;
+ 
+  // to avoid contraction at high curvature regions
+  //bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
+ 
+ 
+  if( edgeLength < 0.6*triEdge[elemID] &&
+      //erro < 0.03 &&
+      elemIDTest //&& 
+      //curvTest 
+      //angleTest 
+    )
    {
-	// sum of all neighbour edge length of the 1st. point
-	real sumLength1=0;
-	int listSize1 = neighbourPoint.at(v1).size();
-	list<int> plist1 = neighbourPoint.at(v1);
-	list<int>::iterator vert1=plist1.begin();
-	for( int i=0;i<listSize1-1;i++ )
-	{
-	 real P0x = surfMesh.X.Get(v1);
-	 real P0y = surfMesh.Y.Get(v1);
-	 real P0z = surfMesh.Z.Get(v1);
-
-	 int v = *vert1;++vert1;
-	 real P1x = surfMesh.X.Get(v);
-	 real P1y = surfMesh.Y.Get(v);
-	 real P1z = surfMesh.Z.Get(v);
-
-     sumLength1 += distance(P0x,P0y,P0z,P1x,P1y,P1z);
-	}
+	 // sum of all neighbour edge length of the 1st. point
+	 real sumLength1=0;
+	 int listSize1 = neighbourPoint.at(v1).size();
+	 list<int> plist1 = neighbourPoint.at(v1);
+	 list<int>::iterator vert1=plist1.begin();
+	 for( int i=0;i<listSize1-1;i++ )
+	 {
+	  real P0x = surfMesh.X.Get(v1);
+	  real P0y = surfMesh.Y.Get(v1);
+	  real P0z = surfMesh.Z.Get(v1);
+      
+	  int v = *vert1;++vert1;
+	  real P1x = surfMesh.X.Get(v);
+	  real P1y = surfMesh.Y.Get(v);
+	  real P1z = surfMesh.Z.Get(v);
+      
+      sumLength1 += distance(P0x,P0y,P0z,P1x,P1y,P1z);
+	 }
 
 	// sum of all neighbour edge length of the 1st. point
 	real sumLength2=0;

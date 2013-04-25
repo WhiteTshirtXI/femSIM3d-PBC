@@ -50,7 +50,7 @@ set style line 5 pointsize 1.5 lt 10 lw 2
 #-------------------------------------------------- 
 
 N = "last"
-fileObj = "../sim/vk3."
+fileObj = "../sim/vk4."
 #fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuZ/analiticoNuZ.dat"
 fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuC/Sc2000/analiticoNuC.dat"

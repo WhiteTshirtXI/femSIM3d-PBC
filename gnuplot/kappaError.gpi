@@ -8,28 +8,29 @@ set xtic auto                          # set xtics automatically
 set ytic auto                          # set ytics automatically
 #set title "Kappa Error- Convergence Order" 
 set xlabel "edge length (h)" offset 1,0
-set ylabel "curvature error" offset 1,0
-#set ylabel "curvature error ({/Symbol k}_e)" offset 1,0
+#set xrange [0.01:1.0]
+#set ylabel "curvature error" offset 1,0
+set ylabel "curvature error ({/Symbol k}_e)" offset 1,0
+set yrange [1e-04:1e-0]
 set format y "10^{%L}"
 unset grid
+
 
 set key at 0.8,0.001
 set key box linestyle 1
 
-#--------------------------------------------------
-# set terminal postscript enhanced font "Times-Roman,25"
-# set output '| ps2pdf - kappaError.pdf'
-#-------------------------------------------------- 
+set terminal postscript enhanced font "Times-Roman,25"
+set output '| ps2pdf - kappaError.pdf'
 
 set log xy
 
-fileObj = '../kappaSphere.dat'
+fileObj = '../dat/kappa.dat'
 
 f(x)=x
 g(x)=x*x
 set samples 10
 
-plot fileObj using 6:4 title 'numerical' with lines ls 1 lw 3,\
+plot fileObj using 7:4 title 'numerical' with lines ls 1 lw 3,\
      f(x) title 'first order'  with lp ls 4 lw 3,\
 	 g(x) title 'second order' with lp ls 5 lw 3
 

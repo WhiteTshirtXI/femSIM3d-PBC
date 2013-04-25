@@ -440,8 +440,12 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
   wSol.Set(i,aux);
   wSolOld.Set(i,aux);
   aux = CA; // C
-  cSol.Set(i,aux);
-  cSolOld.Set(i,aux);
+
+  if( i < numVerts )
+  {
+   cSol.Set(i,aux);
+   cSolOld.Set(i,aux);
+  }
  }
 }
 

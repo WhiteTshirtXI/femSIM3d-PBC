@@ -2638,6 +2638,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
   if( edgeLength < _param*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && 
+	  v2 > 1435 &&
 	  curvTest && 
 	  neighTest //&& 
 	  //angleTest 

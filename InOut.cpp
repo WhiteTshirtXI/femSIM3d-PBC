@@ -891,8 +891,8 @@ void InOut::saveDiskRadiusError(const char* _dir,
  ss1 >> str1;
 
  string file = _dir;
- string aux = _filename;
- file += aux + "." + str1;
+ string auxF = _filename;
+ file += auxF + "." + str1;
  const char* filename = file.c_str();
 
  ofstream vonKarmanFile;
@@ -905,9 +905,8 @@ void InOut::saveDiskRadiusError(const char* _dir,
                << "UVW_error" << setw(19)
                << "UVWc_error" << endl;
 
-
- real auxA;
- real dist1,dist2;
+ real aux;
+ real L,L1,L2;
  clMatrix solFile(2401,5); 
  clVector uExact(numVerts);
  clVector vExact(numVerts);
@@ -927,40 +926,51 @@ void InOut::saveDiskRadiusError(const char* _dir,
  {
   for( int i=0;i<solFile.DimI();i++ )
   {
-   fileA >> auxA;
-   solFile.Set(i,0,auxA);
-   fileA >> auxA;
-   solFile.Set(i,1,auxA);
-   fileA >> auxA;
-   solFile.Set(i,2,auxA);
-   fileA >> auxA;
-   solFile.Set(i,3,auxA);
-   fileA >> auxA;
-   solFile.Set(i,4,auxA);
+   fileA >> aux;
+   solFile.Set(i,0,aux);
+   fileA >> aux;
+   solFile.Set(i,1,aux);
+   fileA >> aux;
+   solFile.Set(i,2,aux);
+   fileA >> aux;
+   solFile.Set(i,3,aux);
+   fileA >> aux;
+   solFile.Set(i,4,aux);
   }
  }
 
  int j;
  real omega = 1.0;
+ real EPSlocal = 1e-04;
  for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
   {
-   dist1 = fabs( Z->Get(i) - solFile(j,0) );
-   dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
-   if( dist2 > dist1 ) break;
+   L = solFile(j+1,0)-solFile(j,0);
+   L1 = ( Z->Get(i)-solFile(j,0) )/L;
+   L2 = 1.0-L1;
+   if( (L1>=0.0-EPSlocal) && (L1<=1.0+EPSlocal) &&
+       (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
-  auxA = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+  // interpolant
+  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+
+  aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
-  uExact.Set(i,auxA); 
-  auxA = ( solFile(j,2)*X->Get(i)+solFile(j,1)*Y->Get(i) )*omega; // G
+  uExact.Set(i,aux); 
+  aux = ( GA*X->Get(i)+FA*Y->Get(i) )*omega; // G
   //aux = solFile(j,2); // G
-  vExact.Set(i,auxA);
-  auxA = (-1)*solFile(j,3); // H (positive on file)
-  wExact.Set(i,auxA);
-  auxA = solFile(j,4); // C
-  cExact.Set(i,auxA);
+  vExact.Set(i,aux);
+  aux = (-1)*HA; // H (positive on file)
+  wExact.Set(i,aux);
+  aux = CA; // C
+  cExact.Set(i,aux);
  }
+
  for( int i=0;i<numVerts;i++ )
  {
   if( Z->Get(i) == Z->Min() && 
@@ -968,7 +978,10 @@ void InOut::saveDiskRadiusError(const char* _dir,
   {
    real radius = sqrt( X->Get(i)*X->Get(i) +
                        Y->Get(i)*Y->Get(i) );
-   if( radius > 0 )
+
+   // taking only results far from the boundary shell, where the
+   // solution is affected by the boundary pressure = 0
+   if( radius > 0 && radius < 0.45*Y->Max() )
    {
     real sumUDiff = 0.0;
     real sumVDiff = 0.0;
@@ -2553,7 +2566,7 @@ void InOut::saveDiskError(const char* _dir,
 {
  int iter = s->getIter();
  real aux;
- real dist1,dist2;
+ real L,L1,L2;
  clMatrix solFile(2401,5); 
  clVector uExact(numVerts);
  clVector vExact(numVerts);
@@ -2589,23 +2602,33 @@ void InOut::saveDiskError(const char* _dir,
 
  int j;
  real omega = 1.0;
+ real EPSlocal = 1e-04;
  for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
   {
-   dist1 = fabs( Z->Get(i) - solFile(j,0) );
-   dist2 = fabs( Z->Get(i) - solFile(j+1,0) );
-   if( dist2 > dist1 ) break;
+   L = solFile(j+1,0)-solFile(j,0);
+   L1 = ( Z->Get(i)-solFile(j,0) )/L;
+   L2 = 1.0-L1;
+   if( (L1>=0.0-EPSlocal) && (L1<=1.0+EPSlocal) &&
+       (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
-  aux = ( solFile(j,1)*X->Get(i)-solFile(j,2)*Y->Get(i) )*omega; // F
+  // interpolant
+  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+
+  aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
   uExact.Set(i,aux); 
-  aux = ( solFile(j,2)*X->Get(i)+solFile(j,1)*Y->Get(i) )*omega; // G
+  aux = ( GA*X->Get(i)+FA*Y->Get(i) )*omega; // G
   //aux = solFile(j,2); // G
   vExact.Set(i,aux);
-  aux = (-1)*solFile(j,3); // H (positive on file)
+  aux = (-1)*HA; // H (positive on file)
   wExact.Set(i,aux);
-  aux = solFile(j,4); // C
+  aux = CA; // C
   cExact.Set(i,aux);
  }
 

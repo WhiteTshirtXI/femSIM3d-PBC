@@ -45,7 +45,6 @@ int main(int argc, char **argv)
  real time = 0;
 
  string meshFile = "sphere.msh";
- //string meshFile = "sphere.msh";
 
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
@@ -153,13 +152,24 @@ int main(int argc, char **argv)
 
   m1.insertPointsByLength("flat");
   m1.contractEdgesByLength("flat");
+
+  if( time > 1.9 )
+   m1.contractEdgesByLength("flat",0.65);
+  if( time > 2.2 )
+   m1.contractEdgesByLength2("flat",0.7);
+  if( time > 2.3 )
+   m1.contractEdgesByLength2("flat",0.8);
+  if( time > 2.8 )
+   m1.contractEdgesByLength2("flat",1.2);
+
   //m1.removePointsByLength();
-  //m1.flipTriangleEdges();
+  m1.flipTriangleEdges();
 
   //m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
+  m1.setInterfaceBC();
   m1.setMiniElement();
   m1.restoreMappingArrays();
   m1.setSurfaceVolume();

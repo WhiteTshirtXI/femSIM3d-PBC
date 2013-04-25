@@ -379,66 +379,67 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
  init(); 
 
  real aux = 0.0;
- int lines = 2401; // number of lines on the file
- clMatrix solMatrix(lines,5);
-
+ clMatrix solFile(2401,5); 
 
  string file = (string) _dir + (string) _filename;
  const char* filename = file.c_str();
- ifstream solFile( filename,ios::in );
+ ifstream fileA( filename,ios::in );
 
- if( !solFile )
+ if( !fileA )
  {
-  cout << solFile << endl;
-  cerr << "Missing base state file!" << endl;
+  cerr << "Esta faltando o arquivo de perfis!" << endl;
   exit(1);
  }
 
- for( int i=0;i<lines;i++ )
+ // leitura do arquivo e transferencia para matriz
+ if( !fileA.eof() )
  {
-  solFile >> aux;
-  solMatrix.Set(i,0,aux);
-  solFile >> aux;
-  solMatrix.Set(i,1,aux);
-  solFile >> aux;
-  solMatrix.Set(i,2,aux);
-  solFile >> aux;
-  solMatrix.Set(i,3,aux);
-  solFile >> aux;
-  solMatrix.Set(i,4,aux);
+  for( int i=0;i<solFile.DimI();i++ )
+  {
+   fileA >> aux;
+   solFile.Set(i,0,aux);
+   fileA >> aux;
+   solFile.Set(i,1,aux);
+   fileA >> aux;
+   solFile.Set(i,2,aux);
+   fileA >> aux;
+   solFile.Set(i,3,aux);
+   fileA >> aux;
+   solFile.Set(i,4,aux);
+  }
  }
 
- real dist1,dist2;
- int j=0;
- real omega=1.0;
+ int j;
+ real L,L1,L2;
+ real omega = 1.0;
+ real EPSlocal = 1e-04;
  for( int i=0;i<numNodes;i++ )
  {
-  for( j=0;j<lines-1;j++ )
+  for( j=0;j<solFile.DimI()-1;j++ )
   {
-   dist1 = fabs( Z->Get(i) - solMatrix.Get(j,0) );
-   dist2 = fabs( Z->Get(i) - solMatrix.Get(j+1,0) );
-   if( dist2 > dist1 ) break;
+   L = solFile(j+1,0)-solFile(j,0);
+   L1 = ( Z->Get(i)-solFile(j,0) )/L;
+   L2 = 1.0-L1;
+   if( (L1>=0.0-EPSlocal) && (L1<=1.0+EPSlocal) &&
+       (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
-  aux = ( solMatrix.Get(j,1)*X->Get(i)-solMatrix.Get(j,2)*Y->Get(i) )*omega;
+  // interpolant
+  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+
+  aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   uSol.Set(i,aux);
   uSolOld.Set(i,aux);
-  aux = ( solMatrix.Get(j,2)*X->Get(i)+solMatrix.Get(j,1)*Y->Get(i) )*omega;
+  aux = ( GA*X->Get(i)+FA*Y->Get(i) )*omega; // G
   vSol.Set(i,aux);
   vSolOld.Set(i,aux);
-  aux = (-1.0)*solMatrix.Get(j,3);
+  aux = (-1)*HA; // H (positive on file)
   wSol.Set(i,aux);
   wSolOld.Set(i,aux);
- }
-
- for( int i=0;i<numVerts;i++ )
- {
-  for( j=0;j<lines-1;j++ )
-  {
-   dist1 = fabs( Z->Get(i) - solMatrix.Get(j,0) );
-   dist2 = fabs( Z->Get(i) - solMatrix.Get(j+1,0) );
-   if( dist2 > dist1 ) break;
-  }
-  aux = solMatrix.Get(j,4);
+  aux = CA; // C
   cSol.Set(i,aux);
   cSolOld.Set(i,aux);
  }

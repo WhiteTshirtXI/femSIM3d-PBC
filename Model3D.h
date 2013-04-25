@@ -70,6 +70,7 @@ class Model3D
   void setInOutVert();
   void setInOutElem();
   void insertPointsByLength(const char* _interpolation);
+  void insertPointsByLength(const char* _interpolation,real _param);
   void insertPointsByCurvature(const char* _interpolation);
   void removePointsByCurvature();
   void smoothPoint(int _node);
@@ -77,6 +78,7 @@ class Model3D
   void checkAngleBetweenPlanes();
   void insertPointsByInterfaceDistance(const char* _interpolation);
   void removePointsByLength();
+  void removePointsByLength(real _param);
   void removePointsByNeighbourCheck();
   void removePointByNeighbourCheck(int _node);
   void insertPointsByArea();
@@ -93,6 +95,8 @@ class Model3D
   list<int> setPolyhedron(list<int> _myList);
   void flipTriangleEdges();
   void contractEdgesByLength(const char* _interpolation);
+  void contractEdgesByLength(const char* _interpolation,real _param);
+  void contractEdgesByLength2(const char* _interpolation,real _param);
   int findEdge(int _v1,int _v2);
 
   // 3D points treatment

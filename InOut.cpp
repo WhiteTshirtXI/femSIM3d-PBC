@@ -979,9 +979,7 @@ void InOut::saveDiskRadiusError(const char* _dir,
    real radius = sqrt( X->Get(i)*X->Get(i) +
                        Y->Get(i)*Y->Get(i) );
 
-   // taking only results far from the boundary shell, where the
-   // solution is affected by the boundary pressure = 0
-   if( radius > 0 && radius < 0.45*Y->Max() )
+   if( radius > 0 )
    {
     real sumUDiff = 0.0;
     real sumVDiff = 0.0;
@@ -2711,8 +2709,10 @@ void InOut::saveDiskError(const char* _dir,
  {
   real radius = sqrt( X->Get(i)*X->Get(i) +
                       Y->Get(i)*Y->Get(i) );
-  // neglecting the solution for radius > 60% of radius_max
-  if( radius < 0.6*Y->Max() )
+
+  // taking only results far from the boundary shell, where the
+  // solution is affected by the boundary pressure = 0
+  if( radius > 0 && radius < 0.45*Y->Max() )
   {
    real UVW = uSol->Get(i)+
               vSol->Get(i)+

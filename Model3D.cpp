@@ -8604,7 +8604,7 @@ clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
  real fx = 0;
  real fy = 0;
  real fz = 0;
- real sumVoronoiArea = 0;
+ real sumMixedArea = 0;
  real sumXCrossUnit = 0;
  real sumYCrossUnit = 0;
  real sumZCrossUnit = 0;
@@ -8678,41 +8678,42 @@ clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
   sumYCrossUnit += cross.Get(1);
   sumZCrossUnit += cross.Get(2);
 
-  // angles
-  real alpha = acos( (a*a+d*d-b*b)/(2*a*d) );
-  real beta = acos( (c*c+e*e-b*b)/(2*c*e) );
+  // angles (law of cosine)
+  real alpha = acos( -(b*b-d*d-a*a)/(2*d*a) );
+  real beta = acos( -(b*b-c*c-e*e)/(2*c*e) );
 
-  real a1 = acos( (b*b+a*a-d*d)/(2*a*b) );
+  real a1 = acos( -(d*d-a*a-b*b)/(2*a*b) );
   real a2 = alpha;
-  real a3 = acos( (b*b+d*d-a*a)/(2*b*d) );
+  real a3 = acos( -(a*a-b*b-d*d)/(2*b*d) );
 
 //--------------------------------------------------
 //   cout << a1 << " " << a2 << " " << " " << a3 << " " << a1+a2+a3 <<endl;
-//   cout << a4 << " " << alpha << " " << beta <<endl;
+//   cout << alpha << " " << beta << endl;
 //   cout << "----"<< endl;
 //-------------------------------------------------- 
 
-  fx += ( 1.0/tan(alpha)+1.0/tan(beta) )*x2;
-  fy += ( 1.0/tan(alpha)+1.0/tan(beta) )*y2;
-  fz += ( 1.0/tan(alpha)+1.0/tan(beta) )*z2;
+  fx += ( 1.0/tan(alpha)+1.0/tan(beta) )*(x2);
+  fy += ( 1.0/tan(alpha)+1.0/tan(beta) )*(y2);
+  fz += ( 1.0/tan(alpha)+1.0/tan(beta) )*(z2);
 
   // area P0-P1-P2
-  real area1 = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+  real area = getArea(P0x,P0y,P0z,P1x,P1y,P1z,P2x,P2y,P2z);
+  real voronoiArea = (1.0/8.0)*( (a*a/(tan(a3))) + (b*b/(tan(a2))));
 
   // voronoi area
-  if( a1 < 3.14/2.0 && a2 < 3.14/2.0 && a3 && 3.14/2.0 )
-   sumVoronoiArea += (1.0/8.0)*( b*b*1.0/(tan(alpha)+a*a*1.0/(tan(a3))) );
+  if( a1 < 3.1415/2.0 && a2 < 3.1415/2.0 && a3 < 3.1415/2.0 )
+   sumMixedArea += voronoiArea;
   else
-   if( a1 > 3.14/2.0 )
-	sumVoronoiArea += area1/2.0;
+   if( a1 > 3.1415/2.0 )
+	sumMixedArea += area/2.0;
    else
-	sumVoronoiArea += area1/4.0;
+	sumMixedArea += area/4.0;
  }
  mele=_myList.end();
 
- fx = fx/(2*sumVoronoiArea);
- fy = fy/(2*sumVoronoiArea);
- fz = fz/(2*sumVoronoiArea);
+ fx = fx/(2*sumMixedArea);
+ fy = fy/(2*sumMixedArea);
+ fz = fz/(2*sumMixedArea);
 
  real len = vectorLength(sumXCrossUnit,sumYCrossUnit,sumZCrossUnit);
  real xNormalUnit = sumXCrossUnit/len;
@@ -8727,7 +8728,7 @@ clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
  if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
   force = -force;
 
- real pressure = force/2.0;
+ real pressure = force;
 
  clVector vec(4);
  vec.Set(0,pressure);

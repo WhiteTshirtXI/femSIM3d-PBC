@@ -23,6 +23,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  const char *mshFolder  = "./msh/";
+ const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
 
  /* meshes */
@@ -105,6 +106,7 @@ int main(int argc, char **argv)
 
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
+  save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveKappaErrorTorus(datFolder);
   save.saveBubbleInfo(datFolder);
 

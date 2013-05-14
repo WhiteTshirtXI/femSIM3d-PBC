@@ -23,6 +23,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  const char *mshFolder  = "./msh/";
+ const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
 
  /* meshes */
@@ -104,6 +105,7 @@ int main(int argc, char **argv)
   s1.setInterfaceGeo();
 
   InOut save(m1,s1); // cria objeto de gravacao
+  save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveKappaErrorCylinder(datFolder);
   save.saveBubbleInfo(datFolder);

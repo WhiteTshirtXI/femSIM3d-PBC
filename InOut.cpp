@@ -3337,9 +3337,6 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 void InOut::saveBubbleInfo(const char* _dir)
 {
  saveOscillatingError(_dir);    // oscillating velocity and diameter
- saveKappaErrorSphere(_dir);       // kappa sphere
- //saveKappaErrorCylinder(_dir);  // kappa cylinder
- //saveKappaErrorTorus(_dir);     // kappa torus
  //savePressureError(_dir);       // pressure 
  saveVolumeError(_dir);         // bubble volume
  saveVolumeCorrection(_dir);    // volume correction

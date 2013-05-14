@@ -85,7 +85,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh[i]);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
 
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
@@ -97,7 +96,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -106,6 +105,7 @@ int main(int argc, char **argv)
 
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
+  save.saveKappaErrorCylinder(datFolder);
   save.saveBubbleInfo(datFolder);
 
   cout << color(none,magenta,black);

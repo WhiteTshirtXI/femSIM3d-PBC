@@ -80,7 +80,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh[i]);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -91,7 +90,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -131,6 +130,7 @@ int main(int argc, char **argv)
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTK(vtkFolder,"sim",i);
   save.saveVTKSurface(vtkFolder,"sim",i);
+  save.saveKappaErrorSphere(datFolder);
   save.saveBubbleInfo(datFolder);
   save.chordalPressure(datFolder,"chordalPressure",i);
   save.crossSectionalPlane(datFolder,"XZ",i);

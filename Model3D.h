@@ -317,7 +317,6 @@ class Model3D
   real getLength(int _v1,int _v2);
   clMatrix* getOFace();
   clVector* getSurface();
-  clVector* getNonSurface();
   real getXCenter();
   real getYCenter();
   real getZCenter();
@@ -368,7 +367,7 @@ class Model3D
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
   clVector heaviside;
-  clVector surface,nonSurface;
+  clVector surface;
   clMatrix mapEdgeTri,mapEdge;  
   clVector xSurface,ySurface,zSurface;
   clVector closer,xCloser,yCloser,zCloser;

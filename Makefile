@@ -5,8 +5,8 @@
 ## =================================================================== ##
 
 # Compilers
-#CXX = g++ 
-CXX = clang
+CXX = g++ 
+#CXX = clang
 
 # Flags
 CXXFLAGS = -g -fPIC
@@ -38,8 +38,9 @@ all: single-phase two-phase two-phaseHT
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE 
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
-           curvatureTorus curvatureAndPressureSphere \
+           curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
 	       curvatureAndPressureCylinder curvatureAndPressureTorus\
+		   hyperboloid curvatureAndPressureHyperboloid \
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
 		   2Bubbles micro zalesak vortex curvatureTest shear
 
@@ -103,6 +104,9 @@ annular: ${FEM3D_DIR}/script/mainAnnular.o $(obj)
 cylinder: ${FEM3D_DIR}/script/mainCylinder.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+hyperboloid: ${FEM3D_DIR}/script/mainHyperboloid.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 torus: ${FEM3D_DIR}/script/mainTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
@@ -115,6 +119,9 @@ curvatureSphere: ${FEM3D_DIR}/script/mainCurvatureSphere.o $(obj)
 curvatureCylinder: ${FEM3D_DIR}/script/mainCurvatureCylinder.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+curvatureHyperboloid: ${FEM3D_DIR}/script/mainCurvatureHyperboloid.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 curvatureTorus: ${FEM3D_DIR}/script/mainCurvatureTorus.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
@@ -122,6 +129,9 @@ curvatureAndPressureSphere: ${FEM3D_DIR}/script/mainCurvatureAndPressureSphere.o
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 curvatureAndPressureCylinder: ${FEM3D_DIR}/script/mainCurvatureAndPressureCylinder.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+curvatureAndPressureHyperboloid: ${FEM3D_DIR}/script/mainCurvatureAndPressureHyperboloid.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 curvatureAndPressureTorus: ${FEM3D_DIR}/script/mainCurvatureAndPressureTorus.o $(obj)

@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file mainHyperboloid.cpp, created at 15-May-2013           //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
  real Re = 10;
  real We = 1;
- real c1 = 1.0;  // lagrangian
+ real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 0.0;  // smooth coord (fujiwara)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "0.20.msh";
+ string meshFile = "0.15.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/torus/curvature/" + meshFile;
+ meshDir += "/gmsh/3d/hyperboloid/curvature/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -197,7 +197,6 @@ int main(int argc, char **argv)
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   //save.chordalPressure(datFolder,"chordalPressure",iter);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();

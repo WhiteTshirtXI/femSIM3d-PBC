@@ -1938,7 +1938,6 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  if( surfMesh->numInterfaces > 0 )
  {
   vtkSurfaceScalar(vtkFile,"kappa",surfMesh->curvature);
-  vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
   vtkSurfaceVector(vtkFile,"surface_force",*fint);
   vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
@@ -4100,6 +4099,142 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 }
 
 void InOut::saveKappaErrorCylinder(const char* _dir)
+{
+ // kappa
+ string fileAux = (string) _dir + "kappa" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename);
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file kappa.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file kappa.dat" << endl;
+  file << "#time" << setw(29) << "kappa" 
+		    	  << setw(18) << "analytic" 
+		    	  << setw(18) << "error" 
+		    	  << setw(18) << "errorRel" 
+		    	  << setw(18) << "stand deviat" 
+		    	  << setw(14) << "averag edge" 
+				  << setw(14) << "edge/radius" 
+				  << setw(14) << "area" 
+				  << setw(14) << "volume" 
+				  << setw(15) << "averag neigh" 
+		    	  << setw(13) << "num points" 
+		    	  << setw(6) << "iter" 
+				  << endl;
+ }
+
+ /* ------------ Radius calculation ------------ */
+ real xMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+ real diameterX = xMax - xMin; 
+ real diameterZ = zMax - zMin; 
+ real radius = (diameterX+diameterZ)/4.0;
+ /* -------------------------------------------- */
+
+ /* -------------- Kappa Analytic -------------- */
+ real kappaAnalytic = 1.0/radius;
+ /* -------------------------------------------- */
+
+ int countK = 0;
+ real sumKappa = 0;
+ real sumKappaSquare = 0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int node = surface->Get(i);
+  
+  // k=1/R
+  if( (Z->Get(node)<zMax) && 
+	  (Z->Get(node)>zMin) )
+  {
+   sumKappa += surfMesh->curvature.Get(node);
+   sumKappaSquare += surfMesh->curvature.Get(node)*
+	                 surfMesh->curvature.Get(node);
+   countK++;
+  }
+ }
+ real kappaAverage = sumKappa/countK;
+ 
+
+ real sumKappaSD = 0;
+ real sumKappaError = 0;
+ real sumNeighbours = 0;
+ countK = 0;
+ for( int i=0;i<surface->Dim();i++ )
+ {
+  int node = surface->Get(i);
+  
+  // k=1/R
+  if( (Z->Get(node)<zMax) && 
+	  (Z->Get(node)>zMin) )
+  {
+   sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
+                    (surfMesh->curvature.Get(node)-kappaAnalytic);
+   sumKappaSD += (surfMesh->curvature.Get(node)-kappaAverage)*
+                 (surfMesh->curvature.Get(node)-kappaAverage);
+   sumNeighbours += neighbourPoint->at(i).size();
+   countK++;
+  }
+ }
+
+ real kappaError = sqrt( sumKappaError/sumKappaSquare );
+
+ /*
+  *         kappaAverage-kappaAnalytic
+  *  k_r = ----------------------------
+  *               kappaAverage
+  * */
+ real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+
+ real kappaSD = sqrt( sumKappaSD/countK );
+
+ real averageNeigh = sumNeighbours/countK;
+
+ averageTriLength = m->getAverageTriLength();
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << s->getTime() << " " 
+      << setw(17) << kappaAverage << " " 
+      << setw(17) << kappaAnalytic << " " 
+      << setw(17) << kappaError << " " 
+      << setw(17) << kappaErrorRel << " " 
+      << setw(17) << kappaSD << " " 
+	  << setprecision(3) << fixed
+      << setw(13) << averageTriLength[1] << " " 
+	  << setprecision(4) << fixed
+      << setw(13) << averageTriLength[1]/radius << " " 
+	  << setprecision(3) << fixed
+      << setw(14) << surfaceArea[1] << " " 
+      << setw(14) << surfaceVolume[1] << " " 
+      << setw(14) << averageNeigh << " " 
+	  << setprecision(0) << fixed
+	  << setw(12) << countK << " " 
+	  << setw(5) << iter << endl;
+ file.close();
+}
+
+void InOut::saveKappaErrorHyperboloid(const char* _dir)
 {
  // kappa
  string fileAux = (string) _dir + "kappa" + ".dat";

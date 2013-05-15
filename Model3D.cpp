@@ -2510,7 +2510,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
 //-------------------------------------------------- 
 
  // computing curvature
- clVector myVec = getNormalAndKappaByDesbrun(vAdd,
+ clVector myVec = getNormalAndKappa(vAdd,
                     getNeighbourSurfacePoint(vAdd));
  curvature.AddItem(vAdd,myVec.Get(0));
  surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
@@ -2748,7 +2748,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
    restoreMappingArrays();
 
    // computing curvature
-   clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
+   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
    curvature.Set(v1,myVec.Get(0));
    surfMesh.curvature.Set(v1,myVec.Get(0));
    surfMesh.xNormal.Set(v1,myVec.Get(1));
@@ -2942,7 +2942,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
    restoreMappingArrays();
 
    // computing curvature
-   clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
+   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
    curvature.Set(v1,myVec.Get(0));
    surfMesh.curvature.Set(v1,myVec.Get(0));
    surfMesh.xNormal.Set(v1,myVec.Get(1));
@@ -3629,7 +3629,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   //for( int i=0;i<surfMesh.numVerts;i++ )
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
   {
-   clVector myVec = getNormalAndKappaByDesbrun(i,getNeighbourSurfacePoint(i));
+   clVector myVec = getNormalAndKappa(i,getNeighbourSurfacePoint(i));
    real curv = fabs(myVec.Get(0));
   //for( int i=0;i<surfMesh.numVerts;i++ )
    if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
@@ -3640,7 +3640,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
    }
   }
 
-  clVector myVec = getNormalAndKappaByDesbrun(node,getNeighbourSurfacePoint(node));
+  clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
   real xIn = surfMesh.X.Get(node)-0.1*triEdge[nb]*myVec.Get(1);
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
   real zIn = surfMesh.Z.Get(node)-0.1*triEdge[nb]*myVec.Get(3);
@@ -7840,11 +7840,11 @@ void Model3D::setNormalAndKappa()
   int node = surface.Get(i);
 
 //--------------------------------------------------
-//   clVector vec = getNormalAndKappaByDesbrun(node,
+//   clVector vec = getNormalAndKappa(node,
 // 	              getNeighbourSurfacePoint(node));
 //-------------------------------------------------- 
 
-  clVector vec = getNormalAndKappaByDesbrun(node,
+  clVector vec = getNormalAndKappa(node,
 	              getNeighbourSurfacePoint(node));
 
   real force       = vec.Get(0);

@@ -94,7 +94,11 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.setOFace();
-  m1.setSurfaceConfig();
+  m1.restoreMappingArrays();
+  m1.setNormalAndKappa();
+  m1.setKappaSurface();
+  m1.setSurfaceVolume();
+  m1.setSurfaceArea();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
   m1.setGenericBC();

@@ -2510,7 +2510,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
 //-------------------------------------------------- 
 
  // computing curvature
- clVector myVec = getNormalAndKappa(vAdd,
+ clVector myVec = getNormalAndKappaByDesbrun(vAdd,
                     getNeighbourSurfacePoint(vAdd));
  curvature.AddItem(vAdd,myVec.Get(0));
  surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
@@ -2748,7 +2748,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
    restoreMappingArrays();
 
    // computing curvature
-   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
+   clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
    curvature.Set(v1,myVec.Get(0));
    surfMesh.curvature.Set(v1,myVec.Get(0));
    surfMesh.xNormal.Set(v1,myVec.Get(1));
@@ -2942,7 +2942,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
    restoreMappingArrays();
 
    // computing curvature
-   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
+   clVector myVec = getNormalAndKappaByDesbrun(v1,getNeighbourSurfacePoint(v1));
    curvature.Set(v1,myVec.Get(0));
    surfMesh.curvature.Set(v1,myVec.Get(0));
    surfMesh.xNormal.Set(v1,myVec.Get(1));
@@ -3629,7 +3629,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
   //for( int i=0;i<surfMesh.numVerts;i++ )
   for( int i=surfMesh.numVerts-1;i>=0;i-- )
   {
-   clVector myVec = getNormalAndKappa(i,getNeighbourSurfacePoint(i));
+   clVector myVec = getNormalAndKappaByDesbrun(i,getNeighbourSurfacePoint(i));
    real curv = fabs(myVec.Get(0));
   //for( int i=0;i<surfMesh.numVerts;i++ )
    if( surfMesh.vertIdRegion.Get(i) == nb && curv < 20 )
@@ -3640,7 +3640,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
    }
   }
 
-  clVector myVec = getNormalAndKappa(node,getNeighbourSurfacePoint(node));
+  clVector myVec = getNormalAndKappaByDesbrun(node,getNeighbourSurfacePoint(node));
   real xIn = surfMesh.X.Get(node)-0.1*triEdge[nb]*myVec.Get(1);
   real yIn = surfMesh.Y.Get(node)-0.1*triEdge[nb]*myVec.Get(2);
   real zIn = surfMesh.Z.Get(node)-0.1*triEdge[nb]*myVec.Get(3);
@@ -7780,17 +7780,38 @@ clVector Model3D::getNormalAndKappa(int _node,list<int> _myList)
  real zNormalUnit = sumZCrossUnit/len;
 
  // intensidade da forca resultante
- real force = -sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+ real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) )/sumArea;
 
- // teste para saber o sentido correto de aplicacao da
- // pressao no noh.
- if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
+//--------------------------------------------------
+//  if( _node == 55 )
+//  {
+//   cout << "force: " << fx << "," << fy << "," << fz << endl;
+//   cout << "normal: " << xNormalUnit << "," << yNormalUnit << "," <<
+//    zNormalUnit << endl;
+//  cout << "dot: " << dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) << endl;
+//  }
+//-------------------------------------------------- 
+
+ /* This if statement test weather the curvature (force) will be set
+  * to negative or positive following the three cases based on the
+  * normal componentes ({x,y,z}NormalUnit) and the computed force
+  * (f{x,y,z}):
+  *
+  *       \              |             /
+  *        \     N       |    N       /    N
+  *   <---  ) --->       | --->      (  --->
+  *   f    /             |            \ --->
+  *       /              |  f=0        \   f
+  *
+  *   dotProd < 0     dotProd = 0   dotProd > 0
+  *   force > 0       force = 0     force < 0
+  *
+  * */
+ if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) > 0.0 )
   force = -force;
 
- real pressure = force/sumArea;
-
  clVector vec(4);
- vec.Set(0,pressure);    // curvature
+ vec.Set(0,force);       // curvature
  vec.Set(1,xNormalUnit); // x normal
  vec.Set(2,yNormalUnit); // y normal
  vec.Set(3,zNormalUnit); // z normal
@@ -7819,14 +7840,14 @@ void Model3D::setNormalAndKappa()
   int node = surface.Get(i);
 
 //--------------------------------------------------
-//   clVector vec = getNormalAndKappa(node,
+//   clVector vec = getNormalAndKappaByDesbrun(node,
 // 	              getNeighbourSurfacePoint(node));
 //-------------------------------------------------- 
 
-  clVector vec = getNormalAndKappa(node,
+  clVector vec = getNormalAndKappaByDesbrun(node,
 	              getNeighbourSurfacePoint(node));
 
-  real pressure    = vec.Get(0);
+  real force       = vec.Get(0);
   real xNormalUnit = vec.Get(1);
   real yNormalUnit = vec.Get(2);
   real zNormalUnit = vec.Get(3);
@@ -7834,7 +7855,7 @@ void Model3D::setNormalAndKappa()
   surfMesh.xNormal.Set(node,xNormalUnit);
   surfMesh.yNormal.Set(node,yNormalUnit);
   surfMesh.zNormal.Set(node,zNormalUnit);
-  surfMesh.curvature.Set(node,pressure);
+  surfMesh.curvature.Set(node,force);
 
 //--------------------------------------------------
 //   if( node == 2 )
@@ -7849,7 +7870,7 @@ void Model3D::setNormalAndKappa()
 //    cout << "xN: " << surfMesh.X.Get(node) + xNormalUnit << endl;
 //    cout << "yN: " << surfMesh.Y.Get(node) + yNormalUnit << endl;
 //    cout << "zN: " << surfMesh.Z.Get(node) + zNormalUnit << endl;
-//    cout << "pressure: " << pressure << endl;
+//    cout << "force: " << force << endl;
 //    list<int> neighPoint = getNeighbourSurfacePoint(node);
 //    for (list<int>::iterator it=neighPoint.begin(); it!=neighPoint.end(); ++it)
 // 	cout << *it << " ";
@@ -8720,21 +8741,32 @@ clVector Model3D::getNormalAndKappaByDesbrun(int _node,list<int> _myList)
  real yNormalUnit = sumYCrossUnit/len;
  real zNormalUnit = sumZCrossUnit/len;
 
- // intensidade da forca resultante
- real force = -sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
+ // resulting force (already divided by 2*area)
+ real force = sqrt( (fx*fx)+(fy*fy)+(fz*fz) );
 
- // teste para saber o sentido correto de aplicacao da
- // pressao no noh.
- if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) < 0.0 )
+ /* This if statement test weather the curvature (force) will be set
+  * to negative or positive following the three cases based on the
+  * normal componentes ({x,y,z}NormalUnit) and the computed force
+  * (f{x,y,z}):
+  *
+  *       \              |             /
+  *        \     N       |    N       /    N
+  *   <---  ) --->       | --->      (  --->
+  *   f    /             |            \ --->
+  *       /              |  f=0        \   f
+  *
+  *   dotProd < 0     dotProd = 0   dotProd > 0
+  *   force > 0       force = 0     force < 0
+  *
+  * */
+ if( dotProd(fx,fy,fz,xNormalUnit,yNormalUnit,zNormalUnit) > 0.0 )
   force = -force;
 
- real pressure = force;
-
  clVector vec(4);
- vec.Set(0,pressure);
- vec.Set(1,xNormalUnit);
- vec.Set(2,yNormalUnit);
- vec.Set(3,zNormalUnit);
+ vec.Set(0,force);       // curvature
+ vec.Set(1,xNormalUnit); // x normal
+ vec.Set(2,yNormalUnit); // y normal
+ vec.Set(3,zNormalUnit); // z normal
 
  return vec;
 } // fecha metodo getNormalAndKappaByDesbrun
@@ -9446,26 +9478,27 @@ void Model3D::setNormalAndKappa2D()
   yNormalUnit = yNormalUnit/len;
 
   // intensidade da forca resultante
-  real force = sqrt( (fx*fx)+(fy*fy) );
+  real force = sqrt( (fx*fx)+(fy*fy) )/sumLength;
 
-  // aplicando o teste para saber o sentido correto de aplicacao da
-  // pressao no noh.
-  if( (fx*xNormalUnit+fy*yNormalUnit) > 0.0 )
-   force = -force;
+ /* This if statement test weather the curvature (force) will be set
+  * to negative or positive following the three cases based on the
+  * normal componentes ({x,y,z}NormalUnit) and the computed force
+  * (f{x,y,z}):
+  *
+  *       \              |             /
+  *        \     N       |    N       /    N
+  *   <---  ) --->       | --->      (  --->
+  *   f    /             |            \ --->
+  *       /              |  f=0        \   f
+  *
+  *   dotProd < 0     dotProd = 0   dotProd > 0
+  *   force > 0       force = 0     force < 0
+  *
+  * */
+ if( dotProd(fx,fy,xNormalUnit,yNormalUnit) > 0.0 )
+  force = -force;
 
-  real pressure = force/sumLength;
-//--------------------------------------------------
-//   cout << v0 << " " 
-//        << v1 << " "
-//        << v2 << " "
-// 	   << fx << " "
-// 	   << fy << " "
-// 	   << xNormalUnit << " "
-// 	   << yNormalUnit << " "
-// 	   << pressure << endl;
-//-------------------------------------------------- 
-
-  surfMesh.curvature.Set(v0,fabs(pressure));
+  surfMesh.curvature.Set(v0,force);
   surfMesh.xNormal.Set(v0,xNormalUnit);
   surfMesh.yNormal.Set(v0,yNormalUnit);
   //surfMesh.zNormal.Set(v0,surfMesh.zNormal.Get(v0));

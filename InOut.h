@@ -182,6 +182,7 @@ class InOut
   void saveBubbleInfo(const char* _dir);
   void saveKappaErrorSphere(const char* _dir);
   void saveKappaErrorCylinder(const char* _dir);
+  void saveKappaErrorHyperboloid(const char* _dir);
   void saveKappaErrorTorus(const char* _dir);
   void savePressureError(const char* _dir);
   void saveVolumeError(const char* _dir);

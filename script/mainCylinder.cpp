@@ -85,9 +85,7 @@ int main(int argc, char **argv)
   s1(m1);
 
   s1.setRe(Re);
-  s1.setSc(Sc);
   s1.setWe(We);
-  s1.setFr(Fr);
   s1.setC1(c1);
   s1.setC2(c2);
   s1.setC3(c3);

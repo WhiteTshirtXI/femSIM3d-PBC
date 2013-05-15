@@ -1836,8 +1836,12 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  //vtkSurfaceCellNormalVector(vtkFile,"cell_normal_test");
 
  vtkSurfaceScalarHeader(vtkFile);
- vtkSurfaceScalar(vtkFile,"pressure",*pc);
- vtkSurfaceVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
+
+ if( pc->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"pressure",*pc);
+
+ if( uc->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"boundary_velocity",*uc,*vc,*wc);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
@@ -1846,13 +1850,18 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
  if( heaviside->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
 
+ if( surfMesh->curvature.Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"kappa",surfMesh->curvature);
+
  if( edgeSize->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
+ if( surfMesh->xNormal.Dim() > 0 )
   vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
 	                                      surfMesh->yNormal,
 						     			  surfMesh->zNormal);
 
+ if( interfaceDistance->Dim() > 0 )
  vtkSurfaceScalar(vtkFile,"distance",*interfaceDistance);
 
  vtkFile.close();
@@ -1921,9 +1930,15 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  //vtkSurfaceCellNormalVector(vtkFile,"cell_normal_test");
 
  vtkSurfaceScalarHeader(vtkFile);
- vtkSurfaceScalar(vtkFile,"pressure",*pSol);
- vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
- vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ if( pSol->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"pressure",*pSol);
+
+ if( uSol->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+
+ if( uALE->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
 
  // este if existe pois nem todos os metodos tem cc
  if( cc->Dim() > 0 )
@@ -1935,18 +1950,25 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
  if( edgeSize->Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
 
- if( surfMesh->numInterfaces > 0 )
- {
+ if( surfMesh->curvature.Dim() > 0 )
   vtkSurfaceScalar(vtkFile,"kappa",surfMesh->curvature);
+
+ if( gravity->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"surface_force",*fint);
+
+ if( surfMesh->xNormal.Dim() > 0 )
   vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
 	                                      surfMesh->yNormal,
 						     			  surfMesh->zNormal);
- }
 
- vtkSurfaceScalar(vtkFile,"viscosity",*mu);
- vtkSurfaceScalar(vtkFile,"density",*rho);
+ if( mu->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"viscosity",*mu);
+
+ if( rho->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"density",*rho);
 
  vtkFile.close();
 
@@ -2967,7 +2989,12 @@ void InOut::vtkHeader(ofstream& _file,int _iter)
   _file << "CHARACTERISTICLENGTH 1 " << surfMesh->elemIdRegion.Max()+1
         << " float" << endl;
   for( int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
+  {
+   if( isnan(triEdge[nb]) )
+   _file << 0.0 << " ";
+   else
    _file << triEdge[nb] << " ";
+  }
   _file << endl;
  }
  else 
@@ -3235,9 +3262,9 @@ void InOut::saveMSH( const char* _dir,const char* _filename )
 
  mshFile << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
-  mshFile << i+1 << " " << X->Get(i) << " " 
-                        << Y->Get(i) << " " 
-						<< Z->Get(i) << endl;
+  mshFile << i+1 << " " << surfMesh->X.Get(i) << " " 
+                        << surfMesh->Y.Get(i) << " " 
+						<< surfMesh->Z.Get(i) << endl;
 
  mshFile << "$EndNodes" << endl;
  mshFile << "$Elements" << endl;
@@ -3297,9 +3324,9 @@ void InOut::saveMSH( const char* _dir,const char* _filename, int _iter )
 
  mshFile << setprecision(10) << scientific;
  for( int i=0;i<surfMesh->numVerts;i++ )
-  mshFile << i+1 << " " << X->Get(i) << " " 
-                        << Y->Get(i) << " " 
-						<< Z->Get(i) << endl;
+  mshFile << i+1 << " " << surfMesh->X.Get(i) << " " 
+                        << surfMesh->Y.Get(i) << " " 
+						<< surfMesh->Z.Get(i) << endl;
 
  mshFile << "$EndNodes" << endl;
  mshFile << "$Elements" << endl;
@@ -4165,8 +4192,8 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   int node = surface->Get(i);
   
   // k=1/R
-  if( (Z->Get(node)<zMax) && 
-	  (Z->Get(node)>zMin) )
+  if( (surfMesh->Z.Get(node)<zMax) && 
+	  (surfMesh->Z.Get(node)>zMin) )
   {
    sumKappa += surfMesh->curvature.Get(node);
    sumKappaSquare += surfMesh->curvature.Get(node)*
@@ -4186,8 +4213,8 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   int node = surface->Get(i);
   
   // k=1/R
-  if( (Z->Get(node)<zMax) && 
-	  (Z->Get(node)>zMin) )
+  if( (surfMesh->Z.Get(node)<zMax) && 
+	  (surfMesh->Z.Get(node)>zMin) )
   {
    sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
                     (surfMesh->curvature.Get(node)-kappaAnalytic);
@@ -4301,8 +4328,8 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
   int node = surface->Get(i);
   
   // k=1/R
-  if( (Y->Get(node)<0.75) && 
-	  (Y->Get(node)>-0.75) )
+  if( (surfMesh->Z.Get(node)<zMax) && 
+	  (surfMesh->Z.Get(node)>zMin) )
   {
    sumKappa += surfMesh->curvature.Get(node);
    sumKappaSquare += surfMesh->curvature.Get(node)*
@@ -4322,8 +4349,8 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
   int node = surface->Get(i);
   
   // k=1/R
-  if( (Y->Get(node)<0.75) && 
-	  (Y->Get(node)>-0.75) )
+  if( (surfMesh->Z.Get(node)<zMax) && 
+	  (surfMesh->Z.Get(node)>zMin) )
   {
    sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
                     (surfMesh->curvature.Get(node)-kappaAnalytic);
@@ -4637,7 +4664,7 @@ void InOut::savePressureError(const char* _dir)
 
 void InOut::saveVolumeError(const char* _dir)
 {
- for(int nb=0;nb<=elemIdRegion->Max();nb++ )
+ for(int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
  {
   stringstream ss;  //convertendo int --> string
   string str;
@@ -4697,7 +4724,7 @@ void InOut::saveVolumeError(const char* _dir)
 
 void InOut::saveVolumeCorrection(const char* _dir)
 {
- for(int nb=0;nb<=elemIdRegion->Max();nb++ )
+ for(int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
  {
   stringstream ss;  //convertendo int --> string
   string str;

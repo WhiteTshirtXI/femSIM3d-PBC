@@ -6,22 +6,13 @@
 
 #include <cmath>
 #include "Model3D.h"
-#include "Simulator3D.h"
-#include "CGSolver.h"
-#include "PCGSolver.h"
-#include "GMRes.h"
-#include "TElement.h"
 #include "InOut.h"
-#include "PetscSolver.h"
-#include "petscksp.h"
 #include "colors.h"
 
 #define NUMPHASES 2
 
 int main(int argc, char **argv)
 {
- PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
-
  const char *mshFolder  = "./msh/";
  const char *vtkFolder  = "./vtk/";
  const char *datFolder  = "./dat/";
@@ -81,38 +72,24 @@ int main(int argc, char **argv)
   cout << resetColor();
 
   Model3D m1;
-  Simulator3D s1;
+  Simulator3D s1(m1);
 
   m1.readMSH(mesh[i]);
   m1.setInterfaceBC();
   m1.setTriEdge();
 
-  m1.mesh2Dto3D();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setOFace();
   m1.restoreMappingArrays();
   m1.setNormalAndKappa();
-  m1.setKappaSurface();
   m1.setSurfaceVolume();
   m1.setSurfaceArea();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setGenericBC();
-
-  s1(m1);
-
-  //s1.setInterface();
-  s1.setInterfaceGeo();
 
   InOut save(m1,s1); // cria objeto de gravacao
   save.saveMSH(mshFolder,"newMesh",i);
   save.saveVTKSurface(vtkFolder,"sim",i);
   save.saveKappaErrorSphere(datFolder);
-  save.saveBubbleInfo(datFolder);
+  save.saveVolumeCorrection(datFolder);
 
   cout << color(none,magenta,black);
   cout << "________________________________________ END of " 
@@ -120,7 +97,6 @@ int main(int argc, char **argv)
   cout << resetColor();
  }
 
- PetscFinalize();
  return 0;
 }
 

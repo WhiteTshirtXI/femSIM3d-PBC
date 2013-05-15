@@ -79,7 +79,6 @@ Model3D::Model3D(const Model3D &_mRight)
 
   // clVector and clMatrix
   surface = _mRight.surface;
-  nonSurface = _mRight.nonSurface;
   uc = _mRight.uc;
   vc = _mRight.vc;
   wc = _mRight.wc;
@@ -6193,10 +6192,8 @@ void Model3D::setSurface()
  list<int>::iterator vert;
 
  // procurando vertices da bolha
- clVector surfaceAux = heaviside==0.5;
+ clVector surfaceAux = surfMesh.Marker==0.5;
  surface = surfaceAux.Find();
- clVector nonSurfaceAux = heaviside!=0.5;
- nonSurface = nonSurfaceAux.Find();
  
  // {x,y,z}Surface representam os valores de {X,Y,Z} dos nos da interface
  xSurface.Dim( surface.Dim() );
@@ -6205,9 +6202,9 @@ void Model3D::setSurface()
  for( int i=0;i<surface.Dim();i++ )
  {
   int surfaceNode = surface.Get(i);
-  xSurface.Set(i,X.Get( surfaceNode ));
-  ySurface.Set(i,Y.Get( surfaceNode ));
-  zSurface.Set(i,Z.Get( surfaceNode ));
+  xSurface.Set(i,surfMesh.X.Get( surfaceNode ));
+  ySurface.Set(i,surfMesh.Y.Get( surfaceNode ));
+  zSurface.Set(i,surfMesh.Z.Get( surfaceNode ));
  }
 } // fecha metodo setSurface
 
@@ -7425,7 +7422,6 @@ void Model3D::operator=(Model3D &_mRight)
 
   // clVector and clMatrix
   surface = _mRight.surface;
-  nonSurface = _mRight.nonSurface;
   uc = _mRight.uc;
   vc = _mRight.vc;
   wc = _mRight.wc;

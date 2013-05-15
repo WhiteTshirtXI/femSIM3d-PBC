@@ -52,7 +52,7 @@ void stepSmoothFujiwaraByHeight();
   clVector *idbcu,*idbcv,*idbcw,*idbcp;
   clVector *heaviside;
   clMatrix *IEN;
-  clVector *nonSurface,*surface,xSurface,ySurface,zSurface;
+  clVector *surface,xSurface,ySurface,zSurface;
   SurfaceMesh *surfMesh;
 
   vector< list<int> > *neighbourVert,*neighbourPoint;

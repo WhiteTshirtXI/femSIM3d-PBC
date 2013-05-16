@@ -697,6 +697,7 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
  }
  surfMesh.vertIdRegion.Dim(numVerts,0.0);
  surfMesh.elemIdRegion.Dim(numElems,0.0);
+ surfMesh.idRegion.Dim(numElems,0.0);
  surfMesh.Marker.Dim(numVerts,0.0);
  surfMesh.numInterfaces = 0;
  //surfMesh.numBoundaries 3;
@@ -1081,6 +1082,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  }
  surfMesh.vertIdRegion.Dim(numVerts,0.0);
  surfMesh.elemIdRegion.Dim(numElems,0.0);
+ surfMesh.idRegion.Dim(numElems,0.0);
  surfMesh.Marker.Dim(numVerts,0.0);
  surfMesh.numInterfaces = 0;
  //surfMesh.numBoundaries 3;

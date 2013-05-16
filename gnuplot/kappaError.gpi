@@ -16,7 +16,7 @@ set format y "10^{%L}"
 unset grid
 
 
-set key at 0.8,0.001
+set key right bottom
 set key box linestyle 1
 
 set terminal postscript enhanced font "Times-Roman,25"

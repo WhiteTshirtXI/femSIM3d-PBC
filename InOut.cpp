@@ -4007,8 +4007,8 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 		    	  << setw(18) << "stand deviat" 
 		    	  << setw(14) << "averag edge" 
 				  << setw(14) << "edge/radius" 
-				  << setw(14) << "area" 
-				  << setw(14) << "volume" 
+				  << setw(10) << "area" 
+				  << setw(10) << "volume" 
 				  << setw(15) << "averag neigh" 
 		    	  << setw(13) << "num points" 
 		    	  << setw(6) << "iter" 
@@ -4087,11 +4087,11 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  real kappaError = sqrt( sumKappaError/sumKappaSquare );
 
  /*
-  *         kappaAverage-kappaAnalytic
-  *  k_r = ----------------------------
-  *               kappaAverage
+  *             kappaAverage-kappaAnalytic
+  *  k_r = abs(----------------------------)
+  *                  kappaAverage
   * */
- real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+ real kappaErrorRel = fabs((kappaAverage-kappaAnalytic)/kappaAverage);
 
  /* 
   *             (  sum( kappa[i] - kappaAverage )  )
@@ -4116,8 +4116,8 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 	  << setprecision(4) << fixed
       << setw(13) << averageTriLength[1]/radius << " " 
 	  << setprecision(3) << fixed
-      << setw(14) << surfaceArea[1] << " " 
-      << setw(14) << surfaceVolume[1] << " " 
+      << setw(9) << surfaceArea[1] << " " 
+      << setw(9) << surfaceVolume[1] << " " 
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << surfacePoints << " " 
@@ -4414,13 +4414,14 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  {
   cout << "Creating file kappa.dat" << endl;
   file << "#time" << setw(29) << "kappa" 
-		    	  << setw(18) << "analytic" 
+		    	  << setw(18) << "avg_analytic" 
 		    	  << setw(18) << "error" 
+		    	  << setw(18) << "errorRel" 
 		    	  << setw(18) << "stand deviat" 
 		    	  << setw(14) << "averag edge" 
 				  << setw(14) << "edge/radius" 
-				  << setw(14) << "area" 
-				  << setw(14) << "volume" 
+				  << setw(10) << "area" 
+				  << setw(10) << "volume" 
 				  << setw(15) << "averag neigh" 
 		    	  << setw(13) << "num points" 
 		    	  << setw(6) << "iter" 
@@ -4501,26 +4502,49 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  }
 
  // radius 1 = D1/2
- real D1 = zMax - zMin; 
- real radius1 = D1/2.0;
- //real xCenter1 = (xMax+xMin)/2.0;
- //real yCenter1 = (yMax+yMin)/2.0; 
- //real zCenter1 = (zMax+zMin)/2.0; 
- 
- // radius 2 = D2/2
- real xCenter2 = (xMax+xMin)/2.0;
- real yCenter2 = (yMax+yMin)/2.0; 
+ real Diam3 = zMax - zMin; 
+ real radius2 = Diam3/2.0;
+
+ // radius 1 = D1/2
+ real DiamX = xMax-xMin;
+ real DiamY = yMax-yMin; 
+ real radius1 = (DiamX+DiamY)/4.0 - radius2;
 
  real sumKappaSD = 0;
  real sumKappaError = 0;
  real sumNeighbours = 0;
+ real sumKappaAnalytic = 0;
  int countK = 0;
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
-  real kappaAnalytic = (1.0/radius1) + 
-                        distance(xCenter2,yCenter2,
-	                             surfMesh->X.Get(node),surfMesh->Y.Get(node));
+  real kappaAverage = 0;
+
+  real rr = sqrt( surfMesh->X.Get(node)*surfMesh->X.Get(node)+
+                  surfMesh->Y.Get(node)*surfMesh->Y.Get(node) )-radius1;
+  real theta = atan(fabs(surfMesh->Z.Get(node)/rr));
+
+  if( rr < -1E-10 )
+   if( surfMesh->Z.Get(node) > 0 )
+	theta += 3.1415/2.0;
+   else
+	theta += 3.1415;
+  else
+   if( surfMesh->Z.Get(node) >= 0 )
+	theta = theta;
+   else
+	theta = 2*3.1415-theta;
+
+  real kappaAnalytic = (radius1+2*radius2*cos(theta))/
+                       (radius2*(radius1+radius2*cos(theta)));
+//--------------------------------------------------
+//   cout << " node: " << node <<  " r: " << rr << " Z: " <<
+//    surfMesh->Z.Get(node) << " theta: " << theta << " kappa: " <<
+//    kappaAnalytic << endl;
+//-------------------------------------------------- 
+
+  sumKappaAnalytic += kappaAnalytic;
+
   sumKappaError += (surfMesh->curvature.Get(node)-kappaAnalytic)*
                    (surfMesh->curvature.Get(node)-kappaAnalytic);
   sumKappaSD += (surfMesh->curvature.Get(node)-kappaAverage)*
@@ -4528,8 +4552,28 @@ void InOut::saveKappaErrorTorus(const char* _dir)
   sumNeighbours += neighbourPoint->at(i).size();
   countK++;
  }
+ real kappaAverageAnalytic = sumKappaAnalytic/surfacePoints;
 
+
+ /*  
+  *            (  sum( kappa[i] - kappa_a )^2    )
+  *  k_e = sqrt( -----------------------------   )
+  *            (        sum( kappa[i]^2 )        )
+  * */
  real kappaError = sqrt( sumKappaError/sumKappaSquare );
+
+ /*
+  *             kappaAverage-kappaAnalytic
+  *  k_r = abs(----------------------------)
+  *                  kappaAverage
+  * */
+ real kappaErrorRel = fabs((kappaAverage-kappaAverageAnalytic)/kappaAverage);
+
+ /* 
+  *             (  sum( kappa[i] - kappaAverage )  )
+  *  SD =  sqrt ( -------------------------------- )
+  *             (           number of i            )
+  * */
  real kappaSD = sqrt( sumKappaSD/surfacePoints );
 
  real averageNeigh = sumNeighbours/surfacePoints;
@@ -4539,16 +4583,17 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
       << setw(17) << kappaAverage << " " 
-      << setw(17) << "spec for each point" << " " 
+      << setw(17) << kappaAverageAnalytic << " " 
       << setw(17) << kappaError << " " 
+      << setw(17) << kappaErrorRel << " " 
       << setw(17) << kappaSD << " " 
 	  << setprecision(3) << fixed
       << setw(13) << averageTriLength[1] << " " 
 	  << setprecision(4) << fixed
-      << setw(13) << averageTriLength[1]/radius1 << " " 
+      << setw(13) << averageTriLength[1]/radius2 << " " 
 	  << setprecision(3) << fixed
-      << setw(14) << surfaceArea[1] << " " 
-      << setw(14) << surfaceVolume[1] << " " 
+      << setw(9) << surfaceArea[1] << " " 
+      << setw(9) << surfaceVolume[1] << " " 
       << setw(14) << averageNeigh << " " 
 	  << setprecision(0) << fixed
 	  << setw(12) << surfacePoints << " " 

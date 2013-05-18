@@ -2415,7 +2415,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
  Y.AddItem(vAdd,YvAdd);
  Z.AddItem(vAdd,ZvAdd);
  heaviside.AddItem(vAdd,heaviside.Get(v1));
- curvature.AddItem(vAdd,heaviside.Get(v1));
+ curvature.AddItem(vAdd,curvature.Get(v1));
  edgeSize.AddItem(vAdd,edgeSize.Get(v1));
 
  surfMesh.X.AddItem(XvAdd);
@@ -2639,7 +2639,6 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
   if( edgeLength < _param*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && 
-	  v2 > 1435 &&
 	  curvTest && 
 	  neighTest //&& 
 	  //angleTest 
@@ -2833,7 +2832,6 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
   //if( elemID > 0 && erro < 0.5*erroS )//&&
   if( edgeLength < _param*triEdge[elemID] &&
       //erro < 0.03 &&
-	  v2 > 1435 &&
 	  elemIDTest && 
 	  neighTest //&& 
 	  //angleTest 
@@ -4477,33 +4475,6 @@ void Model3D::setCDiskBC()
  }
 }
 
-void Model3D::setCubeBC()
-{
-#if NUMGLEU == 5
- real numBCPoints = numVerts;
-#else
- real numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-  // condicao de parede v=0
-  if( (X.Get(i)==X.Max()) || (X.Get(i)==X.Min()) || 
-      (Y.Get(i)==Y.Max()) || (Y.Get(i)==Y.Min()) || 
-      (Z.Get(i)==Z.Max()) || (Z.Get(i)==Z.Min()) )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   real aux = 0.0;
-   uc.Set(i,aux);
-   vc.Set(i,aux);
-   wc.Set(i,aux);
-  }
- }
-}
-
 void Model3D::setGenericBC()
 {    
  /* This IF selects the priority boundary conditions to be set on the
@@ -5359,65 +5330,6 @@ void Model3D::set2BubblesBC()
 
    aux = 0.0;
    pc.Set(*it,aux);
-  }
- }
-}
-
-void Model3D::setCube(real _lim1,real _lim2,real _eps)
-{
- real eps2 = _eps;
- real lim1 = _lim1;
- real lim2 = _lim2;
-
- heaviside.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  // na interface
-  if( (X.Get(i)<lim2+eps2) && (X.Get(i)>lim1-eps2) && 
-      (Y.Get(i)<lim2+eps2) && (Y.Get(i)>lim1-eps2) && 
-      (Z.Get(i)<lim2+eps2) && (Z.Get(i)>lim1-eps2) )
-  {
-   heaviside.Set(i,0.5);
-  }
-  // dentro da bolha
-  if( (X.Get(i)<lim2-eps2) && (X.Get(i)>lim1+eps2) && 
-      (Y.Get(i)<lim2-eps2) && (Y.Get(i)>lim1+eps2) && 
-      (Z.Get(i)<lim2-eps2) && (Z.Get(i)>lim1+eps2) )
-  {
-   heaviside.Set(i,1.0);
-  }
- }
-}
-
-void Model3D::setCube(real _xlimInf,real _xlimSup,
-                      real _ylimInf,real _ylimSup,
-					  real _zlimInf,real _zlimSup,real _eps)
-
-{
- real eps2 = _eps;
- real xlimInf = _xlimInf;
- real ylimInf = _ylimInf;
- real zlimInf = _zlimInf;
- real xlimSup = _xlimSup;
- real ylimSup = _ylimSup;
- real zlimSup = _zlimSup;
-
- heaviside.Dim(numVerts);
- for( int i=0;i<numVerts;i++ )
- {
-  // na interface
-  if( (X.Get(i)<xlimSup+eps2) && (X.Get(i)>xlimInf-eps2) && 
-      (Y.Get(i)<ylimSup+eps2) && (Y.Get(i)>ylimInf-eps2) && 
-      (Z.Get(i)<zlimSup+eps2) && (Z.Get(i)>zlimInf-eps2) )
-  {
-   heaviside.Set(i,0.5);
-  }
-  // dentro da bolha
-  if( (X.Get(i)<xlimSup-eps2) && (X.Get(i)>xlimInf+eps2) && 
-      (Y.Get(i)<ylimSup-eps2) && (Y.Get(i)>ylimInf+eps2) && 
-      (Z.Get(i)<zlimSup-eps2) && (Z.Get(i)>zlimInf+eps2) )
-  {
-   heaviside.Set(i,1.0);
   }
  }
 }

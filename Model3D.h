@@ -55,12 +55,6 @@ class Model3D
   void readMSH( const char* filename );
   void readBC( const char* filename );
 
-  void setSphere(real _xC,real _yC,real _zC,real _r,real _eps);
-  void setCube(real _lim1,real _lim2,real _eps);
-  void setCube(real _xlimInf,real _xlimSup,
-               real _ylimInf,real _ylimSup,
-	       	   real _zlimInf,real _zlimSup,real _eps);
-
   // surface points treatment
   void setSurface();
   void setSurfaceTri();
@@ -191,7 +185,6 @@ class Model3D
   void setDiskCFSBC();
   void setDiskCouetteBC();
   void setInterfaceBC();
-  void setCubeBC();
   void setGenericBC();
   void setGenericBC(real _vel);
   void setWallBC();

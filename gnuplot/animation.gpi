@@ -20,7 +20,7 @@ set xtics 2
 set ytics 0.5
 
 # set grid xtics mxtics ytics mytics back ls 12 ls 13
-set key box center right
+set key box at 9.8,0.4
 set key box ls -1 width -7 spacing 0.7
 set key samplen 4
 set key font ",19"
@@ -46,7 +46,7 @@ fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuCte/analiticoNuCte.dat"
 #fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuZ/analiticoNuZ.dat"
 #fileObjAnalytic = "`echo $DATA_DIR`/baseState/nuC/Sc2000/analiticoNuC.dat"
 
-do for [N=1:130]{
+do for [N=1:1]{
  set output sprintf('| ps2pdf - nuC%03.0f.pdf',N)
 
  plot fileObj .N using 1:2 every 1 title 'F' ls 2 with points,\

@@ -27,8 +27,8 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 1;
  real Fr = 1;
- real c1 = 1.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
  real c3 = 0.0;  // smooth coord (fujiwara)
  real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.0;  // surface smooth cord (fujiwara)

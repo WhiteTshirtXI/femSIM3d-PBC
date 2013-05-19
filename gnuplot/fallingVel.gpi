@@ -14,8 +14,11 @@ set yrange [-1.8:0.2]
 set ytics 0.2
 unset grid
 
-set key at 1.5,-0.0
-set key box linestyle 1
+# set grid xtics mxtics ytics mytics back ls 12 ls 13
+set key bottom right
+set key box ls -1 width -3 spacing 1.0
+set key samplen 4
+set key font ",19"
 
 #--------------------------------------------------
 # set terminal postscript enhanced font "Times-Roman,25"

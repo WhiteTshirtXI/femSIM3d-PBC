@@ -47,7 +47,8 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- string meshFile = "bubble-tube5.msh";
+ string meshFile = "airWaterSugar.msh";
+ //string meshFile = "test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -359,6 +360,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

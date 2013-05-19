@@ -26,7 +26,6 @@ int main(int argc, char **argv)
  real Sc = 2000;
  real Fr = 10;
  //real alpha = 1;
- //real beta = 0;
  real cfl = 0.1;
  real mu_l = 1.0;
  real rho_l = 1.0;
@@ -43,7 +42,7 @@ int main(int argc, char **argv)
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
  const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
+ //const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
  meshDir += "/gmsh/3d/singlePhase/" + meshFile;
  const char *mesh = meshDir.c_str();

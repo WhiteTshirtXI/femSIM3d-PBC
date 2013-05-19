@@ -75,7 +75,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -361,6 +360,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInterfaceBC();
   m1.setGenericBC(vref);
 
   Simulator3D s2(m1,s1);

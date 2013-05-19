@@ -2197,13 +2197,13 @@ void Model3D::flipTriangleEdges()
 //-------------------------------------------------- 
 
   // this works, but is not consistent!!! CHANGE IT SOON!
-  real curv1 = fabs(surfMesh.curvature.Get(v1));
-  real curv2 = fabs(surfMesh.curvature.Get(v2));
-  real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
-  real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+  //real curv1 = fabs(surfMesh.curvature.Get(v1));
+  //real curv2 = fabs(surfMesh.curvature.Get(v2));
+  //real curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  //real curv4 = fabs(surfMesh.curvature.Get(v3elem2));
 
   // to avoid contraction at high curvature regions
-  bool curvTest = (curv1 < 20 && curv2 < 20 && curv3 < 20 && curv4 < 20);
+  //bool curvTest = (curv1 < 20 && curv2 < 20 && curv3 < 20 && curv4 < 20);
 
   // to avoid 3 elem neighbors vertex
   bool neighTest = (neighbourSurfaceElem.at( v1 ).size() > 4 &&  
@@ -2222,7 +2222,7 @@ void Model3D::flipTriangleEdges()
 	  area1+area2  > area3+area4 && // area sum
 	  c1+c2 > c3+c4 &&              // circum radius
 	  //angleNew < angleOld &&
-	  curvTest &&
+	  //curvTest &&
 	  neighTest ) 
   {
    cout << "------------- " << color(none,green,black) 

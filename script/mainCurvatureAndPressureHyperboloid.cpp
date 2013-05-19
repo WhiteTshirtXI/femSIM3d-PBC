@@ -32,9 +32,6 @@ int main(int argc, char **argv)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.0;  // surface smooth cord (fujiwara)
  real alpha = 1;
- real beta = 1;
-
- real sigma = 1.0;
 
  real mu_in = 1;
  real mu_out = 0.001;
@@ -101,8 +98,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);

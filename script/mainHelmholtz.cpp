@@ -30,7 +30,6 @@ int main(int argc, char **argv)
  m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.checkTriangleOrientation();
  m1.mesh2Dto3D();
  m1.setMiniElement();
  m1.setOFace();

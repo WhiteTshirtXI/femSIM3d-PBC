@@ -366,6 +366,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

@@ -32,9 +32,6 @@ int main(int argc, char **argv)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.01;  // surface smooth cord (fujiwara)
  real alpha = 1;
- real beta = 1;
-
- real sigma = 1;
 
  real mu_in = 1.0;
  real mu_out = 0.9;
@@ -55,7 +52,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ meshDir += "/gmsh/3d/tests/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -71,7 +68,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -82,7 +78,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 
@@ -95,8 +91,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
   //s1.setDtALETwoPhase(dt);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
@@ -323,7 +317,8 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
-  m1.setWallBC();
+  m1.setInterfaceBC();
+  m1.setGenericBC();
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

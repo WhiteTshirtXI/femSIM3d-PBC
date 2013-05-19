@@ -27,22 +27,15 @@ int main(int argc, char **argv)
  const char *datFolder  = "./dat/";
 
  string meshFile = (string) getenv("DATA_DIR");
- meshFile += "/gmsh/3d/curvature/0.60.msh";
+ meshFile += "/gmsh/3d/sphere/curvature/0.60.msh";
  const char *mesh = meshFile.c_str();
-
- // set each bubble length
- vector< real > triEdge;
- triEdge.resize(2);
- triEdge[0] = 0.6; // wall
- triEdge[1] = 0.60; // bubble 1 
 
  Model3D m1;
  Simulator3D s1;
 
  m1.readMSH(mesh);
  m1.setInterfaceBC();
- m1.setTriEdge(triEdge);
- m1.checkTriangleOrientation();
+ m1.setTriEdge();
 
  m1.mesh2Dto3D();
 #if NUMGLEU == 5
@@ -59,7 +52,7 @@ int main(int argc, char **argv)
 
  // adding vertex
  Model3D mOld = m1; 
- m1.setTriEdge(triEdge);
+ m1.setTriEdge();
  //m1.insertPointByVertex(2);
  //m1.insertPointByVertex(2);
  m1.mesh3DPoints();

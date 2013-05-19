@@ -29,7 +29,6 @@ int main(int argc, char **argv)
  real Sc = 200;
  real Fr = 10;
  //real alpha = 1;
- //real beta = 0;
  real c1 = 0.3;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 2.0;  // smooth coord (fujiwara)

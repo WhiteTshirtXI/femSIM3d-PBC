@@ -34,9 +34,6 @@ int main(int argc, char **argv)
  real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
  real alpha = 1;
- real beta = 1;
-
- real sigma = 1.0;
 
  real mu_in = 1.0;
  real mu_out = 1.0;
@@ -74,7 +71,6 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.checkTriangleOrientation();
   m1.mesh2Dto3D();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -99,8 +95,6 @@ int main(int argc, char **argv)
   s1.setD1(d1);
   s1.setD2(d2);
   s1.setAlpha(alpha);
-  s1.setBeta(beta);
-  s1.setSigma(sigma);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
@@ -354,6 +348,7 @@ int main(int argc, char **argv)
 #endif
   m1.setOFace();
   m1.setSurfaceConfig();
+  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

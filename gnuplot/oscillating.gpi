@@ -48,6 +48,6 @@ yt2(x)= y0 - a0 * exp(-x/tao)
 
 fileObj = "../dat/diameter.dat"
 
-plot fileObj using 1:($4-0.0004) every 3 title 'numeric' \
+plot fileObj using 1:($4-0.002208) every 3 title 'numeric' \
      with points ls 4,\
  	 f(x) title 'analytic' with lines ls 1

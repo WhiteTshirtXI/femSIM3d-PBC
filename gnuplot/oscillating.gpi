@@ -8,7 +8,7 @@ set ytic auto                          # set ytics automatically
 set xlabel "time (t)" font "Times,25"
 set ylabel "amplitude (a_0)" font "Times,25" offset 1,0
 set label
-set xrange [0.0:3.0]
+set xrange [0.0:1.0]
 set xtics 0.20
 set format  "%1.1f"
 set yrange [0.988:1.012]
@@ -26,7 +26,7 @@ set key box linestyle 1
 
 # parameters
 n=2
-sigma=0.1
+sigma=1
 R=0.5
 
 # fluid properties

@@ -10,7 +10,7 @@ set ylabel "height (z)" offset 2,0
 set label
 set xrange [0.0:1.6]
 set xtics 0.2
-set yrange [4.0:5.6]
+#set yrange [4.0:5.6]
 set ytics 0.5
 unset grid
 
@@ -25,11 +25,8 @@ set key box linestyle 1
 gravity = 1
 f(x)=5.5-(1.0/2.0)*gravity*x*x
 
-f1 = "../dat/f1.dat"
-f5 = "../dat/f5.dat"
+fileObj = "../dat/volume1.dat"
 
-plot f1 using 1:($8) every 20 title 'high viscosity'\
+plot fileObj using 1:($11) every 20 title 'numerical'\
         with points ls 4 lw 1,\
-     f5 using 1:($8) every 20 title 'low viscosity'\
-	    with points ls 5 lw 1,\
- 	 f(x) title 'analytical' with lines ls1 lw 3
+ 	 f(x) title 'analytical' with lines ls 1 lw 3

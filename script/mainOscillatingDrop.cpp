@@ -27,11 +27,11 @@ int main(int argc, char **argv)
  real Sc = 1;
  real We = 1;
  real Fr = 1;
- real c1 = 0.5;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 0.1;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.01;  // surface smooth cord (fujiwara)
+ real c1 = 1.0;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 0.0;  // smooth coord (fujiwara)
+ real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.0;  // surface smooth cord (fujiwara)
  real alpha = 1;
 
  real mu_in = 1;
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
   m1.setSphereToEllipsoid(1.01);
 
   s1(m1);
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setWallBC();
+  m1.setGenericBC();
 
   s1(m1);
 

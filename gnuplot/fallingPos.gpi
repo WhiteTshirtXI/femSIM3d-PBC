@@ -10,12 +10,21 @@ set ylabel "height (z)" offset 2,0
 set label
 set xrange [0.0:1.6]
 set xtics 0.2
-#set yrange [4.0:5.6]
+set yrange [4.0:5.6]
 set ytics 0.5
 unset grid
 
+# set grid xtics mxtics ytics mytics back ls 12 ls 13
 set key at 1.05,4.8
-set key box linestyle 1
+set key box ls -1 width -3 spacing 1.0
+set key samplen 4
+set key font ",19"
+
+set style line 1 lt 1 lw 4
+set style line 2 pointsize 1.5 lt 4 lw 2 
+set style line 3 pointsize 1.5 lt 6 lw 2 
+set style line 4 pointsize 1.5 lt 14 lw 2 
+set style line 5 pointsize 1.5 lt 10 lw 2 
 
 #--------------------------------------------------
 # set terminal postscript enhanced font "Times-Roman,25"
@@ -28,5 +37,5 @@ f(x)=5.5-(1.0/2.0)*gravity*x*x
 fileObj = "../dat/volume1.dat"
 
 plot fileObj using 1:($11) every 20 title 'numerical'\
-        with points ls 4 lw 1,\
- 	 f(x) title 'analytical' with lines ls 1 lw 3
+        with points ls 2,\
+ 	 f(x) title 'analytical' with lines ls 1

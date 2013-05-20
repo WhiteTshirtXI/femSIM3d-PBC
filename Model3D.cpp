@@ -1338,7 +1338,7 @@ void Model3D::insertPointsByLength(const char* _interpolation,
 
 void Model3D::insertPointsByLength(const char* _interpolation)
 {
- insertPointsByLength(_interpolation,1.6);
+ insertPointsByLength(_interpolation,1.4);
 }
 
 /* Method to surface points when the curvature of the points is higher

@@ -23,9 +23,7 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  real Re = 100;
- real Sc = 1;
- real We = 1;
- real Fr = 1;
+ real We = 0.2;
  real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 0.0;  // smooth coord (fujiwara)
@@ -55,14 +53,15 @@ int main(int argc, char **argv)
 
  /* meshes */
  vector<const char*> mesh;
- mesh.resize(7);
- mesh[0]  = "../../db/gmsh/3d/sphere/curvature/0.10.msh";
- mesh[1]  = "../../db/gmsh/3d/sphere/curvature/0.09.msh";
- mesh[2]  = "../../db/gmsh/3d/sphere/curvature/0.08.msh";
- mesh[3]  = "../../db/gmsh/3d/sphere/curvature/0.07.msh";
- mesh[4]  = "../../db/gmsh/3d/sphere/curvature/0.06.msh";
- mesh[5]  = "../../db/gmsh/3d/sphere/curvature/0.05.msh";
- mesh[6]  = "../../db/gmsh/3d/sphere/curvature/0.04.msh";
+ mesh.resize(8);
+ mesh[0]  = "../../db/gmsh/3d/sphere/static/0.10.msh";
+ mesh[1]  = "../../db/gmsh/3d/sphere/static/0.09.msh";
+ mesh[2]  = "../../db/gmsh/3d/sphere/static/0.08.msh";
+ mesh[3]  = "../../db/gmsh/3d/sphere/static/0.07.msh";
+ mesh[4]  = "../../db/gmsh/3d/sphere/static/0.06.msh";
+ mesh[5]  = "../../db/gmsh/3d/sphere/static/0.05.msh";
+ mesh[6]  = "../../db/gmsh/3d/sphere/static/0.04.msh";
+ mesh[7]  = "../../db/gmsh/3d/sphere/static/0.03.msh";
 
  for( int i=0;i<(int) mesh.size();i++ )
  {
@@ -92,9 +91,7 @@ int main(int argc, char **argv)
   s1(m1);
 
   s1.setRe(Re);
-  s1.setSc(Sc);
   s1.setWe(We);
-  s1.setFr(Fr);
   s1.setC1(c1);
   s1.setC2(c2);
   s1.setC3(c3);
@@ -109,9 +106,9 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
+  s1.setDtALETwoPhase();
   //s1.stepLagrangian();
   s1.stepALE();
-  s1.setDtALETwoPhase();
   s1.movePoints();
   s1.assemble();
   s1.matMount();
@@ -129,6 +126,7 @@ int main(int argc, char **argv)
   save.saveBubbleInfo(datFolder);
   save.chordalPressure(datFolder,"chordalPressure",i);
   save.crossSectionalPlane(datFolder,"XZ",i);
+  save.saveMeshInfo(datFolder);
 
   cout << color(none,magenta,black);
   cout << "________________________________________ END of " 

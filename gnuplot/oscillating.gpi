@@ -44,6 +44,7 @@ y0=1.000
 nu=mu/rho
 tao=R/(5*nu)
 w1=sqrt( 24*sigma/( (3*rho_l+2*rho_g)*R*R*R) )
+print w1
 f(x) = y0 + a0 * exp(-x/tao) * cos(w1*x)
 yt1(x)= y0 + a0 * exp(-x/tao)
 yt2(x)= y0 - a0 * exp(-x/tao)

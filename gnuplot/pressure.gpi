@@ -24,7 +24,7 @@ unset grid
 # set output '| ps2pdf - pressure3d.pdf'
 #-------------------------------------------------- 
 
-fileObj1 = "~/projects/python/femSIM3d/staticDroplet1/dat/XZpressure-780.dat"
+fileObj1 = "../dat/XZpressure-0.dat"
 
 splot fileObj1 using 1:2:3 title '1024 points' with lines
 

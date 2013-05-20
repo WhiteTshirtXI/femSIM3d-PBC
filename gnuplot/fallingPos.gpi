@@ -36,6 +36,6 @@ f(x)=5.5-(1.0/2.0)*gravity*x*x
 
 fileObj = "../dat/volume1.dat"
 
-plot fileObj using 1:($11) every 20 title 'numerical'\
+plot fileObj using 1:($11) every 2 title 'numerical'\
         with points ls 2,\
  	 f(x) title 'analytical' with lines ls 1

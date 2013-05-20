@@ -9,26 +9,37 @@ set xlabel "x"
 set ylabel "pressure (p)" offset 1,0
 set xrange [-1.0:1.0]
 set yrange [-3:23]
-set key at 0.3,6
-#set key outside font "Times-Roman,25"
-set key box linestyle 1
-set boxwidth 1
 unset grid
 
-#--------------------------------------------------
-# set terminal postscript enhanced font "Times-Roman,25"
-# set output '| ps2pdf - chordalPressure.pdf'
-#-------------------------------------------------- 
+# set grid xtics mxtics ytics mytics back ls 12 ls 13
+#set key box center right
+set key at 0.3,6
+set key box ls -1 width -1 spacing 1.0
+set key samplen 4
+set key font ",19"
+set grid
 
-fileObj1 = "../chordalPressure1.dat"
-fileObj2 = "../chordalPressure2.dat"
-fileObj3 = "../chordalPressure3.dat"
-fileObj4 = "../chordalPressure4.dat"
-fileObj5 = "../chordalPressure5.dat"
+set style line 1 lt 1 lw 4
+set style line 2 lt 4  pt 64 ps 1.0  lw 1 
+set style line 3 lt 6  pt 65 ps 1.0  lw 1 
+set style line 4 lt 14 pt 69 ps 1.0  lw 1 
+set style line 5 lt 11 pt 70 ps 1.0  lw 1
+set style line 6 lt 16 pt 31 ps 1.0  lw 1
 
-plot fileObj1 using 1:4 title 'h=0.10' with points ls 4 lw 1,\
-     fileObj3 using 1:4 title 'h=0.06' with points ls 5 lw 1,\
-     fileObj5 using 1:4 title 'h=0.03' with lines ls 1 lw 3
+set terminal postscript enhanced font "Times-Roman,25"
+set output '| ps2pdf - chordalPressure.pdf'
+
+fileObj1 = "../dat/chordalPressure-0.dat"
+fileObj2 = "../dat/chordalPressure-2.dat"
+fileObj3 = "../dat/chordalPressure-4.dat"
+fileObj4 = "../dat/chordalPressure-6.dat"
+fileObj5 = "../dat/chordalPressure-7.dat"
+
+plot fileObj1 using 1:4 every 4 title 'h=0.10' ls 2 with points,\
+     fileObj2 using 1:4 every 4 title 'h=0.08' ls 3 with points,\
+     fileObj3 using 1:4 every 4 title 'h=0.06' ls 4 with points,\
+     fileObj4 using 1:4 every 4 title 'h=0.04' ls 5 with points,\
+     fileObj5 using 1:4 every 4 title 'h=0.03' ls 6 with points
 
 
 

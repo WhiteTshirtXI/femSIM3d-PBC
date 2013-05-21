@@ -3932,6 +3932,98 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
 
  cout << "cross sectional pressure No. " << _iter << " saved in dat" << endl;
 
+ // concatenando nomes para o nome do arquivo final
+ file = (string) _dir + "pressureError-" + str + ".dat";
+ const char* filenameZ = file.c_str();
+ 
+ // saving in DAT format
+ ifstream testFileZ( filenameZ );
+ ofstream zFile( filenameZ,ios::app );
+ if( testFileZ )
+ {
+  testFileZ.close();
+  cout << "appending on file " << _filename << ".dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file " << _filename << ".dat" << endl;
+  zFile << "#p_in" << setw(30) << "p_out" 
+				  << setw(19) << "p_in-p_out"
+				  << setw(19) << "analytical"
+				  << setw(19) << "L1"
+				  << setw(19) << "L2"
+				  << endl;
+ }
+
+ real xMax = -1E-10; 
+ real yMax = -1E-10; 
+ real zMax = -1E-10; 
+ real xMin = 1E10; 
+ real yMin = 1E10; 
+ real zMin = 1E10; 
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  if( surfMesh->vertIdRegion.Get(i) == 1 )
+  {
+   if( surfMesh->X.Get(i) > xMax )
+	xMax = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) > yMax )
+	yMax = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) > zMax )
+	zMax = surfMesh->Z.Get(i);
+   if( surfMesh->X.Get(i) < xMin )
+	xMin = surfMesh->X.Get(i);
+   if( surfMesh->Y.Get(i) < yMin )
+	yMin = surfMesh->Y.Get(i);
+   if( surfMesh->Z.Get(i) < zMin )
+	zMin = surfMesh->Z.Get(i);
+  }
+ }
+
+ // retorna o valor do maior diametro em X na interface 
+ real diameterX = xMax - xMin; 
+ // retorna o valor do maior diametro em Y na interface 
+ real diameterY = yMax - yMin; 
+ // retorna o valor do maior diametro em Z na interface 
+ real diameterZ = zMax - zMin; 
+
+ real radius = (diameterX+diameterY+diameterZ)/6.0;
+
+ // sphere
+ real dPAnalytic = 2.0/(We*radius); 
+
+ real pInSum = 0;
+ real pOutSum = 0;
+ real countIn = 0;
+ real countOut = 0;
+ zFile << setprecision(10) << scientific;
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( heaviside->Get(i) > 0.5 )
+  {
+   pInSum += pSol->Get(i);
+   countIn++;
+  }
+  if( heaviside->Get(i) < 0.5 )
+  {
+   pOutSum += pSol->Get(i);
+   countOut++;
+  }
+ }
+ real dP = fabs(pInSum/countIn) - fabs(pOutSum/countOut);
+ real L1 = fabs(dPAnalytic-dP)/dPAnalytic;
+ real L2 = sqrt( (dPAnalytic-dP)*(dPAnalytic-dP)/(dPAnalytic*dPAnalytic) );
+ zFile << fabs(pInSum/countIn) << setw(19) << fabs(pOutSum/countOut)
+	   << setw(19) << dP
+	   << setw(19) << dPAnalytic 
+	   << setw(19) << L1
+	   << setw(19) << L2
+	   << endl;
+
+ zFile.close();
+
+ cout << "pressure erro No. " << _iter << " saved in dat" << endl;
+
 } // fecha metodo crossSectionalPlane
 
 void InOut::bubbleWallDistance( const char* _dir,const char* _filename, int _iter )

@@ -1101,6 +1101,40 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  out.initialize();
 }
 
+void Model3D::transformDiskToSphere()
+{
+ // ndr = number of radius intervals or 2nd input in
+ // setMeshDisk(...,ndr,...)
+ int ndr = 0;
+ for( int i=0;i<numVerts;i++ )
+  if( Z.Get(i) == Z.Min() && Y.Get(i) == 0 && X.Get(i) > 0 )
+   ndr++;
+
+ real aux = 0;
+ real maxRadius = (X.Max()+Y.Max())/2.0;
+ for( int i=0;i<numNodes;i++ )
+ {
+  real radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
+  real height = Z.Get(i);
+  real dr = maxRadius/ndr;
+  real nr = radius/dr;
+  real theta = nr*(3.14159265359/2.0)/ndr;
+  real dr_new = (maxRadius+height)/ndr;
+
+  //aux = (dr_new*nr)*(X.Get(i)/(radius+1E-10)); // linear
+  aux = (sin(theta)*(maxRadius+height))*(X.Get(i)/(radius+1E-10));
+  X.Set(i,aux);
+
+  //aux = (dr_new*nr)*(Y.Get(i)/(radius+1E-10)); // linear
+  aux = (sin(theta)*(maxRadius+height))*(Y.Get(i)/(radius+1E-10));
+  Y.Set(i,aux);
+
+  real newRadius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
+  aux = sqrt( (maxRadius+height)*(maxRadius+height) - newRadius*newRadius );
+  Z.Set(i,aux);
+ }
+}
+
 
 void Model3D::mesh2Dto3D()
 {
@@ -9269,7 +9303,7 @@ void Model3D::remove3dMeshPointsByHeight()
 	//                   (surfMesh.phyBounds.at(v3) == "\"wallOutflow\"" );
 	//-------------------------------------------------- 
 
-	if( minHeight < 0.4*triEdge[vertID] //&& 
+	if( minHeight < 0.7*triEdge[vertID] //&& 
 	//if( minHeight < 0.4*edgeSize.Get(v1)  && 
 	    //pressureTest 
 	  )

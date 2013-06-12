@@ -35,7 +35,8 @@ obj = $(src:%.cpp=%.o)
 
 all: single-phase two-phase two-phaseHT
 
-single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE 
+single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
+              sphereNuCte 
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
@@ -64,6 +65,9 @@ diskNuC: ${FEM3D_DIR}/script/mainDiskNuC.o $(obj)
 	 -${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 diskNuCte: ${FEM3D_DIR}/script/mainDiskNuCte.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+sphereNuCte: ${FEM3D_DIR}/script/mainSphereNuCte.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 finiteDisk: ${FEM3D_DIR}/script/mainFiniteDisk.o $(obj)

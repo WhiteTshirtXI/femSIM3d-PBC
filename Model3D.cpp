@@ -4409,6 +4409,56 @@ void Model3D::setInfiniteDiskBC(real _F,real _G, real _H)
  }
 }
 
+void Model3D::setInfiniteSphereBC(real _F,real _G, real _H)
+{
+ //real radius;
+ real omega,aux;
+ rMax = Y.Max();
+
+#if NUMGLEU == 5
+ real numBCPoints = numVerts;
+#else
+ real numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
+ {
+  //radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
+
+  if( Z.Get(i) == Z.Min() )
+  {
+   idbcu.AddItem(i);
+   idbcv.AddItem(i);
+   idbcw.AddItem(i);
+
+   omega=1.0;
+
+   aux = (-1.0)*Y.Get(i)*omega;
+   uc.Set(i,aux);
+   aux = X.Get(i)*omega;
+   vc.Set(i,aux);
+   aux = 0.0;
+   wc.Set(i,aux);
+  }
+
+  if( (Z.Get(i)<Z.Max() && 
+	   Z.Get(i)>Z.Min() && 
+	  (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) > 
+	   (rMax*rMax - 0.001) ) ) ||
+	  (Z.Get(i) == Z.Max()))
+  {
+   outflow.Set(i,aux);
+
+   if( i < numVerts )
+   {
+	idbcp.AddItem(i);
+	aux = 0.0;
+	pc.Set(i,aux);
+   }
+  }
+ }
+}
+
 void Model3D::setFiniteDiskBC()
 {
  real omega,aux;

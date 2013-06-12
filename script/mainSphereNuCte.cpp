@@ -42,7 +42,7 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,6,8);
+ m1.setMeshDisk(6,20,10);
  m1.setAdimenDisk();
  m1.setMapEdge(); 
 #if NUMGLEU == 5
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
  m1.tetMeshStats();
 
  // F, G and H
- m1.setInfiniteDiskBC(1.3326987e-04,1.7327920e-04,8.8416563E-01);
+ m1.setInfiniteSphereBC(0.0,0.0,0.0);
  //m1.setCDiskBC();
 
  InOut save2(m1); // cria objeto de gravacao

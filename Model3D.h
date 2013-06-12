@@ -180,6 +180,7 @@ class Model3D
 
   // boundary condition settings
   void setInfiniteDiskBC(real _F,real _G,real _H);
+  void setInfiniteSphereBC(real _F,real _G, real _H);
   void setFiniteDiskBC();
   void setCDiskBC();
   void setDiskFSBC();

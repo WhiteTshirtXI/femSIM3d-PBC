@@ -18,7 +18,7 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
 
  Model3D m1;
- m1.setMeshTorus(1.5,0.5);
+ //m1.setMeshTorus(1.5,0.5);
 
  m1.setInterfaceBC();
  m1.setTriEdge();

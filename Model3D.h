@@ -132,6 +132,7 @@ class Model3D
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
+  void transformDiskToSphere();
   void setMeshTorus(real _a,real _b);
   void mesh2Dto3D();
   void mesh2Dto3DOriginal();

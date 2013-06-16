@@ -52,7 +52,7 @@ int main(int argc, char **argv)
  m1.readVTK(vtkFile);
  m1.setMiniElement();
  m1.readVTKHeaviside(vtkFile);
- m1.setOFace();
+ m1.setMapping();
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setGenericBC();
 

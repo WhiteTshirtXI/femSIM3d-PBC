@@ -54,13 +54,12 @@ int main(int argc, char **argv)
  m1.setInterfaceBC();
  m1.setTriEdge();
  m1.mesh2Dto3D();
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
- m1.setOFace();
- m1.setMapEdge(); 
  m1.setVertNeighbour();
  m1.setInOutVert();
  m1.setStepBC();

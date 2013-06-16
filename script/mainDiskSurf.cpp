@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
  Model3D m1;
  m1.setMeshDisk(8,8,7);
- m1.setMapEdge(); 
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
@@ -61,7 +61,6 @@ int main(int argc, char **argv)
  m1.setPerturbSurf();
  //m1.setPerturbSurf2();
  //m1.setPerturbSurfSquare();
- m1.setOFace();
  m1.setSurface();
  m1.setInOutVert();
  //m1.setInOutElem();
@@ -146,13 +145,13 @@ int main(int argc, char **argv)
 //   Model3D mOld = m1; 
 //   //m1.mesh2Dto3DOriginal();
 //   m1.mesh3DPoints();
+//   m1.setMapping();
 //#if NUMGLEU == 5
 // m1.setMiniElement();
 //#else
 // m1.setQuadElement();
 //#endif
 //   m1.setDiskFSBC();
-//   m1.setOFace();
 //   m1.setSurface();
 //   m1.setInOutVert();
 //   //m1.setInOutElem();

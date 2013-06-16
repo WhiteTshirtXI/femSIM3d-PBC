@@ -80,12 +80,12 @@ int main(int argc, char **argv)
  m1.setTriEdge();
  m1.setWallInterfaceBC();
  m1.mesh2Dto3D();
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
- m1.setOFace();
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
@@ -195,12 +195,12 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setGenericBC();
 

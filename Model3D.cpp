@@ -96,13 +96,9 @@ Model3D::Model3D(const Model3D &_mRight)
   idbcc = _mRight.idbcc;
   V = _mRight.V;
   IEN = _mRight.IEN;
-  faceFace = _mRight.faceFace;
-  freeFace = _mRight.freeFace;
-  mapViz = _mRight.mapViz;
   oFace = _mRight.oFace;
   surfMesh = _mRight.surfMesh;
   interfaceMesh = _mRight.interfaceMesh;
-  convexMesh = _mRight.convexMesh;
   vertIdRegion = _mRight.vertIdRegion;
   elemIdRegion = _mRight.elemIdRegion;
   triEdge = _mRight.triEdge;
@@ -1101,6 +1097,11 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  out.initialize();
 }
 
+/* Method to transform the coordinates of the disk problem to the
+ * sphere.
+ *
+ * Obs.: this method keeps the edge equally distanced
+ * */
 void Model3D::transformDiskToSphere()
 {
  // ndr = number of radius intervals or 2nd input in
@@ -1119,13 +1120,10 @@ void Model3D::transformDiskToSphere()
   real dr = maxRadius/ndr;
   real nr = radius/dr;
   real theta = nr*(3.14159265359/2.0)/ndr;
-  real dr_new = (maxRadius+height)/ndr;
 
-  //aux = (dr_new*nr)*(X.Get(i)/(radius+1E-10)); // linear
   aux = (sin(theta)*(maxRadius+height))*(X.Get(i)/(radius+1E-10));
   X.Set(i,aux);
 
-  //aux = (dr_new*nr)*(Y.Get(i)/(radius+1E-10)); // linear
   aux = (sin(theta)*(maxRadius+height))*(Y.Get(i)/(radius+1E-10));
   Y.Set(i,aux);
 
@@ -5816,10 +5814,6 @@ void Model3D::checkTetrahedronOrientation()
  }
 }
 
-// criando os nos na metade de cada aresta. Para isso eh necessario
-// fazer uma lista de arestas e numera-las de forma que uma aresta comum
-// tenha apenas 1 numero e seja compartilhada em todos os elementos que
-// tem a aresta. 
 /*
  * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
  * mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
@@ -5829,13 +5823,19 @@ void Model3D::checkTetrahedronOrientation()
  * mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
  *
  * */
-void Model3D::setMapEdge()
+void Model3D::setMapping()
 {
- int numFace = 6; // teraedro tem 6 arestas
- clVector faceaux(2);
- IFACE2D *faces = NULL;
- int listSize = numFace*numElems;
- faces = new IFACE2D[listSize];
+ setNeighbour();
+
+ int numFaces = 4; // teraedro tem 6 arestas
+ clVector faceaux(3);
+ IFACE3D *faces = NULL;
+ faces = new IFACE3D[numFaces*numElems];
+
+ int numEdges = 6; // teraedro tem 6 arestas
+ clVector edgeaux(2);
+ IFACE2D *edges = NULL;
+ edges = new IFACE2D[numEdges*numElems];
 
  checkTetrahedronOrientation();
 
@@ -5846,65 +5846,169 @@ void Model3D::setMapEdge()
   int v3 = (int) IEN.Get(mele,2);
   int v4 = (int) IEN.Get(mele,3);
 
+  // 1st. face 0-1-2
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v2);
+  faceaux.Set(2,v3);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFaces*mele+0].p1 = (int) faceaux.Get(0);
+  faces[numFaces*mele+0].p2 = (int) faceaux.Get(1);
+  faces[numFaces*mele+0].p3 = (int) faceaux.Get(2);
+  faces[numFaces*mele+0].p4 = mele;
+  faces[numFaces*mele+0].p5 = 3; // ID of v4
+
+  // 2nd. face 0-1-3
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v2);
+  faceaux.Set(2,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFaces*mele+1].p1 = (int) faceaux.Get(0);
+  faces[numFaces*mele+1].p2 = (int) faceaux.Get(1);
+  faces[numFaces*mele+1].p3 = (int) faceaux.Get(2);
+  faces[numFaces*mele+1].p4 = mele;
+  faces[numFaces*mele+1].p5 = 2; // ID of v3
+
+  // 3rd. face 0-2-3
+  faceaux.Set(0,v1);
+  faceaux.Set(1,v3);
+  faceaux.Set(2,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFaces*mele+2].p1 = (int) faceaux.Get(0);
+  faces[numFaces*mele+2].p2 = (int) faceaux.Get(1);
+  faces[numFaces*mele+2].p3 = (int) faceaux.Get(2);
+  faces[numFaces*mele+2].p4 = mele;
+  faces[numFaces*mele+2].p5 = 1; // ID of v2
+
+  // 4th. face 1-2-3
+  faceaux.Set(0,v2);
+  faceaux.Set(1,v3);
+  faceaux.Set(2,v4);
+  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  faces[numFaces*mele+3].p1 = (int) faceaux.Get(0);
+  faces[numFaces*mele+3].p2 = (int) faceaux.Get(1);
+  faces[numFaces*mele+3].p3 = (int) faceaux.Get(2);
+  faces[numFaces*mele+3].p4 = mele;
+  faces[numFaces*mele+3].p5 = 0; // ID of v1
+
   // 1st. edge
   faceaux.Set(0,v1);
   faceaux.Set(1,v2);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+0].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+0].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+0].p3 = mele;
+  edges[numEdges*mele+0].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+0].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+0].p3 = mele;
 
   // 2nd. edge
   faceaux.Set(0,v1);
   faceaux.Set(1,v3);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+1].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+1].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+1].p3 = mele;
+  edges[numEdges*mele+1].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+1].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+1].p3 = mele;
 
   // 3rd. edge
   faceaux.Set(0,v1);
   faceaux.Set(1,v4);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+2].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+2].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+2].p3 = mele;
+  edges[numEdges*mele+2].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+2].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+2].p3 = mele;
 
   // 4th. edge
   faceaux.Set(0,v2);
   faceaux.Set(1,v3);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+3].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+3].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+3].p3 = mele;
+  edges[numEdges*mele+3].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+3].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+3].p3 = mele;
 
   // 5th. edge
   faceaux.Set(0,v2);
   faceaux.Set(1,v4);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+4].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+4].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+4].p3 = mele;
+  edges[numEdges*mele+4].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+4].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+4].p3 = mele;
 
   // 6th. edge
   faceaux.Set(0,v3);
   faceaux.Set(1,v4);
   faceaux.Sort(); // para ordenar os vertices de uma aresta
-  faces[numFace*mele+5].p1 = (int) faceaux.Get(0);
-  faces[numFace*mele+5].p2 = (int) faceaux.Get(1);
-  faces[numFace*mele+5].p3 = mele;
+  edges[numEdges*mele+5].p1 = (int) edgeaux.Get(0);
+  edges[numEdges*mele+5].p2 = (int) edgeaux.Get(1);
+  edges[numEdges*mele+5].p3 = mele;
  }
 
  // ordena uma estrutura (matriz) em ordem crescente na linha e coluna
  // as faces continuam repetidas neste ponto.
- qsort(faces,listSize,sizeof(IFACE2D),IFACE2DCompare);
+ qsort(faces,numFaces*numElems,sizeof(IFACE3D),IFACE3DCompare);
+ qsort(edges,numEdges*numEdges,sizeof(IFACE2D),IFACE2DCompare);
 
 //--------------------------------------------------
-//  for( int i=0;i<listSize;i++ )
+//  for( int i=0;i<numFaces*numElems;i++ )
 //   cout << faces[i].p1 << " "
 //        << faces[i].p2 << " "
 //        << faces[i].p3 << endl;
 //-------------------------------------------------- 
+
+ /*        - nome: oFace
+           - definicao: matrix com mapeamento de elementos opostos ao 
+		                vertice em questao. Se encontrar o valor (-1) quer
+						dizer que o vertice nao apresenta elemento oposto,
+						ou seja, eh um elemento de fronteira
+
+               +---+---+---+
+               | a | a | a |  a = identificacao dos vertices do elemento
+     ---   +---+---+---+---+      seguindo a ordem local 0-1-2
+      |    | b | e | e | e |  
+      |    +---+---+---+---+  b = idendificacao dos elementos
+	  |    .   .   .   .   .  
+	  |	   .   .   .   .   .  e = identificacao do elemento oposto ao 
+	  c    .   .   .   .   .      vertice
+      |    +---+---+---+---+
+      |    | b | e | e | e |
+      |    +---+---+---+---+  c = numero total de elementos
+      |    | b | e | e | e |  d = numero de total de vertices do elemento 
+     ---   +---+---+---+---+
+
+	       |________ d ________|
+		   |                   |
+ */
+
+ // vertices belonging to the boundary
+ boundaryVert.clear();
+ oFace.Dim(numElems,NUMGLE);
+ for( int i=0;i<numElems;i++ )
+  for( int j=0;j<NUMGLE;j++ )
+   oFace.Set(i,j,-1);
+
+ /* p1 = v1
+  * p2 = v2
+  * p3 = v3
+  * p4 = elem
+  * p5 = v postition (0,1,2 or 3)
+  * */
+ int i = 0;
+ while( i < numFaces*numElems-1 )
+ {
+  if( faces[i].p1 == faces[i+1].p1 && 
+	  faces[i].p2 == faces[i+1].p2 &&
+	  faces[i].p3 == faces[i+1].p3 )
+  {
+   oFace.Set(faces[i].p4,faces[i].p5,faces[i+1].p4);
+   oFace.Set(faces[i+1].p4,faces[i+1].p5,faces[i].p4);
+   i += 2;
+  }
+  else
+  {
+   boundaryVert.push_back(faces[i].p1);
+   boundaryVert.push_back(faces[i].p2);
+   boundaryVert.push_back(faces[i].p3);
+   i += 1;
+  }
+ }
+ boundaryVert.sort();
+ boundaryVert.unique();
 
  /*        - nome: mapEdge
            - definicao: matrix com mapeamento de arestas
@@ -5941,22 +6045,22 @@ void Model3D::setMapEdge()
   *  but in 3D there is no fixed number of neighbours elements.
   * */
  neighbourEdge.clear();
- neighbourEdge.resize (listSize);
- mapEdge.Dim(listSize,6);
+ neighbourEdge.resize (numEdges*numElems);
+ mapEdge.Dim(numEdges*numElems,6);
 
  // numeracao de arestas a partir de numVerts e associacao das arestas
- // aos elementos para inclusao na IEN
- // OBS.: the for loop is from 0 to listSize-1. This can be done because
- // the last line of faces (faces[listSize-1]) is always a repetion of
- // the previous one (faces[listSize-2]).
- for( int i=0;i<listSize-1;i++ )
+ // aos elementos para inclusao na IEN OBS.: the for loop is from 0 to
+ // numEdges*numElems-1. This can be done because the last line of edges
+ // (edges[numEdges*numElems-1]) is always a repetion of the previous one
+ // (edges[numEdges*numElems-2]).
+ for( int i=0;i<numEdges*numElems-1;i++ )
  {
-  real x1=X.Get(faces[i].p1);
-  real y1=Y.Get(faces[i].p1);
-  real z1=Z.Get(faces[i].p1);
-  real x2=X.Get(faces[i].p2);
-  real y2=Y.Get(faces[i].p2);
-  real z2=Z.Get(faces[i].p2);
+  real x1=X.Get(edges[i].p1);
+  real y1=Y.Get(edges[i].p1);
+  real z1=Z.Get(edges[i].p1);
+  real x2=X.Get(edges[i].p2);
+  real y2=Y.Get(edges[i].p2);
+  real z2=Z.Get(edges[i].p2);
 
   real xMid = (x1+x2)*0.5;
   real yMid = (y1+y2)*0.5;
@@ -5971,18 +6075,18 @@ void Model3D::setMapEdge()
   mapEdge.Set(edge,1,xMid ); // coordenada X do centro da aresta
   mapEdge.Set(edge,2,yMid ); // coordenada Y do centro da aresta
   mapEdge.Set(edge,3,zMid ); // coordenada Y do centro da aresta
-  mapEdge.Set(edge,4,faces[i].p1 ); // 1o noh
-  mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
+  mapEdge.Set(edge,4,edges[i].p1 ); // 1o noh
+  mapEdge.Set(edge,5,edges[i].p2 ); // 2o noh
 
-  neighbourEdge.at(edge).push_back(faces[i].p3);
+  neighbourEdge.at(edge).push_back(edges[i].p3);
 
-  // faces[listSize]
-  while( (i<listSize-1 ) &&
-         (faces[i].p1 == faces[i+1].p1) &&
-         (faces[i].p2 == faces[i+1].p2) )
+  // edges[numEdges*numElems]
+  while( (i<numEdges*numElems-1 ) &&
+         (edges[i].p1 == edges[i+1].p1) &&
+         (edges[i].p2 == edges[i+1].p2) )
 		 
   {
-   neighbourEdge.at(edge).push_back(faces[i+1].p3);
+   neighbourEdge.at(edge).push_back(edges[i+1].p3);
    i++; // pula 1 linha
   }
   edge++; // numero total de arestas
@@ -6004,6 +6108,7 @@ void Model3D::setMapEdge()
 //-------------------------------------------------- 
 
  delete[] faces;
+ delete[] edges;
 }
 
 void Model3D::setQuadElement()
@@ -6109,7 +6214,7 @@ void Model3D::setQuadElement()
 void Model3D::setNeighbour()
 {
  neighbourElem.resize (0);
- neighbourElem.resize (numNodes);
+ neighbourElem.resize (numVerts);
 
  for( int i=0;i<numElems;i++ )
   for( int j= 0;j<NUMGLEU;j++ )
@@ -6294,157 +6399,6 @@ void Model3D::setSurfaceTri()
 }
 
 /*
- * cria matriz IEN para os elementos do convex-hull que no caso 3D sao
- * triagulos. Este metodo utiliza freeFace. 
- * Note que a triangulacao esta referenciada pelas coordenadas globais
- * X,Y e Z. Isto quer dizer que a malha do convex-hull tem 'buracos' em
- * sua numeracao. Para reordenar a malha com os vertices comecando do
- * indice '0' eh necessario passar no metodo arrangeIEN.
- */
-void Model3D::setConvexTri()
-{
- convexMesh.numElems = freeFace.DimI();
- convexMesh.IEN.Dim(convexMesh.numElems,3);
-
- for (int i=0;i<freeFace.DimI();i++ )
- {
-  int v1 = freeFace.Get(i,2);
-  int v2 = freeFace.Get(i,3);
-  int v3 = freeFace.Get(i,4);
-
-  convexMesh.IEN.Set(i,0,v1);
-  convexMesh.IEN.Set(i,1,v2);
-  convexMesh.IEN.Set(i,2,v3);
- }
-
- convexMesh.numVerts = convexMesh.IEN.Max()+1;
- convexMesh.X.Dim(convexMesh.numVerts);
- convexMesh.Y.Dim(convexMesh.numVerts);
- convexMesh.Z.Dim(convexMesh.numVerts);
- convexMesh.Marker.Dim(convexMesh.numVerts);
-
- for (int i=0;i<convexMesh.numElems;i++ )
- {
-  int v1 = convexMesh.IEN.Get(i,0);
-  int v2 = convexMesh.IEN.Get(i,1);
-  int v3 = convexMesh.IEN.Get(i,2);
-
-  convexMesh.X.Set(v1,surfMesh.X.Get(v1));
-  convexMesh.X.Set(v2,surfMesh.X.Get(v2));
-  convexMesh.X.Set(v3,surfMesh.X.Get(v3));
-
-  convexMesh.Y.Set(v1,surfMesh.Y.Get(v1));
-  convexMesh.Y.Set(v2,surfMesh.Y.Get(v2));
-  convexMesh.Y.Set(v3,surfMesh.Y.Get(v3));
-
-  convexMesh.Z.Set(v1,surfMesh.Z.Get(v1));
-  convexMesh.Z.Set(v2,surfMesh.Z.Get(v2));
-  convexMesh.Z.Set(v3,surfMesh.Z.Get(v3));
-
-  convexMesh.Marker.Set(v1,0.0);
-  convexMesh.Marker.Set(v2,0.0);
-  convexMesh.Marker.Set(v3,0.0);
- }
-}
-
-/* This method build the surfMesh struct, combining interface and convex
- * structs. This struct can only be created after the assembling of
- * interfaceMesh and convexMesh.
- * The method is useful to define the 3D triangle surface mesh 
- * that is sent straigth to the mesh generator program (TETGEN). This is
- * essential to define mesh limits and interfaces between fluids and
- * solids. 
- * */
-void Model3D::buildSurfMesh()
-{
- surfMesh.numElems = interfaceMesh.numElems+convexMesh.numElems;
-
- int maxInterface = interfaceMesh.IEN.Max();
- int maxConvex = convexMesh.IEN.Max();
- int max = maxInterface;
- if( max < maxConvex )
-  max = maxConvex;
- surfMesh.numVerts = max+1;
-
- surfMesh.IEN = interfaceMesh.IEN;
- surfMesh.IEN.Append(convexMesh.IEN);
- surfMesh.X.Dim(surfMesh.numVerts);
- surfMesh.Y.Dim(surfMesh.numVerts);
- surfMesh.Z.Dim(surfMesh.numVerts);
- surfMesh.Marker.Dim(surfMesh.numVerts);
-
- for( int elem=0;elem<interfaceMesh.numElems;elem++ )
- {
-  int v1 = interfaceMesh.IEN.Get(elem,0);
-  int v2 = interfaceMesh.IEN.Get(elem,1);
-  int v3 = interfaceMesh.IEN.Get(elem,2);
-
-  real x1 = interfaceMesh.X.Get(v1); 
-  real x2 = interfaceMesh.X.Get(v2); 
-  real x3 = interfaceMesh.X.Get(v3); 
-
-  real y1 = interfaceMesh.Y.Get(v1); 
-  real y2 = interfaceMesh.Y.Get(v2); 
-  real y3 = interfaceMesh.Y.Get(v3); 
-
-  real z1 = interfaceMesh.Z.Get(v1);
-  real z2 = interfaceMesh.Z.Get(v2);
-  real z3 = interfaceMesh.Z.Get(v3);
-
-  surfMesh.X.Set( v1,x1 );
-  surfMesh.X.Set( v2,x2 );
-  surfMesh.X.Set( v3,x3 );
-
-  surfMesh.Y.Set( v1,y1 );
-  surfMesh.Y.Set( v2,y2 );
-  surfMesh.Y.Set( v3,y3 );
-
-  surfMesh.Z.Set( v1,z1 );
-  surfMesh.Z.Set( v2,z2 );
-  surfMesh.Z.Set( v3,z3 );
-
-  surfMesh.Marker.Set( v1,0.5 );
-  surfMesh.Marker.Set( v2,0.5 );
-  surfMesh.Marker.Set( v3,0.5 );
- }
-
- for( int elem=0;elem<convexMesh.numElems;elem++ )
- {
-  int v1 = convexMesh.IEN.Get(elem,0);
-  int v2 = convexMesh.IEN.Get(elem,1);
-  int v3 = convexMesh.IEN.Get(elem,2);
-
-  real x1 = convexMesh.X.Get(v1); 
-  real x2 = convexMesh.X.Get(v2); 
-  real x3 = convexMesh.X.Get(v3); 
-
-  real y1 = convexMesh.Y.Get(v1); 
-  real y2 = convexMesh.Y.Get(v2); 
-  real y3 = convexMesh.Y.Get(v3); 
-
-  real z1 = convexMesh.Z.Get(v1);
-  real z2 = convexMesh.Z.Get(v2);
-  real z3 = convexMesh.Z.Get(v3);
-
-  surfMesh.X.Set( v1,x1 );
-  surfMesh.X.Set( v2,x2 );
-  surfMesh.X.Set( v3,x3 );
-                       
-  surfMesh.Y.Set( v1,y1 );
-  surfMesh.Y.Set( v2,y2 );
-  surfMesh.Y.Set( v3,y3 );
-                       
-  surfMesh.Z.Set( v1,z1 );
-  surfMesh.Z.Set( v2,z2 );
-  surfMesh.Z.Set( v3,z3 );
-
-  surfMesh.Marker.Set( v1,0.0 );
-  surfMesh.Marker.Set( v2,0.0 );
-  surfMesh.Marker.Set( v3,0.0 );
- }
-}
-
-/*
  * este metodo organiza uma estrutura do tipo IEN ordenando a partir de
  * um numero todos os outros vertices sem deixar 'buracos' na estrutura.
  * Isso quer dizer que podemos recriar uma malha comecando a numeracao
@@ -6568,479 +6522,18 @@ void Model3D::setInOutElem()
  }
 }
 
-// cria matrizes de mapeamentos de vizinhos opostos ao vertice em
-// questao. Este metodo funciona com Semi-Lagrangian pois permite a
-// procura de elementos considerando o vertice em questao. Uma descricao
-// completa das matrizes eh definida dentro do proprio metodo.
-void Model3D::setOFace()
-{
- clMatrix mapViz(numElems,numElems);
- clMatrix faceFace(1000,NUMGLE+1);
- //clMatrix freeFace(1000,NUMGLE+1);
- freeFace.Dim(1000,NUMGLE+1);
- clMatrix faceFaceAux;
- clMatrix freeFaceAux;
- clMatrix mapVizAux(numElems*NUMGLE,NUMGLE);
- clMatrix mapVizAux2(numElems*NUMGLE,NUMGLE);
- clMatrix comb(NUMGLE,NUMGLE-1);  // triangulo = 2
- clVector verts(NUMGLE);           // tetraedro = 3
- clVector face(NUMGLE-1);
- clVector index(numElems*NUMGLE);
- clVector index2(numElems*NUMGLE);
- clVector index3(numElems*NUMGLE);
- clVector idcol(numElems*NUMGLE);
- clVector idcol2(numElems*NUMGLE);
- clVector idcol3(numElems*NUMGLE);
- clVector vect1(NUMGLE+1);
- clVector vert(NUMGLE-1);
-
- //        - nome: comb
- //        - definicao:  matriz de aresta/face para um elemento de referencia
- //
- //            +---+---+---+
- //            | a | a | a |   a = identificacao dos vertices
- //  ---   +---+---+---+---+
- //   |    | b |   |   |   |   b = identificacao das faces   
- //   |    +---+---+---+---+
- //   |    | b |   |   |   |   c = quantidade de faces    
- //   c    +---+---+---+---+
- //   |    | b |   |   |   |   d = quantidade de vertices para formar face
- //   |    +---+---+---+---+
- //   |    | b |   |   |   |
- //  ---   |---+---+---+---+
- //
- //        |______ d ______|
- //        |               |
- //
-
- comb.Set(0,0,0);
- comb.Set(0,1,1);
- comb.Set(0,2,2);
- comb.Set(1,0,0);
- comb.Set(1,1,1);
- comb.Set(1,2,3);
- comb.Set(2,0,1);
- comb.Set(2,1,2);
- comb.Set(2,2,3);
- comb.Set(3,0,0);
- comb.Set(3,1,2);
- comb.Set(3,2,3);
-
- setNeighbour();
-
- int k = 0;
-
- for( int i=0;i<numElems;i++ )
- {
-  verts.CopyRow(i,IEN);
-  for( int j=0;j<NUMGLE;j++ )
-  {
-   face.Set(0,comb.Get(j,0));
-   face.Set(1,comb.Get(j,1));
-   face.Set(2,comb.Get(j,2));
-   vert.Set(0, (int) verts.Get( (int) face.Get(0) ) );
-   vert.Set(1, (int) verts.Get( (int) face.Get(1) ) );
-   vert.Set(2, (int) verts.Get( (int) face.Get(2) ) );
-   vert.Sort();
-   mapVizAux.Set(k,0,vert.Get(0));
-   mapVizAux.Set(k,1,vert.Get(1));
-   mapVizAux.Set(k,2,vert.Get(2));
-   mapVizAux.Set(k,3,i);
-   k++;
-  }
- }
-
-//--------------------------------------------------
-//  // ------------------ HELP
-//  int v1,v2,v3,v4;
-//  list<int> plist5;
-//  list<int>::iterator mele5;
-//  for( int ii=0;ii<numVerts;ii++ )
-//  {
-//   if( ii== 675 )
-//   {
-//    plist5 = neighbourElem.at(ii);
-//    cout << "surfaceNode " << ii << endl;
-//    for( mele5=plist5.begin(); mele5 != plist5.end();++mele5 )
-//    {
-// 	v1 = (int) IEN.Get(*mele5,0);
-// 	v2 = (int) IEN.Get(*mele5,1);
-// 	v3 = (int) IEN.Get(*mele5,2);
-// 	v4 = (int) IEN.Get(*mele5,3);
-// 	cout << v1 << " " << heaviside.Get(v1) << " " 
-// 	     << v2 << " " << heaviside.Get(v2) << " "
-// 	     << v3 << " " << heaviside.Get(v3) << " "
-// 	     << v4 << " " <<  heaviside.Get(v4) << " " << *mele5 << endl;
-//    }
-//    cout << endl;
-//   }
-//  }
-//-------------------------------------------------- 
-//--------------------------------------------------
-//  for( int i=0;i<numVerts;i++ )
-//  {
-//   int surfaceNode = i;
-//   if( surfaceNode == 659 )
-//   {
-//    cout << "---------" << surfaceNode << "------------" << endl;
-//    std::ostream_iterator< int > output( cout, " " );
-//    std::copy( neighbourElem.at(surfaceNode).begin(), neighbourElem.at(surfaceNode).end(), output );
-//    cout << endl;
-//   }
-//  }
-//  // ------------------ HELP
-//-------------------------------------------------- 
- 
-
-
-
-
- //cout << "mapVizAux: " << endl;
- //mapVizAux.Display();
- //cout << " -------------- " << endl;
-
- clVector faceaux(3);
- IFACE3D *faces = NULL;
- faces = new IFACE3D[4*(int)mapVizAux.DimI()];
- for( int i=0;i<mapVizAux.DimI();i++ )
- {
-  int v1 = (int) mapVizAux.Get(i,0);
-  int v2 = (int) mapVizAux.Get(i,1);
-  int v3 = (int) mapVizAux.Get(i,2);
-  int v4 = (int) mapVizAux.Get(i,3);
-
-  faceaux.Set(0,v1);
-  faceaux.Set(1,v2);
-  faceaux.Set(2,v3);
-  faceaux.Sort(); // ordena a linha
-  faces[i].p1 = (int)faceaux(0);
-  faces[i].p2 = (int)faceaux(1);
-  faces[i].p3 = (int)faceaux(2);
-  faces[i].p4 = v4;
- }
-
- // rotina em C que compara vertices de 2 elementos, ordenando-os
- qsort(faces,(int)mapVizAux.DimI(),sizeof(IFACE3D),IFACE3DCompare);
-
- for( int i=0;i<(int) mapVizAux.DimI();i++ )
- {
-  mapVizAux2.Set(i,0,faces[i].p1);
-  mapVizAux2.Set(i,1,faces[i].p2);
-  mapVizAux2.Set(i,2,faces[i].p3);
-  mapVizAux2.Set(i,3,faces[i].p4);
- }
-
- //        - nome: mapViz
- //        - definicao: matrix com mapeamento de vizinhos de cada
- //                     elemento
- //  					Cada linha da matriz so podera apresentar no 
- //  					maximo o numero de vizinhos de cada elemento, no
- //  					caso do tetraedro os valores diferentes de zero por
- //  					linha nao ultrapassa de 3. A estrutura desta matriz
- //  					deve ser esparsa.
- //
- //              +---+---+---+ ... +---+
- //              | a | a | a |     | a |
- //    ---   +---+---+---+---+ ... +---+
- //     |    | b | e | e | e |     | e |  a = identificacao do elemento
- //     |    +---+---+---+---+ ... +---+
- //     |    .   .   .   .   . ... .   .  b = identificacao do elemento viz.
- //     |	 .   .   .   .   . ... .   .
- //     c    .   .   .   .   . ... .   .  c = numero total de elementos
- //     |    +---+---+---+---+ ... +---+                               
- //     |    | b | e | e | e |     | e |  d = numero total de elementos
- //     |    +---+---+---+---+ ... +---+
- //     |    | b | e | e | e |     | e |  e = identificacao da aresta
- //    ---   +---+---+---+---+ ... +---+
- //
- //          |___________ d ___________|
- //   	     |                         |
- //
- 
- //          - nome: faceFace
- //          - definicao: matrix com mapeamento de faces vizinhas de cada
- //   	                elemento. As arestas dobradas sao retiradas da
- //   					matriz mapViz. Se apresenta aresta dobrada quer 
- //   					dizer que 2 elementos possuem a mesma aresta, 
- //   					entao sao elementos vizinhos
- //
- //              +---+---+---+---+---+
- //              | a | b | c | d | e |  a = identificacao do 1o. elemento
- //    ---   +---+---+---+---+---+---+  b = identificacao do 2o. elemento
- //     |    | f |   |   |   |   |   |  c = 1o. vertice da face em comum
- //     |    +---+---+---+---+---+---+  d = 2o. vertice da face em comum
- //     |    .   .   .   .   .   .   .  e = 3o. vertice da face comum
- //     |	 .   .   .   .   .   .   .  f = ident da face dobrada
- //     g    .   .   .   .   .   .   .
- //     |    +---+---+---+---+---+---+
- //     |    | f |   |   |   |   |   |
- //     |    +---+---+---+---+---+---+  g = numero de arestas dobradas
- //     |    | f |   |   |   |   |   |  h = 2 elem + 3 vertices de aresta = 5
- //    ---   +---+---+---+---+---+---+
- //
- //          |________ h ________|
- //          |                   |
- //
- 
- //        - nome: freeFace
- //          - definicao: matrix com mapeamento de faces de fronteira 
- //   	                de cada elemento, pois nao possuem arestas 
- //   					dobradas. Como a identificacao segue o 
- //   					padram da matriz faceFace, a 1a coluna eh igual a 
- //   					zero pois em condicao de contorno o elemento nao
- //   					tem vizinho
- //
- //              +---+---+---+---+---+
- //              | a | b | c | d | e |  a = identificacao do 1o. elemento = 0
- //    ---   +---+---+---+---+---+---+  b = identificacao do 2o. elemento
- //     |    | f |   |   |   |   |   |  c = 1o. vertice da face em comum
- //     |    +---+---+---+---+---+---+  d = 2o. vertice da face em comum
- //     |    .   .   .   .   .   .   .  e = 3o. vertice da face comum
- //     |	 .   .   .   .   .   .   .  f = ident da face dobrada
- //     g    .   .   .   .   .   .   .
- //     |    +---+---+---+---+---+---+
- //     |    | f |   |   |   |   |   |
- //     |    +---+---+---+---+---+---+  g = numero de arestas dobradas
- //     |    | f |   |   |   |   |   |  h = 2 elem + 3 vertices de aresta = 5
- //    ---   +---+---+---+---+---+---+
- //
- //          |________ h ________|
- //          |                   |
- //
- 
- // procura de elementos que apresentam 3 vertices iguais -> faceFace
- // procura de elementos que nao possuem vizinhos -> freeFace
- mapVizAux = mapVizAux2;
- int iFace = 0;
- int iFree = 0;
- for ( int ii=0;ii<mapVizAux.DimI()-1;ii++ )
- {
-  if( (mapVizAux.Get(ii,0)==mapVizAux.Get(ii+1,0)) &&
-	  (mapVizAux.Get(ii,1)==mapVizAux.Get(ii+1,1)) &&  
-	  (mapVizAux.Get(ii,2)==mapVizAux.Get(ii+1,2)) )  
-  {
-   // a matriz faceFace eh pre-alocada com 1000 linhas, caso ultrapasse
-   // esse valor realoca-se para uma dimensao maior
-   if( iFace == faceFace.DimI() ) 
-   {
-	faceFaceAux = faceFace;
-	faceFace.Dim(iFace+faceFaceAux.DimI(),NUMGLE+1);
-	faceFace.CopyFrom(0,0,faceFaceAux);
-   }
-   faceFace.Set(iFace,0,mapVizAux.Get(ii+1,3));
-   faceFace.Set(iFace,1,mapVizAux.Get(ii,3));
-   faceFace.Set(iFace,2,mapVizAux.Get(ii,0));
-   faceFace.Set(iFace,3,mapVizAux.Get(ii,1));
-   faceFace.Set(iFace,4,mapVizAux.Get(ii,2));
-   ii++; // pois existem 2 faces
-   iFace++;
-  } 
-  if((ii==0) || 
-	(   (ii!=0) && ( mapVizAux.Get(ii,0)!=mapVizAux.Get(ii-1,0) ||
-					 mapVizAux.Get(ii,1)!=mapVizAux.Get(ii-1,1) ||     
-					 mapVizAux.Get(ii,2)!=mapVizAux.Get(ii-1,2) ) ))     
-  {    
-   // a matriz freeFace eh pre-alocada com 1000 linhas, caso ultrapasse
-   // esse valor realoca-se para uma dimensao maior
-   if( iFree == freeFace.DimI() ) 
-   {
-	freeFaceAux = freeFace;
-	freeFace.Dim(iFree+freeFaceAux.DimI(),NUMGLE+1);
-	freeFace.CopyFrom(0,0,freeFaceAux);
-   }
-   freeFace.Set(iFree,0,0);
-   freeFace.Set(iFree,1,mapVizAux.Get(ii,3));
-   freeFace.Set(iFree,2,mapVizAux.Get(ii,0));
-   freeFace.Set(iFree,3,mapVizAux.Get(ii,1));
-   freeFace.Set(iFree,4,mapVizAux.Get(ii,2));
-   iFree++;
-  }
- }
- int ii = mapVizAux.DimI()-1;
- if( ( mapVizAux.Get(ii,0)!=mapVizAux.Get(ii-1,0) ||
-	   mapVizAux.Get(ii,1)!=mapVizAux.Get(ii-1,1) ||     
-	   mapVizAux.Get(ii,2)!=mapVizAux.Get(ii-1,2) ) )     
- {
-   if( iFree == freeFace.DimI() ) 
-   {
-	freeFaceAux = freeFace;
-	freeFace.Dim(iFree+freeFaceAux.DimI(),NUMGLE+1);
-	freeFace.CopyFrom(0,0,freeFaceAux);
-   }
-   freeFace.Set(iFree,0,0);
-   freeFace.Set(iFree,1,mapVizAux.Get(ii,3));
-   freeFace.Set(iFree,2,mapVizAux.Get(ii,0));
-   freeFace.Set(iFree,3,mapVizAux.Get(ii,1));
-   freeFace.Set(iFree,4,mapVizAux.Get(ii,2));
-   iFree++;
- }
-
- // como as matrizes faceFace e freeFace possuem dimensoes variaveis,
- // precisa-se aloca-las com um numero maior que o necessario. Apos suas
- // atribuicoes, necessita-se dimensiona-las para o tamanho final
- // redimensionalizando...
- faceFaceAux = faceFace;
- freeFaceAux = freeFace;
- faceFace.Dim(iFace,NUMGLE+1);
- freeFace.Dim(iFree,NUMGLE+1);
- faceFaceAux.CopyTo(0,0,faceFace);
- freeFaceAux.CopyTo(0,0,freeFace);
-
- mapVizAux.Dim(0,0);
- mapVizAux2.Dim(0,0);
-
- //        - nome: oFace
- //        - definicao: matrix com mapeamento de elementos opostos ao 
- //   	                vertice em questao. Se encontrar o valor (-1) quer
- //   					dizer que o vertice nao apresenta elemento oposto,
- //   					ou seja, eh um elemento de fronteira
- //
- //              +---+---+---+---+
- //              | a | a | a | a |  a = identificacao dos vertices do elemento
- //    ---   +---+---+---+---+---+      seguindo a ordem local 0-1-2-3
- //     |    | b | e | e | e | e |  
- //     |    +---+---+---+---+---+  b = idendificacao dos elementos
- //     |    .   .   .   .   .   .  
- //     |	 .   .   .   .   .   .  e = identificacao do elemento oposto ao 
- //     c    .   .   .   .   .   .      vertice
- //     |    +---+---+---+---+---+
- //     |    | b | e | e | e | e |
- //     |    +---+---+---+---+---+  c = numero total de elementos
- //     |    | b | e | e | e | e |  d = numero de total de vertices do elemento 
- //    ---   +---+---+---+---+---+
- //
- //          |________ d ________|
- //     	 |                   |
- 
- oFace.Dim(numElems,NUMGLE);
- for( int i=0;i<numElems;i++ )
-  for( int j=0;j<NUMGLE;j++ )
-   oFace.Set(i,j,-1);
-
- clVector tetra(IEN.DimJ());
-
- for( int ii=0;ii<faceFace.DimI();ii++ )
- {
-  int elem1 = (int) faceFace.Get(ii,0);
-  int elem2 = (int) faceFace.Get(ii,1);
-  vert.Set(0, (int) faceFace.Get(ii,2) );
-  vert.Set(1, (int) faceFace.Get(ii,3) );
-  vert.Set(2, (int) faceFace.Get(ii,4) );
-
-  // armazena o numero da aresta + 1, para manter a matriz esparsa
-  mapViz.Set(elem1,elem2,ii+1);
-  mapViz.Set(elem2,elem1,ii+1);
-
-  tetra.CopyRow(elem1,IEN);
-
-  for( int kk=0;kk<NUMGLE;kk++)
-   if( (tetra.Get(kk) != vert.Get(0)) && 
-	   (tetra.Get(kk) != vert.Get(1)) && 
-	   (tetra.Get(kk) != vert.Get(2)) )
-   {
-	oFace.Set(elem1,kk,elem2);
-	break;
-   }
-
-  tetra.CopyRow(elem2,IEN);
-  for ( int kk=0;kk<NUMGLE;kk++ )
-   if( (tetra.Get(kk) != vert.Get(0)) && 
-	   (tetra.Get(kk) != vert.Get(1)) && 
-	   (tetra.Get(kk) != vert.Get(2)) )
-   {
-	oFace.Set(elem2,kk,elem1);
-	break;
-   }
- }
-
- // correcao da oFace (funcionando para malha step40-20-10)
- int vec[3];
- int v[4];
- int aresta = 0;
- int vertOp1 = 0;
- int vertOp2 = 0;
- int kFace = 0;
- int nele;
- int count;
- list<int> plist;
- list<int>::iterator mele; // definicao do iterador
- for( int i=0;i<freeFace.DimI();i++ )
- {
-  nele = (int) freeFace.Get(i,1);
-  vec[0] = (int) freeFace.Get(i,2); 
-  vec[1] = (int) freeFace.Get(i,3); 
-  vec[2] = (int) freeFace.Get(i,4); 
-  for( int j=0;j<NUMGLE-1;j++ )
-  {
-   ii = (int) freeFace.Get(i,j+2);
-   plist = neighbourElem.at(ii);
-   for (mele=plist.begin(); mele != plist.end(); ++mele)
-   {
-	v[0] = (int) IEN.Get(*mele,0);
-	v[1] = (int) IEN.Get(*mele,1);
-	v[2] = (int) IEN.Get(*mele,2);
-	v[3] = (int) IEN.Get(*mele,3);
-	count = 0;
-	for( int m=0;m<3;m++ )
-	 for( int n=0;n<4;n++ )
-	  if( (vec[m] == v[n]) && (vec[m] != ii) ){ aresta = vec[m];count++; }
-	  
-	if( count == 1 ) // aresta localizada!
-	{
-	 for( int m=0;m<3;m++ )
-	  if( vec[m] != ii ) kFace = m; 
-	 
-	 for( int m=0;m<3;m++ )
-	 {
-	  if( (v[m] != ii) && (v[m] != aresta) )
-	  {
-	   if( testFace(ii,aresta,vec[kFace],v[m]) )
-	   {
-		for( int n=0;n<4;n++ )
-		{
-		 if( (IEN.Get(nele,n) != ii) && 
-		     (IEN.Get(nele,n) != aresta) && 
-			 (IEN.Get(nele,n) != vec[kFace]) )  
-		  vertOp1 = n;
-		}
-		for( int n=0;n<4;n++ )
-		{
-		 if( (IEN.Get(*mele,n) != ii) && 
-		     (IEN.Get(*mele,n) != aresta) && 
-			 (IEN.Get(*mele,n) != v[m]) )  
-		  vertOp2 = n;
-		}
-		if( oFace.Get(nele,vertOp1) == -1 )
-		 oFace.Set(nele,vertOp1,*mele);
-
-		if( oFace.Get(*mele,vertOp2) == -1 )
-		 oFace.Set(*mele,vertOp2,nele);
-	   }
-	  }
-	 }
-	}
-   }
-  }
- }
- delete[] faces;
-
-}
-
 // aplica configuracoes referentes a superficie da modelagem 2 fases.
 void Model3D::setSurfaceConfig()
 {
  setVertNeighbour(); // neighbourVert (3D mesh)
  setInOutVert(); // inVert e boundaryVert
  setInOutElem(); // inElem e outElem
- setMapEdge(); 
 
  // update surface, edge matrix, surface neigh elems and points
  restoreMappingArrays();
 
 
  //setSurfaceTri(); // triang superficie - interfaceMesh
- //setConvexTri(); // triang parte externa do dominio - convexMesh
- //buildSurfMesh();
 
  setInterfaceDistance();
  setNormalAndKappa();
@@ -7259,7 +6752,6 @@ void Model3D::moveZPoints(clVector &_vec,real _dt)
 
 SurfaceMesh* Model3D::getSurfMesh(){ return &surfMesh; }
 SurfaceMesh* Model3D::getInterfaceMesh(){ return &interfaceMesh; }
-SurfaceMesh* Model3D::getConvexMesh(){ return &convexMesh; }
 Mesh3D* Model3D::getMesh3d(){ return &mesh3d; }
 clVector* Model3D::getX(){ return &X; }
 real Model3D::getMaxX(){ return X.Max(); }
@@ -7295,8 +6787,6 @@ clDMatrix* Model3D::getCurvature(){ return &curvature; }
 int Model3D::getNumVerts(){ return numVerts; }
 int Model3D::getNumNodes(){ return numNodes; }
 int Model3D::getNumElems(){ return numElems; }
-//clMatrix Model3D::getMapViz(){ return mapViz; }
-//clMatrix Model3D::getFaceFace(){ return faceFace; }
 clMatrix* Model3D::getOFace(){ return &oFace; }
 real Model3D::getXCenter(){ return xCenter; }
 real Model3D::getYCenter(){ return yCenter; }
@@ -7437,13 +6927,9 @@ void Model3D::operator=(Model3D &_mRight)
   idbcc = _mRight.idbcc;
   V = _mRight.V;
   IEN = _mRight.IEN;
-  faceFace = _mRight.faceFace;
-  freeFace = _mRight.freeFace;
-  mapViz = _mRight.mapViz;
   oFace = _mRight.oFace;
   surfMesh = _mRight.surfMesh;
   interfaceMesh = _mRight.interfaceMesh;
-  convexMesh = _mRight.convexMesh;
   vertIdRegion = _mRight.vertIdRegion;
   elemIdRegion = _mRight.elemIdRegion;
   triEdge = _mRight.triEdge;
@@ -7465,53 +6951,6 @@ void Model3D::operator=(Model3D &_mRight)
   inVert = _mRight.inVert;
   outElem = _mRight.outElem;
   inElem = _mRight.inElem;
-}
-
-void Model3D::saveVTKConvex( const char* _dir,const char* _filename, int _iter )
-{
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
-
- string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
- const char* filename = file.c_str();
-
- ofstream vtkFile( filename );
-
- vtkFile << "# vtk DataFile Version 1.0" << endl;
- vtkFile << "3D Simulation C++" << endl;
- vtkFile << "ASCII" << endl;
- vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
- vtkFile << endl;
-
-
- vtkFile << "POINTS " << convexMesh.numVerts << " double" << endl;
- for( int i=0;i<convexMesh.numVerts;i++ )
-  vtkFile << X.Get(i) << " " 
-          << Y.Get(i) << " " 
-		  << Z.Get(i) << endl;
-
- vtkFile << endl;
-
- int numTri = convexMesh.numElems;
-
- vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
- for( int i=0;i<numTri;i++ )
- {
-   vtkFile << "3 " << convexMesh.IEN.Get(i,0) << " "
-	               << convexMesh.IEN.Get(i,1) << " "
-				   << convexMesh.IEN.Get(i,2) << endl;
- }
- vtkFile << endl;
-
- vtkFile <<  "CELL_TYPES " << numTri << endl;
- for( int i=0;i<numTri;i++ )
-  vtkFile << "5 ";
-
- vtkFile << endl;
-
- vtkFile.close();
 }
 
 void Model3D::saveVTKSurface( const char* _dir,

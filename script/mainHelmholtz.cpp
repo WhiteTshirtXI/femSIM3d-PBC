@@ -31,8 +31,8 @@ int main(int argc, char **argv)
  m1.setInterfaceBC();
  m1.setTriEdge();
  m1.mesh2Dto3D();
+ m1.setMapping();
  m1.setMiniElement();
- m1.setOFace();
  m1.setSurfaceConfig();
 
  // Point's distribution

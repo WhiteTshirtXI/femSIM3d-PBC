@@ -41,13 +41,12 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,6,8);
  m1.setAdimenDisk();
- m1.setMapEdge(); 
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
- m1.setOFace();
 
  m1.setTriEdge();
  m1.setMapEdgeTri();

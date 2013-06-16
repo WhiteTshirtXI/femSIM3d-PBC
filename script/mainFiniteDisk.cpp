@@ -44,13 +44,12 @@ int main(int argc, char **argv)
  Model3D m1;
  m1.setMeshDisk(6,10,20);
  m1.setAdimenDisk();
- m1.setMapEdge(); 
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
- m1.setOFace();
  m1.setFiniteDiskBC();
  //m1.readAndSetPressureDiskBC("../../db/baseState/nuCte/","p");
  //m1.setCDiskBC();

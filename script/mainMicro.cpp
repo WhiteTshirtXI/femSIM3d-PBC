@@ -88,12 +88,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -143,13 +143,13 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
 
   m1.readVTK(vtkFile);
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
   m1.readVTKHeaviside(vtkFile);
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
   mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
+  mOld.setMapping();
 
   // load surface mesh and create new mesh
   file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
@@ -184,12 +184,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
   mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
+  mOld.setMapping();
 
   // load surface mesh and create new one
   file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
@@ -224,12 +224,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -367,13 +367,13 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+  m1.setMapping();
 
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
   m1.setSurfaceConfig();
   m1.setInterfaceBC();
   //m1.setGenericBC(); // fixed frame

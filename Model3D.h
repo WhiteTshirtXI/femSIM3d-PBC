@@ -58,8 +58,6 @@ class Model3D
   // surface points treatment
   void setSurface();
   void setSurfaceTri();
-  void setConvexTri();
-  void buildSurfMesh();
   SurfaceMesh arrangeMesh(SurfaceMesh _mesh,int _nVerts,int _begin);
   void setInOutVert();
   void setInOutElem();
@@ -106,11 +104,10 @@ class Model3D
 
   void breakup();
   clVector triangleQuality(int _v);
-  void setMapEdge();
+  void setMapping();
   void setMapEdgeTri();
   void setSurfaceConfig();
   void saveVTK( const char* _dir,const char* _filename, int _iter );
-  void saveVTKConvex( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
 
@@ -234,7 +231,6 @@ class Model3D
   list<int> getNeighbourSurfacePoint(int _node);
   void setNeighbourSurfacePoint();
   void setVertNeighbour();
-  void setOFace();
   void triMeshStats();
   void tetMeshStats();
   void clearBC();
@@ -359,7 +355,6 @@ class Model3D
   clVector X,Y,Z;
   clVector xConvex,yConvex,zConvex;
   clVector outflow,idbcu,idbcv,idbcw,idbcp,idbcc;
-  clMatrix faceFace,freeFace,mapViz;
   clMatrix oFace;
   clVector V; // vetor de volumes dos elementos de malha 
   clVector heaviside;

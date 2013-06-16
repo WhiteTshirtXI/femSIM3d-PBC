@@ -2103,48 +2103,45 @@ void Simulator3D::stepALE()
  setInterfaceVelocity();
  //setMassTransfer();
 
- // smoothing - velocidade
- MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSmooth(uALE,vALE,wALE);
- uSmooth = *e1.getUSmooth();
- vSmooth = *e1.getVSmooth();
- wSmooth = *e1.getWSmooth();
-
- uSmooth=uALE;
- vSmooth=vALE;
- wSmooth=wALE;
- MeshSmooth e3(*m,dt); // criando objeto MeshSmooth
- for( int i=0;i<20;i++ )
+ if( c2 > 0 )
  {
   // smoothing - velocidade
-  e3.stepSmoothLonger(uSmooth,vSmooth,wSmooth);
-  uSmooth = *e3.getUSmooth();
-  vSmooth = *e3.getVSmooth();
-  wSmooth = *e3.getWSmooth();
+  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+  e1.stepSmooth(uALE,vALE,wALE);
+  uSmooth = *e1.getUSmooth();
+  vSmooth = *e1.getVSmooth();
+  wSmooth = *e1.getWSmooth();
 
-  for( int i=0;i<surfMesh->numVerts;i++ )
+  uSmooth=uALE;
+  vSmooth=vALE;
+  wSmooth=wALE;
+  MeshSmooth e3(*m,dt); // criando objeto MeshSmooth
+  for( int i=0;i<20;i++ )
   {
-   uSmooth.Set(i,uALE.Get(i));
-   vSmooth.Set(i,vALE.Get(i));
-   wSmooth.Set(i,wALE.Get(i));
+   // smoothing - velocidade
+   e3.stepSmoothLonger(uSmooth,vSmooth,wSmooth);
+   uSmooth = *e3.getUSmooth();
+   vSmooth = *e3.getVSmooth();
+   wSmooth = *e3.getWSmooth();
+
+   for( int i=0;i<surfMesh->numVerts;i++ )
+   {
+	uSmooth.Set(i,uALE.Get(i));
+	vSmooth.Set(i,vALE.Get(i));
+	wSmooth.Set(i,wALE.Get(i));
+   }
   }
  }
 
- // smoothing coords
- MeshSmooth e2(*m,1.0); // criando objeto MeshSmooth
- e2.stepSmoothFujiwara();
- uSmoothCoord = *e2.getUSmooth();
- vSmoothCoord = *e2.getVSmooth();
- wSmoothCoord = *e2.getWSmooth();
-
-//--------------------------------------------------
-//  // smoothing coords
-//  MeshSmooth e4(*m,1.0); // criando objeto MeshSmooth
-//  e4.stepSmoothFujiwaraByHeight();
-//  clVector uSmoothHeight = *e4.getUSmooth();
-//  clVector vSmoothHeight = *e4.getVSmooth();
-//  clVector wSmoothHeight = *e4.getWSmooth();
-//-------------------------------------------------- 
+ if( c3 > 0.0 )
+ {
+  // smoothing coords
+  MeshSmooth e2(*m,1.0); // criando objeto MeshSmooth
+  e2.stepSmoothFujiwara();
+  uSmoothCoord = *e2.getUSmooth();
+  vSmoothCoord = *e2.getVSmooth();
+  wSmoothCoord = *e2.getWSmooth();
+ }
 
  // compute ALE
  uALE = c1*uVert+c2*uSmooth+c3*uSmoothCoord;
@@ -2175,7 +2172,7 @@ void Simulator3D::stepALE()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
- stepSL();
+ //stepSL();
 } // fecha metodo stepALE
 
 /* move nodes according to ALE velocity 
@@ -2209,12 +2206,15 @@ void Simulator3D::movePoints(clVector *_uVel,
 
 void Simulator3D::setInterfaceVelocity()
 {
- // smoothing - coordenadas
- MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
- e1.stepSurfaceSmoothFujiwara();
- uSmoothSurface = *e1.getUSmoothSurface();
- vSmoothSurface = *e1.getVSmoothSurface();
- wSmoothSurface = *e1.getWSmoothSurface();
+ if( d2 > 0 )
+ {
+  // smoothing - coordenadas
+  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+  e1.stepSurfaceSmoothFujiwara();
+  uSmoothSurface = *e1.getUSmoothSurface();
+  vSmoothSurface = *e1.getVSmoothSurface();
+  wSmoothSurface = *e1.getWSmoothSurface();
+ }
 
  for( int i=0;i<surface->Dim();i++ )
  {

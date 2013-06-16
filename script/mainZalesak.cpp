@@ -24,9 +24,6 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 1.0;  // lagrangian
- real c2 = 0.5;  // smooth vel
- real c3 = 3.0;  // smooth coord (fujiwara)
  real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
  real d2 = 0.1;  // surface smooth cord (fujiwara)
 
@@ -49,7 +46,7 @@ int main(int argc, char **argv)
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.mesh2Dto3D();
+ m1.mesh2Dto3D("QYYAp");
  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -62,9 +59,6 @@ int main(int argc, char **argv)
 
  s1(m1);
 
- s1.setC1(c1);
- s1.setC2(c2);
- s1.setC3(c3);
  s1.setD1(d1);
  s1.setD2(d2);
  s1.setDt(dt);
@@ -119,41 +113,29 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
   m1.initMeshParameters();
 
-  // 3D operations
-  //m1.insert3dMeshPointsByDiffusion();
-  m1.remove3dMeshPointsByDiffusion();
-  //m1.removePointByVolume();
-  //m1.removePointsByInterfaceDistance();
-  //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
-  m1.delete3DPoints();
-
   // surface operations
-  m1.smoothPointsByCurvature();
+  //m1.smoothPointsByCurvature();
 
   m1.insertPointsByLength("flat");
-  //m1.insertPointsByCurvature("flat");
-  //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance("flat");
   m1.contractEdgesByLength("flat");
   //m1.removePointsByLength();
   //m1.flipTriangleEdges();
 
-  m1.removePointsByNeighbourCheck();
+  //m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
-  //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
-  m1.setMapping();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
+  m1.setInterfaceBC();
+  m1.setMiniElement();
+  m1.restoreMappingArrays();
+  m1.setSurfaceVolume();
+  m1.setSurfaceArea();
+  m1.triMeshStats();
 
+  // computing velocity field X^(n+1),time+1 at new nodes too!
   Simulator3D s2(m1,s1);
+  s2.stepImposedPeriodicField("rotating",0.0,time);
+  s2.saveOldData();
   s1 = s2;
   s1.setCentroidVelPos();
 

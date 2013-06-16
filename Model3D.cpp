@@ -596,7 +596,7 @@ void Model3D::readBC( const char* filename )
 // este metodo cria os pontos de forma ordenada e igualmente espacada e
 // depois utiliza a biblioteca tetgen para gerar a tetraedralizacao
 // seguida pela atualizacao da matriz de mapeamento de elementos IEN
-void Model3D::setMeshStep(int nX,int nY,int nZ)
+void Model3D::setMeshStep(int nX,int nY,int nZ,const char* _param)
 {
  // clean and init tetgen mesh object
  in.initialize();
@@ -645,7 +645,7 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "                | meshing 3D points... ";
- tetrahedralize( (char*) "Q",&in,&out );
+ tetrahedralize( (char*) _param,&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -707,6 +707,11 @@ void Model3D::setMeshStep(int nX,int nY,int nZ)
 
  in.initialize();
  out.initialize();
+}
+
+void Model3D::setMeshStep(int nX,int nY,int nZ)
+{
+ setMeshStep(nX,nY,nZ,"Q");
 }
 
 void Model3D::setStepBC()
@@ -942,7 +947,8 @@ void Model3D::setAdimenStep()
  }
 }
 
-void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
+void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ,const
+  char* _param)
 {
  real aux;
 
@@ -1030,7 +1036,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "                | meshing 3D points... ";
- tetrahedralize( (char*) "Q",&in,&out );
+ tetrahedralize( (char*) _param,&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -1097,6 +1103,11 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
  out.initialize();
 }
 
+void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
+{
+ setMeshDisk(nLados1Poli,nCircMax,nZ,"Q");
+}
+
 /* Method to transform the coordinates of the disk problem to the
  * sphere.
  *
@@ -1134,7 +1145,7 @@ void Model3D::transformDiskToSphere()
 }
 
 
-void Model3D::mesh2Dto3D()
+void Model3D::mesh2Dto3D(const char* _param)
 {
  // clean and init tetgen mesh object
  in.initialize();
@@ -1166,12 +1177,7 @@ void Model3D::mesh2Dto3D()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "                 | meshing surface to 3D domain... ";
- //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApqq",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApa0.1",&in,&out ); 
- //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- tetrahedralize( (char*) "QYYApa",&in,&out ); // no insertion of points
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ tetrahedralize( (char*) _param,&in,&out ); // no insertion of points
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -1186,6 +1192,11 @@ void Model3D::mesh2Dto3D()
 
  in.initialize();
  out.initialize();
+}
+
+void Model3D::mesh2Dto3D()
+{
+ mesh2Dto3D("QYYApa");
 }
 
 /*
@@ -3516,7 +3527,7 @@ void Model3D::insertPointsBetweenBubblesByPosition()
  * usually when the mesh is created from the .MSH file 
  *
  * */
-void Model3D::mesh2Dto3DOriginal()
+void Model3D::mesh2Dto3DOriginal(const char* _param)
 {
  // clean and init tetgen mesh object
  in.initialize();
@@ -3546,7 +3557,7 @@ void Model3D::mesh2Dto3DOriginal()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "                | complete re-meshing the domain... ";
- tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+ tetrahedralize( (char*) _param,&in,&out );
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -3572,7 +3583,7 @@ void Model3D::mesh2Dto3DOriginal()
   convertModel3DtoTetgen(in);
 
   cout << "----> fixing 3D mesh points... ";
-  tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out );
+  tetrahedralize( (char*) _param,&in,&out );
   cout << "finished <---- " << endl;;
 
   convertTetgenToModel3D(out);
@@ -3582,6 +3593,11 @@ void Model3D::mesh2Dto3DOriginal()
 
  in.initialize();
  out.initialize();
+}
+
+void Model3D::mesh2Dto3DOriginal()
+{
+ mesh2Dto3DOriginal("QYYApa");
 }
 
 /* 
@@ -4216,7 +4232,7 @@ void Model3D::tetMeshStats()
  * Mesh a set of points using TETGEN.
  *
  * */
-void Model3D::mesh3DPoints()
+void Model3D::mesh3DPoints(const char* _param)
 {
  // init tetgen mesh object
  in.initialize();
@@ -4248,14 +4264,7 @@ void Model3D::mesh3DPoints()
       << "|-----------------------------------------------------|" << endl;
  cout << color(blink,blue,black) 
       << "                     | re-meshing 3D points... ";
- //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYRCApa",&in,&out );
- //tetrahedralize( (char*) "QYYCApa0.5",&in,&out ); 
- tetrahedralize( (char*) "QYYApa",&in,&out ); 
- //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
- //tetrahedralize( (char*) "QYYApaq",&in,&out ); // 
- //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ tetrahedralize( (char*) _param,&in,&out ); 
  cout << "finished | " << resetColor() << endl;
  cout << "            " 
       << "|-----------------------------------------------------|" << endl;
@@ -4273,6 +4282,15 @@ void Model3D::mesh3DPoints()
  
  in.initialize();
  out.initialize();
+}
+
+void Model3D::mesh3DPoints()
+{
+ //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApqq10a",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYRCApqq10",&in,&out ); // quality
+ //tetrahedralize( (char*) "QYYAp",&in,&out ); // no insertion of points
+ mesh3DPoints("QYYApa");
 }
 
 void Model3D::setDiskCouetteBC()
@@ -6531,7 +6549,6 @@ void Model3D::setSurfaceConfig()
 
  // update surface, edge matrix, surface neigh elems and points
  restoreMappingArrays();
-
 
  //setSurfaceTri(); // triang superficie - interfaceMesh
 

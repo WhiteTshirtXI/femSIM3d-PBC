@@ -128,12 +128,16 @@ class Model3D
 
   // meshing with TETGEN
   void setMeshStep(int nX,int nY,int nZ);
+  void setMeshStep(int nX,int nY,int nZ,const char* _param);
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
+  void setMeshDisk(int nLados1Poli,int nCircMax,int nZ,const char* _param);
   void transformDiskToSphere();
-  void setMeshTorus(real _a,real _b);
   void mesh2Dto3D();
+  void mesh2Dto3D(const char* _param);
   void mesh2Dto3DOriginal();
+  void mesh2Dto3DOriginal(const char* _param);
   void mesh3DPoints();
+  void mesh3DPoints(const char* _param);
   bool checkMeshQuality(tetgenio &_tetmesh);
   tetgenio convertSurfaceMeshToTetGen(SurfaceMesh _mesh,tetgenio &_tetmesh);
   Mesh3D convertTetgenToMesh3d(tetgenio &_tetmesh);
@@ -298,9 +302,6 @@ class Model3D
   SurfaceMesh* getInterfaceMesh();
   SurfaceMesh* getConvexMesh();
   Mesh3D* getMesh3d();
-  void setMeshX(clVector _X); 
-  void setMeshY(clVector _Y);
-  void setMeshZ(clVector _Z);
   int getNumVerts();
   int getNumNodes();
   int getNumElems();

@@ -60,7 +60,7 @@ int main(int argc, char **argv)
  m1.readMSH(mesh1);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.mesh2Dto3D();
+ m1.mesh2Dto3D("QYYAp");
  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
   {
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: "
-	<< iter << endl << endl;
+	    << iter << endl << endl;
    cout << resetColor();
 
    InOut save(m1,s1); // cria objeto de gravacao
@@ -187,7 +187,6 @@ int main(int argc, char **argv)
   saveEnd.printMeshReport();
   saveEnd.saveMeshInfo(datFolder);
  }
-
 
  PetscFinalize();
  return 0;

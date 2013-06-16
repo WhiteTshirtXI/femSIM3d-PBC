@@ -1,6 +1,7 @@
 *.o
 *.dat
 *.swp
+*.swo
 .DS_Store
 2Bubbles
 bubble

@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
- m1.setOFace();
+ m1.setMapping();
  m1.setSurfaceConfig();
  m1.setInitSurfaceVolume();
  m1.setInitSurfaceArea();
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
 
   Simulator3D s2(m1,s1);

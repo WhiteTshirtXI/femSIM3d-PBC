@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.readVTKHeaviside(vtkFile);
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
   mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
+  mOld.setMapping();
 
   // load surface mesh and create new mesh
   file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
   mOld.readVTK(vtkFile);
   mOld.readVTKHeaviside(vtkFile);
-  mOld.setOFace();
+  mOld.setMapping();
 
   // load surface mesh and create new one
   file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 #else
  m1.setQuadElement();
 #endif
-  m1.setOFace();
+  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInterfaceBC();
   m1.setGenericBC();

@@ -8,7 +8,7 @@
 
 MeshSmooth::~MeshSmooth(){};
 
-MeshSmooth::MeshSmooth(Model3D &_m,real _dt)
+MeshSmooth::MeshSmooth(Model3D &_m,double _dt)
 {
  m = &_m;
  uc = m->getUC();
@@ -60,11 +60,11 @@ clVector MeshSmooth::compute()
 // calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSmooth()
 {
- real aux;
+ double aux;
  list<int> plist;
  list<int>::iterator vert;
- real xSum,ySum,zSum;
- real size; // numero de elementos da lista
+ double xSum,ySum,zSum;
+ double size; // numero de elementos da lista
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -119,11 +119,11 @@ void MeshSmooth::stepSmooth()
 // calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSmoothFujiwara()
 {
- real aux;
+ double aux;
  list<int> plist;
  list<int>::iterator vert;
- real xSum,ySum,zSum,distSum;
- //real size; // numero de elementos da lista
+ double xSum,ySum,zSum,distSum;
+ //double size; // numero de elementos da lista
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -140,7 +140,7 @@ void MeshSmooth::stepSmoothFujiwara()
   for( vert=plist.begin(); vert != plist.end(); ++vert )
   {
    // distance between the vertex *it and all its neighbours
-   real dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
+   double dist = distance( X->Get(*vert),Y->Get(*vert),Z->Get(*vert),
 	                     X->Get(i),Y->Get(i),Z->Get(i) );
    // sum of distances
    distSum += dist;   
@@ -170,10 +170,10 @@ void MeshSmooth::stepSmoothFujiwara()
 // calcula velocidade da malha em todos os vertices
 void MeshSmooth::stepSurfaceSmoothFujiwara()
 {
- real aux;
+ double aux;
  list<int> plist;
  list<int>::iterator vert;
- real xSum,ySum,zSum,distSum;
+ double xSum,ySum,zSum,distSum;
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -192,16 +192,16 @@ void MeshSmooth::stepSurfaceSmoothFujiwara()
   list<int>::iterator vert=plist.begin();
   for( int i=0;i<listSize-1;i++ )
   {
-   real P0x = X->Get(surfaceNode);
-   real P0y = Y->Get(surfaceNode);
-   real P0z = Z->Get(surfaceNode);
+   double P0x = X->Get(surfaceNode);
+   double P0y = Y->Get(surfaceNode);
+   double P0z = Z->Get(surfaceNode);
 
    int v1 = *vert;++vert;
-   real P1x = X->Get(v1);
-   real P1y = Y->Get(v1);
-   real P1z = Z->Get(v1);
+   double P1x = X->Get(v1);
+   double P1y = Y->Get(v1);
+   double P1z = Z->Get(v1);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 
    distSum += edgeLength;   
    xSum += ( P1x-P0x )*edgeLength;
@@ -226,7 +226,7 @@ void MeshSmooth::stepSmooth(clVector &_uVel,clVector &_vVel,clVector &_wVel)
 {
  list<int> plist;
  list<int>::iterator vert;
- real uSum,vSum,wSum;
+ double uSum,vSum,wSum;
  int size; // numero de elementos da lista
  uSmoothSurface.Dim(numVerts);
  vSmoothSurface.Dim(numVerts);
@@ -281,7 +281,7 @@ void MeshSmooth::stepSmoothLonger(clVector &_uVel,clVector &_vVel,clVector &_wVe
 {
  list<int> plist;
  list<int>::iterator vert;
- real uSum,vSum,wSum;
+ double uSum,vSum,wSum;
  int size; // numero de elementos da lista
  uSmoothSurface.Dim(numVerts);
  vSmoothSurface.Dim(numVerts);
@@ -312,7 +312,7 @@ void MeshSmooth::setCentroid()
  // calculando os valores de uSmooth e vSmooth nos centroides
  // atraves da media dos valores nos vertices
  int v[5];
- real aux;
+ double aux;
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -342,12 +342,12 @@ void MeshSmooth::stepSmoothSurface()
  // velocidade da interface eh igual a velocidade do fluido
  // para isso precisa-se encontrar os vertices da interface e impor a
  // velocidade do fluido (calculada pelo Semi-lagrangeano)
- real aux;
+ double aux;
  int surfaceNode;
  list<int> plist;
  list<int>::iterator vert;
- real xSum,ySum,zSum;
- real size; // numero de elementos da lista
+ double xSum,ySum,zSum;
+ double size; // numero de elementos da lista
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -367,7 +367,7 @@ void MeshSmooth::stepSmoothSurface()
    ySum += Y->Get(*vert);
    zSum += Z->Get(*vert);
   }
-  real xAverage = xSum/size; // X medio
+  double xAverage = xSum/size; // X medio
   aux = (xAverage - X->Get( surfaceNode ))/dt;
   uSmooth.Set( surfaceNode,aux );
 //--------------------------------------------------
@@ -378,11 +378,11 @@ void MeshSmooth::stepSmoothSurface()
 //        << X->Get(surfaceNode) << endl;
 //-------------------------------------------------- 
 
-  real yAverage = ySum/size; // Y medio
+  double yAverage = ySum/size; // Y medio
   aux = (yAverage - Y->Get( surfaceNode ))/dt;
   vSmooth.Set( surfaceNode,aux );
 
-  real zAverage = zSum/size; // Z medio
+  double zAverage = zSum/size; // Z medio
   aux = (zAverage - Z->Get( surfaceNode))/dt;
   wSmooth.Set( surfaceNode,aux );
  }
@@ -395,12 +395,12 @@ void MeshSmooth::stepSmoothSurface2()
  // velocidade da interface eh igual a velocidade do fluido
  // para isso precisa-se encontrar os vertices da interface e impor a
  // velocidade do fluido (calculada pelo Semi-lagrangeano)
- real aux;
+ double aux;
  int surfaceNode;
  list<int> plist;
  list<int>::iterator vert;
- real xSum,ySum,zSum;
- real size; // numero de elementos da lista
+ double xSum,ySum,zSum;
+ double size; // numero de elementos da lista
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -424,15 +424,15 @@ void MeshSmooth::stepSmoothSurface2()
 	size++;
    }
   }
-  real xAverage = xSum/size; // X medio
+  double xAverage = xSum/size; // X medio
   aux = (xAverage - X->Get( surfaceNode ))/dt;
   uSmooth.Set( surfaceNode,aux );
 
-  real yAverage = ySum/size; // Y medio
+  double yAverage = ySum/size; // Y medio
   aux = (yAverage - Y->Get( surfaceNode ))/dt;
   vSmooth.Set( surfaceNode,aux );
 
-  real zAverage = zSum/size; // Z medio
+  double zAverage = zSum/size; // Z medio
   aux = (zAverage - Z->Get( surfaceNode ))/dt;
   wSmooth.Set( surfaceNode,aux );
  }
@@ -450,8 +450,8 @@ void MeshSmooth::stepSmoothSurface(clVector &_uVel,
  int surfaceNode;
  list<int> plist;
  list<int>::iterator vert;
- real uSum,vSum,wSum;
- real size; // numero de elementos da lista
+ double uSum,vSum,wSum;
+ double size; // numero de elementos da lista
  uSmooth.Dim(numVerts);
  vSmooth.Dim(numVerts);
  wSmooth.Dim(numVerts);
@@ -514,35 +514,35 @@ void MeshSmooth::stepSmoothFujiwaraByHeight()
   int v3 = surfMesh->IEN.Get(elem,2);
 
   // points
-  real P1x = surfMesh->X.Get(v1);
-  real P1y = surfMesh->Y.Get(v1);
-  real P1z = surfMesh->Z.Get(v1);
-  real P2x = surfMesh->X.Get(v2);
-  real P2y = surfMesh->Y.Get(v2);
-  real P2z = surfMesh->Z.Get(v2);
-  real P3x = surfMesh->X.Get(v3);
-  real P3y = surfMesh->Y.Get(v3);
-  real P3z = surfMesh->Z.Get(v3);
+  double P1x = surfMesh->X.Get(v1);
+  double P1y = surfMesh->Y.Get(v1);
+  double P1z = surfMesh->Z.Get(v1);
+  double P2x = surfMesh->X.Get(v2);
+  double P2y = surfMesh->Y.Get(v2);
+  double P2z = surfMesh->Z.Get(v2);
+  double P3x = surfMesh->X.Get(v3);
+  double P3y = surfMesh->Y.Get(v3);
+  double P3z = surfMesh->Z.Get(v3);
 
   // centroid
-  real xMid = (P1x+P2x+P3x)/3.0;
-  real yMid = (P1y+P2y+P3y)/3.0;
-  real zMid = (P1z+P2z+P3z)/3.0;
+  double xMid = (P1x+P2x+P3x)/3.0;
+  double yMid = (P1y+P2y+P3y)/3.0;
+  double zMid = (P1z+P2z+P3z)/3.0;
 
   // mid 12
-  real xMid12 = (P1x+P2x)/2.0;
-  real yMid12 = (P1y+P2y)/2.0;
-  real zMid12 = (P1z+P2z)/2.0;
+  double xMid12 = (P1x+P2x)/2.0;
+  double yMid12 = (P1y+P2y)/2.0;
+  double zMid12 = (P1z+P2z)/2.0;
 
   // mid 13
-  real xMid13 = (P1x+P3x)/2.0;
-  real yMid13 = (P1y+P3y)/2.0;
-  real zMid13 = (P1z+P3z)/2.0;
+  double xMid13 = (P1x+P3x)/2.0;
+  double yMid13 = (P1y+P3y)/2.0;
+  double zMid13 = (P1z+P3z)/2.0;
 
   // mid 23
-  real xMid23 = (P2x+P3x)/2.0;
-  real yMid23 = (P2y+P3y)/2.0;
-  real zMid23 = (P2z+P3z)/2.0;
+  double xMid23 = (P2x+P3x)/2.0;
+  double yMid23 = (P2y+P3y)/2.0;
+  double zMid23 = (P2z+P3z)/2.0;
 
   // list of neighbouring points
   list<int> plist = neighbourVert->at(v1);
@@ -552,23 +552,23 @@ void MeshSmooth::stepSmoothFujiwaraByHeight()
    {
 	int vertID = surfMesh->vertIdRegion.Get(v1);
 
-	real Pxvert = X->Get(*vert);
-	real Pyvert = Y->Get(*vert);
-	real Pzvert = Z->Get(*vert);
+	double Pxvert = X->Get(*vert);
+	double Pyvert = Y->Get(*vert);
+	double Pzvert = Z->Get(*vert);
 
-	real height1 = distance(P1x,P1y,P1z,Pxvert,Pyvert,Pzvert);
-	real height2 = distance(P2x,P2y,P2z,Pxvert,Pyvert,Pzvert);
-	real height3 = distance(P3x,P3y,P3z,Pxvert,Pyvert,Pzvert);
+	double height1 = distance(P1x,P1y,P1z,Pxvert,Pyvert,Pzvert);
+	double height2 = distance(P2x,P2y,P2z,Pxvert,Pyvert,Pzvert);
+	double height3 = distance(P3x,P3y,P3z,Pxvert,Pyvert,Pzvert);
 	// centroid
-	real height4 = distance(xMid,yMid,zMid,Pxvert,Pyvert,Pzvert);
+	double height4 = distance(xMid,yMid,zMid,Pxvert,Pyvert,Pzvert);
 	// xMid12 
-	real height5 = distance(xMid12,yMid12,zMid12,Pxvert,Pyvert,Pzvert);
+	double height5 = distance(xMid12,yMid12,zMid12,Pxvert,Pyvert,Pzvert);
 	// xMid13 
-	real height6 = distance(xMid13,yMid13,zMid13,Pxvert,Pyvert,Pzvert);
+	double height6 = distance(xMid13,yMid13,zMid13,Pxvert,Pyvert,Pzvert);
 	// xMid23 
-	real height7 = distance(xMid23,yMid23,zMid23,Pxvert,Pyvert,Pzvert);
+	double height7 = distance(xMid23,yMid23,zMid23,Pxvert,Pyvert,Pzvert);
 
-	real minHeight = min(height1,height2);
+	double minHeight = min(height1,height2);
 	minHeight = min(minHeight,height3);
 	minHeight = min(minHeight,height4);
 	minHeight = min(minHeight,height5);
@@ -578,14 +578,14 @@ void MeshSmooth::stepSmoothFujiwaraByHeight()
 	if( minHeight < 0.4*triEdge[vertID] )
 	{
 	 list<int> plist2 = neighbourVert->at(*vert);
-	 real xSum = 0.0;
-	 real ySum = 0.0;
-	 real zSum = 0.0;
-	 real distSum = 0.0;
+	 double xSum = 0.0;
+	 double ySum = 0.0;
+	 double zSum = 0.0;
+	 double distSum = 0.0;
 	 for(list<int>::iterator viz=plist2.begin(); viz != plist2.end(); ++viz )
 	 {
 	  // distance between the vertex *it and all its neighbours
-	  real dist = distance( X->Get(*viz),Y->Get(*viz),Z->Get(*viz),
+	  double dist = distance( X->Get(*viz),Y->Get(*viz),Z->Get(*viz),
 	                    	X->Get(*vert),Y->Get(*vert),Z->Get(*vert) );
 	  // sum of distances
 	  distSum += dist;   
@@ -596,7 +596,7 @@ void MeshSmooth::stepSmoothFujiwaraByHeight()
 	  zSum += ( Z->Get(*viz)-Z->Get(*vert) )*dist;
 	 }
 	 //aux = (1.0/distSum)*xSum; // USmooth
-	 real aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
+	 double aux = (1.0/distSum)*xSum/dt; // velocidade USmooth
 	 //aux = (2.0/distSum)*xSum/dt; // velocidade USmooth
 	 uSmooth.Set(*vert,aux);
 

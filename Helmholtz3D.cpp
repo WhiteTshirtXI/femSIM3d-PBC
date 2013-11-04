@@ -48,20 +48,20 @@ void Helmholtz3D::initImposedField()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real P0x = surfMesh->X.Get(i);
-  real P0y = surfMesh->Y.Get(i);
-  real P0z = surfMesh->Z.Get(i);
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
 
-  real sumEdgeLength = 0;
+  double sumEdgeLength = 0;
   int listSize = neighbourPoint->at(i).size();
   list<int> plist = neighbourPoint->at(i);
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
-   real P1x = surfMesh->X.Get(*vert);
-   real P1y = surfMesh->Y.Get(*vert);
-   real P1z = surfMesh->Z.Get(*vert);
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
@@ -72,28 +72,28 @@ void Helmholtz3D::initImposedField()
   *
   * */
  clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real radius = 0.15; // sphere radius
+  double radius = 0.15; // sphere radius
   // outside mesh
   if( heaviside->Get(i) < 0.5 ) 
   {
-   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
    if( interfaceDistance->Get(i) < 1.0*radius )
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	double aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
 	convC.Set(i,aux);
    }
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)];
+   double aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }
@@ -110,48 +110,48 @@ void Helmholtz3D::initRisingBubble()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real P0x = surfMesh->X.Get(i);
-  real P0y = surfMesh->Y.Get(i);
-  real P0z = surfMesh->Z.Get(i);
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
 
-  real sumEdgeLength = 0;
+  double sumEdgeLength = 0;
   int listSize = neighbourPoint->at(i).size();
   list<int> plist = neighbourPoint->at(i);
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
-   real P1x = surfMesh->X.Get(*vert);
-   real P1y = surfMesh->Y.Get(*vert);
-   real P1z = surfMesh->Z.Get(*vert);
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real radius = 0.5; // sphere radius
+  double radius = 0.5; // sphere radius
   // outside mesh
   if( heaviside->Get(i) < 0.5 ) 
   {
-   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
    if( interfaceDistance->Get(i) < 2.0*radius )
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	double aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
 	convC.Set(i,aux);
    }
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)];
+   double aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }
@@ -168,20 +168,20 @@ void Helmholtz3D::initSessile()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real P0x = surfMesh->X.Get(i);
-  real P0y = surfMesh->Y.Get(i);
-  real P0z = surfMesh->Z.Get(i);
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
 
-  real sumEdgeLength = 0;
+  double sumEdgeLength = 0;
   int listSize = neighbourPoint->at(i).size();
   list<int> plist = neighbourPoint->at(i);
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
-   real P1x = surfMesh->X.Get(*vert);
-   real P1y = surfMesh->Y.Get(*vert);
-   real P1z = surfMesh->Z.Get(*vert);
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
@@ -193,28 +193,28 @@ void Helmholtz3D::initSessile()
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real radius = 0.5; // sphere radius
+  double radius = 0.5; // sphere radius
   // outside mesh
   if( heaviside->Get(i) < 0.5 ) 
   {
-   real factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
    if( interfaceDistance->Get(i) < 1.2*radius )
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/factor;
+	double aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
 	convC.Set(i,aux);
    }
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)];
+   double aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }
@@ -226,20 +226,20 @@ void Helmholtz3D::initMicro()
  setCloserWall();
 
  // set liquid film thickness
- real thickness = 0.2;
+ double thickness = 0.2;
 
- real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+ double triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
  convC.Dim(numVerts);
  convC.SetAll(triEdgeMin);
 
- //real xMid = (X->Min()+X->Max())*0.5;
- real yMid = (Y->Min()+Y->Max())*0.5;
- real zMid = (Z->Min()+Z->Max())*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
- real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- //real tol = diameter/3.0;
- real tol = diameter/2.0-thickness;
+ //double xMid = (X->Min()+X->Max())*0.5;
+ double yMid = (Y->Min()+Y->Max())*0.5;
+ double zMid = (Z->Min()+Z->Max())*0.5;
+ //double diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
+ //double diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
+ double diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
+ //double tol = diameter/3.0;
+ double tol = diameter/2.0-thickness;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   // meiuca
@@ -270,44 +270,44 @@ void Helmholtz3D::initSquareChannel()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real P0x = surfMesh->X.Get(i);
-  real P0y = surfMesh->Y.Get(i);
-  real P0z = surfMesh->Z.Get(i);
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
 
-  real sumEdgeLength = 0;
+  double sumEdgeLength = 0;
   int listSize = neighbourPoint->at(i).size();
   list<int> plist = neighbourPoint->at(i);
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
-   real P1x = surfMesh->X.Get(*vert);
-   real P1y = surfMesh->Y.Get(*vert);
-   real P1z = surfMesh->Z.Get(*vert);
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
  }
 
- //real xMid = (X->Min()+X->Max())*0.5;
- real yMid = (Y->Min()+Y->Max())*0.5;
- real zMid = (Z->Min()+Z->Max())*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
- //real diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
- real diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
- real epslocal = 0.1*diameter;
+ //double xMid = (X->Min()+X->Max())*0.5;
+ double yMid = (Y->Min()+Y->Max())*0.5;
+ double zMid = (Z->Min()+Z->Max())*0.5;
+ //double diameter = ( (X->Max()-X->Min())+(Y->Max()-Y->Min()) )*0.5;
+ //double diameter = ( (X->Max()-X->Min())+(Z->Max()-Z->Min()) )*0.5;
+ double diameter = ( (Y->Max()-Y->Min())+(Z->Max()-Z->Min()) )*0.5;
+ double epslocal = 0.1*diameter;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
 	(Y->Get(i) > yMid-epslocal && Y->Get(i) < yMid+epslocal) &&
 	(Z->Get(i) > zMid-epslocal && Z->Get(i) < zMid+epslocal) )
   {
-   real aux = triEdge[0]*10;
+   double aux = triEdge[0]*10;
    convC.Set(i,aux);
   }
   else
   {
-   real aux = triEdge[0];
+   double aux = triEdge[0];
    convC.Set(i,aux);
   }
  }
@@ -323,11 +323,11 @@ void Helmholtz3D::initBackwardStep()
  // set wall distance for each 3D vertex
  for( int i=0;i<numVerts;i++ )
  {
-  real vert = closerWall.Get(i);
-  real xCloser = X->Get(vert);
-  real yCloser = Y->Get(vert);
-  real zCloser = Z->Get(vert);
-  real aux = distance( X->Get(i),Y->Get(i),Z->Get(i),
+  double vert = closerWall.Get(i);
+  double xCloser = X->Get(vert);
+  double yCloser = Y->Get(vert);
+  double zCloser = Z->Get(vert);
+  double aux = distance( X->Get(i),Y->Get(i),Z->Get(i),
 	                   xCloser,yCloser,zCloser );
   wallDistance.Set(i,aux);
  }
@@ -335,7 +335,7 @@ void Helmholtz3D::initBackwardStep()
 
  // considering that the smaller distance is equivalent to the wall edge
  // length (triEdge[0])
- //real minWallDistance = triEdge[0];
+ //double minWallDistance = triEdge[0];
 
  /* loop at surfMesh: for each vertex, an average value is set based on
   * the umbrella operator (neighbors) for distance. Thus, each vertex
@@ -346,20 +346,20 @@ void Helmholtz3D::initBackwardStep()
  {
   if( surfMesh->phyBounds.at(i).compare(5,6,"Normal") != 0 )
   {
-   real P0x = surfMesh->X.Get(i);
-   real P0y = surfMesh->Y.Get(i);
-   real P0z = surfMesh->Z.Get(i);
+   double P0x = surfMesh->X.Get(i);
+   double P0y = surfMesh->Y.Get(i);
+   double P0z = surfMesh->Z.Get(i);
 
-   real sumEdgeLength = 0;
+   double sumEdgeLength = 0;
    int listSize = neighbourPoint->at(i).size();
    list<int> plist = neighbourPoint->at(i);
    for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
    {
-	real P1x = surfMesh->X.Get(*vert);
-	real P1y = surfMesh->Y.Get(*vert);
-	real P1z = surfMesh->Z.Get(*vert);
+	double P1x = surfMesh->X.Get(*vert);
+	double P1y = surfMesh->Y.Get(*vert);
+	double P1z = surfMesh->Z.Get(*vert);
 
-	real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+	double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 	sumEdgeLength += edgeLength;
    }
    convC.Set(i,sumEdgeLength/listSize);
@@ -367,16 +367,16 @@ void Helmholtz3D::initBackwardStep()
   else // apply same strategy for non-boundary vertics if it is
        // NormalU,V,W c.c.
   {
-  real ratio = triEdge[0]*wallDistance.Get(i)*2.5;
-  real aux = triEdge[0]+ratio;
+  double ratio = triEdge[0]*wallDistance.Get(i)*2.5;
+  double aux = triEdge[0]+ratio;
    convC.Set(i,aux);
   }
  }
 
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real ratio = triEdge[0]*wallDistance.Get(i)*2.5;
-  real aux = triEdge[0]+ratio;
+  double ratio = triEdge[0]*wallDistance.Get(i)*2.5;
+  double aux = triEdge[0]+ratio;
   convC.Set(i,aux);
  }
 }
@@ -392,48 +392,48 @@ void Helmholtz3D::init2Bubbles()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
-  real P0x = surfMesh->X.Get(i);
-  real P0y = surfMesh->Y.Get(i);
-  real P0z = surfMesh->Z.Get(i);
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
 
-  real sumEdgeLength = 0;
+  double sumEdgeLength = 0;
   int listSize = neighbourPoint->at(i).size();
   list<int> plist = neighbourPoint->at(i);
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
-   real P1x = surfMesh->X.Get(*vert);
-   real P1y = surfMesh->Y.Get(*vert);
-   real P1z = surfMesh->Z.Get(*vert);
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
 
-   real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
   convC.Set(i,sumEdgeLength/listSize);
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
- real minEdge = *min_element(triEdge.begin(),triEdge.end());
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  real radius = 0.5; // sphere radius
+  double radius = 0.5; // sphere radius
   // outside mesh
   if( heaviside->Get(i) < 0.5 ) 
   {
-   real factor = minEdge/triEdge[vertIdRegion->Get(i)];
+   double factor = minEdge/triEdge[vertIdRegion->Get(i)];
    if( interfaceDistance->Get(i) < 0.6*radius )
    {
-	real aux = triEdge[vertIdRegion->Get(i)]*factor*0.4;
+	double aux = triEdge[vertIdRegion->Get(i)]*factor*0.4;
 	convC.Set(i,aux);
    }
    else
    {
-	real aux = triEdge[vertIdRegion->Get(i)];
+	double aux = triEdge[vertIdRegion->Get(i)];
 	convC.Set(i,aux);
    }
   }
   else                         // inside mesh
   {
-   real aux = triEdge[vertIdRegion->Get(i)];
+   double aux = triEdge[vertIdRegion->Get(i)];
    convC.Set(i,aux);
   }
  }
@@ -443,7 +443,7 @@ void Helmholtz3D::assemble()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
@@ -454,7 +454,7 @@ void Helmholtz3D::assemble()
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  real dif = 1.0;
+  double dif = 1.0;
 
   linElem.getM(*v); 
 
@@ -511,20 +511,20 @@ void Helmholtz3D::setBC()
   {
    idbcc.AddItem(i);
 
-   real P0x = surfMesh->X.Get(i);
-   real P0y = surfMesh->Y.Get(i);
-   real P0z = surfMesh->Z.Get(i);
+   double P0x = surfMesh->X.Get(i);
+   double P0y = surfMesh->Y.Get(i);
+   double P0z = surfMesh->Z.Get(i);
 
-   real sumEdgeLength = 0;
+   double sumEdgeLength = 0;
    int listSize = neighbourPoint->at(i).size();
    list<int> plist = neighbourPoint->at(i);
    for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
    {
-	real P1x = surfMesh->X.Get(*vert);
-	real P1y = surfMesh->Y.Get(*vert);
-	real P1z = surfMesh->Z.Get(*vert);
+	double P1x = surfMesh->X.Get(*vert);
+	double P1y = surfMesh->Y.Get(*vert);
+	double P1z = surfMesh->Z.Get(*vert);
 
-	real edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+	double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
 	sumEdgeLength += edgeLength;
    }
    cc.Set(i,sumEdgeLength/listSize);
@@ -733,7 +733,7 @@ void Helmholtz3D::saveChordalEdge( const char* _dir,const char* _filename, int _
 		 << endl;
 
  // xVert da malha nova
- real nPoints = 1000;
+ double nPoints = 1000;
  clVector xVert(nPoints);
  clVector yVert(nPoints);
  clVector zVert(nPoints);
@@ -742,8 +742,8 @@ void Helmholtz3D::saveChordalEdge( const char* _dir,const char* _filename, int _
  yVert.SetAll( (Y->Max()+Y->Min())/2.0 );
  for( int i=0;i<nPoints;i++ )
  {
-  real dz = i * ( (Z->Max()-Z->Min()) )/(nPoints-1);
-  real pos = Z->Min()+dz;
+  double dz = i * ( (Z->Max()-Z->Min()) )/(nPoints-1);
+  double pos = Z->Min()+dz;
   zVert.Set(i,pos);
  }
 
@@ -780,8 +780,8 @@ void Helmholtz3D::saveChordalEdge( const char* _dir,const char* _filename, int _
 
 } // fecha metodo chordalEdge
 
-void Helmholtz3D::setk(real _k){k = _k;}
-real Helmholtz3D::getk(){return k;}
+void Helmholtz3D::setk(double _k){k = _k;}
+double Helmholtz3D::getk(){return k;}
 
 
 void Helmholtz3D::setCloserWall()
@@ -820,16 +820,16 @@ void Helmholtz3D::setCloserWall()
  }
 }
 
-bool Helmholtz3D::isInsideLiquidFilm(int _node, real _thickness)
+bool Helmholtz3D::isInsideLiquidFilm(int _node, double _thickness)
 {
- real x1 = X->Get(_node);
- real y1 = Y->Get(_node);
- real z1 = Z->Get(_node);
+ double x1 = X->Get(_node);
+ double y1 = Y->Get(_node);
+ double z1 = Z->Get(_node);
 
  int closer = closerWall.Get(_node);
- real x2 = X->Get(closer);
- real y2 = Y->Get(closer);
- real z2 = Z->Get(closer);
+ double x2 = X->Get(closer);
+ double y2 = Y->Get(closer);
+ double z2 = Z->Get(closer);
  
  return distance(x1,y1,z1,x2,y2,z2) < _thickness;
 }

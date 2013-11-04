@@ -246,7 +246,7 @@ void InOut::saveSol( const char* _dir,const char* _filename, int _iter )
 
  ofstream UVWPC_file( filenameUVWPC,ios::binary | ios::trunc ); 
 
- UVWPC_file.write( (const char*) vec.GetVec(),vec.Dim()*sizeof(real) );
+ UVWPC_file.write( (const char*) vec.GetVec(),vec.Dim()*sizeof(double) );
 
  UVWPC_file.close();
 
@@ -272,7 +272,7 @@ void InOut::loadSol( const char* _dir,const char* _filename, int _iter )
 
  ifstream UVWPC_file( filenameUVWPC,ios::in | ios::binary ); 
 
- UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
+ UVWPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(double) );
 
  UVWPC_file.close();
 
@@ -565,8 +565,8 @@ void InOut::saveVTK( const char* _coord1, const char* _coord2,
  if( strcmp( _coord2,"z") == 0 || strcmp( _coord2,"Z") == 0 )
   coordPlane2 = Z;
 
- real plane1 = ( coordPlane1->Max()+coordPlane1->Min() )/2.0;
- real plane2 = ( coordPlane2->Max()+coordPlane2->Min() )/2.0;
+ double plane1 = ( coordPlane1->Max()+coordPlane1->Min() )/2.0;
+ double plane2 = ( coordPlane2->Max()+coordPlane2->Min() )/2.0;
 
  // conta numero de elementos
  int count = 0;
@@ -585,7 +585,7 @@ void InOut::saveVTK( const char* _coord1, const char* _coord2,
  	               (coordPlane2->Get( v3 ) <  plane2) && 
 				   (coordPlane2->Get( v4 ) <  plane2);
 
-  real hTest = heaviside->Get(v1)+heaviside->Get(v2)+
+  double hTest = heaviside->Get(v1)+heaviside->Get(v2)+
 	           heaviside->Get(v3)+heaviside->Get(v4) > 1.5;
 
   if( planeTest || hTest )
@@ -609,7 +609,7 @@ void InOut::saveVTK( const char* _coord1, const char* _coord2,
  	               (coordPlane2->Get( v3 ) <  plane2) && 
 				   (coordPlane2->Get( v4 ) <  plane2);
 
-  real hTest = heaviside->Get(v1)+heaviside->Get(v2)+
+  double hTest = heaviside->Get(v1)+heaviside->Get(v2)+
 	           heaviside->Get(v3)+heaviside->Get(v4) > 1.5;
 
   if( planeTest || hTest )
@@ -638,7 +638,7 @@ void InOut::saveVTK( const char* _coord1, const char* _coord2,
  	               (coordPlane2->Get( v3 ) <  plane2) && 
 				   (coordPlane2->Get( v4 ) <  plane2);
 
-  real hTest = heaviside->Get(v1)+heaviside->Get(v2)+
+  double hTest = heaviside->Get(v1)+heaviside->Get(v2)+
 	           heaviside->Get(v3)+heaviside->Get(v4) > 1.5;
 
   if( planeTest || hTest )
@@ -817,27 +817,27 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename)
    {
 	if( X->Get(j) == X->Get(i) && Y->Get(j) == Y->Get(i) )
 	{
-	 real radius = sqrt( X->Get(i)*X->Get(i) +
+	 double radius = sqrt( X->Get(i)*X->Get(i) +
 	                     Y->Get(i)*Y->Get(i) );
 	 int vert = j;
 
 	 //      X*u      Y*v
 	 // F = ------ + ------
 	 //      R^2      R^2
-	 real F = X->Get(vert)*uSol->Get(vert)/(radius*radius)+  
+	 double F = X->Get(vert)*uSol->Get(vert)/(radius*radius)+  
 	          Y->Get(vert)*vSol->Get(vert)/(radius*radius);
 	 //      X*v      Y*u
 	 // G = ------ - ------
 	 //      R^2      R^2
-	 real G = X->Get(vert)*vSol->Get(vert)/(radius*radius)-  
+	 double G = X->Get(vert)*vSol->Get(vert)/(radius*radius)-  
 	          Y->Get(vert)*uSol->Get(vert)/(radius*radius);
 	 //      
 	 // H = -1*w
 	 //     
-	 real H = (-1)*wSol->Get(vert); 
-	 real c = cSol->Get(vert);
-	 real p = pSol->Get(vert);
-	 real muValue = mu->Get(vert);
+	 double H = (-1)*wSol->Get(vert); 
+	 double c = cSol->Get(vert);
+	 double p = pSol->Get(vert);
+	 double muValue = mu->Get(vert);
 
      vonKarmanFile << setw(16) << Z->Get(vert)  
 	               << setw(18) << F
@@ -905,8 +905,8 @@ void InOut::saveDiskRadiusError(const char* _dir,
                << "UVW_error" << setw(19)
                << "UVWc_error" << endl;
 
- real aux;
- real L,L1,L2;
+ double aux;
+ double L,L1,L2;
  clMatrix solFile(2401,5); 
  clVector uExact(numVerts);
  clVector vExact(numVerts);
@@ -940,8 +940,8 @@ void InOut::saveDiskRadiusError(const char* _dir,
  }
 
  int j;
- real omega = 1.0;
- real EPSlocal = 1e-04;
+ double omega = 1.0;
+ double EPSlocal = 1e-04;
  for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
@@ -953,11 +953,11 @@ void InOut::saveDiskRadiusError(const char* _dir,
        (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
   // interpolant
-  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
-  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
-  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
-  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
-  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+  double interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  double FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  double GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  double HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  double CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
 
   aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
@@ -976,39 +976,39 @@ void InOut::saveDiskRadiusError(const char* _dir,
   if( Z->Get(i) == Z->Min() && 
 	  Y->Get(i) == 0 )
   {
-   real radius = sqrt( X->Get(i)*X->Get(i) +
+   double radius = sqrt( X->Get(i)*X->Get(i) +
                        Y->Get(i)*Y->Get(i) );
 
    if( radius > 0 )
    {
-    real sumUDiff = 0.0;
-    real sumVDiff = 0.0;
-    real sumWDiff = 0.0;
-    real sumcDiff = 0.0;
-    real sumUVWDiff = 0.0;
-    real sumUVWcDiff = 0.0;
-    real sumU = 0.0;
-    real sumV = 0.0;
-    real sumW = 0.0;
-    real sumc = 0.0;
-    real sumUVW = 0.0;
-    real sumUVWc = 0.0;
+    double sumUDiff = 0.0;
+    double sumVDiff = 0.0;
+    double sumWDiff = 0.0;
+    double sumcDiff = 0.0;
+    double sumUVWDiff = 0.0;
+    double sumUVWcDiff = 0.0;
+    double sumU = 0.0;
+    double sumV = 0.0;
+    double sumW = 0.0;
+    double sumc = 0.0;
+    double sumUVW = 0.0;
+    double sumUVWc = 0.0;
     for( int j=0;j<numVerts;j++ )
     {
      if( X->Get(j) == X->Get(i) && 
          Y->Get(j) == Y->Get(i) )
      {
-      real UVW = uSol->Get(j)+
+      double UVW = uSol->Get(j)+
                  vSol->Get(j)+
 				 wSol->Get(j); 
    
-      real UVWc = UVW+cSol->Get(j); 
+      double UVWc = UVW+cSol->Get(j); 
      
-      real UVWExact = uExact.Get(j)+
+      double UVWExact = uExact.Get(j)+
                       vExact.Get(j)+
 					  wExact.Get(j); 
    
-      real UVWcExact = UVWExact+cExact.Get(j); 
+      double UVWcExact = UVWExact+cExact.Get(j); 
      
       sumUDiff += (uSol->Get(j)-uExact.Get(j))*
                   (uSol->Get(j)-uExact.Get(j));
@@ -1044,12 +1044,12 @@ void InOut::saveDiskRadiusError(const char* _dir,
      *  _e = sqrt( --------------------------- )
      *           (      sum( sol[i]^2 )        )
      * */
-    real errorU = sqrt( sumUDiff/(sumU+EPS) );
-    real errorV = sqrt( sumVDiff/(sumV+EPS) );
-    real errorW = sqrt( sumWDiff/(sumW+EPS) );
-    real errorc = sqrt( sumcDiff/(sumc+EPS) );
-    real errorUVW = sqrt( sumUVWDiff/(sumUVW+EPS) );
-    real errorUVWc = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
+    double errorU = sqrt( sumUDiff/(sumU+EPS) );
+    double errorV = sqrt( sumVDiff/(sumV+EPS) );
+    double errorW = sqrt( sumWDiff/(sumW+EPS) );
+    double errorc = sqrt( sumcDiff/(sumc+EPS) );
+    double errorUVW = sqrt( sumUVWDiff/(sumUVW+EPS) );
+    double errorUVWc = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
    
     vonKarmanFile << setprecision(4) << fixed; 
     vonKarmanFile << setw(8) << X->Get(i);
@@ -1099,7 +1099,7 @@ void InOut::savePert(const char* _dir,const char* _filename,int _iter,
  clVector Y0 = Yaux.Find(); // retorna o vertice dos pontos em X
  clVector Xaux = *X==X->Get( (int) Y0.Get(vertice) ); // escolhe um X qualquer
  clVector X0 = Xaux.Find(); // retorna os vertices com o mesmo X em Z variavel
- real raio = X->Get( (int) X0.Get(0)); // raio do ponto
+ double raio = X->Get( (int) X0.Get(0)); // raio do ponto
 
  clVector aux2;
  for( int i=0;i<numVerts;i++ )
@@ -1440,7 +1440,7 @@ int InOut::loadIter()
 {
  ifstream simTime( "./sim/simTime.dat",ios::in ); 
 
- real time;
+ double time;
  int iter;
 
  simTime >> iter;
@@ -1457,7 +1457,7 @@ int InOut::loadIter()
 int InOut::loadIter( const char* filename )
 {
  char auxstr[255];
- real time;
+ double time;
  int iter;
 
  ifstream vtkFile( filename,ios::in );
@@ -1559,7 +1559,7 @@ void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
 				  << endl;
  }
 
- real aux;
+ double aux;
 
  int dim = surface->Dim();
  clVector xSurface(dim);
@@ -1586,9 +1586,9 @@ void InOut::oscillating(const char* _dir,const char* _filename, int _iter)
  clVector zSurfaceMax = zSurfaceAux.Find(); // retorna o vertice de maior Z
 
  // retorna o valor de maior Y da interface 
- real pointX = uSolSurface.Get((int) xSurfaceMax.Get(0));
- real pointY = vSolSurface.Get((int) ySurfaceMax.Get(0));
- real pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
+ double pointX = uSolSurface.Get((int) xSurfaceMax.Get(0));
+ double pointY = vSolSurface.Get((int) ySurfaceMax.Get(0));
+ double pointZ = wSolSurface.Get((int) zSurfaceMax.Get(0));
 
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
@@ -1620,9 +1620,9 @@ void InOut::oscillating(int point1,int point2,int point3,const char* _filename)
  }
 
  // retorna o valor de maior Y da interface 
- real pointX = uSol->Get(point1);
- real pointY = vSol->Get(point2);
- real pointZ = wSol->Get(point3);
+ double pointX = uSol->Get(point1);
+ double pointY = vSol->Get(point2);
+ double pointZ = wSol->Get(point3);
 
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
@@ -1652,19 +1652,19 @@ void InOut::oscillatingD(int point1,int point2,int point3,int point4,
  }
 
  // retorna o valor de maior Y da interface 
- real pointX1 = X->Get(point1);
- real pointX2 = X->Get(point2);
- real pointY1 = Y->Get(point3);
- real pointY2 = Y->Get(point4);
- real pointZ1 = Z->Get(point5);
- real pointZ2 = Z->Get(point6);
+ double pointX1 = X->Get(point1);
+ double pointX2 = X->Get(point2);
+ double pointY1 = Y->Get(point3);
+ double pointY2 = Y->Get(point4);
+ double pointZ1 = Z->Get(point5);
+ double pointZ2 = Z->Get(point6);
 
  // retorna o valor do maior diametro em Z na interface 
- real diameterX = fabs( pointX1-pointX2 ); 
+ double diameterX = fabs( pointX1-pointX2 ); 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = fabs( pointY1-pointY2 );
+ double diameterY = fabs( pointY1-pointY2 );
  // retorna o valor do maior diametro em Y na interface 
- real diameterZ = fabs( pointZ1-pointZ2 );
+ double diameterZ = fabs( pointZ1-pointZ2 );
                  
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
@@ -1698,7 +1698,7 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
 				 << endl;
  }
  
- real aux;
+ double aux;
 
  int dim = surface->Dim();
  clVector xSurface(dim);
@@ -1713,12 +1713,12 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
  }
 
  // pega o 1o. valor da interface
- real xMax = xSurface.Get(0); 
- real yMax = ySurface.Get(0); 
- real zMax = zSurface.Get(0); 
- real xMin = xSurface.Get(0); 
- real yMin = ySurface.Get(0); 
- real zMin = zSurface.Get(0); 
+ double xMax = xSurface.Get(0); 
+ double yMax = ySurface.Get(0); 
+ double zMax = zSurface.Get(0); 
+ double xMin = xSurface.Get(0); 
+ double yMin = ySurface.Get(0); 
+ double zMin = zSurface.Get(0); 
  for( int i=1;i<dim;i++ )
  {
   if( xSurface.Get(i) > xMax )
@@ -1736,11 +1736,11 @@ void InOut::oscillatingD(const char* _dir,const char* _filename, int _iter)
  }
 
  // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
+ double diameterX = xMax - xMin; 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
+ double diameterY = yMax - yMin; 
  // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
+ double diameterZ = zMax - zMin; 
 
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
@@ -1772,11 +1772,11 @@ void InOut::oscillatingKappa(const char* _dir,const char* _filename, int _iter)
 				  << endl;
  }
 
- real aux = 0;
+ double aux = 0;
  for( int i=0;i<kappa->Dim();i++ )
   aux += kappa->Get(i);
 
- real kappaAverage = aux/kappa->Dim();
+ double kappaAverage = aux/kappa->Dim();
 
  file << setprecision(10) << scientific; 
  file << setw(10) << s->getTime() << " " 
@@ -2006,10 +2006,10 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
 				  << endl;
  }
 
- real Ymax1=100;
- real Ymin1=-100;
- real Ymax2=-100;
- real Ymin2=100;
+ double Ymax1=100;
+ double Ymin1=-100;
+ double Ymax2=-100;
+ double Ymin2=100;
  
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
@@ -2028,8 +2028,8 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
   }
  }
 
- real dist1 = Ymin2-Ymin1;
- real dist2 = Ymax2-Ymax1;
+ double dist1 = Ymin2-Ymin1;
+ double dist2 = Ymax2-Ymax1;
 
  file << setprecision(10) << scientific; 
  file << setw(9) <<  s->getTime() << " " << Ymin1 << " " << Ymax1 << " " 
@@ -2044,7 +2044,7 @@ void InOut::bubblesDistance(const char* _dir,const char* _filename, int _iter)
 
 void InOut::saveMeshInfo(const char* _dir)
 {
- real time = s->getTime();
+ double time = s->getTime();
  string file = (string) _dir + "meshingInfo.dat";
  const char* filename = file.c_str();
 
@@ -2358,29 +2358,29 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
  }
 
  // EPS to avoid division by 0
- real uDiff = ( (*uSol - *uSolOld).Abs() ).Sum();
- real uSum = ( uSol->Abs() ).Sum();
- real uError = (uDiff/(uSum+EPS))/dt;
+ double uDiff = ( (*uSol - *uSolOld).Abs() ).Sum();
+ double uSum = ( uSol->Abs() ).Sum();
+ double uError = (uDiff/(uSum+EPS))/dt;
 
- real vDiff = ( (*vSol - *vSolOld).Abs() ).Sum();
- real vSum = ( vSol->Abs() ).Sum();
- real vError = (vDiff/(vSum+EPS))/dt;
+ double vDiff = ( (*vSol - *vSolOld).Abs() ).Sum();
+ double vSum = ( vSol->Abs() ).Sum();
+ double vError = (vDiff/(vSum+EPS))/dt;
 
- real wDiff = ( (*wSol - *wSolOld).Abs() ).Sum();
- real wSum = ( wSol->Abs() ).Sum();
- real wError = (wDiff/(wSum+EPS))/dt;
+ double wDiff = ( (*wSol - *wSolOld).Abs() ).Sum();
+ double wSum = ( wSol->Abs() ).Sum();
+ double wError = (wDiff/(wSum+EPS))/dt;
 
- real pDiff = ( (*pSol - *pSolOld).Abs() ).Sum();
- real pSum = ( pSol->Abs() ).Sum();
- real pError = (pDiff/(pSum+EPS))/dt;
+ double pDiff = ( (*pSol - *pSolOld).Abs() ).Sum();
+ double pSum = ( pSol->Abs() ).Sum();
+ double pError = (pDiff/(pSum+EPS))/dt;
 
- real cDiff = ( (*cSol - *cSolOld).Abs() ).Sum();
- real cSum = ( cSol->Abs() ).Sum();
- real cError = (cDiff/(cSum+EPS))/dt;
+ double cDiff = ( (*cSol - *cSolOld).Abs() ).Sum();
+ double cSum = ( cSol->Abs() ).Sum();
+ double cError = (cDiff/(cSum+EPS))/dt;
  
- real uvwError = ( (uDiff+vDiff+wDiff) / (uSum+vSum+wSum+EPS) ) / dt;
- real uvwpError = ( (uDiff+vDiff+wDiff+pDiff) / (uSum+vSum+wSum+pSum+EPS) )/dt;
- real uvwpcError = ( (uDiff+vDiff+wDiff+pDiff+cDiff) /
+ double uvwError = ( (uDiff+vDiff+wDiff) / (uSum+vSum+wSum+EPS) ) / dt;
+ double uvwpError = ( (uDiff+vDiff+wDiff+pDiff) / (uSum+vSum+wSum+pSum+EPS) )/dt;
+ double uvwpcError = ( (uDiff+vDiff+wDiff+pDiff+cDiff) /
                      (uSum+vSum+wSum+pSum+cSum+EPS) ) / dt;
 
  iter = s->getIter();
@@ -2409,8 +2409,8 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 //--------------------------------------------------
 // void InOut::saveDiskError2(const char* _dir,const char* _filename )
 // {
-//  real aux;
-//  real dist1,dist2;
+//  double aux;
+//  double dist1,dist2;
 //  clMatrix solFile(2401,5); 
 //  clVector solF(numVerts);
 //  clVector solG(numVerts);
@@ -2483,50 +2483,50 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 // 			 << setw(10) << "numElems" 
 // 			 << endl;
 // 
-//    real sumFDiff = 0.0;
-//    real sumGDiff = 0.0;
-//    real sumHDiff = 0.0;
-//    real sumcDiff = 0.0;
-//    real sumFGHDiff = 0.0;
-//    real sumFGHcDiff = 0.0;
-//    real sumF = 0.0;
-//    real sumG = 0.0;
-//    real sumH = 0.0;
-//    real sumc = 0.0;
-//    real sumFGH = 0.0;
-//    real sumFGHc = 0.0;
+//    double sumFDiff = 0.0;
+//    double sumGDiff = 0.0;
+//    double sumHDiff = 0.0;
+//    double sumcDiff = 0.0;
+//    double sumFGHDiff = 0.0;
+//    double sumFGHcDiff = 0.0;
+//    double sumF = 0.0;
+//    double sumG = 0.0;
+//    double sumH = 0.0;
+//    double sumc = 0.0;
+//    double sumFGH = 0.0;
+//    double sumFGHc = 0.0;
 //    for( int i=0;i<numVerts;i++ )
 //    {
-// 	 real radius = sqrt( X->Get(i)*X->Get(i) +
+// 	 double radius = sqrt( X->Get(i)*X->Get(i) +
 // 	                     Y->Get(i)*Y->Get(i) )+EPS;
 // 
 // 	 //      X*u      Y*v
 // 	 // F = ------ + ------
 // 	 //      R^2      R^2
-// 	 real F = X->Get(i)*uSol->Get(i)/(radius*radius)+  
+// 	 double F = X->Get(i)*uSol->Get(i)/(radius*radius)+  
 // 	          Y->Get(i)*vSol->Get(i)/(radius*radius);
 // 	 //      X*v      Y*u
 // 	 // G = ------ - ------
 // 	 //      R^2      R^2
-// 	 real G = X->Get(i)*vSol->Get(i)/(radius*radius)-  
+// 	 double G = X->Get(i)*vSol->Get(i)/(radius*radius)-  
 // 	          Y->Get(i)*uSol->Get(i)/(radius*radius);
 // 	 //      
 // 	 // H = -1*w
 // 	 //     
-// 	 real H = (-1)*wSol->Get(i); 
+// 	 double H = (-1)*wSol->Get(i); 
 // 
-// 	 real c = cSol->Get(i);
+// 	 double c = cSol->Get(i);
 // 
-// 	 real FGH = F+G+H; 
-// 	 real FGHc = F+G+H+c;
+// 	 double FGH = F+G+H; 
+// 	 double FGHc = F+G+H+c;
 // 
-// 	 real FExact = solF.Get(i);
-// 	 real GExact = solG.Get(i);
-// 	 real HExact = solH.Get(i);
-// 	 real cExact = solC.Get(i);
+// 	 double FExact = solF.Get(i);
+// 	 double GExact = solG.Get(i);
+// 	 double HExact = solH.Get(i);
+// 	 double cExact = solC.Get(i);
 // 
-// 	 real FGHExact = FExact+GExact+HExact;
-// 	 real FGHcExact = FExact+GExact+HExact+cExact;
+// 	 double FGHExact = FExact+GExact+HExact;
+// 	 double FGHcExact = FExact+GExact+HExact+cExact;
 // 
 // 	 sumFDiff += (F-FExact)*(F-FExact);
 // 	 sumGDiff += (G-GExact)*(G-GExact);
@@ -2549,12 +2549,12 @@ void InOut::saveConvergence(const char* _dir,const char* _filename)
 // 	*  _e = sqrt( --------------------------- )
 // 	*           (      sum( sol[i]^2 )        )
 // 	* */
-//    real errorF = sqrt( sumFDiff/(sumF+EPS) );
-//    real errorG = sqrt( sumGDiff/(sumG+EPS) );
-//    real errorH = sqrt( sumHDiff/(sumH+EPS) );
-//    real errorc = sqrt( sumcDiff/(sumc+EPS) );
-//    real errorFGH = sqrt( sumFGHDiff/(sumFGH+EPS) );
-//    real errorFGHc = sqrt( sumFGHcDiff/(sumFGHc+EPS) );
+//    double errorF = sqrt( sumFDiff/(sumF+EPS) );
+//    double errorG = sqrt( sumGDiff/(sumG+EPS) );
+//    double errorH = sqrt( sumHDiff/(sumH+EPS) );
+//    double errorc = sqrt( sumcDiff/(sumc+EPS) );
+//    double errorFGH = sqrt( sumFGHDiff/(sumFGH+EPS) );
+//    double errorFGHc = sqrt( sumFGHcDiff/(sumFGHc+EPS) );
 // 
 //    errorFile << errorF 
 //              << setw(18) << errorG 
@@ -2584,8 +2584,8 @@ void InOut::saveDiskError(const char* _dir,
 						  char* _fileAnalytic)
 {
  int iter = s->getIter();
- real aux;
- real L,L1,L2;
+ double aux;
+ double L,L1,L2;
  clMatrix solFile(2401,5); 
  clVector uExact(numVerts);
  clVector vExact(numVerts);
@@ -2620,8 +2620,8 @@ void InOut::saveDiskError(const char* _dir,
  }
 
  int j;
- real omega = 1.0;
- real EPSlocal = 1e-04;
+ double omega = 1.0;
+ double EPSlocal = 1e-04;
  for( int i=0;i<numVerts;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
@@ -2633,11 +2633,11 @@ void InOut::saveDiskError(const char* _dir,
        (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
   // interpolant
-  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
-  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
-  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
-  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
-  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+  double interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  double FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  double GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  double HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  double CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
 
   aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   //aux = solFile(j,1); // F
@@ -2653,24 +2653,24 @@ void InOut::saveDiskError(const char* _dir,
 
  // average edge length for the 3D mesh
  clMatrix *mapEdge = m->getMapEdge();
- real length = 0;
+ double length = 0;
  for( int edge=0;edge<mapEdge->DimI();edge++ )
  {
   // v1
   int v1 = mapEdge->Get(edge,4);
-  real p1x=X->Get(v1);
-  real p1y=Y->Get(v1);
-  real p1z=Z->Get(v1);
+  double p1x=X->Get(v1);
+  double p1y=Y->Get(v1);
+  double p1z=Z->Get(v1);
 
   // v2
   int v2 = mapEdge->Get(edge,5);
-  real p2x=X->Get(v2);
-  real p2y=Y->Get(v2);
-  real p2z=Z->Get(v2);
+  double p2x=X->Get(v2);
+  double p2y=Y->Get(v2);
+  double p2z=Z->Get(v2);
 
   length += distance(p1x,p1y,p1z,p2x,p2y,p2z);
  }
- real avgLength = length/(mapEdge->DimI());
+ double avgLength = length/(mapEdge->DimI());
 
  // this loop retrives all the points with Y=0 and Z varying from 0 to
  // Z.Max for all radius X 
@@ -2708,46 +2708,46 @@ void InOut::saveDiskError(const char* _dir,
 				  << endl;
  }
 
- real sumUDiff = 0.0;
- real sumVDiff = 0.0;
- real sumWDiff = 0.0;
- //real sumpDiff = 0.0;
- real sumcDiff = 0.0;
- real sumUVWDiff = 0.0;
- //real sumUVWpDiff = 0.0;
- real sumUVWcDiff = 0.0;
- //real sumUVWpcDiff = 0.0;
- real sumU = 0.0;
- real sumV = 0.0;
- real sumW = 0.0;
- //real sump = 0.0;
- real sumc = 0.0;
- real sumUVW = 0.0;
- //real sumUVWp = 0.0;
- real sumUVWc = 0.0;
- //real sumUVWpc = 0.0;
+ double sumUDiff = 0.0;
+ double sumVDiff = 0.0;
+ double sumWDiff = 0.0;
+ //double sumpDiff = 0.0;
+ double sumcDiff = 0.0;
+ double sumUVWDiff = 0.0;
+ //double sumUVWpDiff = 0.0;
+ double sumUVWcDiff = 0.0;
+ //double sumUVWpcDiff = 0.0;
+ double sumU = 0.0;
+ double sumV = 0.0;
+ double sumW = 0.0;
+ //double sump = 0.0;
+ double sumc = 0.0;
+ double sumUVW = 0.0;
+ //double sumUVWp = 0.0;
+ double sumUVWc = 0.0;
+ //double sumUVWpc = 0.0;
  for( int i=0;i<numVerts;i++ )
  {
-  real radius = sqrt( X->Get(i)*X->Get(i) +
+  double radius = sqrt( X->Get(i)*X->Get(i) +
                       Y->Get(i)*Y->Get(i) );
 
   // taking only results far from the boundary shell, where the
   // solution is affected by the boundary pressure = 0
   if( radius > 0 && radius < 0.45*Y->Max() )
   {
-   real UVW = uSol->Get(i)+
+   double UVW = uSol->Get(i)+
               vSol->Get(i)+
      		 wSol->Get(i); 
-   //real UVWp = UVW + pSol->Get(i); 
-   real UVWc = UVW + cSol->Get(i); 
-   //real UVWpc = UVWp + cSol->Get(i); 
+   //double UVWp = UVW + pSol->Get(i); 
+   double UVWc = UVW + cSol->Get(i); 
+   //double UVWpc = UVWp + cSol->Get(i); 
    
-   real UVWExact = uExact.Get(i)+
+   double UVWExact = uExact.Get(i)+
                    vExact.Get(i)+
      			  wExact.Get(i); 
-   //real UVWpExact = UVWExact+pExact.Get(i); 
-   real UVWcExact = UVWExact+cExact.Get(i); 
-   //real UVWpcExact = UVWpExact+cExact.Get(i); 
+   //double UVWpExact = UVWExact+pExact.Get(i); 
+   double UVWcExact = UVWExact+cExact.Get(i); 
+   //double UVWpcExact = UVWpExact+cExact.Get(i); 
    
    sumUDiff += (uSol->Get(i)-uExact.Get(i))*
                (uSol->Get(i)-uExact.Get(i));
@@ -2796,15 +2796,15 @@ void InOut::saveDiskError(const char* _dir,
   *  _e = sqrt( --------------------------- )
   *           (      sum( sol[i]^2 )        )
   * */
- real uError = sqrt( sumUDiff/(sumU+EPS) );
- real vError = sqrt( sumVDiff/(sumV+EPS) );
- real wError = sqrt( sumWDiff/(sumW+EPS) );
- //real pError = sqrt( sumpDiff/(sump+EPS) );
- real cError = sqrt( sumcDiff/(sumc+EPS) );
- real uvwError = sqrt( sumUVWDiff/(sumUVW+EPS) );
- //real uvwpError = sqrt( sumUVWpDiff/(sumUVWp+EPS) );
- real uvwcError = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
- //real uvwpcError = sqrt( sumUVWpcDiff/(sumUVWpc+EPS) );
+ double uError = sqrt( sumUDiff/(sumU+EPS) );
+ double vError = sqrt( sumVDiff/(sumV+EPS) );
+ double wError = sqrt( sumWDiff/(sumW+EPS) );
+ //double pError = sqrt( sumpDiff/(sump+EPS) );
+ double cError = sqrt( sumcDiff/(sumc+EPS) );
+ double uvwError = sqrt( sumUVWDiff/(sumUVW+EPS) );
+ //double uvwpError = sqrt( sumUVWpDiff/(sumUVWp+EPS) );
+ double uvwcError = sqrt( sumUVWcDiff/(sumUVWc+EPS) );
+ //double uvwpcError = sqrt( sumUVWpcDiff/(sumUVWpc+EPS) );
 
  iter = s->getIter();
 
@@ -2856,15 +2856,15 @@ void InOut::chordalPressure( const char* _dir,const char* _filename, int _iter )
  iter = s->getIter();
 
  // xVert da malha nova
- real nPoints = 1000;
+ double nPoints = 1000;
  clVector xVert(nPoints);
  clVector yVert(nPoints);
  clVector zVert(nPoints);
 
  for( int i=0;i<nPoints;i++ )
  {
-  real dx = i * ( (X->Max()-X->Min()) )/(nPoints-1);
-  real pos = X->Min()+dx;
+  double dx = i * ( (X->Max()-X->Min()) )/(nPoints-1);
+  double pos = X->Min()+dx;
   xVert.Set(i,pos);
  }
  yVert.SetAll( (Y->Max()+Y->Min())/2.0 );
@@ -2910,7 +2910,7 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
  ofstream pFile( filename ); 
 
  // xVert da malha nova
- real nPoints = 100;
+ double nPoints = 100;
  clVector xVert(nPoints*nPoints);
  clVector yVert(nPoints*nPoints);
  clVector zVert(nPoints*nPoints);
@@ -2920,9 +2920,9 @@ void InOut::crossSectionalPressure( const char* _dir,const char* _filename, int 
  {
   for( int j=0;j<nPoints;j++ )
   {
-   real dx = i * (3.0-0.0)/(nPoints-1);
+   double dx = i * (3.0-0.0)/(nPoints-1);
    xVert.Set(count,dx);
-   real dy = j * (3.0-0.0)/(nPoints-1);
+   double dy = j * (3.0-0.0)/(nPoints-1);
    yVert.Set(count,dy);
    count++;
   }
@@ -3551,7 +3551,7 @@ void InOut::printSimulationReport()
 // 	  << asctime( localtime( &currentTime ) ) << endl;
 //-------------------------------------------------- 
 
- real rho_ratio,mu_ratio;
+ double rho_ratio,mu_ratio;
  if( rho_in >= rho_out )
  {
   rho_ratio = rho_in/rho_out;
@@ -3695,7 +3695,7 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  ss << _iter;
  ss >> str;
 
- real _pos = (Y->Max()+Y->Min())/2.0;
+ double _pos = (Y->Max()+Y->Min())/2.0;
 
  // concatenando nomes para o nome do arquivo final
  string file = (string) _dir + (string) _filename + ".dat";
@@ -3709,27 +3709,27 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  clVector yVert(nTotal);
  clVector zVert(nTotal);
 
- real plane1_i,plane1_f,plane2_i,plane2_f;
- real dp1,dp2; // mesh space in 2 directions: plane1 and plane2
+ double plane1_i,plane1_f,plane2_i,plane2_f;
+ double dp1,dp2; // mesh space in 2 directions: plane1 and plane2
  if( (strcmp(_filename,"XY") == 0) ||
      (strcmp(_filename,"YX") == 0)  )
  {
   // structured mesh points generator
-  real xi = X->Min();
-  real xf = X->Max();
-  real yi = Y->Min();
-  real yf = Y->Max();
-  real zi = _pos;
-  real dx = (xf-xi)/(np1-1);
-  real dy = (yf-yi)/(np2-1);
+  double xi = X->Min();
+  double xf = X->Max();
+  double yi = Y->Min();
+  double yf = Y->Max();
+  double zi = _pos;
+  double dx = (xf-xi)/(np1-1);
+  double dy = (yf-yi)/(np2-1);
   int count = 0;
   for( int i=0;i<np1;i++ )
   {
    for( int j=0;j<np2;j++ )
    {
-	real x = xi + i * dx ;
+	double x = xi + i * dx ;
 	xVert.Set(count,x);
-	real y = yi + j * dy;
+	double y = yi + j * dy;
 	yVert.Set(count,y);
 	count++;
    }
@@ -3746,21 +3746,21 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
           (strcmp(_filename,"ZX") == 0) )
  {
   // structured mesh points generator
-  real xi = X->Min();
-  real xf = X->Max();
-  real yi = _pos;
-  real zi = Z->Min();
-  real zf = Z->Max();
-  real dx = (xf-xi)/(np1-1);
-  real dz = (zf-zi)/(np2-1);
+  double xi = X->Min();
+  double xf = X->Max();
+  double yi = _pos;
+  double zi = Z->Min();
+  double zf = Z->Max();
+  double dx = (xf-xi)/(np1-1);
+  double dz = (zf-zi)/(np2-1);
   int count = 0;
   for( int i=0;i<np1;i++ )
   {
    for( int j=0;j<np2;j++ )
    {
-	real x = xi + i * dx ;
+	double x = xi + i * dx ;
 	xVert.Set(count,x);
-	real z = zi + j * dz;
+	double z = zi + j * dz;
 	zVert.Set(count,z);
 	count++;
    }
@@ -3777,21 +3777,21 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
           (strcmp(_filename,"ZY") == 0) )
  {
   // structured mesh points generator
-  real xi = _pos;
-  real yi = Y->Min();
-  real yf = Y->Max();
-  real zi = Z->Min();
-  real zf = Z->Max();
-  real dy = (yf-yi)/(np1-1);
-  real dz = (zf-zi)/(np2-1);
+  double xi = _pos;
+  double yi = Y->Min();
+  double yf = Y->Max();
+  double zi = Z->Min();
+  double zf = Z->Max();
+  double dy = (yf-yi)/(np1-1);
+  double dz = (zf-zi)/(np2-1);
   int count = 0;
   for( int i=0;i<np1;i++ )
   {
    for( int j=0;j<np2;j++ )
    {
-	real y = yi + i * dy;
+	double y = yi + i * dy;
 	yVert.Set(count,y);
-	real z = zi + j * dz;
+	double z = zi + j * dz;
 	zVert.Set(count,z);
 	count++;
    }
@@ -3814,21 +3814,21 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
   cout << "       * ************************************** *" << endl;
   cout << endl;
   // structured mesh points generator
-  real xi = X->Min();
-  real xf = X->Max();
-  real yi = _pos;
-  real zi = Z->Min();
-  real zf = Z->Max();
-  real dx = (xf-xi)/(np1-1);
-  real dz = (zf-zi)/(np2-1);
+  double xi = X->Min();
+  double xf = X->Max();
+  double yi = _pos;
+  double zi = Z->Min();
+  double zf = Z->Max();
+  double dx = (xf-xi)/(np1-1);
+  double dz = (zf-zi)/(np2-1);
   int count = 0;
   for( int i=0;i<np1;i++ )
   {
    for( int j=0;j<np2;j++ )
    {
-	real x = xi + i * dx ;
+	double x = xi + i * dx ;
 	xVert.Set(count,x);
-	real z = zi + j * dz;
+	double z = zi + j * dz;
 	zVert.Set(count,z);
 	count++;
    }
@@ -3874,10 +3874,10 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
 					  << endl;
  }
 
- real totalArea = (plane1_f-plane1_i)*(plane2_f-plane2_i);
- real bubbleArea = gas*dp1*dp2;
- real fluidArea = totalArea - bubbleArea;
- real voidFraction = bubbleArea/totalArea;
+ double totalArea = (plane1_f-plane1_i)*(plane2_f-plane2_i);
+ double bubbleArea = gas*dp1*dp2;
+ double fluidArea = totalArea - bubbleArea;
+ double voidFraction = bubbleArea/totalArea;
  voidFile << setprecision(10) << scientific;
  voidFile << setw(10) << s->getTime() << " " 
                       << totalArea << " " 
@@ -3955,12 +3955,12 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
 				  << endl;
  }
 
- real xMax = -1E-10; 
- real yMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real yMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double yMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double yMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -3981,21 +3981,21 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
  }
 
  // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
+ double diameterX = xMax - xMin; 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
+ double diameterY = yMax - yMin; 
  // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
+ double diameterZ = zMax - zMin; 
 
- real radius = (diameterX+diameterY+diameterZ)/6.0;
+ double radius = (diameterX+diameterY+diameterZ)/6.0;
 
  // sphere
- real dPAnalytic = 2.0/(We*radius); 
+ double dPAnalytic = 2.0/(We*radius); 
 
- real pInSum = 0;
- real pOutSum = 0;
- real countIn = 0;
- real countOut = 0;
+ double pInSum = 0;
+ double pOutSum = 0;
+ double countIn = 0;
+ double countOut = 0;
  zFile << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
  {
@@ -4010,9 +4010,9 @@ void InOut::crossSectionalPlane( const char* _dir,const char* _filename, int _it
    countOut++;
   }
  }
- real dP = fabs(pInSum/countIn) - fabs(pOutSum/countOut);
- real L1 = fabs(dPAnalytic-dP)/dPAnalytic;
- real L2 = sqrt( (dPAnalytic-dP)*(dPAnalytic-dP)/(dPAnalytic*dPAnalytic) );
+ double dP = fabs(pInSum/countIn) - fabs(pOutSum/countOut);
+ double L1 = fabs(dPAnalytic-dP)/dPAnalytic;
+ double L2 = sqrt( (dPAnalytic-dP)*(dPAnalytic-dP)/(dPAnalytic*dPAnalytic) );
  zFile << fabs(pInSum/countIn) << setw(19) << fabs(pOutSum/countOut)
 	   << setw(19) << dP
 	   << setw(19) << dPAnalytic 
@@ -4048,15 +4048,15 @@ void InOut::bubbleWallDistance( const char* _dir,const char* _filename, int _ite
 	  << "kappa" << setw(22)
 	  << "pressure" << endl; 
 
- real zMin = surfMesh->Z.Min();
+ double zMin = surfMesh->Z.Min();
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->Marker.Get(i) == 0.5 )
   {
-   real P1x = X->Get(i);
-   real P1y = Y->Get(i);
-   real P1z = Z->Get(i);
-   real length = fabs(P1z-zMin);
+   double P1x = X->Get(i);
+   double P1y = Y->Get(i);
+   double P1z = Z->Get(i);
+   double length = fabs(P1z-zMin);
 
    dist << setprecision(10) << scientific; 
    dist << setw(11) << P1x << " " 
@@ -4107,12 +4107,12 @@ void InOut::saveKappaErrorSphere(const char* _dir)
 				  << endl;
  }
  
- real xMax = -1E-10; 
- real yMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real yMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double yMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double yMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -4133,30 +4133,30 @@ void InOut::saveKappaErrorSphere(const char* _dir)
  }
 
  // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
+ double diameterX = xMax - xMin; 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
+ double diameterY = yMax - yMin; 
  // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
+ double diameterZ = zMax - zMin; 
 
- real radius = (diameterX+diameterY+diameterZ)/6.0;
+ double radius = (diameterX+diameterY+diameterZ)/6.0;
 
  // sphere
- real kappaAnalytic = 2.0/radius; 
+ double kappaAnalytic = 2.0/radius; 
 
- real surfacePoints = surface->Dim();
- real sumKappa = 0;
- real sumKappaSquare = 0;
+ double surfacePoints = surface->Dim();
+ double sumKappa = 0;
+ double sumKappaSquare = 0;
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
   sumKappa += surfMesh->curvature.Get(node);
  }
- real kappaAverage = sumKappa/surfacePoints;
+ double kappaAverage = sumKappa/surfacePoints;
 
- real sumKappaSD = 0;
- real sumKappaError = 0;
- real sumNeighbours = 0;
+ double sumKappaSD = 0;
+ double sumKappaError = 0;
+ double sumNeighbours = 0;
  int countK = 0;
  for( int i=0;i<surfacePoints;i++ )
  {
@@ -4176,23 +4176,23 @@ void InOut::saveKappaErrorSphere(const char* _dir)
   *  k_e = sqrt( -----------------------------   )
   *            (        sum( kappa[i]^2 )        )
   * */
- real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ double kappaError = sqrt( sumKappaError/sumKappaSquare );
 
  /*
   *             kappaAverage-kappaAnalytic
   *  k_r = abs(----------------------------)
   *                  kappaAverage
   * */
- real kappaErrorRel = fabs((kappaAverage-kappaAnalytic)/kappaAverage);
+ double kappaErrorRel = fabs((kappaAverage-kappaAnalytic)/kappaAverage);
 
  /* 
   *             (  sum( kappa[i] - kappaAverage )  )
   *  SD =  sqrt ( -------------------------------- )
   *             (           number of i            )
   * */
- real kappaSD = sqrt( sumKappaSD/surfacePoints );
+ double kappaSD = sqrt( sumKappaSD/surfacePoints );
 
- real averageNeigh = sumNeighbours/surfacePoints;
+ double averageNeigh = sumNeighbours/surfacePoints;
 
  averageTriLength = m->getAverageTriLength();
 
@@ -4249,10 +4249,10 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
  }
 
  /* ------------ Radius calculation ------------ */
- real xMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -4267,18 +4267,18 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
 	zMin = surfMesh->Z.Get(i);
   }
  }
- real diameterX = xMax - xMin; 
- real diameterZ = zMax - zMin; 
- real radius = (diameterX+diameterZ)/4.0;
+ double diameterX = xMax - xMin; 
+ double diameterZ = zMax - zMin; 
+ double radius = (diameterX+diameterZ)/4.0;
  /* -------------------------------------------- */
 
  /* -------------- Kappa Analytic -------------- */
- real kappaAnalytic = 1.0/radius;
+ double kappaAnalytic = 1.0/radius;
  /* -------------------------------------------- */
 
  int countK = 0;
- real sumKappa = 0;
- real sumKappaSquare = 0;
+ double sumKappa = 0;
+ double sumKappaSquare = 0;
  for( int i=0;i<surface->Dim();i++ )
  {
   int node = surface->Get(i);
@@ -4293,12 +4293,12 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
    countK++;
   }
  }
- real kappaAverage = sumKappa/countK;
+ double kappaAverage = sumKappa/countK;
  
 
- real sumKappaSD = 0;
- real sumKappaError = 0;
- real sumNeighbours = 0;
+ double sumKappaSD = 0;
+ double sumKappaError = 0;
+ double sumNeighbours = 0;
  countK = 0;
  for( int i=0;i<surface->Dim();i++ )
  {
@@ -4317,18 +4317,18 @@ void InOut::saveKappaErrorCylinder(const char* _dir)
   }
  }
 
- real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ double kappaError = sqrt( sumKappaError/sumKappaSquare );
 
  /*
   *         kappaAverage-kappaAnalytic
   *  k_r = ----------------------------
   *               kappaAverage
   * */
- real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+ double kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
 
- real kappaSD = sqrt( sumKappaSD/countK );
+ double kappaSD = sqrt( sumKappaSD/countK );
 
- real averageNeigh = sumNeighbours/countK;
+ double averageNeigh = sumNeighbours/countK;
 
  averageTriLength = m->getAverageTriLength();
 
@@ -4385,10 +4385,10 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
  }
 
  /* ------------ Radius calculation ------------ */
- real xMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -4403,18 +4403,18 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
 	zMin = surfMesh->Z.Get(i);
   }
  }
- real diameterX = xMax - xMin; 
- real diameterZ = zMax - zMin; 
- real radius = (diameterX+diameterZ)/4.0;
+ double diameterX = xMax - xMin; 
+ double diameterZ = zMax - zMin; 
+ double radius = (diameterX+diameterZ)/4.0;
  /* -------------------------------------------- */
 
  /* -------------- Kappa Analytic -------------- */
- real kappaAnalytic = 1.0/radius;
+ double kappaAnalytic = 1.0/radius;
  /* -------------------------------------------- */
 
  int countK = 0;
- real sumKappa = 0;
- real sumKappaSquare = 0;
+ double sumKappa = 0;
+ double sumKappaSquare = 0;
  for( int i=0;i<surface->Dim();i++ )
  {
   int node = surface->Get(i);
@@ -4429,12 +4429,12 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
    countK++;
   }
  }
- real kappaAverage = sumKappa/countK;
+ double kappaAverage = sumKappa/countK;
  
 
- real sumKappaSD = 0;
- real sumKappaError = 0;
- real sumNeighbours = 0;
+ double sumKappaSD = 0;
+ double sumKappaError = 0;
+ double sumNeighbours = 0;
  countK = 0;
  for( int i=0;i<surface->Dim();i++ )
  {
@@ -4453,18 +4453,18 @@ void InOut::saveKappaErrorHyperboloid(const char* _dir)
   }
  }
 
- real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ double kappaError = sqrt( sumKappaError/sumKappaSquare );
 
  /*
   *         kappaAverage-kappaAnalytic
   *  k_r = ----------------------------
   *               kappaAverage
   * */
- real kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
+ double kappaErrorRel = (kappaAverage-kappaAnalytic)/kappaAverage;
 
- real kappaSD = sqrt( sumKappaSD/countK );
+ double kappaSD = sqrt( sumKappaSD/countK );
 
- real averageNeigh = sumNeighbours/countK;
+ double averageNeigh = sumNeighbours/countK;
 
  averageTriLength = m->getAverageTriLength();
 
@@ -4520,9 +4520,9 @@ void InOut::saveKappaErrorTorus(const char* _dir)
 				  << endl;
  }
 
- real surfacePoints = surface->Dim();
- real sumKappa = 0;
- real sumKappaSquare = 0;
+ double surfacePoints = surface->Dim();
+ double sumKappa = 0;
+ double sumKappaSquare = 0;
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
@@ -4530,7 +4530,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
   sumKappaSquare += surfMesh->curvature.Get(node)*
                     surfMesh->curvature.Get(node);
  }
- real kappaAverage = sumKappa/surfacePoints;
+ double kappaAverage = sumKappa/surfacePoints;
 
 
 /*  TORUS
@@ -4568,12 +4568,12 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  * */
 
  
- real xMax = -1E-10; 
- real yMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real yMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double yMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double yMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -4594,27 +4594,27 @@ void InOut::saveKappaErrorTorus(const char* _dir)
  }
 
  // radius 1 = D1/2
- real Diam3 = zMax - zMin; 
- real radius2 = Diam3/2.0;
+ double Diam3 = zMax - zMin; 
+ double radius2 = Diam3/2.0;
 
  // radius 1 = D1/2
- real DiamX = xMax-xMin;
- real DiamY = yMax-yMin; 
- real radius1 = (DiamX+DiamY)/4.0 - radius2;
+ double DiamX = xMax-xMin;
+ double DiamY = yMax-yMin; 
+ double radius1 = (DiamX+DiamY)/4.0 - radius2;
 
- real sumKappaSD = 0;
- real sumKappaError = 0;
- real sumNeighbours = 0;
- real sumKappaAnalytic = 0;
+ double sumKappaSD = 0;
+ double sumKappaError = 0;
+ double sumNeighbours = 0;
+ double sumKappaAnalytic = 0;
  int countK = 0;
  for( int i=0;i<surfacePoints;i++ )
  {
   int node = surface->Get(i);
-  real kappaAverage = 0;
+  double kappaAverage = 0;
 
-  real rr = sqrt( surfMesh->X.Get(node)*surfMesh->X.Get(node)+
+  double rr = sqrt( surfMesh->X.Get(node)*surfMesh->X.Get(node)+
                   surfMesh->Y.Get(node)*surfMesh->Y.Get(node) )-radius1;
-  real theta = atan(fabs(surfMesh->Z.Get(node)/rr));
+  double theta = atan(fabs(surfMesh->Z.Get(node)/rr));
 
   if( rr < -1E-10 )
    if( surfMesh->Z.Get(node) > 0 )
@@ -4627,7 +4627,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
    else
 	theta = 2*3.1415-theta;
 
-  real kappaAnalytic = (radius1+2*radius2*cos(theta))/
+  double kappaAnalytic = (radius1+2*radius2*cos(theta))/
                        (radius2*(radius1+radius2*cos(theta)));
 //--------------------------------------------------
 //   cout << " node: " << node <<  " r: " << rr << " Z: " <<
@@ -4644,7 +4644,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
   sumNeighbours += neighbourPoint->at(i).size();
   countK++;
  }
- real kappaAverageAnalytic = sumKappaAnalytic/surfacePoints;
+ double kappaAverageAnalytic = sumKappaAnalytic/surfacePoints;
 
 
  /*  
@@ -4652,23 +4652,23 @@ void InOut::saveKappaErrorTorus(const char* _dir)
   *  k_e = sqrt( -----------------------------   )
   *            (        sum( kappa[i]^2 )        )
   * */
- real kappaError = sqrt( sumKappaError/sumKappaSquare );
+ double kappaError = sqrt( sumKappaError/sumKappaSquare );
 
  /*
   *             kappaAverage-kappaAnalytic
   *  k_r = abs(----------------------------)
   *                  kappaAverage
   * */
- real kappaErrorRel = fabs((kappaAverage-kappaAverageAnalytic)/kappaAverage);
+ double kappaErrorRel = fabs((kappaAverage-kappaAverageAnalytic)/kappaAverage);
 
  /* 
   *             (  sum( kappa[i] - kappaAverage )  )
   *  SD =  sqrt ( -------------------------------- )
   *             (           number of i            )
   * */
- real kappaSD = sqrt( sumKappaSD/surfacePoints );
+ double kappaSD = sqrt( sumKappaSD/surfacePoints );
 
- real averageNeigh = sumNeighbours/surfacePoints;
+ double averageNeigh = sumNeighbours/surfacePoints;
 
  averageTriLength = m->getAverageTriLength();
 
@@ -4719,12 +4719,12 @@ void InOut::savePressureError(const char* _dir)
 					      << endl;
  }
 
- real xMax = -1E-10; 
- real yMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real yMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10; 
+ double yMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double yMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == 1 )
@@ -4745,23 +4745,23 @@ void InOut::savePressureError(const char* _dir)
  }
 
  // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
+ double diameterX = xMax - xMin; 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
+ double diameterY = yMax - yMin; 
  // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
+ double diameterZ = zMax - zMin; 
 
  int surfacePoints = surface->Dim();
 
- real radius = (diameterX+diameterY+diameterZ)/6.0;
+ double radius = (diameterX+diameterY+diameterZ)/6.0;
 
- real pressureAnalytic = 2*sigma/radius; 
+ double pressureAnalytic = 2*sigma/radius; 
 
- real sumPressureIn = 0;
- //real sumPressureSquareIn = 0;
+ double sumPressureIn = 0;
+ //double sumPressureSquareIn = 0;
  int countIn = 0;
- real sumPressureOut = 0;
- //real sumPressureSquareOut = 0;
+ double sumPressureOut = 0;
+ //double sumPressureSquareOut = 0;
  int countOut = 0;
 
  for( int i=0;i<numVerts;i++ )
@@ -4780,10 +4780,10 @@ void InOut::savePressureError(const char* _dir)
   }
  }
 
- real averagePIn = sumPressureIn/countIn;
- real averagePOut = sumPressureOut/countOut;
+ double averagePIn = sumPressureIn/countIn;
+ double averagePOut = sumPressureOut/countOut;
 
- real dp = averagePIn-averagePOut;
+ double dp = averagePIn-averagePOut;
 
  filePressure << setprecision(10) << scientific; 
  filePressure << setw(10) << s->getTime() << " " 
@@ -4927,12 +4927,12 @@ void InOut::saveOscillatingError(const char* _dir)
 					 << endl;
  }
  
- real xMax,uMax = -1E-10;
- real yMax,vMax = -1E-10; 
- real zMax,wMax = -1E-10; 
- real xMin,uMin = 1E10; 
- real yMin,vMin = 1E10; 
- real zMin,wMin = 1E10; 
+ double xMax,uMax = -1E-10;
+ double yMax,vMax = -1E-10; 
+ double zMax,wMax = -1E-10; 
+ double xMin,uMin = 1E10; 
+ double yMin,vMin = 1E10; 
+ double zMin,wMin = 1E10; 
 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
@@ -5015,11 +5015,11 @@ void InOut::saveOscillatingError(const char* _dir)
  }
 
  // retorna o valor do maior diametro em X na interface 
- real diameterX = xMax - xMin; 
+ double diameterX = xMax - xMin; 
  // retorna o valor do maior diametro em Y na interface 
- real diameterY = yMax - yMin; 
+ double diameterY = yMax - yMin; 
  // retorna o valor do maior diametro em Z na interface 
- real diameterZ = zMax - zMin; 
+ double diameterZ = zMax - zMin; 
 
  fileD << setprecision(10) << scientific; 
  fileD << setw(10) << s->getTime() << " " 
@@ -5104,13 +5104,13 @@ void InOut::saveParasiticCurrent(const char* _dir)
 				  << endl;
  }
 
- real uMax = uSol->Abs().Max();
- real vMax = vSol->Abs().Max();
- real wMax = wSol->Abs().Max();
- real uvMax = max(uMax,vMax);
- real uwMax = max(uMax,wMax);
- real vwMax = max(vMax,wMax);
- real uvwMax = max(uMax,vMax);
+ double uMax = uSol->Abs().Max();
+ double vMax = vSol->Abs().Max();
+ double wMax = wSol->Abs().Max();
+ double uvMax = max(uMax,vMax);
+ double uwMax = max(uMax,wMax);
+ double vwMax = max(vMax,wMax);
+ double uvwMax = max(uMax,vMax);
  uvwMax = max(uvwMax,wMax);
 
  file << setprecision(10) << scientific; 
@@ -5153,15 +5153,15 @@ void InOut::copyLastFile(const char* _dir,
 
 void InOut::setCutPlane(ofstream& _file)
 {
- real plane1a = X->Min() +  ( X->Max()-X->Min() )/4.0;
- real plane1b = X->Min() +2*( X->Max()-X->Min() )/4.0;
- real plane1c = X->Min() +3*( X->Max()-X->Min() )/4.0;
- real plane2a = Y->Min() +  ( Y->Max()-Y->Min() )/4.0;
- real plane2b = Y->Min() +2*( Y->Max()-Y->Min() )/4.0;
- real plane2c = Y->Min() +3*( Y->Max()-Y->Min() )/4.0;
- real plane3a = Z->Min() +  ( Z->Max()-Z->Min() )/4.0;
- real plane3b = Z->Min() +2*( Z->Max()-Z->Min() )/4.0;
- real plane3c = Z->Min() +3*( Z->Max()-Z->Min() )/4.0;
+ double plane1a = X->Min() +  ( X->Max()-X->Min() )/4.0;
+ double plane1b = X->Min() +2*( X->Max()-X->Min() )/4.0;
+ double plane1c = X->Min() +3*( X->Max()-X->Min() )/4.0;
+ double plane2a = Y->Min() +  ( Y->Max()-Y->Min() )/4.0;
+ double plane2b = Y->Min() +2*( Y->Max()-Y->Min() )/4.0;
+ double plane2c = Y->Min() +3*( Y->Max()-Y->Min() )/4.0;
+ double plane3a = Z->Min() +  ( Z->Max()-Z->Min() )/4.0;
+ double plane3b = Z->Min() +2*( Z->Max()-Z->Min() )/4.0;
+ double plane3c = Z->Min() +3*( Z->Max()-Z->Min() )/4.0;
  clVector cutPlaneX(numVerts);
  clVector cutPlaneY(numVerts);
  clVector cutPlaneZ(numVerts);
@@ -5182,7 +5182,7 @@ void InOut::setCutPlane(ofstream& _file)
   // allows only the outter mesh for two-phase flows, 
   // however it works for single phase flows too
 
-  real hTest;
+  double hTest;
   if( surfMesh->numInterfaces > 0 )
    hTest = heaviside->Get(i) > 0.0;
   else 
@@ -5218,12 +5218,12 @@ void InOut::setCutPlane(ofstream& _file)
 void InOut::saveFilmThickness(const char* _dir)
 {
  // max and min of domain
- real xdMin = surfMesh->X.Min();  
- real ydMin = surfMesh->Y.Min();
- real zdMin = surfMesh->Z.Min(); 
- real xdMax = surfMesh->X.Max(); 
- real ydMax = surfMesh->Y.Max(); 
- real zdMax = surfMesh->Z.Max(); 
+ double xdMin = surfMesh->X.Min();  
+ double ydMin = surfMesh->Y.Min();
+ double zdMin = surfMesh->Z.Min(); 
+ double xdMax = surfMesh->X.Max(); 
+ double ydMax = surfMesh->Y.Max(); 
+ double zdMax = surfMesh->Z.Max(); 
 
  for(int nb=0;nb<=elemIdRegion->Max();nb++ )
  {
@@ -5264,12 +5264,12 @@ void InOut::saveFilmThickness(const char* _dir)
      			   << endl;
   }
 
- real xMax = -1E-10;
- real yMax = -1E-10; 
- real zMax = -1E-10; 
- real xMin = 1E10; 
- real yMin = 1E10; 
- real zMin = 1E10; 
+ double xMax = -1E-10;
+ double yMax = -1E-10; 
+ double zMax = -1E-10; 
+ double xMin = 1E10; 
+ double yMin = 1E10; 
+ double zMin = 1E10; 
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
   if( surfMesh->vertIdRegion.Get(i) == nb )
@@ -5289,12 +5289,12 @@ void InOut::saveFilmThickness(const char* _dir)
   }
  }
 
- real minFilmX = fabs(xMin-xdMin);
- real minFilmY = fabs(yMin-ydMin);
- real minFilmZ = fabs(zMin-zdMin);
- real maxFilmX = fabs(xMax-xdMax);
- real maxFilmY = fabs(yMax-ydMax);
- real maxFilmZ = fabs(zMax-zdMax);
+ double minFilmX = fabs(xMin-xdMin);
+ double minFilmY = fabs(yMin-ydMin);
+ double minFilmZ = fabs(zMin-zdMin);
+ double maxFilmX = fabs(xMax-xdMax);
+ double maxFilmY = fabs(yMax-ydMax);
+ double maxFilmZ = fabs(zMax-zdMax);
 
   file << setprecision(10) << scientific; 
   file << setw(10) << s->getTime() << " " 

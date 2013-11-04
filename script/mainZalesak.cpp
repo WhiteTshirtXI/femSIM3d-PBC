@@ -24,11 +24,11 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
+ double d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
 
- real dt = 0.01;
- real time = 0.0;
+ double dt = 0.01;
+ double time = 0.0;
 
  string meshFile = "sphere.msh";
 

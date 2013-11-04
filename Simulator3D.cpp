@@ -2,11 +2,61 @@
 // this is file Simulator3D.cpp, created at 23-Ago-2007                //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
-// =================================================================== //
-
+// =================================================================== // 
 #include "Simulator3D.h"
 
 Simulator3D::Simulator3D(){}
+
+Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )  
+{
+ getModel3DAttrib(_m);
+ getPeriodic3DToAttrib(_pbc);
+ setSolverVelocity( new PCGSolver() );
+ setSolverPressure( new PCGSolver() );
+ setSolverConcentration( new PCGSolver() );
+
+ Re    = 10;
+ Sc    = 2;
+ Fr    = 0.1;
+ We    = 10;
+ alpha = 1;
+ beta  = 0;
+ dt    = 0.01;
+ dtSemiLagrangian = 0.01;
+ dtLagrangian = 0.01;
+ dtSurfaceTension = 0.01;
+ dtGravity = 0.01;
+ time  = 0.0;
+ cfl   = 0.5;
+ iter  = 0;
+
+ c1    = 1.0;
+ c2    = 0.0;
+ c3    = 0.0;
+ d1    = 1.0;
+ d2    = 0.1;
+
+ g     = 9.81;
+ sigma = 1.0;
+ mu_in  = 1.0;
+ mu_out  = 1.0;
+ rho_in = 1.0;
+ rho_out = 1.0;
+ cp_in = 1.0;
+ cp_out = 1.0;
+ kt_in = 1.0;
+ kt_out = 1.0;
+ uRef = 0.0;
+ vRef = 0.0;
+ wRef = 0.0;
+ xRef = 0.0;
+ yRef = 0.0;
+ zRef = 0.0;
+
+ allocateMemoryToAttrib();
+
+}
+
 
 Simulator3D::Simulator3D( Model3D &_m )  
 {
@@ -378,7 +428,7 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
 {
  init(); 
 
- real aux = 0.0;
+ double aux = 0.0;
  clMatrix solFile(2401,5); 
 
  string file = (string) _dir + (string) _filename;
@@ -410,9 +460,9 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
  }
 
  int j;
- real L,L1,L2;
- real omega = 1.0;
- real EPSlocal = 1e-04;
+ double L,L1,L2;
+ double omega = 1.0;
+ double EPSlocal = 1e-04;
  for( int i=0;i<numNodes;i++ )
  {
   for( j=0;j<solFile.DimI()-1;j++ )
@@ -424,11 +474,11 @@ void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
        (L2>=0.0-EPSlocal) && (L2<=1.0+EPSlocal) ) break;
   }
   // interpolant
-  real interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
-  real FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
-  real GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
-  real HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
-  real CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
+  double interp = (Z->Get(i)-solFile(j,0))/(solFile(j+1,0)-solFile(j,0));
+  double FA = solFile(j,1)+(solFile(j+1,1)-solFile(j,1))*interp;
+  double GA = solFile(j,2)+(solFile(j+1,2)-solFile(j,2))*interp;
+  double HA = solFile(j,3)+(solFile(j+1,3)-solFile(j,3))*interp;
+  double CA = solFile(j,4)+(solFile(j+1,4)-solFile(j,4))*interp;
 
   aux = ( FA*X->Get(i)-GA*Y->Get(i) )*omega; // F
   uSol.Set(i,aux);
@@ -454,23 +504,23 @@ void Simulator3D::initAnnular()
 {
  init();
 
- //real p1y = Y->Min();
- //real p2y = Y->Max();
- //real p1z = Z->Min();
- //real p2z = Z->Max();
+ //double p1y = Y->Min();
+ //double p2y = Y->Max();
+ //double p1z = Z->Min();
+ //double p2z = Z->Max();
 
  for( int i=0;i<numNodes;i++ )
  {
   // gas
   if( heaviside->Get(i) < 1.0 )
   {
-   real aux = 1.0;
+   double aux = 1.0;
    wSol.Set(i,aux);
    wSolOld.Set(i,aux);
   }
   else
   {
-   real aux = 2.5;
+   double aux = 2.5;
    wSol.Set(i,aux);
    wSolOld.Set(i,aux);
   }
@@ -481,23 +531,23 @@ void Simulator3D::initChannel()
 {
  init();
 
- real p1y = Y->Min();
- real p2y = Y->Max();
- real p1z = Z->Min();
- real p2z = Z->Max();
+ double p1y = Y->Min();
+ double p2y = Y->Max();
+ double p1z = Z->Min();
+ double p2z = Z->Max();
 
  // calculating channel's diameter.
- real diameterYZ = ( dist(p1y,p2y) + 
+ double diameterYZ = ( dist(p1y,p2y) + 
                      dist(p1z,p2z) ) / 2.0;
 
  for( int i=0;i<numNodes;i++ )
  {
-  real radius = sqrt( Y->Get(i)*Y->Get(i) + 
+  double radius = sqrt( Y->Get(i)*Y->Get(i) + 
 	                  Z->Get(i)*Z->Get(i) );
 
   // Parabolic profile
-  real Umax = 1.0;
-  real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+  double Umax = 1.0;
+  double aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
   aux = 1.0;
   uSol.Set(i,aux-1);
@@ -509,22 +559,22 @@ void Simulator3D::initChannelSquare()
 {
  init();
 
- real p1y = Y->Min();
- real p2y = Y->Max();
- real p1z = Z->Min();
- real p2z = Z->Max();
+ double p1y = Y->Min();
+ double p2y = Y->Max();
+ double p1z = Z->Min();
+ double p2z = Z->Max();
 
  // calculating channel's diameter.
- real diameterYZ = distance(p1y,p1z,p2y,p2z); 
+ double diameterYZ = distance(p1y,p1z,p2y,p2z); 
 
  for( int i=0;i<numNodes;i++ )
  {
-  real radius = sqrt( Y->Get(i)*Y->Get(i) + 
+  double radius = sqrt( Y->Get(i)*Y->Get(i) + 
 	                  Z->Get(i)*Z->Get(i) );
 
   // Parabolic profile
-  real Umax = 1.0;
-  real aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+  double Umax = 1.0;
+  double aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
 
   aux = 1.0;
@@ -553,7 +603,7 @@ void Simulator3D::initFixedBubbleZ()
 
  for( int i=0;i<numNodes;i++ )
  {
-  real aux = 1.0;
+  double aux = 1.0;
   wSolOld.Set(i,aux);
  }
  for( int i=0;i<idbcw->Dim();i++ )
@@ -567,7 +617,7 @@ void Simulator3D::init2AxiBubbles()
 /* two bubbles */
  for( int i=0;i<numNodes;i++ )
  {
-  real aux = X->Get(i);
+  double aux = X->Get(i);
   uSolOld.Set(i,aux);
   aux = -1.0*Y->Get(i);
   vSolOld.Set(i,aux);
@@ -583,7 +633,7 @@ void Simulator3D::init2Bubbles()
 /* two bubbles */
  for( int i=0;i<numNodes;i++ )
  {
-  real aux = X->Get(i);
+  double aux = X->Get(i);
   uSolOld.Set(i,aux);
   aux = -1.0*Y->Get(i);
   vSolOld.Set(i,aux);
@@ -596,7 +646,7 @@ void Simulator3D::assemble()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -628,8 +678,8 @@ void Simulator3D::assemble()
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  real muValue=0;
-  real rhoValue=0;
+  double muValue=0;
+  double rhoValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
@@ -737,7 +787,7 @@ void Simulator3D::assembleHeatTransfer()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -780,10 +830,10 @@ void Simulator3D::assembleHeatTransfer()
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  real muValue=0;
-  real rhoValue=0;
-  //real cpValue=0;
-  real ktValue=0;
+  double muValue=0;
+  double rhoValue=0;
+  //double cpValue=0;
+  double ktValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
    muValue = mu_outAdimen;
@@ -928,7 +978,7 @@ void Simulator3D::assembleC()
 {
  int i,j,ii,jj;
  int v[NUMGLEC];
- real aux;
+ double aux;
  clMatrix KcMat( numVerts,numVerts );
  clMatrix McMat( numVerts,numVerts );
 
@@ -939,7 +989,7 @@ void Simulator3D::assembleC()
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  real dif = 1.0;
+  double dif = 1.0;
 
   linElem.getM(*v); 
 
@@ -969,7 +1019,7 @@ void Simulator3D::assembleNuCte()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Gx( numNodes,numVerts );
@@ -993,8 +1043,8 @@ void Simulator3D::assembleNuCte()
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  real muValue = mu_inAdimen;
-  real rhoValue = rho_inAdimen;
+  double muValue = mu_inAdimen;
+  double rhoValue = rho_inAdimen;
 
   miniElem.getMSlip(*v);  // para problemas SEM deslizamento
 
@@ -1079,7 +1129,7 @@ void Simulator3D::assembleNuC()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -1108,7 +1158,7 @@ void Simulator3D::assembleNuC()
 
  for( int mele=0;mele<numElems;mele++ )
  {
-  real c = 0;
+  double c = 0;
   for( int n=0;n<NUMGLEU;n++ )
   {
    v[n] = (int) IEN->Get(mele,n);
@@ -1116,10 +1166,10 @@ void Simulator3D::assembleNuC()
   }
   c = c/NUMGLE;
 
-  real eme = 0.81315;
-  real muC = exp(eme*c);
-  real dif = 1.0/muC;
-  real rhoValue = 1.0;
+  double eme = 0.81315;
+  double muC = exp(eme*c);
+  double dif = 1.0/muC;
+  double rhoValue = 1.0;
 
   // updating mu
   for( int n=0;n<NUMGLE;n++ )
@@ -1258,7 +1308,7 @@ void Simulator3D::assembleSlip()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -1290,8 +1340,8 @@ void Simulator3D::assembleSlip()
    v[n] = (int) IEN->Get(mele,n);
 
   // muValue and rhoValue = mean value of element vertices
-  real muValue = 0;
-  real rhoValue = 0;
+  double muValue = 0;
+  double rhoValue = 0;
   for( int n=0;n<NUMGLE;n++ )
   {
    muValue += mu.Get(v[n]);
@@ -1439,7 +1489,7 @@ void Simulator3D::assembleNuZ(const char* _name)
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -1469,8 +1519,8 @@ void Simulator3D::assembleNuZ(const char* _name)
    v[n] = (int) IEN->Get(mele,n);
   
   // muValue and rhoValue = mean value of element vertices
-  real muValue = 0;
-  real rhoValue = 0;
+  double muValue = 0;
+  double rhoValue = 0;
   for( int n=0;n<NUMGLE;n++ )
   {
    muValue += mu.Get(v[n]);
@@ -1591,7 +1641,7 @@ void Simulator3D::assembleK()
 {
  int i,j,ii,jj;
  int v[NUMGLEU];
- real aux;
+ double aux;
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
@@ -1614,14 +1664,14 @@ void Simulator3D::assembleK()
    v[n] = (int) IEN->Get(mele,n);
 
   // muValue and rhoValue = mean value of element vertices
-  real c = 0;
+  double c = 0;
   for( int n=0;n<NUMGLE;n++ )
    c += cSolOld.Get(v[n]);
   c = c/NUMGLE;
 
-  real eme = 0.81315;
-  real muC = exp(eme*c);
-  real dif = 1.0/muC;
+  double eme = 0.81315;
+  double muC = exp(eme*c);
+  double dif = 1.0/muC;
 
   miniElem.getK(*v);  
   linElem.getK(*v); 
@@ -1706,7 +1756,7 @@ void Simulator3D::stepSL()
  clVector velW = wSolOld-wALE;
 
 //--------------------------------------------------
-//  real test = centroidVelZ[1];
+//  double test = centroidVelZ[1];
 //  for ( int i=0;i<numVerts;i++ )
 //  {
 //   int node = i;
@@ -1742,6 +1792,26 @@ void Simulator3D::stepSL()
  
 } // fecha metodo stepSL 
 
+void Simulator3D::stepSLPBCFix()
+{
+   clVector velU = uSolOld-uALE;
+   clVector velV = vSolOld-vALE;
+   clVector velW = wSolOld-wALE;
+ 
+   SemiLagrangean slp (*m,uSolOld,vSolOld,wSolOld,velU,velV,velW,cSolOld);
+
+   slp.computePBCFix(dt);
+   uSL = *slp.getUSL();
+   vSL = *slp.getVSL();
+   wSL = *slp.getWSL();
+
+   convUVW.CopyFrom(0,uSL);
+   convUVW.CopyFrom(numNodes,vSL);
+   convUVW.CopyFrom(2*numNodes,wSL);
+   convC = *slp.getCSL();
+ 
+} // fecha metodo stepSLPBCFix 
+
 void Simulator3D::stepNoConvection()
 {
  convUVW.CopyFrom(0,uSolOld);
@@ -1759,11 +1829,11 @@ void Simulator3D::stepNoConvection()
  * output: Sol velocity field
  * */
 void Simulator3D::stepImposedPeriodicField(const char* _name,
-                                           real _T,
-										   real _time)
+                                           double _T,
+										   double _time)
 {
- real aux;
- real pi = 3.14159265358;
+ double aux;
+ double pi = 3.14159265358;
  /*
   * Reference:
   *
@@ -1823,9 +1893,9 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  else if( strcmp( _name,"shear3d") == 0 || 
           strcmp( _name,"shear3D") == 0 ) 
  {
-  real R = 0.5;
-  real x0 = 0.5;
-  real y0 = 0.5;
+  double R = 0.5;
+  double x0 = 0.5;
+  double y0 = 0.5;
   for( int i=0;i<numVerts;i++ )
   {
    aux = sin(pi*X->Get(i))*
@@ -1838,7 +1908,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
 				sin(pi*Y->Get(i))*
 				cos(pi*_time/_T);
    vSol.Set(i,aux);
-   real r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)+
+   double r0 = sqrt( (X->Get(i)-x0)*(X->Get(i)-x0)+
 	               (Y->Get(i)-y0)*(Y->Get(i)-y0) );
    aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*_time/_T);
    wSol.Set(i,aux);
@@ -1861,7 +1931,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  {
   for( int i=0;i<numNodes;i++ )
   {
-   real omega=1.0;
+   double omega=1.0;
 
    aux = (-1.0)*Y->Get(i)*omega;
    uSol.Set(i,aux);
@@ -1884,12 +1954,12 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  * output: SolOld velocity
  * */
 void Simulator3D::stepImposedPeriodicField(const char* _name,
-                                           real _T,
-										   real _time,
-										   real _dt)
+                                           double _T,
+										   double _time,
+										   double _dt)
 {
- real aux;
- real pi = 3.14159265358;
+ double aux;
+ double pi = 3.14159265358;
  /*
   * Reference:
   *
@@ -1899,8 +1969,8 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  {
   for( int i=0;i<numVerts;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*_dt);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*_dt);
+   double Xp = X->Get(i)+(uSolOld.Get(i)*_dt);
+   double Yp = Y->Get(i)+(vSolOld.Get(i)*_dt);
    aux = (-1.0)*sin(pi*Xp)*
 	            sin(pi*Xp)*
 				sin(2*pi*Yp)*
@@ -1924,9 +1994,9 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  {
   for( int i=0;i<numVerts;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*_dt);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*_dt);
-   real Zp = Z->Get(i)+(wSolOld.Get(i)*_dt);
+   double Xp = X->Get(i)+(uSolOld.Get(i)*_dt);
+   double Yp = Y->Get(i)+(vSolOld.Get(i)*_dt);
+   double Zp = Z->Get(i)+(wSolOld.Get(i)*_dt);
    aux = (2.0)*sin(pi*Xp)*
 	           sin(pi*Xp)*
 			   sin(2*pi*Yp)*
@@ -1954,14 +2024,14 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  else if( strcmp( _name,"shear3d") == 0 || 
           strcmp( _name,"shear3D") == 0 ) 
  {
-  real R = 0.5;
-  real x0 = 0.5;
-  real y0 = 0.5;
+  double R = 0.5;
+  double x0 = 0.5;
+  double y0 = 0.5;
   for( int i=0;i<numVerts;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
-   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   double Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   double Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //double Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
    aux = sin(pi*Xp)*
 		 sin(pi*Xp)*
 		 sin(2.0*pi*Yp)*
@@ -1972,7 +2042,7 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
 				sin(pi*Yp)*
 				cos(pi*_time/_T);
    vSol.Set(i,aux);
-   real r0 = sqrt( (Xp-x0)*(Xp-x0)+
+   double r0 = sqrt( (Xp-x0)*(Xp-x0)+
 	               (Yp-y0)*(Yp-y0) );
    aux = ( 1.0-r0/R )*( 1.0-r0/R )*cos(pi*_time/_T);
    wSol.Set(i,aux);
@@ -1983,9 +2053,9 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  {
   for( int i=0;i<numVerts;i++ )
   {
-   //real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
-   //real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
-   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   //double Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   //double Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //double Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
    aux = 1.0*cos(pi*_time/_T);
 
    uSol.Set(i,aux);
@@ -1998,10 +2068,10 @@ void Simulator3D::stepImposedPeriodicField(const char* _name,
  {
   for( int i=0;i<numNodes;i++ )
   {
-   real Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
-   real Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
-   //real Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
-   real omega=1.0;
+   double Xp = X->Get(i)+(uSolOld.Get(i)*dt/2.0);
+   double Yp = Y->Get(i)+(vSolOld.Get(i)*dt/2.0);
+   //double Zp = Z->Get(i)+(wSolOld.Get(i)*dt/2.0);
+   double omega=1.0;
 
    aux = (-1.0)*Yp*omega;
    uSol.Set(i,aux);
@@ -2221,48 +2291,48 @@ void Simulator3D::setInterfaceVelocity()
   int surfaceNode = surface->Get(i);
 
   // unitario do vetor normal (ponderado com a area) resultante
-  real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
-  real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
-  real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
+  double xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+  double yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+  double zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
 
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
+  double prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
               (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
 			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
-  real uSolNormal = xNormalUnit*prod;
-  real vSolNormal = yNormalUnit*prod;
-  real wSolNormal = zNormalUnit*prod;
+  double uSolNormal = xNormalUnit*prod;
+  double vSolNormal = yNormalUnit*prod;
+  double wSolNormal = zNormalUnit*prod;
 
   // 1.3 is a pragmatic number which fits the velocity for the bhaga5
   // and the moving frame technique. Still don't know why!
-  real uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
-  real vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
-  real wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
+  double uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
+  double vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
+  double wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
 
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
+  double prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
                vSmoothSurface.Get(surfaceNode)*yNormalUnit + 
 			   wSmoothSurface.Get(surfaceNode)*zNormalUnit;
-  real uSmoothNormal = xNormalUnit*prod2;
-  real vSmoothNormal = yNormalUnit*prod2;
-  real wSmoothNormal = zNormalUnit*prod2;
+  double uSmoothNormal = xNormalUnit*prod2;
+  double vSmoothNormal = yNormalUnit*prod2;
+  double wSmoothNormal = zNormalUnit*prod2;
 
-  real uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
-  real vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
-  real wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
+  double uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
+  double vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
+  double wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
 
-  real uALESurface =   uSolOld.Get(surfaceNode) 
+  double uALESurface =   uSolOld.Get(surfaceNode) 
                      - d1*uSolTangent 
 					 + d2*uSmoothTangent;
-  real vALESurface =   vSolOld.Get(surfaceNode) 
+  double vALESurface =   vSolOld.Get(surfaceNode) 
                      - d1*vSolTangent 
 					 + d2*vSmoothTangent;
-  real wALESurface =   wSolOld.Get(surfaceNode) 
+  double wALESurface =   wSolOld.Get(surfaceNode) 
                      - d1*wSolTangent 
 					 + d2*wSmoothTangent;
 
@@ -2425,7 +2495,7 @@ void Simulator3D::setInterfaceLevelSet()
  clVector levelSet(numVerts);
  for( int i=0;i<numVerts;i++ )
  {
-  real aux = zeroLevel.Get(i)*interfaceDistance->Get(i);
+  double aux = zeroLevel.Get(i)*interfaceDistance->Get(i);
   levelSet.Set(i,aux);
  }
 
@@ -2454,14 +2524,14 @@ void Simulator3D::matMount()
 
  for( int i = 0; i < 3*numNodes; i++ )
  {
-  real sumMat = mat.SumLine(i);
+  double sumMat = mat.SumLine(i);
   invA.Set( i,1.0/sumMat );
 
-  real sumM = M.SumLine(i);
+  double sumM = M.SumLine(i);
   //MLumped.Set( i,sumM );
   invMLumped.Set( i,1.0/sumM );
 
-  real sumMrho = Mrho.SumLine(i);
+  double sumMrho = Mrho.SumLine(i);
   //MrhoLumped.Set( i,sumMrho );
   invMrhoLumped.Set( i,1.0/sumMrho );
  }
@@ -2472,7 +2542,7 @@ void Simulator3D::matMountC()
  // set para Matriz Lumped da concentracao
  for( int i=0;i<numVerts;i++ )
  {
-  real sumMc = Mc.SumLine(i);
+  double sumMc = Mc.SumLine(i);
   McLumped.Set( i,sumMc );
   invMcLumped.Set( i,1.0/sumMc );
  }
@@ -2482,7 +2552,7 @@ void Simulator3D::matMountC()
 
  for( int i=0;i<numVerts;i++ )
  {
-  real sumMatc = matc.SumLine(i);
+  double sumMatc = matc.SumLine(i);
   invC.Set( i,1.0/sumMatc );
  }
 }
@@ -2802,6 +2872,89 @@ void Simulator3D::setUnCoupledBC()
  //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
 } // fecha metodo setUnCoupledBC 
 
+
+/* Idem explicacao para setUnCoupledBC(), exceto por chamada final
+ * que impoe ETilde = E. */
+void Simulator3D::setUnCoupledPBC()
+{
+ int nbc,i,j;
+ // ----------- nova versao ------------ //
+ clVector UVWC = *uc;
+ UVWC.Append(*vc);
+ UVWC.Append(*wc);
+ // ------------------------------------ //
+ 
+ ATilde = mat;
+ DTilde = D;
+ GTilde = G;
+
+ b1.Dim(3*numNodes,0);  // zerando os vetores b1 e b2
+ b2.Dim(numVerts,0);
+ ip.Dim(3*numNodes,1); // inicializando vetor ip com 1
+
+ nbc = idbcu->Dim();
+ for( i=0;i<nbc;i++ )
+ {
+  j=(int) idbcu->Get(i);
+  b1.CopyMult(j,ATilde,UVWC);
+  b2.CopyMult(j,DTilde,GTilde,UVWC);
+  ATilde.Set(j,j,1);
+  b1.Set(j,uc->Get(j));
+  ip.Set(j,0);
+ }
+ cout << endl;
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "U ";
+ cout << resetColor() << "--> SET " << endl;
+
+ nbc = idbcv->Dim();
+ for( i=0;i<nbc;i++ )
+ {
+  j=(int) idbcv->Get(i);
+  b1.CopyMult(j+numNodes,ATilde,UVWC);
+  b2.CopyMult(j+numNodes,DTilde,GTilde,UVWC);
+  ATilde.Set(j+numNodes,j+numNodes,1);
+  b1.Set(j+numNodes,vc->Get(j));
+  ip.Set(j+numNodes,0);
+ }
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "V ";
+ cout << resetColor() << "--> SET " << endl;
+
+ nbc = idbcw->Dim();
+ for( i=0;i<nbc;i++ )
+ {
+  j=(int) idbcw->Get(i);
+  b1.CopyMult(j+numNodes*2,ATilde,UVWC);
+  b2.CopyMult(j+numNodes*2,DTilde,GTilde,UVWC);
+  ATilde.Set(j+numNodes*2,j+numNodes*2,1);
+  b1.Set(j+numNodes*2,wc->Get(j));
+  ip.Set(j+numNodes*2,0);
+ }
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "W ";
+ cout << resetColor() << "--> SET " << endl;
+
+ E.Dim(numVerts,numVerts);
+ nbc = idbcp->Dim();
+ for( i=0;i<nbc;i++ )
+ {
+  j=(int) idbcp->Get(i);
+  b1.CopyMult(j,GTilde,DTilde,*pc);
+  E.Set(j,j,-1);
+  b2.Set(j,-pc->Get(j));  // sem correcao na pressao
+  //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
+ }
+ cout << " boundary condition ";
+ cout << color(none,red,black) << "P ";
+ cout << resetColor() << "--> SET " << endl;
+ cout << endl;
+
+ ETilde = E; 
+ //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
+} // fecha metodo setUnCoupledBC 
+
+
 void Simulator3D::setUnCoupledCBC()
 {
  int nbc,i,j;
@@ -2876,8 +3029,8 @@ void Simulator3D::setDtSurfaceTension()
  rho_inAdimen = rho_in/rho_0; 
  rho_outAdimen = rho_out/rho_0;
 
- vector<real> minLength = m->getMinLength();
- real minEdge = *min_element(minLength.begin()+1,minLength.end());
+ vector<double> minLength = m->getMinLength();
+ double minEdge = *min_element(minLength.begin()+1,minLength.end());
 
  dtSurfaceTension = sqrt( ( We*0.5*(rho_inAdimen+rho_outAdimen)*
                     minEdge*minEdge*minEdge)/
@@ -2912,7 +3065,7 @@ void Simulator3D::setDtSurfaceTension()
 void Simulator3D::setDtLagrangianExtream()
 {
  int idMinVolume = *min_element(m->getIdMinVolume().begin(),m->getIdMinVolume().end());
- real minEdge = m->getMinEdge();
+ double minEdge = m->getMinEdge();
 
  //cout << idMinVolume << " " << minEdge << endl;
 
@@ -2922,71 +3075,71 @@ void Simulator3D::setDtLagrangianExtream()
  int v4 = IEN->Get(idMinVolume,3);
 
  /* X-component */
- real p1x = X->Get(v1);
- real p2x = X->Get(v2);
- real p3x = X->Get(v3);
- real p4x = X->Get(v4);
+ double p1x = X->Get(v1);
+ double p2x = X->Get(v2);
+ double p3x = X->Get(v3);
+ double p4x = X->Get(v4);
 
- real xCentroid = ( p1x+p2x+p3x+p4x )*0.25;
+ double xCentroid = ( p1x+p2x+p3x+p4x )*0.25;
 
- real d1x = dist(p1x,xCentroid);
- real d2x = dist(p2x,xCentroid);
- real d3x = dist(p3x,xCentroid);
- real d4x = dist(p4x,xCentroid);
+ double d1x = dist(p1x,xCentroid);
+ double d2x = dist(p2x,xCentroid);
+ double d3x = dist(p3x,xCentroid);
+ double d4x = dist(p4x,xCentroid);
  
- real minXdist = min(d1x,d2x);
+ double minXdist = min(d1x,d2x);
  minXdist = min(minXdist,d3x);
  minXdist = min(minXdist,d4x);
 
- real xVelMax = max( 1.0,uALE.Abs().Max() );
- real minDtx = minXdist/xVelMax;
+ double xVelMax = max( 1.0,uALE.Abs().Max() );
+ double minDtx = minXdist/xVelMax;
 
  /* Y-component */
- real p1y = Y->Get(v1);
- real p2y = Y->Get(v2);
- real p3y = Y->Get(v3);
- real p4y = Y->Get(v4);
+ double p1y = Y->Get(v1);
+ double p2y = Y->Get(v2);
+ double p3y = Y->Get(v3);
+ double p4y = Y->Get(v4);
 
- real yCentroid = ( p1y+p2y+p3y+p4y )*0.25;
+ double yCentroid = ( p1y+p2y+p3y+p4y )*0.25;
 
- real d1y = dist(p1y,yCentroid);
- real d2y = dist(p2y,yCentroid);
- real d3y = dist(p3y,yCentroid);
- real d4y = dist(p4y,yCentroid);
+ double d1y = dist(p1y,yCentroid);
+ double d2y = dist(p2y,yCentroid);
+ double d3y = dist(p3y,yCentroid);
+ double d4y = dist(p4y,yCentroid);
 
- real minYdist = min(d1y,d2y);
+ double minYdist = min(d1y,d2y);
  minYdist = min(minYdist,d3y);
  minYdist = min(minYdist,d4y);
 
- real yVelMax = max( 1.0,vALE.Abs().Max() );
- real minDty = minYdist/yVelMax;
+ double yVelMax = max( 1.0,vALE.Abs().Max() );
+ double minDty = minYdist/yVelMax;
 
  /* Z-component */
- real p1z = Z->Get(v1);
- real p2z = Z->Get(v2);
- real p3z = Z->Get(v3);
- real p4z = Z->Get(v4);
+ double p1z = Z->Get(v1);
+ double p2z = Z->Get(v2);
+ double p3z = Z->Get(v3);
+ double p4z = Z->Get(v4);
 
- real zCentroid = ( p1z+p2z+p3z+p4z )*0.25;
+ double zCentroid = ( p1z+p2z+p3z+p4z )*0.25;
 
- real d1z = dist(p1z,zCentroid);
- real d2z = dist(p2z,zCentroid);
- real d3z = dist(p3z,zCentroid);
- real d4z = dist(p4z,zCentroid);
+ double d1z = dist(p1z,zCentroid);
+ double d2z = dist(p2z,zCentroid);
+ double d3z = dist(p3z,zCentroid);
+ double d4z = dist(p4z,zCentroid);
 
- real minZdist = min(d1z,d2z);
+ double minZdist = min(d1z,d2z);
  minZdist = min(minZdist,d3z);
  minZdist = min(minZdist,d4z);
 
- real zVelMax = max( 1.0,wALE.Abs().Max() );
- real minDtz = minZdist/zVelMax;
+ double zVelMax = max( 1.0,wALE.Abs().Max() );
+ double minDtz = minZdist/zVelMax;
 
- real minDt1 = min(minDtx,minDty);
+ double minDt1 = min(minDtx,minDty);
  minDt1 = min(minDt1,minDtz);
 
- real velMax = max(xVelMax,yVelMax);
+ double velMax = max(xVelMax,yVelMax);
  velMax = max(velMax,zVelMax);
- real minDt2 = 0.5*minEdge/velMax;
+ double minDt2 = 0.5*minEdge/velMax;
 
  dtLagrangian = min(minDt1,minDt2);
 
@@ -3003,11 +3156,11 @@ void Simulator3D::setDtLagrangianExtream()
  * */
 void Simulator3D::setDtLagrangian()
 {
- real minEdge = m->getMinEdge();
+ double minEdge = m->getMinEdge();
 
- real length = minEdge*0.86602;
+ double length = minEdge*0.86602;
 
- real velMax = max( 1.0,uALE.Abs().Max() );
+ double velMax = max( 1.0,uALE.Abs().Max() );
  velMax = max( velMax,vALE.Abs().Max() );
  velMax = max( velMax,wALE.Abs().Max() );
 
@@ -3066,30 +3219,30 @@ void Simulator3D::setDtLagrangianNorberto()
  {
   // v1
   int v1 = mapEdge->Get(edge,4);
-  real p1x=X->Get(v1);
-  real p1y=Y->Get(v1);
-  real p1z=Z->Get(v1);
+  double p1x=X->Get(v1);
+  double p1y=Y->Get(v1);
+  double p1z=Z->Get(v1);
 
   // v2
   int v2 = mapEdge->Get(edge,5);
-  real p2x=X->Get(v2);
-  real p2y=Y->Get(v2);
-  real p2z=Z->Get(v2);
+  double p2x=X->Get(v2);
+  double p2y=Y->Get(v2);
+  double p2z=Z->Get(v2);
 
-  real length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+  double length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
 
   // bubble.py - 146 iterations
-  real xVel = fabs(uALE.Get(v1)) - fabs(uALE.Get(v2));
-  real yVel = fabs(vALE.Get(v1)) - fabs(vALE.Get(v2));
-  real zVel = fabs(wALE.Get(v1)) - fabs(wALE.Get(v2));
+  double xVel = fabs(uALE.Get(v1)) - fabs(uALE.Get(v2));
+  double yVel = fabs(vALE.Get(v1)) - fabs(vALE.Get(v2));
+  double zVel = fabs(wALE.Get(v1)) - fabs(wALE.Get(v2));
 
-  real vel = vectorLength(xVel,yVel,zVel);
-  //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
+  double vel = vectorLength(xVel,yVel,zVel);
+  //double vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
   //                    fabs(x),fabs(y),fabs(z));
 
-  real a = 0.2; // security parameter
+  double a = 0.2; // security parameter
 
-  real minDt = a*length/vel;
+  double minDt = a*length/vel;
 
   if( minDt < dtLagrangian && minDt > 0 )
    dtLagrangian = minDt;
@@ -3118,30 +3271,30 @@ void Simulator3D::setDtSemiLagrangian()
  {
   // v1
   int v1 = mapEdge->Get(edge,4);
-  real p1x=X->Get(v1);
-  real p1y=Y->Get(v1);
-  real p1z=Z->Get(v1);
+  double p1x=X->Get(v1);
+  double p1y=Y->Get(v1);
+  double p1z=Z->Get(v1);
 
   // v2
   int v2 = mapEdge->Get(edge,5);
-  real p2x=X->Get(v2);
-  real p2y=Y->Get(v2);
-  real p2z=Z->Get(v2);
+  double p2x=X->Get(v2);
+  double p2y=Y->Get(v2);
+  double p2z=Z->Get(v2);
 
-  real length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
+  double length = distance(p1x,p1y,p1z,p2x,p2y,p2z);
 
   // bubble.py - 146 iterations
-  real xVel = fabs(velU.Get(v1)) - fabs(velU.Get(v2));
-  real yVel = fabs(velV.Get(v1)) - fabs(velV.Get(v2));
-  real zVel = fabs(velW.Get(v1)) - fabs(velW.Get(v2));
+  double xVel = fabs(velU.Get(v1)) - fabs(velU.Get(v2));
+  double yVel = fabs(velV.Get(v1)) - fabs(velV.Get(v2));
+  double zVel = fabs(velW.Get(v1)) - fabs(velW.Get(v2));
 
-  real vel = vectorLength(xVel,yVel,zVel);
-  //real vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
+  double vel = vectorLength(xVel,yVel,zVel);
+  //double vel = distance(fabs(xVel),fabs(yVel),fabs(zVel),
   //                    fabs(x),fabs(y),fabs(z));
 
-  real a = 0.2; // security parameter
+  double a = 0.2; // security parameter
 
-  real minDt = a*length/vel;
+  double minDt = a*length/vel;
 
   if( minDt < dtSemiLagrangian && minDt > 0 )
    dtSemiLagrangian = minDt;
@@ -3150,8 +3303,8 @@ void Simulator3D::setDtSemiLagrangian()
 
 void Simulator3D::setDtGravity()
 {
- real minEdge = m->getMinEdge();
- real velMax = max( 1.0,gravity.Abs().Max() );
+ double minEdge = m->getMinEdge();
+ double velMax = max( 1.0,gravity.Abs().Max() );
 
  dtGravity = sqrt(velMax/minEdge);
 }
@@ -3169,7 +3322,7 @@ void Simulator3D::setDtEulerian()
  setDtGravity();
  dtSurfaceTension=0.0;
 
- real dtEulerian = min(1.0,getDtSemiLagrangian());
+ double dtEulerian = min(1.0,getDtSemiLagrangian());
  dtEulerian = min(dtEulerian,getDtGravity());
 
  dt = cfl*dtEulerian;
@@ -3190,7 +3343,7 @@ void Simulator3D::setDtALETwoPhase()
  dtSemiLagrangian = dtLagrangian;
  setDtSurfaceTension();
 
- real dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
+ double dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
  dtALETwoPhase = min(dtALETwoPhase,getDtGravity());
 
  dt = cfl*dtALETwoPhase;
@@ -3211,7 +3364,7 @@ void Simulator3D::setDtALESinglePhase()
  dtSemiLagrangian=dtLagrangian;
  dtSurfaceTension = 0.0;
 
- real dtALETwoPhase = min(getDtLagrangian(),getDtGravity());
+ double dtALETwoPhase = min(getDtLagrangian(),getDtGravity());
 
  dt = cfl*dtALETwoPhase;
 }
@@ -3230,8 +3383,8 @@ void Simulator3D::setNuZ(const char* _filename)
 {
  // -- Leitura do perfil de nu variavel em Z para os nos da malha -- //
 
- real aux;
- real dist1,dist2;
+ double aux;
+ double dist1,dist2;
  clMatrix muFile(1001,2); // number of points in the file
 
  ifstream file( _filename,ios::in );
@@ -3276,13 +3429,13 @@ void Simulator3D::setNuC()
   int v2 = (int) IEN->Get(mele,1);
   int v3 = (int) IEN->Get(mele,2);
   int v4 = (int) IEN->Get(mele,3);
-  real c = ( cSol.Get(v1)+
+  double c = ( cSol.Get(v1)+
 	         cSol.Get(v2)+
 	         cSol.Get(v3)+
 	         cSol.Get(v4) )/4.0;
 
-  real eme = 0.81315;
-  real muC = exp(eme*c);
+  double eme = 0.81315;
+  double muC = exp(eme*c);
 
   // updating mu
   mu.Set(v1,muC);
@@ -3292,7 +3445,7 @@ void Simulator3D::setNuC()
  }
 }
 
-void Simulator3D::setSigma(real _sigma)
+void Simulator3D::setSigma(double _sigma)
 {
  sigma = _sigma;
  sigma_0 = sigma;
@@ -3302,67 +3455,67 @@ void Simulator3D::setSigma(real _sigma)
 void Simulator3D::setSolverVelocity(Solver *s){solverV = s;}
 void Simulator3D::setSolverPressure(Solver *s){solverP = s;}
 void Simulator3D::setSolverConcentration(Solver *s){solverC = s;}
-void Simulator3D::setRe(real _Re){Re = _Re;}
-real Simulator3D::getRe(){return Re;}
-void Simulator3D::setSc(real _Sc){Sc = _Sc;}
-real Simulator3D::getSc(){return Sc;}
-void Simulator3D::setFr(real _Fr){Fr = _Fr;}
-real Simulator3D::getFr(){return Fr;}
-void Simulator3D::setWe(real _We){We = _We;}
-real Simulator3D::getWe(){return We;}
-void Simulator3D::setAlpha(real _alpha){alpha = _alpha;}
-real Simulator3D::getAlpha(){return alpha;}
-void Simulator3D::setBeta(real _beta){beta = _beta;}
-real Simulator3D::getBeta(){return beta;}
-real Simulator3D::getSigma(){return sigma;}
-void Simulator3D::setDt(real _dt){dt = _dt;}
-void Simulator3D::setTime(real _time){time = _time;}
-real Simulator3D::getDt(){return dt;}
-real Simulator3D::getDtLagrangian(){return dtLagrangian;}
-real Simulator3D::getDtSemiLagrangian(){return dtSemiLagrangian;}
-real Simulator3D::getDtGravity(){return dtGravity;}
-real Simulator3D::getDtSurfaceTension(){return dtSurfaceTension;}
-void Simulator3D::setIter(real _iter){iter = _iter;}
+void Simulator3D::setRe(double _Re){Re = _Re;}
+double Simulator3D::getRe(){return Re;}
+void Simulator3D::setSc(double _Sc){Sc = _Sc;}
+double Simulator3D::getSc(){return Sc;}
+void Simulator3D::setFr(double _Fr){Fr = _Fr;}
+double Simulator3D::getFr(){return Fr;}
+void Simulator3D::setWe(double _We){We = _We;}
+double Simulator3D::getWe(){return We;}
+void Simulator3D::setAlpha(double _alpha){alpha = _alpha;}
+double Simulator3D::getAlpha(){return alpha;}
+void Simulator3D::setBeta(double _beta){beta = _beta;}
+double Simulator3D::getBeta(){return beta;}
+double Simulator3D::getSigma(){return sigma;}
+void Simulator3D::setDt(double _dt){dt = _dt;}
+void Simulator3D::setTime(double _time){time = _time;}
+double Simulator3D::getDt(){return dt;}
+double Simulator3D::getDtLagrangian(){return dtLagrangian;}
+double Simulator3D::getDtSemiLagrangian(){return dtSemiLagrangian;}
+double Simulator3D::getDtGravity(){return dtGravity;}
+double Simulator3D::getDtSurfaceTension(){return dtSurfaceTension;}
+void Simulator3D::setIter(double _iter){iter = _iter;}
 int  Simulator3D::getIter(){return iter;}
-real Simulator3D::getCfl(){return cfl;}
-void Simulator3D::setC1(real _c1){c1 = _c1;}
-void Simulator3D::setC2(real _c2){c2 = _c2;}
-void Simulator3D::setC3(real _c3){c3 = _c3;}
-void Simulator3D::setD1(real _d1){d1 = _d1;}
-void Simulator3D::setD2(real _d2){d2 = _d2;}
-real Simulator3D::getC1(){return c1;}
-real Simulator3D::getC2(){return c2;}
-real Simulator3D::getC3(){return c3;}
-real Simulator3D::getD1(){return d1;}
-real Simulator3D::getD2(){return d2;}
+double Simulator3D::getCfl(){return cfl;}
+void Simulator3D::setC1(double _c1){c1 = _c1;}
+void Simulator3D::setC2(double _c2){c2 = _c2;}
+void Simulator3D::setC3(double _c3){c3 = _c3;}
+void Simulator3D::setD1(double _d1){d1 = _d1;}
+void Simulator3D::setD2(double _d2){d2 = _d2;}
+double Simulator3D::getC1(){return c1;}
+double Simulator3D::getC2(){return c2;}
+double Simulator3D::getC3(){return c3;}
+double Simulator3D::getD1(){return d1;}
+double Simulator3D::getD2(){return d2;}
 
 // reference frame velocity
-void Simulator3D::setURef(real _uRef)
+void Simulator3D::setURef(double _uRef)
 {
  uRef = _uRef;
  xRef = uRef*time;
 }
-void Simulator3D::setVRef(real _vRef)
+void Simulator3D::setVRef(double _vRef)
 {
  vRef = _vRef;
  yRef = vRef*time;
 }
-void Simulator3D::setWRef(real _wRef)
+void Simulator3D::setWRef(double _wRef)
 {
  wRef = _wRef;
  zRef = wRef*time;
 }
-real Simulator3D::getURef(){return uRef;}
-real Simulator3D::getVRef(){return vRef;}
-real Simulator3D::getWRef(){return wRef;}
-void Simulator3D::setXRef(real _xRef){xRef = _xRef;}
-real Simulator3D::getXRef(){return xRef;}
-void Simulator3D::setYRef(real _yRef){yRef = _yRef;}
-real Simulator3D::getYRef(){return yRef;}
-void Simulator3D::setZRef(real _zRef){zRef = _zRef;}
-real Simulator3D::getZRef(){return zRef;}
+double Simulator3D::getURef(){return uRef;}
+double Simulator3D::getVRef(){return vRef;}
+double Simulator3D::getWRef(){return wRef;}
+void Simulator3D::setXRef(double _xRef){xRef = _xRef;}
+double Simulator3D::getXRef(){return xRef;}
+void Simulator3D::setYRef(double _yRef){yRef = _yRef;}
+double Simulator3D::getYRef(){return yRef;}
+void Simulator3D::setZRef(double _zRef){zRef = _zRef;}
+double Simulator3D::getZRef(){return zRef;}
 
-void Simulator3D::setMu(real _mu_in)
+void Simulator3D::setMu(double _mu_in)
 { 
  mu_in = _mu_in;
  mu_0 = _mu_in;
@@ -3371,7 +3524,7 @@ void Simulator3D::setMu(real _mu_in)
  mu.SetAll(mu_inAdimen); 
 }
 
-void Simulator3D::setRho(real _rho_in)
+void Simulator3D::setRho(double _rho_in)
 { 
  rho_in = _rho_in;
  rho_0 = rho_in; 
@@ -3380,7 +3533,7 @@ void Simulator3D::setRho(real _rho_in)
  rho.SetAll(rho_inAdimen); 
 }
 
-void Simulator3D::setCp(real _cp_in)
+void Simulator3D::setCp(double _cp_in)
 { 
  cp_in = _cp_in;
  cp_0 = cp_in; 
@@ -3389,7 +3542,7 @@ void Simulator3D::setCp(real _cp_in)
  cp.SetAll(cp_inAdimen); 
 }
 
-void Simulator3D::setKt(real _kt_in)
+void Simulator3D::setKt(double _kt_in)
 { 
  kt_in = _kt_in;
  kt_0 = kt_in; 
@@ -3441,7 +3594,7 @@ void Simulator3D::setKt(real _kt_in)
  * rho_0*v*D               [ mu_0   (                       ) ]
  *
  * */
-void Simulator3D::setMu(real _mu_in,real _mu_out)
+void Simulator3D::setMu(double _mu_in,double _mu_out)
 { 
  mu_in = _mu_in;
  mu_out = _mu_out;
@@ -3457,7 +3610,7 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
  clVector one(numVerts);one.SetAll(1.0);
  mu = mu_inAdimen*(*heaviside) + mu_outAdimen*(one-(*heaviside));
 
- //real rMax = 1.0;
+ //double rMax = 1.0;
 //--------------------------------------------------
 //  for (list<int>::iterator it=boundaryVert->begin(); 
 //                           it!=boundaryVert->end(); 
@@ -3477,7 +3630,7 @@ void Simulator3D::setMu(real _mu_in,real _mu_out)
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setRho(real _rho_in,real _rho_out)
+void Simulator3D::setRho(double _rho_in,double _rho_out)
 { 
  rho_in = _rho_in;
  rho_out = _rho_out;
@@ -3493,7 +3646,7 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
  clVector one(numVerts);one.SetAll(1.0);
  rho = rho_inAdimen*(*heaviside) + rho_outAdimen*(one-(*heaviside));
 
- //real rMax = 1.0;
+ //double rMax = 1.0;
 //--------------------------------------------------
 //  for (list<int>::iterator it=boundaryVert->begin(); 
 //                           it!=boundaryVert->end(); 
@@ -3512,7 +3665,7 @@ void Simulator3D::setRho(real _rho_in,real _rho_out)
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setCp(real _cp_in,real _cp_out)
+void Simulator3D::setCp(double _cp_in,double _cp_out)
 { 
  cp_in = _cp_in;
  cp_out = _cp_out;
@@ -3536,7 +3689,7 @@ void Simulator3D::setCp(real _cp_in,real _cp_out)
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setKt(real _kt_in,real _kt_out)
+void Simulator3D::setKt(double _kt_in,double _kt_out)
 { 
  kt_in = _kt_in;
  kt_out = _kt_out;
@@ -3560,7 +3713,7 @@ void Simulator3D::setKt(real _kt_in,real _kt_out)
 //-------------------------------------------------- 
 }
 
-void Simulator3D::setMuSmooth(real _mu_in,real _mu_out)
+void Simulator3D::setMuSmooth(double _mu_in,double _mu_out)
 { 
  mu_in = _mu_in;
  mu_out = _mu_out;
@@ -3577,7 +3730,7 @@ void Simulator3D::setMuSmooth(real _mu_in,real _mu_out)
  mu = mu_inAdimen*hSmooth + mu_outAdimen*(one-hSmooth);
 }
 
-void Simulator3D::setRhoSmooth(real _rho_in,real _rho_out)
+void Simulator3D::setRhoSmooth(double _rho_in,double _rho_out)
 { 
  rho_in = _rho_in;
  rho_out = _rho_out;
@@ -3600,12 +3753,12 @@ void Simulator3D::setHSmooth()
  clVector half(numVerts);half.SetAll(0.5);
  clVector zeroLevel = ((*heaviside)-half)*2;
  triEdge = m->getTriEdge();
- real triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+ double triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
  for( int i=0;i<numVerts;i++ )
  {
-  real len = 1.3*triEdgeMin;
-  real d = interfaceDistance->Get(i);
-  real aux = zeroLevel.Get(i)*d;
+  double len = 1.3*triEdgeMin;
+  double d = interfaceDistance->Get(i);
+  double aux = zeroLevel.Get(i)*d;
 
   if( aux < -len )
    hSmooth.Set( i,0.0 );
@@ -3613,80 +3766,80 @@ void Simulator3D::setHSmooth()
    hSmooth.Set( i,1.0 );
   else
   {
-   //real func = 0.5;
-   real func = 0.5*( 1.0+(aux/len)+(1.0/3.1415)*sin(3.1415*(aux/len)) );
+   //double func = 0.5;
+   double func = 0.5*( 1.0+(aux/len)+(1.0/3.1415)*sin(3.1415*(aux/len)) );
    hSmooth.Set( i,func );
   }
  }
 }
 
 //--------------------------------------------------
-// real Simulator3D::computeReynolds()
+// double Simulator3D::computeReynolds()
 // {
-//  real D = 1.0;
-//  real L = D;
-//  real U = sqrt(g*D);
+//  double D = 1.0;
+//  double L = D;
+//  double U = sqrt(g*D);
 //  Re = rho_in*L*U/mu_in;
 // }
 // 
-// real Simulator3D::computeFroud()
+// double Simulator3D::computeFroud()
 // {
-//  real D = 1.0;
-//  real L = D;
-//  real U = sqrt(g*D);
+//  double D = 1.0;
+//  double L = D;
+//  double U = sqrt(g*D);
 //  Fr = U/sqrt(g*L);
 // }
 // 
-// real Simulator3D::computeWebber()
+// double Simulator3D::computeWebber()
 // {
-//  real D = 1.0;
-//  real L = D;
-//  real U = sqrt(g*D);
+//  double D = 1.0;
+//  double L = D;
+//  double U = sqrt(g*D);
 //  We = rho_in*L*U*U/sigma;
 // }
 // 
-// real Simulator3D::computeEotvos()
+// double Simulator3D::computeEotvos()
 // {
-//  real D = 1.0;
+//  double D = 1.0;
 //  Eo = rho_in*g*D*D/sigma;
 //  We = Eo;
 // }
 // 
-// real Simulator3D::computeGalileo()
+// double Simulator3D::computeGalileo()
 // {
-//  real D = 1.0;
-//  real L = D;
-//  real U = sqrt(g*D);
+//  double D = 1.0;
+//  double L = D;
+//  double U = sqrt(g*D);
 //  N = rho_in*U*L/mu_in;
 //  Re = N;
 // }
 // 
-// real Simulator3D::computeMorton()
+// double Simulator3D::computeMorton()
 // {
-//  real D = 1.0;
-//  real L = D;
-//  real U = sqrt(g*D);
+//  double D = 1.0;
+//  double L = D;
+//  double U = sqrt(g*D);
 //  Mo = (rho_in-rho_out)*mu_in*mu_in*mu_in*mu_in*g/(rho_in*rho_in*sigma*sigma*sigma); 
 // }
 //-------------------------------------------------- 
 
-real Simulator3D::getMu_in(){return mu_in;}
-real Simulator3D::getMu_out(){return mu_out;}
-real Simulator3D::getRho_in(){return rho_in;}
-real Simulator3D::getRho_out(){return rho_out;}
-real Simulator3D::getCp_in(){return cp_in;}
-real Simulator3D::getCp_out(){return cp_out;}
-real Simulator3D::getKt_in(){return kt_in;}
-real Simulator3D::getKt_out(){return kt_out;}
-real Simulator3D::getMu_inAdimen(){return mu_inAdimen;}
-real Simulator3D::getMu_outAdimen(){return mu_outAdimen;}
-real Simulator3D::getRho_inAdimen(){return rho_inAdimen;}
-real Simulator3D::getRho_outAdimen(){return rho_outAdimen;}
-real Simulator3D::getCp_inAdimen(){return cp_inAdimen;}
-real Simulator3D::getCp_outAdimen(){return cp_outAdimen;}
-real Simulator3D::getKt_inAdimen(){return kt_inAdimen;}
-real Simulator3D::getKt_outAdimen(){return kt_outAdimen;}
-real Simulator3D::getTime(){return time;}
+double Simulator3D::getMu_in(){return mu_in;}
+double Simulator3D::getMu_out(){return mu_out;}
+double Simulator3D::getRho_in(){return rho_in;}
+double Simulator3D::getRho_out(){return rho_out;}
+double Simulator3D::getCp_in(){return cp_in;}
+double Simulator3D::getCp_out(){return cp_out;}
+double Simulator3D::getKt_in(){return kt_in;}
+double Simulator3D::getKt_out(){return kt_out;}
+double Simulator3D::getMu_inAdimen(){return mu_inAdimen;}
+double Simulator3D::getMu_outAdimen(){return mu_outAdimen;}
+double Simulator3D::getRho_inAdimen(){return rho_inAdimen;}
+double Simulator3D::getRho_outAdimen(){return rho_outAdimen;}
+double Simulator3D::getCp_inAdimen(){return cp_inAdimen;}
+double Simulator3D::getCp_outAdimen(){return cp_outAdimen;}
+double Simulator3D::getKt_inAdimen(){return kt_inAdimen;}
+double Simulator3D::getKt_outAdimen(){return kt_outAdimen;}
+double Simulator3D::getTime(){return time;}
 clVector* Simulator3D::getUSol(){return &uSol;} 
 clVector* Simulator3D::getUSolOld(){return &uSolOld;} 
 void Simulator3D::setUSol(clVector *_uSol){uSol = *_uSol;}
@@ -3711,7 +3864,7 @@ clVector* Simulator3D::getWALE(){return &wALE;}
 clVector* Simulator3D::getWALEOld(){return &wALEOld;} 
 clVector* Simulator3D::getFint(){return &fint;}
 clVector* Simulator3D::getGravity(){return &gravity;}
-real Simulator3D::getGrav(){return g;}
+double Simulator3D::getGrav(){return g;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
 clMatrix* Simulator3D::getM(){return &Mrho;}
@@ -3727,25 +3880,25 @@ clVector* Simulator3D::getKt(){return &kt;}
 clVector* Simulator3D::getHSmooth(){return &hSmooth;}
 clVector* Simulator3D::getHeatFlux(){return &heatFlux;}
 void Simulator3D::updateIEN(){IEN = m->getIEN();}
-void Simulator3D::setCfl(real _cfl){cfl = _cfl;}
-vector<real> Simulator3D::getCentroidVelX(){return centroidVelX;}
-vector<real> Simulator3D::getCentroidVelY(){return centroidVelY;}
-vector<real> Simulator3D::getCentroidVelZ(){return centroidVelZ;}
-void Simulator3D::setCentroidVelX(vector<real> _centroidVelX)
+void Simulator3D::setCfl(double _cfl){cfl = _cfl;}
+vector<double> Simulator3D::getCentroidVelX(){return centroidVelX;}
+vector<double> Simulator3D::getCentroidVelY(){return centroidVelY;}
+vector<double> Simulator3D::getCentroidVelZ(){return centroidVelZ;}
+void Simulator3D::setCentroidVelX(vector<double> _centroidVelX)
 {centroidVelX = _centroidVelX;}
-void Simulator3D::setCentroidVelY(vector<real> _centroidVelY)
+void Simulator3D::setCentroidVelY(vector<double> _centroidVelY)
 {centroidVelY = _centroidVelY;}
-void Simulator3D::setCentroidVelZ(vector<real> _centroidVelZ)
+void Simulator3D::setCentroidVelZ(vector<double> _centroidVelZ)
 {centroidVelZ = _centroidVelZ;}
 
-vector<real> Simulator3D::getCentroidPosX(){return centroidPosX;}
-vector<real> Simulator3D::getCentroidPosY(){return centroidPosY;}
-vector<real> Simulator3D::getCentroidPosZ(){return centroidPosZ;}
-void Simulator3D::setCentroidPosX(vector<real> _centroidPosX)
+vector<double> Simulator3D::getCentroidPosX(){return centroidPosX;}
+vector<double> Simulator3D::getCentroidPosY(){return centroidPosY;}
+vector<double> Simulator3D::getCentroidPosZ(){return centroidPosZ;}
+void Simulator3D::setCentroidPosX(vector<double> _centroidPosX)
 {centroidPosX = _centroidPosX;}
-void Simulator3D::setCentroidPosY(vector<real> _centroidPosY)
+void Simulator3D::setCentroidPosY(vector<double> _centroidPosY)
 {centroidPosY = _centroidPosY;}
-void Simulator3D::setCentroidPosZ(vector<real> _centroidPosZ)
+void Simulator3D::setCentroidPosZ(vector<double> _centroidPosZ)
 {centroidPosZ = _centroidPosZ;}
 
 
@@ -3753,7 +3906,7 @@ void Simulator3D::setCentroidPosZ(vector<real> _centroidPosZ)
 // (applyLinearInterpolation)
 clVector Simulator3D::setCentroid(clVector &_vector)
 {
- real aux;
+ double aux;
  clVector zerosConv(numNodes-numVerts);
  _vector.Append(zerosConv);
 
@@ -4134,7 +4287,7 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
   exit(1);
  }
 
- UVPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(real) );
+ UVPC_file.read( (char*) aux2.GetVec(),aux2.Dim()*sizeof(double) );
 
  UVPC_file.close();
 
@@ -4222,7 +4375,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clVector xKappaOld(_mOld.getNumVerts());
  for( int i=0;i<_mOld.getNumVerts();i++ )
  {
-  real aux = kappaOld.Get(i);
+  double aux = kappaOld.Get(i);
   xKappaOld.Set(i,aux);
  }
  clVector xFintOld(_mOld.getNumVerts());
@@ -4351,7 +4504,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  kappa.Dim(3*numNodes);
  for( int i=0;i<numNodes;i++ )
  {
-  real aux = xKappa.Get(i);
+  double aux = xKappa.Get(i);
   kappa.Set(i,aux);
   kappa.Set(i+numNodes,aux);
   kappa.Set(i+numNodes*2,aux);
@@ -4626,20 +4779,20 @@ void Simulator3D::setCentroidVelPos()
  clVector _wVel = wSol;
 
  int v = elemIdRegion->Max()+1;
- vector<real> velX(v,0);
- vector<real> velY(v,0);
- vector<real> velZ(v,0);
- vector<real> posX(v,0);
- vector<real> posY(v,0);
- vector<real> posZ(v,0);
- vector<real> volume(v,0);
- vector<real> sumVolume(v,0);
- vector<real> sumXVelVolume(v,0);
- vector<real> sumYVelVolume(v,0);
- vector<real> sumZVelVolume(v,0);
- vector<real> sumXPosVolume(v,0);
- vector<real> sumYPosVolume(v,0);
- vector<real> sumZPosVolume(v,0);
+ vector<double> velX(v,0);
+ vector<double> velY(v,0);
+ vector<double> velZ(v,0);
+ vector<double> posX(v,0);
+ vector<double> posY(v,0);
+ vector<double> posZ(v,0);
+ vector<double> volume(v,0);
+ vector<double> sumVolume(v,0);
+ vector<double> sumXVelVolume(v,0);
+ vector<double> sumYVelVolume(v,0);
+ vector<double> sumZVelVolume(v,0);
+ vector<double> sumXPosVolume(v,0);
+ vector<double> sumYPosVolume(v,0);
+ vector<double> sumZPosVolume(v,0);
 
  list<int> *inElem;
  inElem = m->getInElem();
@@ -4696,7 +4849,7 @@ void Simulator3D::setCentroidVelPos()
 
  centroidVelX.clear();centroidVelY.clear();centroidVelZ.clear();
  centroidPosX.clear();centroidPosY.clear();centroidPosZ.clear();
- vector<real> surfaceVolume = m->getSurfaceVolume();
+ vector<double> surfaceVolume = m->getSurfaceVolume();
  for( int nb=0;nb<v;nb++ )
  {
   centroidVelX.push_back(sumXVelVolume[nb]/surfaceVolume[nb]);
@@ -4709,54 +4862,54 @@ void Simulator3D::setCentroidVelPos()
  }
 }
 
-real Simulator3D::getCentroidVelXAverage()
+double Simulator3D::getCentroidVelXAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidVelX[nb];
  return sum/v;
 }
 
-real Simulator3D::getCentroidVelYAverage()
+double Simulator3D::getCentroidVelYAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidVelY[nb];
  return sum/v;
 }
 
-real Simulator3D::getCentroidVelZAverage()
+double Simulator3D::getCentroidVelZAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidVelZ[nb];
  return sum/v;
 }
 
-real Simulator3D::getCentroidPosXAverage()
+double Simulator3D::getCentroidPosXAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidPosX[nb];
  return sum/v;
 }
 
-real Simulator3D::getCentroidPosYAverage()
+double Simulator3D::getCentroidPosYAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidPosY[nb];
  return sum/v;
 }
 
-real Simulator3D::getCentroidPosZAverage()
+double Simulator3D::getCentroidPosZAverage()
 {
- real sum=0;
+ double sum=0;
  int v = elemIdRegion->Max();
  for( int nb=1;nb<=v;nb++ )
   sum+=centroidPosZ[nb];
@@ -4770,40 +4923,40 @@ void Simulator3D::setCentroidVelPosInterface()
  clVector _wVel = wALEOld;
 
  int v = surfMesh->elemIdRegion.Max()+1;
- vector<real> velX(v,0);
- vector<real> velY(v,0);
- vector<real> velZ(v,0);
- vector<real> posX(v,0);
- vector<real> posY(v,0);
- vector<real> posZ(v,0);
- vector<real> area(v,0);
- vector<real> sumArea(v,0);
- vector<real> sumXVelArea(v,0);
- vector<real> sumYVelArea(v,0);
- vector<real> sumZVelArea(v,0);
- vector<real> sumXPosArea(v,0);
- vector<real> sumYPosArea(v,0);
- vector<real> sumZPosArea(v,0);
+ vector<double> velX(v,0);
+ vector<double> velY(v,0);
+ vector<double> velZ(v,0);
+ vector<double> posX(v,0);
+ vector<double> posY(v,0);
+ vector<double> posZ(v,0);
+ vector<double> area(v,0);
+ vector<double> sumArea(v,0);
+ vector<double> sumXVelArea(v,0);
+ vector<double> sumYVelArea(v,0);
+ vector<double> sumZVelArea(v,0);
+ vector<double> sumXPosArea(v,0);
+ vector<double> sumYPosArea(v,0);
+ vector<double> sumZPosArea(v,0);
 
  for( int elem=0;elem<surfMesh->numElems;elem++ ) 
  {
   // P1
   int v1 = surfMesh->IEN.Get(elem,0);
-  real p1x = surfMesh->X.Get(v1);
-  real p1y = surfMesh->Y.Get(v1);
-  real p1z = surfMesh->Z.Get(v1);
+  double p1x = surfMesh->X.Get(v1);
+  double p1y = surfMesh->Y.Get(v1);
+  double p1z = surfMesh->Z.Get(v1);
 
   // P2
   int v2 = surfMesh->IEN.Get(elem,1);
-  real p2x = surfMesh->X.Get(v2);
-  real p2y = surfMesh->Y.Get(v2);
-  real p2z = surfMesh->Z.Get(v2);
+  double p2x = surfMesh->X.Get(v2);
+  double p2y = surfMesh->Y.Get(v2);
+  double p2z = surfMesh->Z.Get(v2);
 
   // P3
   int v3 = surfMesh->IEN.Get(elem,2);
-  real p3x = surfMesh->X.Get(v3);
-  real p3y = surfMesh->Y.Get(v3);
-  real p3z = surfMesh->Z.Get(v3);
+  double p3x = surfMesh->X.Get(v3);
+  double p3y = surfMesh->Y.Get(v3);
+  double p3z = surfMesh->Z.Get(v3);
 
   int elemID = surfMesh->elemIdRegion.Get(elem);
 
@@ -4844,7 +4997,7 @@ void Simulator3D::setCentroidVelPosInterface()
 
  centroidVelX.clear();centroidVelY.clear();centroidVelZ.clear();
  centroidPosX.clear();centroidPosY.clear();centroidPosZ.clear();
- vector<real> surfaceArea = m->getSurfaceArea();
+ vector<double> surfaceArea = m->getSurfaceArea();
  for( int nb=0;nb<v;nb++ )
  {
   centroidVelX.push_back(sumXVelArea[nb]/surfaceArea[nb]);
@@ -4857,32 +5010,32 @@ void Simulator3D::setCentroidVelPosInterface()
  }
 }
 
-real Simulator3D::getCentroidVelXMax()
+double Simulator3D::getCentroidVelXMax()
 {
  return *max_element(centroidVelX.begin()+1,centroidVelX.end());
 }
-real Simulator3D::getCentroidVelYMax()
+double Simulator3D::getCentroidVelYMax()
 {
  return *max_element(centroidVelY.begin()+1,centroidVelY.end());
 }
-real Simulator3D::getCentroidVelZMax()
+double Simulator3D::getCentroidVelZMax()
 {
  return *max_element(centroidVelZ.begin()+1,centroidVelZ.end());
 }
-real Simulator3D::getCentroidVelXMin()
+double Simulator3D::getCentroidVelXMin()
 {
  return *min_element(centroidVelX.begin()+1,centroidVelX.end());
 }
-real Simulator3D::getCentroidVelYMin()
+double Simulator3D::getCentroidVelYMin()
 {
  return *min_element(centroidVelY.begin()+1,centroidVelY.end());
 }
-real Simulator3D::getCentroidVelZMin()
+double Simulator3D::getCentroidVelZMin()
 {
  return *min_element(centroidVelZ.begin()+1,centroidVelZ.end());
 }
 
-void Simulator3D::setUSol(real _vel)
+void Simulator3D::setUSol(double _vel)
 {
  for( int i=0;i<numNodes;i++ )
  {
@@ -4890,7 +5043,7 @@ void Simulator3D::setUSol(real _vel)
   uSolOld.Set(i,uSolOld.Get(i)-_vel);
  }
 }
-void Simulator3D::setVSol(real _vel)
+void Simulator3D::setVSol(double _vel)
 {
  for( int i=0;i<numNodes;i++ )
  {
@@ -4898,7 +5051,7 @@ void Simulator3D::setVSol(real _vel)
   vSolOld.Set(i,vSolOld.Get(i)-_vel);
  }
 }
-void Simulator3D::setWSol(real _vel)
+void Simulator3D::setWSol(double _vel)
 {
  for( int i=0;i<numNodes;i++ )
  {
@@ -4909,7 +5062,7 @@ void Simulator3D::setWSol(real _vel)
 
 void Simulator3D::setSurfaceTSat()
 {
- real Tsat = 0.0;
+ double Tsat = 0.0;
  for( int i=0;i<surface->Dim();i++ )
  {
   int surfaceNode = surface->Get(i);
@@ -4926,13 +5079,13 @@ void Simulator3D::setSurfaceTSat()
 //   int surfaceNode = surface->Get(i);
 // 
 //   // unitario do vetor normal (ponderado com a area) resultante
-//   real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
-//   real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
-//   real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
+//   double xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+//   double yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+//   double zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
 // 
-//   real uSurface = xNormalUnit;
-//   real vSurface = yNormalUnit;
-//   real wSurface = zNormalUnit;
+//   double uSurface = xNormalUnit;
+//   double vSurface = yNormalUnit;
+//   double wSurface = zNormalUnit;
 // 
 //   uMassTransfer.Set(surfaceNode,uSurface);
 //   vMassTransfer.Set(surfaceNode,vSurface);
@@ -4970,7 +5123,7 @@ void Simulator3D::setMassTransfer()
  //clVector *vertIdRegion = m->getVertIdRegion();
  for( int i=0;i<numVerts;i++ )
  {
-  real aux = sqrt( GH.Get(i)*GH.Get(i) + 
+  double aux = sqrt( GH.Get(i)*GH.Get(i) + 
                    GH.Get(i+numVerts)*GH.Get(i+numVerts) +
                    GH.Get(i+2*numVerts)*GH.Get(i+2*numVerts) );
   heatFlux.Set(i,distrib.Get(i)*aux);
@@ -4983,7 +5136,7 @@ void Simulator3D::setMassTransfer()
 //   //if( Y->Get(i) < Y->Max() )
 //   if( vertIdRegion->Get(i) == 1 && i < lineMesh->numVerts )
 //   {
-//    real aux = fabs( GH.Get(i+numVerts) );
+//    double aux = fabs( GH.Get(i+numVerts) );
 //    heatFlux.Set(i,0.0*aux);
 //   }
 //-------------------------------------------------- 
@@ -5007,71 +5160,71 @@ void Simulator3D::setMassTransfer()
   int surfaceNode = surface->Get(i);
 
   // unitario do vetor normal (ponderado com a area) resultante
-  real xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
-  real yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
-  real zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
+  double xNormalUnit = surfMesh->xNormal.Get(surfaceNode);
+  double yNormalUnit = surfMesh->yNormal.Get(surfaceNode);
+  double zNormalUnit = surfMesh->zNormal.Get(surfaceNode);
 
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
+  double prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
               (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
 			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
-  real uSolNormal = xNormalUnit*prod;
-  real vSolNormal = yNormalUnit*prod;
-  real wSolNormal = zNormalUnit*prod;
+  double uSolNormal = xNormalUnit*prod;
+  double vSolNormal = yNormalUnit*prod;
+  double wSolNormal = zNormalUnit*prod;
 
   // 1.3 is a pragmatic number which fits the velocity for the bhaga5
   // and the moving frame technique. Still don't know why!
-  real uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
-  real vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
-  real wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
+  double uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
+  double vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
+  double wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
 
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  real prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
+  double prod2 = uSmoothSurface.Get(surfaceNode)*xNormalUnit + 
                vSmoothSurface.Get(surfaceNode)*yNormalUnit + 
 			   wSmoothSurface.Get(surfaceNode)*zNormalUnit;
-  real uSmoothNormal = xNormalUnit*prod2;
-  real vSmoothNormal = yNormalUnit*prod2;
-  real wSmoothNormal = zNormalUnit*prod2;
+  double uSmoothNormal = xNormalUnit*prod2;
+  double vSmoothNormal = yNormalUnit*prod2;
+  double wSmoothNormal = zNormalUnit*prod2;
 
-  real uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
-  real vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
-  real wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
+  double uSmoothTangent = uSmoothSurface.Get(surfaceNode) - uSmoothNormal;
+  double vSmoothTangent = vSmoothSurface.Get(surfaceNode) - vSmoothNormal;
+  double wSmoothTangent = wSmoothSurface.Get(surfaceNode) - wSmoothNormal;
 
-  real uALESurface =   uSolOld.Get(surfaceNode) 
+  double uALESurface =   uSolOld.Get(surfaceNode) 
                      - d1*uSolTangent 
 					 + d2*uSmoothTangent;
-  real vALESurface =   vSolOld.Get(surfaceNode) 
+  double vALESurface =   vSolOld.Get(surfaceNode) 
                      - d1*vSolTangent 
 					 + d2*vSmoothTangent;
-  real wALESurface =   wSolOld.Get(surfaceNode) 
+  double wALESurface =   wSolOld.Get(surfaceNode) 
                      - d1*wSolTangent 
 					 + d2*wSmoothTangent;
 
 
   // MASS TRASNFER at SURFACE NODES
-  real rho1 = ( (1.0/(rho_inAdimen*rho_inAdimen))+
+  double rho1 = ( (1.0/(rho_inAdimen*rho_inAdimen))+
                 (1.0/(rho_outAdimen*rho_outAdimen)) )/
                 ( (1.0/rho_inAdimen)+(1.0/rho_outAdimen) ) ;
 
-  real rho2 = 0.5*( 1.0/rho_inAdimen + 1.0/rho_outAdimen );
+  double rho2 = 0.5*( 1.0/rho_inAdimen + 1.0/rho_outAdimen );
 
   cout << surfaceNode << " " 
        << q.Get(surfaceNode) << " "
        << rho1 << " "
 	   << rho2 << endl;
 
-  real uMassTransfer = uALESurface
+  double uMassTransfer = uALESurface
                        - (q.Get(surfaceNode)*xNormalUnit)*rho2;
 
-  real vMassTransfer = vALESurface
+  double vMassTransfer = vALESurface
                        - (q.Get(surfaceNode)*yNormalUnit)*rho2;
 
-  real wMassTransfer = wALESurface
+  double wMassTransfer = wALESurface
                        - (q.Get(surfaceNode)*zNormalUnit)*rho2;
 
   uALE.Set(surfaceNode,uMassTransfer);
@@ -5080,3 +5233,482 @@ void Simulator3D::setMassTransfer()
  }
 } // fecha metodo setMassTransfer
 
+
+// PBC
+void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
+{
+	pbc = &_pbc;
+	nyPointsL = pbc->GetNyPointsL();
+	nyPointsM = pbc->GetNyPointsM();
+	NumVertsMid = pbc->GetNumVertsMid();
+	VecXMin = pbc->GetVecXMin();
+	VecXMax = pbc->GetVecXMax();
+	VecXMid = pbc->GetVecXMid();
+	VecXMidVerts = pbc->GetVecXMidVerts();
+	VecXMinGlob.Dim(0);
+	VecXMaxGlob.Dim(0);
+	PFlow.Dim(3*numNodes);
+
+} // fecha metodo
+
+
+void Simulator3D::setPressureJump(double _pJump)
+{
+	pJump = _pJump;
+	PFlow.SetAll(0);
+
+	for (int i = 0; i < numNodes; i++)
+	{
+	 	PFlow.Set(i,pJump);
+	}
+
+} // fecha metodo
+
+
+void Simulator3D::assemblePBC()
+{
+ 	int i,j,ibL,ibR;
+	double aux, diagU, diagV, diagW;
+
+	clVector VecXMinAux, VecXMaxAux;
+
+	nyPointsL = pbc->GetNyPointsL(); // nyPointsL was arriving here differently of the initial value. I don't know why... Step forced.
+
+	VecXMinAux.Dim(nyPointsL);
+	VecXMaxAux.Dim(nyPointsL);
+
+	VecXMin->CopyTo(0,VecXMinAux);
+	VecXMax->CopyTo(0,VecXMaxAux);
+
+	/* Copying rows and columns from ibL into ibR:
+	 * i) Remove the contributions from left and overloads in right;
+	 * ii) Now, the positions that stayed opened receive the same 
+	 * values at right. */
+
+	// ATilde
+	  for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+	  {
+	     // left and right nodes
+	     ibL = VecXMinAux.Get(i);
+	     ibR = VecXMaxAux.Get(i);
+
+		  for ( j = 0; j < 3*numNodes; j++ ) // loop rows
+		  {
+			 // x-direction
+			 double ATildeRow = ATilde.Get(ibR,j);
+			 ATildeRow += ATilde.Get(ibL,j);
+			 ATilde.Set(ibR,j,ATildeRow);
+			  
+			 // y-direction
+			 double ATildeRowN = ATilde.Get(ibR + numNodes,j);
+			 ATildeRowN += ATilde.Get(ibL + numNodes,j);
+			 ATilde.Set(ibR + numNodes,j,ATildeRowN);
+			 
+			 // z-direction
+			 ATildeRowN = ATilde.Get(ibR + 2*numNodes,j);
+			 ATildeRowN += ATilde.Get(ibL + 2*numNodes,j);
+			 ATilde.Set(ibR + 2*numNodes,j,ATildeRowN);
+	      }
+
+		  for ( j =0; j < 3*numNodes; j++ ) // loop columns
+		  {
+		   	 // x-direction
+			 double ATildeColumn = ATilde.Get(j,ibR);
+			 ATildeColumn += ATilde.Get(j,ibL);
+			 ATilde.Set(j,ibR,ATildeColumn);
+
+		   	 // y-direction
+			 ATildeColumn = ATilde.Get(j,ibR + numNodes);
+			 ATildeColumn += ATilde.Get(j,ibL + numNodes);
+			 ATilde.Set(j,ibR + numNodes,ATildeColumn);
+
+		   	 // z-direction
+			 ATildeColumn = ATilde.Get(j,ibR + 2*numNodes);
+			 ATildeColumn += ATilde.Get(j,ibL + 2*numNodes);
+			 ATilde.Set(j,ibR + 2*numNodes,ATildeColumn);
+		  }
+	  }
+	
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+	     // getting diagonal's values
+	     ibL = VecXMaxAux.Get(i);
+		 diagU = ATilde.Get(ibR,ibR);
+		 diagV = ATilde.Get(ibR + numNodes, ibR + numNodes);
+		 diagW = ATilde.Get(ibR + 2*numNodes, ibR + 2*numNodes);
+
+		 // eliminating rows and columns
+		 ibR = VecXMaxAux.Get(i);
+		 ATilde.SetRowZero(ibL);
+		 ATilde.SetColumnZero(ibL);
+		 ATilde.SetRowZero(ibL + numNodes);
+		 ATilde.SetColumnZero(ibL + numNodes);
+		 ATilde.SetRowZero(ibL + 2*numNodes);
+		 ATilde.SetColumnZero(ibL + 2*numNodes);
+
+		 // changed diagonal's values
+		 //ATilde.Set(ibL,ibL,diagU);
+		 //ATilde.Set(ibL + numNodes,ibL + numNodes,diagV);
+		 //ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,diagW);
+	     ATilde.Set(ibL,ibL,1.0);
+	     ATilde.Set(ibL + numNodes,ibL + numNodes,1.0);
+	     ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+	  }
+
+	  // DTilde
+       
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+	     ibL = VecXMinAux.Get(i);
+		 ibR = VecXMaxAux.Get(i);
+		
+		   for ( j = 0; j < 3*numNodes; j++ ) // loop rows
+		   {
+				double DTildeRow = DTilde.Get(ibR,j);
+				DTildeRow += DTilde.Get(ibL,j);
+				DTilde.Set(ibR,j,DTildeRow);
+		   }
+	  
+           for ( j = 0; j < numVerts; j++ ) // loop columns
+	       {
+				double DTildeColumn = DTilde.Get(j,ibR);
+				DTildeColumn += DTilde.Get(j,ibL);
+				DTilde.Set(j,ibR,DTildeColumn);
+
+				DTildeColumn = DTilde.Get(j, ibR + numNodes);
+				DTildeColumn += DTilde.Get(j, ibL + numNodes);
+				DTilde.Set(j, ibR + numNodes, DTildeColumn);
+
+				DTildeColumn = DTilde.Get(j, ibR + 2*numNodes);
+				DTildeColumn += DTilde.Get(j, ibL + 2*numNodes);
+				DTilde.Set(j, ibR + 2*numNodes, DTildeColumn);
+	       }
+
+	  }	
+	  
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+
+		  ibL = VecXMinAux.Get(i);
+		  aux = DTilde.Get(ibR,ibR);
+
+		  ibR = VecXMaxAux.Get(i);
+		  DTilde.SetRowZero(ibL);
+		  DTilde.SetColumnZero(ibL);
+		  DTilde.SetColumnZero(ibL + numNodes);
+		  DTilde.SetColumnZero(ibL + 2*numNodes);
+
+          // ver 2D, pois o bloco daqui esta comentado.
+
+	  }
+
+	  // ETilde
+	  for (  i = 0; i < nyPointsL; i++ )
+	  {
+		  ibL = VecXMinAux.Get(i);
+		  ibR = VecXMaxAux.Get(i);
+	  
+		  for ( j = 0; j < numVerts; j++ ) // loop rows
+		  {
+			  double ETildeRow = ETilde.Get(ibR,j);
+			  ETildeRow += ETilde.Get(ibL,j);
+			  //<<ETilde.Set(ibR,j,ETildeRow);
+
+		  }
+
+		  for ( j = 0; j < numVerts; j++ ) // loop columns
+		  {
+			  double ETildeColumn = ETilde.Get(j,ibR);
+			  ETildeColumn += ETilde.Get(j,ibL);
+			  //<<ETilde.Set(j,ibR,ETildeColumn);
+              
+		  }
+	 
+	  }
+
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+	      ibL = VecXMinAux.Get(i);
+		  aux = ETilde.Get(ibR,ibR);
+
+		  ibR = VecXMaxAux.Get(i);
+		  //<<ETilde.SetRowZero(ibL);
+		  //<<ETilde.SetColumnZero(ibL);
+		  //ETilde.Set(ibL,ibL,aux);
+		  //ETilde.Set(ibL,ibL,1.0);
+
+	  }
+
+	  // GTilde
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+	      ibL = VecXMinAux.Get(i);
+		  ibR = VecXMaxAux.Get(i);
+
+		     for ( j = 0; j < numVerts; j++ ) // loop rows
+			 {
+				double GTildeRow = GTilde.Get(ibR,j);
+				GTildeRow += GTilde.Get(ibL,j);
+				GTilde.Set(ibR,j,GTildeRow);
+
+			 }
+	     
+			 for ( j = 0; j < numNodes; j++ ) // loop columns
+			 {
+			    double GTildeColumn = GTilde.Get(j,ibR);
+				GTildeColumn += GTilde.Get(j,ibL);
+				GTilde.Set(j,ibR,GTildeColumn);
+
+				GTildeColumn = GTilde.Get(j + numNodes,ibR);
+				GTildeColumn += GTilde.Get(j + numNodes,ibL);
+				GTilde.Set(j + numNodes,ibR,GTildeColumn);
+				
+				GTildeColumn = GTilde.Get(j + 2*numNodes,ibR);
+				GTildeColumn += GTilde.Get(j + 2*numNodes,ibL);
+				GTilde.Set(j + 2*numNodes,ibR,GTildeColumn);
+
+			 }
+
+	  }
+
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+		 ibL = VecXMinAux.Get(i);
+		 aux = GTilde.Get(ibR,ibR);
+
+		 ibR = VecXMaxAux.Get(i);
+		 GTilde.SetRowZero(ibL);
+		 GTilde.SetRowZero(ibL + numNodes);
+		 GTilde.SetRowZero(ibL + 2*numNodes);
+		 GTilde.SetColumnZero(ibL);
+		 //GTilde.Set(ibL,ibL,aux);
+		 //GTilde.Set(ibL,ibL,1.0);
+
+		 aux = GTilde.Get(ibR + numNodes,ibR);
+		 //GTilde.Set(ibL + numNodes,ibL,aux);
+		 //GTilde.Set(ibL + numNodes,ibL,1.0);
+		 //GTilde.Set(ibL + 2*numNodes,ibL,aux);
+		 //GTilde.Set(ibL + 2*numNodes,ibL,1.0);
+
+	  }
+
+	  // bloco da invA...
+	  
+	  //*** ETilde call
+	  ETilde = E - (( DTilde * invA) * GTilde );
+
+	  for ( i = 0; i < nyPointsL; i++ )
+	  {
+		  ibR = VecXMaxAux.Get(i);
+		  aux = ETilde.Get(ibR,ibR);
+
+		  ibL = VecXMinAux.Get(i);
+		  ETilde.SetRowZero(ibL);
+		  ETilde.SetColumnZero(ibL);
+		  ETilde.Set(ibL,ibL,1.0);		  
+	  }
+
+} // fecha metodo
+
+
+void Simulator3D::unCoupledPBC()
+{
+ clVector uvw(3*numNodes);
+ clVector vaIp(3*numNodes);
+ clVector b1Tilde;
+ clVector b2Tilde;
+ clVector uTildeU, uTildeV, uTildeW;
+ Periodic3D pbc;
+
+ vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
+
+ VecXMaxGlob.Dim(nyPointsL);
+ VecXMax->CopyTo(0,VecXMaxGlob);
+ VecXMinGlob.Dim(nyPointsL);
+ VecXMin->CopyTo(0,VecXMinGlob);
+ 
+ b1Tilde = b1 + vaIp;
+
+ //*** sums ibL to ibR on rhs vector - velocity
+ sumIndexPBCVel(VecXMin,VecXMax,b1Tilde);
+
+ //*** Reassemble
+ assemblePBC();
+
+ // resolve sistema ATilde uTilde = b
+ cout << " --------> solving velocity --------- " << endl;
+ solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
+ cout << " ------------------------------------ " << endl;
+
+
+ //*** copy uTilde to set it periodic
+ uTildeU = uTilde.Copy(0,numNodes -1);
+ uTildeV = uTilde.Copy(numNodes,2*numNodes - 1);
+ uTildeW = uTilde.Copy(2*numNodes,3*numNodes - 1);
+ pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+
+ //*** updated periodic velocity
+ uTilde = uTildeU;
+ uTilde.Append(uTildeV);
+ uTilde.Append(uTildeW);
+
+ // uvw = uTilde + surface tension + gravity
+ if( rho_in <= rho_out ) // BUBBLE
+ {
+  cout << setw(70) << "BUBBLE SIMULATION" << endl;
+  uvw = uTilde + 
+        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
+
+ }
+ else // DROPLET
+ {
+  cout << setw(70) << "DROPLET SIMULATION" << endl;
+  uvw = uTilde + 
+        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
+ }
+ 
+ //uvw = uTilde;
+
+
+ /* 
+  * Mass Transfer
+  * */
+ //clVector massTransfer = dt*invMcLumped*( heatFlux );
+ //clVector massTransfer = ( invMcLumped*heatFlux );
+ clVector massTransfer = invC*
+                         (1.0/rho_inAdimen - 1.0/rho_outAdimen)
+						 *heatFlux;
+
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+
+
+ //*** copy to global vector and drop IBR indices - pressure
+
+ // resolve sistema E pTilde = b2
+ cout << " --------> solving pressure --------- " << endl;
+ solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
+ cout << " ------------------------------------ " << endl;
+ 
+ //*** copying pressure
+ pbc.SetPurePressurePBC(pTilde,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+
+ //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
+ uvw = uvw - (invA * GTilde * pTilde);
+ 
+ uTildeU = uvw.Copy(0,numNodes - 1);
+ uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
+ uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
+
+ pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+
+ //*** updated periodic velocity
+ uvw = uTildeU;
+ uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
+ uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
+
+
+ uvw.CopyTo(         0,uSol);
+ uvw.CopyTo(  numNodes,vSol);
+ uvw.CopyTo(numNodes*2,wSol);
+
+ pSol = pTilde;       // sem correcao na pressao
+ //pSol = pSol + pTilde;  // com correcao na pressao
+
+ // compute bubble's centroid velocity
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
+} // fecha metodo unCoupledPBC 
+
+
+void Simulator3D::inputVelocityPBC()
+{
+	Periodic3D pbc;
+
+	clVector VecXMinAux, VecXMaxAux, VecXMidAux;
+
+	VecXMinAux.Dim(nyPointsL);
+	VecXMaxAux.Dim(nyPointsL);
+
+	VecXMin->CopyTo(0,VecXMinAux);
+	VecXMax->CopyTo(0,VecXMaxAux);
+
+	string aux = direction;
+	pbc.SetVelocityPBC(uSol, vSol, wSol, VecXMinAux, VecXMaxAux, nyPointsL, direction);
+
+	*uc = uSol;
+	*vc = vSol;
+	*wc = wSol;
+
+} // fecha metodo
+
+void Simulator3D::inputPurePressurePBC()
+{
+	Periodic3D pbc;
+
+	clVector VecXMinAux, VecXMaxAux;
+
+	VecXMinAux.Dim(nyPointsL);
+	VecXMaxAux.Dim(nyPointsL);
+
+	VecXMin->CopyTo(0,VecXMinAux);
+	VecXMax->CopyTo(0,VecXMaxAux);
+
+	string aux = direction;
+	pbc.SetPurePressurePBC(pSol, VecXMinAux, VecXMaxAux, nyPointsL, direction);
+
+	*pc = uSol;
+
+} // fecha metodo
+
+
+void Simulator3D::setRHS_PBC()
+{
+	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + (1/Fr*Fr)*Mrho*gravity;
+
+} // fecha metodo
+
+void Simulator3D::sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b)
+{
+    for (int i = 0; i < _indexL->Dim(); i++)
+    {
+       int ibL = _indexL->Get(i);
+       int ibR = _indexR->Get(i);
+ 
+       double uL = _b.Get(ibL);
+       double uR = _b.Get(ibR);
+       _b.Set(ibR, uL + uR);
+       _b.Set(ibL,0);
+ 
+       uL = _b.Get(ibL + numNodes);
+       uR = _b.Get(ibR + numNodes);
+       _b.Set(ibR + numNodes, uL + uR);
+       _b.Set(ibL + numNodes,0);
+ 
+     }
+} // fecha metodo
+
+void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b)
+{
+   for (int i = 0; i < _indexL->Dim(); i++)
+   {
+      int ibL = _indexL->Get(i);
+      int ibR = _indexR->Get(i);
+
+      double pL = _b.Get(ibL);
+      double pR = _b.Get(ibR);
+      _b.Set(ibR,pL + pR);
+      _b.Set(ibL,0);
+
+    }
+} // fecha metodo
+
+
+
+void Simulator3D::setCopyDirectionPBC(string _direction)
+{
+ 	direction = _direction;
+
+} // fecha metodo

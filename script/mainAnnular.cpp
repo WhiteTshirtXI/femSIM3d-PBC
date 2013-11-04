@@ -11,7 +11,7 @@
 //                                                                     //
 // Model3D: insertPointsByLength("flat")                                     //
 //           - no insertion at the boundaries Z.Max() and Z.Min()      //
-//           - uncomment real v2 = mapEdgeTri.Get(edge,2)              //
+//           - uncomment double v2 = mapEdgeTri.Get(edge,2)              //
 //          setPolyhedron()                                            //
 //           - uncomment wSwap2 == node2 until break;                  //
 //          uncomment setNormalAndKappa2D()                            //
@@ -30,6 +30,7 @@
 #include "PetscSolver.h"
 #include "petscksp.h"
 #include "colors.h"
+#include "Periodic3D.h"
 
 #define NUMPHASES 2
 
@@ -38,25 +39,24 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
  int iter = 1;
- real Re = 91;
- real We = 0.23;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1.0;
+ double Re = 91;
+ double We = 0.23;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 1.0;  // smooth vel
+ double c3 = 10.0;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
+ double alpha = 1.0;
 
- real mu_in = 1.78E-5;
- real mu_out = 1.0E-3;
+ double mu_in = 1.78E-5;
+ double mu_out = 1.0E-3;
 
- real rho_in = 1.25;
- real rho_out = 1000;
+ double rho_in = 1.25;
+ double rho_out = 1000;
 
- real cfl = 0.5;
+ double cfl = 0.5;
 
- string meshFile = "annular.msh";
- //string meshFile = "annularSquare.msh";
+ string meshFile = "annular-3d.msh";
 
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -67,8 +67,10 @@ int main(int argc, char **argv)
  const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/" + meshFile;
+ string meshDir = (string) getenv("MESH3D_DIR");
+ //string meshDir = (string) getenv("MESH_DIR");
+ meshDir += "/" + meshFile;
+ //meshDir += "/gustavo-anjos-meshes/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -118,6 +120,7 @@ int main(int argc, char **argv)
 
  int nIter = 3000;
  int nReMesh = 1;
+ 
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
@@ -162,6 +165,7 @@ int main(int argc, char **argv)
 
   iter++;
  }
+
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */

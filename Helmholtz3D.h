@@ -56,10 +56,10 @@ class Helmholtz3D
   void saveVTK( const char* _dir,const char* _filename, int _iter );
   void saveChordalEdge( const char* _dir,const char* _filename, int _iter );
 
-  void setk(real _k);
-  real getk();
+  void setk(double _k);
+  double getk();
   void setCloserWall();
-  bool isInsideLiquidFilm(int _node, real _thickness);
+  bool isInsideLiquidFilm(int _node, double _thickness);
 
   clVector* getCSol();
 
@@ -67,8 +67,8 @@ class Helmholtz3D
   Model3D *m;
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
-  real k;
-  vector<real> triEdge;
+  double k;
+  vector<double> triEdge;
   clVector *X,*Y,*Z;
   clMatrix *IEN;
   clVector *heaviside,*interfaceDistance;

@@ -14,6 +14,7 @@
 #include "InOut.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
+#include "Periodic3D.h"
 
 #define NUMPHASES 1
 
@@ -22,13 +23,13 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 1;
- real Re = 10000;
- real Sc = 2000;
- real Fr = 10;
- //real alpha = 1;
- real cfl = 0.1;
- real mu_l = 1.0;
- real rho_l = 1.0;
+ double Re = 100;
+ double Sc = 200;
+ double Fr = 10;
+ //double alpha = 1;
+ double cfl = 0.1;
+ double mu_l = 1.0;
+ double rho_l = 1.0;
  //Solver *solverP = new PCGSolver();
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -37,23 +38,29 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "retangle.msh";
+ //string meshFile = "rectangle.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
- const char *vtkFolder  = "./vtk/";
+ const char *vtkFolder  = "./vtk-step/";
  //const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/singlePhase/" + meshFile;
- const char *mesh = meshDir.c_str();
+ //string meshDir = (string) getenv("DATA_DIR");
+ //meshDir += "/gmsh/3d/singlePhase/" + meshFile;
+ //const char *mesh = meshDir.c_str();
+
+ //const char *mesh = "/Users/peixoto/meshes/3d/periodic-cylindrical-3d-Lx6.vtk";
+ //const char *mesh = "/Users/peixoto/meshes/3d/periodic-rectangular-3d-channel-Lx2-Ly1-Ly1-23verts.vtk";
+ const char *mesh = "/Users/peixoto/meshes/3d/periodic-rectangular-3d-channel-Lx5-Ly1-Ly1-1254verts.vtk";
 
  Model3D m1;
+
  //m1.setMeshStep(40,20,2);
  //m1.setAdimenStep();
- m1.readMSH(mesh);
+ //m1.readMSH(mesh);
+ m1.readVTK(mesh);
  m1.setInterfaceBC();
- m1.setTriEdge();
- m1.mesh2Dto3D();
+ //m1.setTriEdge();
+ //m1.mesh2Dto3D();
  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -62,28 +69,32 @@ int main(int argc, char **argv)
 #endif
  m1.setVertNeighbour();
  m1.setInOutVert();
- m1.setStepBC();
+ //m1.setStepBC();
+ m1.setStepPBC();
  m1.setCStepBC();
 
- Simulator3D s1(m1);
+ Periodic3D pbc(m1);
+ Simulator3D s2(pbc,m1);
+ pbc.MountPeriodicVectors(m1);
+ //Simulator3D s1(m1);
 
- s1.setRe(Re);
- s1.setSc(Sc);
- s1.setFr(Fr);
- s1.setCfl(cfl);
- s1.setDtEulerian();
- s1.setMu(mu_l);
- s1.setRho(rho_l);
- s1.setSolverPressure(solverP);
- s1.setSolverVelocity(solverV);
- s1.setSolverConcentration(solverC);
+ s2.setRe(Re);
+ s2.setSc(Sc);
+ s2.setFr(Fr);
+ s2.setCfl(cfl);
+ s2.setDtEulerian();
+ s2.setMu(mu_l);
+ s2.setRho(rho_l);
+ s2.setSolverPressure(solverP);
+ s2.setSolverVelocity(solverV);
+ s2.setSolverConcentration(solverC);
 
- s1.init();
- s1.assembleSlip();
- s1.matMount();
- s1.matMountC();
- s1.setUnCoupledBC(); 
- s1.setUnCoupledCBC(); 
+ s2.init();
+ s2.assembleSlip();
+ s2.matMount();
+ s2.matMountC();
+ s2.setUnCoupledBC(); 
+ //s2.setUnCoupledCBC(); 
 
  if( (*(argv+1)) == NULL )
  {
@@ -98,10 +109,10 @@ int main(int argc, char **argv)
   cout << endl;
 
   string file = (string) "sim-" + *(argv+2);
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
+  iter = s2.loadSolution("./","sim",atoi(*(argv+2)));
  }
 
- InOut save(m1,s1); // cria objeto de gravacao
+ InOut save(m1,s2); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
 
@@ -114,19 +125,23 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << iter << endl;
 
-   s1.stepSL();
-   s1.setRHS();
-   s1.setCRHS();
-   s1.unCoupled();
-   s1.unCoupledC();
+   s2.stepSL();
+   //s2.setCRHS();
+   s2.setUnCoupledBC(); 
+   s2.setGravity("+X");
+   s2.setRHS_PBC();
+   s2.setCopyDirectionPBC("RL");
+   s2.unCoupledPBC();
+   s2.inputVelocityPBC();
+   //s2.unCoupledC();
 
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTU(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
 
-   s1.saveOldData();
+   s2.saveOldData();
 
-   s1.timeStep();
+   s2.timeStep();
 
    cout << "________________________________________ END of "
 	    << iter << endl;

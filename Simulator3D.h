@@ -34,12 +34,14 @@
 #include "colors.h"
 #include "geometry.h"
 #include "searchInterp3D.h"
+#include "Periodic3D.h"
 
 class Simulator3D
 {
  public:
   Simulator3D(); // construtor padrao
   Simulator3D( Model3D &_m ); // construtor 
+  Simulator3D( Periodic3D &_pbc, Model3D &_m );
   Simulator3D( const Simulator3D &_sRight ); // construtor 
   Simulator3D( Model3D &_m, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
@@ -67,11 +69,25 @@ class Simulator3D
   void matMount();
   void matMountC();
 
+  // PBC
+  	void assemblePBC();
+    void setUnCoupledPBC();
+    void unCoupledPBC();
+	void getPeriodic3DToAttrib(Periodic3D &_pbc);
+	void setPressureJump(double _pJump);
+	void inputVelocityPBC();
+	void inputPurePressurePBC();
+	void setRHS_PBC();
+	void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
+	void sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b);
+	void setCopyDirectionPBC(string _direction);
+	void stepSLPBCFix();
+
   void step();
   void stepSL();
   void stepNoConvection();
-  void stepImposedPeriodicField(const char* _name, real T,real _time);
-  void stepImposedPeriodicField(const char* _name,real T,real _time,real _dt);
+  void stepImposedPeriodicField(const char* _name, double T,double _time);
+  void stepImposedPeriodicField(const char* _name,double T,double _time,double _dt);
   void copyALEtoSol();
   void stepLagrangian();
   void stepLagrangianZ();
@@ -103,20 +119,20 @@ class Simulator3D
 
   void setNuZ(const char* _filename);
   void setNuC();
-  void setRe(real _Re);
-  real getRe();
-  void setSc(real _Sc);
-  real getSc();
-  void setFr(real _Fr);
-  real getFr();
-  void setWe(real _We);
-  real getWe();
-  void setAlpha(real _alpha);
-  real getAlpha();
-  void setBeta(real _beta);
-  real getBeta();
-  void setSigma(real _sigma);
-  real getSigma();
+  void setRe(double _Re);
+  double getRe();
+  void setSc(double _Sc);
+  double getSc();
+  void setFr(double _Fr);
+  double getFr();
+  void setWe(double _We);
+  double getWe();
+  void setAlpha(double _alpha);
+  double getAlpha();
+  void setBeta(double _beta);
+  double getBeta();
+  void setSigma(double _sigma);
+  double getSigma();
   void setDtLagrangian();
   void setDtLagrangianExtream();
   void setDtLagrangianNorberto();
@@ -127,73 +143,73 @@ class Simulator3D
   void setDtALESinglePhase();
   void setDtALETwoPhase();
   void setDt();
-  void setDt(real _dt);
-  void setTime(real _time);
-  real getTime();
-  void setCfl(real _cfl);
-  void setCflBubble(real _cfl);
-  real getDt();
-  real getDtLagrangian();
-  real getDtSemiLagrangian();
-  real getDtSurfaceTension();
-  real getDtGravity();
-  real getCfl();
-  void setIter(real _Iter);
+  void setDt(double _dt);
+  void setTime(double _time);
+  double getTime();
+  void setCfl(double _cfl);
+  void setCflBubble(double _cfl);
+  double getDt();
+  double getDtLagrangian();
+  double getDtSemiLagrangian();
+  double getDtSurfaceTension();
+  double getDtGravity();
+  double getCfl();
+  void setIter(double _Iter);
   int getIter();
-  void setC1(real _c1);
-  void setC2(real _c2);
-  void setC3(real _c3);
-  void setD1(real _d1);
-  void setD2(real _d2);
-  real getC1();
-  real getC2();
-  real getC3();
-  real getD1();
-  real getD2();
-  void setURef(real _uRef);
-  real getURef();
-  void setVRef(real _vRef);
-  real getVRef();
-  void setWRef(real _wRef);
-  real getWRef();
-  void setXRef(real _XRef);
-  real getXRef();
-  void setYRef(real _YRef);
-  real getYRef();
-  void setZRef(real _ZRef);
-  real getZRef();
-  void setMu(real _mu_in);
-  void setMu(real _mu_in,real _mu_out);
-  void setMuSmooth(real _mu_in,real _mu_out);
-  real getMu_in();
-  real getMu_out();
-  real getMu_inAdimen();
-  real getMu_outAdimen();
-  void setRho(real _rho_in);
-  void setRho(real _rho_in,real _rho_out);
-  void setRrho_in(real _rho_in);
-  void setRhoSmooth(real _rho_in,real _rho_out);
-  void setCp(real _cp_in);
-  void setCp(real _cp_in,real _cp_out);
-  void setCpSmooth(real _cp_in,real _cp_out);
-  real getCp_in();
-  real getCp_out();
-  real getCp_inAdimen();
-  real getCp_outAdimen();
-  void setKt(real _kt_in);
-  void setKt(real _kt_in,real _kt_out);
-  void setKtSmooth(real _kt_in,real _kt_out);
-  real getKt_in();
-  real getKt_out();
-  real getKt_inAdimen();
-  real getKt_outAdimen();
+  void setC1(double _c1);
+  void setC2(double _c2);
+  void setC3(double _c3);
+  void setD1(double _d1);
+  void setD2(double _d2);
+  double getC1();
+  double getC2();
+  double getC3();
+  double getD1();
+  double getD2();
+  void setURef(double _uRef);
+  double getURef();
+  void setVRef(double _vRef);
+  double getVRef();
+  void setWRef(double _wRef);
+  double getWRef();
+  void setXRef(double _XRef);
+  double getXRef();
+  void setYRef(double _YRef);
+  double getYRef();
+  void setZRef(double _ZRef);
+  double getZRef();
+  void setMu(double _mu_in);
+  void setMu(double _mu_in,double _mu_out);
+  void setMuSmooth(double _mu_in,double _mu_out);
+  double getMu_in();
+  double getMu_out();
+  double getMu_inAdimen();
+  double getMu_outAdimen();
+  void setRho(double _rho_in);
+  void setRho(double _rho_in,double _rho_out);
+  void setRrho_in(double _rho_in);
+  void setRhoSmooth(double _rho_in,double _rho_out);
+  void setCp(double _cp_in);
+  void setCp(double _cp_in,double _cp_out);
+  void setCpSmooth(double _cp_in,double _cp_out);
+  double getCp_in();
+  double getCp_out();
+  double getCp_inAdimen();
+  double getCp_outAdimen();
+  void setKt(double _kt_in);
+  void setKt(double _kt_in,double _kt_out);
+  void setKtSmooth(double _kt_in,double _kt_out);
+  double getKt_in();
+  double getKt_out();
+  double getKt_inAdimen();
+  double getKt_outAdimen();
   void setHSmooth();
   void setHeatFlux();
-  real getRho_in();
-  void setRho_out(real _rho_out);
-  real getRho_out();
-  real getRho_inAdimen();
-  real getRho_outAdimen();
+  double getRho_in();
+  void setRho_out(double _rho_out);
+  double getRho_out();
+  double getRho_inAdimen();
+  double getRho_outAdimen();
   void setUAnt(clVector &_uAnt);
   void setCSol(clVector &_cSol);
   void setUSol(clVector *_uSol);
@@ -204,9 +220,9 @@ class Simulator3D
   void setWALE(clVector *_wALE);
   void updateIEN();
   clVector setCentroid(clVector &_vector);
-  void setUSol(real _vel);
-  void setVSol(real _vel);
-  void setWSol(real _vel);
+  void setUSol(double _vel);
+  void setVSol(double _vel);
+  void setWSol(double _vel);
 
   void setSolverVelocity(Solver *s);
   void setSolverPressure(Solver *s);
@@ -232,7 +248,7 @@ class Simulator3D
   clVector* getCAnt();
   clVector* getFint();
   clVector* getGravity();
-  real getGrav();
+  double getGrav();
   clDMatrix* getKappa();
   clMatrix* getK();
   clMatrix* getM();
@@ -257,40 +273,51 @@ class Simulator3D
   void setAnnularALEBC();
   void setLagrangianVelBC();
 
-  vector<real> getCentroidVelX();
-  real getCentroidVelXAverage();
-  vector<real> getCentroidVelY();
-  real getCentroidVelYAverage();
-  vector<real> getCentroidVelZ();
-  real getCentroidVelZAverage();
-  real getCentroidVelXMax();
-  real getCentroidVelYMax();
-  real getCentroidVelZMax();
-  real getCentroidVelXMin();
-  real getCentroidVelYMin();
-  real getCentroidVelZMin();
+  vector<double> getCentroidVelX();
+  double getCentroidVelXAverage();
+  vector<double> getCentroidVelY();
+  double getCentroidVelYAverage();
+  vector<double> getCentroidVelZ();
+  double getCentroidVelZAverage();
+  double getCentroidVelXMax();
+  double getCentroidVelYMax();
+  double getCentroidVelZMax();
+  double getCentroidVelXMin();
+  double getCentroidVelYMin();
+  double getCentroidVelZMin();
 
-  void setCentroidVelX(vector<real> _centroidVelX);
-  void setCentroidVelY(vector<real> _centroidVelY);
-  void setCentroidVelZ(vector<real> _centroidVelZ);
+  void setCentroidVelX(vector<double> _centroidVelX);
+  void setCentroidVelY(vector<double> _centroidVelY);
+  void setCentroidVelZ(vector<double> _centroidVelZ);
 
-  vector<real> getCentroidPosX();
-  real getCentroidPosXAverage();
-  vector<real> getCentroidPosY();
-  real getCentroidPosYAverage();
-  vector<real> getCentroidPosZ();
-  real getCentroidPosZAverage();
-  void setCentroidPosX(vector<real> _centroidPosX);
-  void setCentroidPosY(vector<real> _centroidPosY);
-  void setCentroidPosZ(vector<real> _centroidPosZ);
+  vector<double> getCentroidPosX();
+  double getCentroidPosXAverage();
+  vector<double> getCentroidPosY();
+  double getCentroidPosYAverage();
+  vector<double> getCentroidPosZ();
+  double getCentroidPosZAverage();
+  void setCentroidPosX(vector<double> _centroidPosX);
+  void setCentroidPosY(vector<double> _centroidPosY);
+  void setCentroidPosZ(vector<double> _centroidPosZ);
   void setSurfaceTSat();
   void setMassTransfer();
 
  private:
   Model3D *m;
+
+  // PBC
+  Periodic3D *pbc;
+  int nyPointsL, nyPointsR, nyPointsM, NumVertsMid;
+  double pJump;
+  int IBR;
+  string direction;
+  clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
+  clVector VecXMinGlob, VecXMaxGlob;
+  clVector PFlow;
+  
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
-  vector<real> triEdge;
+  vector<double> triEdge;
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
   clVector *idbcu,*idbcv,*idbcw,*idbcp,*idbcc;
@@ -303,25 +330,25 @@ class Simulator3D
   list<int> *boundaryVert;
 
 
-  real Re,Sc,Fr,We,alpha,beta,cfl,time;
-  real dt,dtLagrangian,dtSemiLagrangian,dtSurfaceTension,dtGravity;
-  real c1,c2,c3,d1,d2;
-  real bubbleXVel,bubbleYVel,bubbleZVel;
-  real sigma,g,rho_in,rho_out,mu_in,mu_out;
-  real sigma_0,g_0,rho_0,mu_0;
-  real cp_in,cp_out,cp_0,cp_inAdimen,cp_outAdimen;
-  real kt_in,kt_out,kt_0,kt_inAdimen,kt_outAdimen;
-  real sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
-  real bubbleVel;
+  double Re,Sc,Fr,We,alpha,beta,cfl,time;
+  double dt,dtLagrangian,dtSemiLagrangian,dtSurfaceTension,dtGravity;
+  double c1,c2,c3,d1,d2;
+  double bubbleXVel,bubbleYVel,bubbleZVel;
+  double sigma,g,rho_in,rho_out,mu_in,mu_out;
+  double sigma_0,g_0,rho_0,mu_0;
+  double cp_in,cp_out,cp_0,cp_inAdimen,cp_outAdimen;
+  double kt_in,kt_out,kt_0,kt_inAdimen,kt_outAdimen;
+  double sigmaAdimen,gAdimen,rho_inAdimen,rho_outAdimen,mu_inAdimen,mu_outAdimen;
+  double bubbleVel;
   int iter;
-  vector<real> centroidVelX,centroidVelY,centroidVelZ;
-  vector<real> centroidVelXOld,centroidVelYOld,centroidVelZOld;
-  vector<real> centroidPosX,centroidPosY,centroidPosZ;
-  vector<real> centroidPosXOld,centroidPosYOld,centroidPosZOld;
+  vector<double> centroidVelX,centroidVelY,centroidVelZ;
+  vector<double> centroidVelXOld,centroidVelYOld,centroidVelZOld;
+  vector<double> centroidPosX,centroidPosY,centroidPosZ;
+  vector<double> centroidPosXOld,centroidPosYOld,centroidPosZOld;
 
   // moving referential
-  real uRef,vRef,wRef;
-  real xRef,yRef,zRef;
+  double uRef,vRef,wRef;
+  double xRef,yRef,zRef;
 
   clMatrix K,Kc,Mrho,M,Mc,G,Gc,D,A;
   clMatrix mat,matc;

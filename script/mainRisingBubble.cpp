@@ -26,36 +26,36 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //real Re = sqrt(42.895); // case 1
- //real Re = 13.8487; // case 2
- real Re = 33.0413; // case 3
- //real Re = sqrt(3892.856); // case 6
- //real Re = sqrt(18124.092); // case 7
- //real Re = sqrt(41505.729); // case 8 (extream)
- //real Re = 79.88; // case 3
- real Sc = 1;
- real We = 115.662;
- real Fr = 1.0;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1.0;
+ //double Re = sqrt(42.895); // case 1
+ //double Re = 13.8487; // case 2
+ double Re = 33.0413; // case 3
+ //double Re = sqrt(3892.856); // case 6
+ //double Re = sqrt(18124.092); // case 7
+ //double Re = sqrt(41505.729); // case 8 (extream)
+ //double Re = 79.88; // case 3
+ double Sc = 1;
+ double We = 115.662;
+ double Fr = 1.0;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 1.0;  // smooth vel
+ double c3 = 10.0;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
+ double alpha = 1.0;
 
- real mu_in = 0.0000178;
+ double mu_in = 0.0000178;
 
- //real mu_out = 2.73;
- //real mu_out = 1.28; 
- real mu_out = 0.5396; // case 3
- //real mu_out = 0.2857; // case 6
- //real mu_out = 0.1324; // case 7
- //real mu_out = 0.0875134907735; // extream
+ //double mu_out = 2.73;
+ //double mu_out = 1.28; 
+ double mu_out = 0.5396; // case 3
+ //double mu_out = 0.2857; // case 6
+ //double mu_out = 0.1324; // case 7
+ //double mu_out = 0.0875134907735; // extream
 
- real rho_in = 1.225;
- real rho_out =1350; 
+ double rho_in = 1.225;
+ double rho_out =1350; 
 
- real cfl = 0.6;
+ double cfl = 0.6;
 
  string meshFile = "airWaterSugar.msh";
  //string meshFile = "test.msh";

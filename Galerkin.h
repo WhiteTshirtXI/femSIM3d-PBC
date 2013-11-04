@@ -16,10 +16,10 @@ class Galerkin
 					   clMatrix &_gx,
 					   clMatrix &_gy,
 					   clMatrix &_gz);
-  void compute(real dt);
+  void compute(double dt);
 
   int numVerts,numNodes,numElems;
-  real dt;
+  double dt;
   clVector uc,vc,wc,pc;
   clVector X,Y,Z;
   clVector idbcu,idbcv,idbcw,idbcp;

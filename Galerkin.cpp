@@ -22,7 +22,7 @@ Galerkin::Galerkin(Model3D &_m,clVector &_uSol,
  gz = _gz;
 }
 
-void Galerkin::compute(real dt)
+void Galerkin::compute(double dt)
 {
  clDMatrix diagU(uSol);
  clDMatrix diagV(vSol);

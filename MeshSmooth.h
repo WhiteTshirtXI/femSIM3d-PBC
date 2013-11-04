@@ -17,7 +17,7 @@
 class MeshSmooth
 {
  public:
-  MeshSmooth(Model3D &_m,real _dt);
+  MeshSmooth(Model3D &_m,double _dt);
   virtual ~MeshSmooth();
 
   clVector compute();
@@ -45,7 +45,7 @@ void stepSmoothFujiwaraByHeight();
 
  private:
   Model3D *m;
-  real dt;
+  double dt;
   int numNodes,numVerts,numElems;
   clVector *X,*Y,*Z;
   clVector *uc,*vc,*wc,*pc,*cc;
@@ -57,7 +57,7 @@ void stepSmoothFujiwaraByHeight();
 
   vector< list<int> > *neighbourVert,*neighbourPoint;
   list<int> *inVert;
-  vector<real> triEdge;
+  vector<double> triEdge;
 };
 #endif /* ifndef MESHSMOOTH_H */
 

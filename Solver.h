@@ -18,7 +18,7 @@ class Solver
 {
   public:
    Solver();
-   virtual void solve(real eps, clMatrix & A, clVector & x, clVector & bb) = 0;
+   virtual void solve(double eps, clMatrix & A, clVector & x, clVector & bb) = 0;
    virtual ~Solver();
    void printAndSaveInfo();
 
@@ -28,10 +28,10 @@ class Solver
    string reason;      // reason of solver stop
    string solverName;  // solver name
    string pcName;      // preconditioner name
-   real initial;       // initial time 
-   real final;         // final time
-   real elapsed;       // difference between final and initial;
-   real residual;      // residual norm
+   double initial;       // initial time 
+   double final;         // final time
+   double elapsed;       // difference between final and initial;
+   double residual;      // residual norm
 };
 
 

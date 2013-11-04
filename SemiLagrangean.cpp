@@ -77,7 +77,7 @@ SemiLagrangean::SemiLagrangean(Model3D &_m,clVector &_uSol,
 #endif
 }
 
-void SemiLagrangean::compute(real dt)
+void SemiLagrangean::compute(double dt)
 {
 #if NUMGLEU == 5 
  getDepartElem(dt); // procura de elemento
@@ -114,7 +114,49 @@ void SemiLagrangean::compute(real dt)
  setBC();
 } // fim do metodo compute
 
-void SemiLagrangean::computeFreeSurface(real dt)
+void SemiLagrangean::computePBCFix(double dt)
+{
+   #if NUMGLEU == 4
+    getDepartElemPBCFix(dt); // procura de elemento
+
+    clVector uVert(numVerts);
+    clVector vVert(numVerts);
+    clVector wVert(numVerts);
+	uSol.CopyTo(0,uVert);
+	vSol.CopyTo(0,vVert);
+	wSol.CopyTo(0,wVert);
+
+	uParticle = convLin*uVert;
+	vParticle = convLin*vVert;
+	wParticle = convLin*wVert;
+	cParticle = convLin*cSol;
+
+	clVector zerosConv(numNodes-numVerts);
+	uParticle.Append(zerosConv);
+	vParticle.Append(zerosConv);
+	wParticle.Append(zerosConv);
+
+	uParticle = setTriCentroid(*IEN,uParticle);
+    vParticle = setTriCentroid(*IEN,vParticle);
+    wParticle = setTriCentroid(*IEN,wParticle);
+
+    #else
+	
+	getDepartElemQuadPBCFix(dt);
+
+    uParticle = convQuad*uSol;
+	vParticle = convQuad*vSol;
+	wParticle = convQuad*wSol;
+	cParticle = convLin*cSol;
+
+    #endif
+
+    setBC();
+} // fim do metodo compute -> SemiLangrangean
+
+
+
+void SemiLagrangean::computeFreeSurface(double dt)
 {
 #if NUMGLEU == 5 
  getDepartElem2(dt); // procura de elemento
@@ -154,7 +196,7 @@ void SemiLagrangean::computeFreeSurface(real dt)
 void SemiLagrangean::setCentroid()
 {
  int v[NUMGLEU];
- real aux;
+ double aux;
 
  for( int mele=0;mele<numElems;mele++ )
  {
@@ -186,7 +228,7 @@ void SemiLagrangean::setCentroid()
 // void SemiLagrangean::setQuad()
 // {
 //  int v[NUMGLEU];
-//  real aux;
+//  double aux;
 // 
 //  for( int mele=0;mele<numElems;mele++ )
 //  {
@@ -275,9 +317,9 @@ void SemiLagrangean::setCentroid()
 // }// fim do metodo compute -> setQuad
 //-------------------------------------------------- 
 
-void SemiLagrangean::getDepartElem(real dt)
+void SemiLagrangean::getDepartElem(double dt)
 {
- real xP,yP,zP;
+ double xP,yP,zP;
 
  clVector xParticle = *X - velU*dt; 
  clVector yParticle = *Y - velV*dt;
@@ -299,9 +341,38 @@ void SemiLagrangean::getDepartElem(real dt)
  } 
 } // fim do metodo compute -> getDepartElem
 
-void SemiLagrangean::getDepartElemQuad(real dt)
+void SemiLagrangean::getDepartElemPBCFix(double dt)
 {
- real xP,yP,zP;
+ double xP,yP,zP;
+
+ clVector xParticle = *X - velU*dt; 
+ clVector yParticle = *Y - velV*dt;
+ clVector zParticle = *Z - velW*dt;
+
+ list<int> plist;
+ list<int>::iterator mele;
+
+ for (int ii = 0; ii < numVerts; ii++)
+ {
+  plist = neighbourElem->at(ii);
+  mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
+
+  xP = xParticle.Get(ii);
+  yP = yParticle.Get(ii);
+  zP = zParticle.Get(ii);
+
+  if ( xP < X->Min() ) // PBC repair
+  {
+    xParticle.Set(ii,xParticle.Get(ii) + X->Max() - X->Min());
+  }
+  jumpToElem(*mele,ii,xP,yP,zP);
+ } 
+} // fim do metodo compute -> getDepartElemPBCFix
+
+
+void SemiLagrangean::getDepartElemQuad(double dt)
+{
+ double xP,yP,zP;
 
  clVector xParticle = *X - velU*dt; 
  clVector yParticle = *Y - velV*dt;
@@ -323,10 +394,39 @@ void SemiLagrangean::getDepartElemQuad(real dt)
  } 
 } // fim do metodo compute -> getDepartElemQuad
 
-// rotina usada em simulacao FREE SURFACE
-void SemiLagrangean::getDepartElem2(real dt)
+
+void SemiLagrangean::getDepartElemQuadPBCFix(double dt)
 {
- real xP,yP,zP;
+ double xP,yP,zP;
+
+ clVector xParticle = *X - velU*dt; 
+ clVector yParticle = *Y - velV*dt;
+ clVector zParticle = *Z - velW*dt;
+
+ list<int> plist;
+ list<int>::iterator mele;
+
+ for (int ii = 0; ii < numNodes; ii++)
+ {
+  plist = neighbourElem->at(ii);
+  mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
+
+  xP = xParticle.Get(ii);
+  yP = yParticle.Get(ii);
+  zP = zParticle.Get(ii);
+
+  if ( xP < X->Min() ) // PBC repair
+  {
+    xParticle.Set(ii,xParticle.Get(ii) + X->Max() - X->Min());
+  }
+  jumpToElemQuad(*mele,ii,xP,yP,zP);
+ } 
+} // fim do metodo compute -> getDepartElemQuadPBCFix
+
+// rotina usada em simulacao FREE SURFACE
+void SemiLagrangean::getDepartElem2(double dt)
+{
+ double xP,yP,zP;
 
  //clVector xParticle = *X; 
  //clVector yParticle = *Y - vSol*dt;
@@ -360,10 +460,10 @@ void SemiLagrangean::getDepartElem2(real dt)
 // verifica se esta dentro do elemento, se estiver calcula os
 // coeficientes de interpolacao (convLin). Se nao encontrar e tiver
 // vizinho, pula para o novo vizinho. Se nao, interpola na face
-void SemiLagrangean::jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R2Z)
+void SemiLagrangean::jumpToElem(int destElem,int iiVert,double R2X,double R2Y,double R2Z)
 {
- real l1,l2,l3,l4;
- real Bl1,Bl2,Bl3;
+ double l1,l2,l3,l4;
+ double Bl1,Bl2,Bl3;
  int v[4],v1,v2,v3,v4,vjump;
  int ib1=0;
  int ib2=0;
@@ -415,12 +515,12 @@ void SemiLagrangean::jumpToElem(int destElem,int iiVert,real R2X,real R2Y,real R
 // verifica se esta dentro do elemento, se estiver calcula os
 // coeficientes de interpolacao (convLin). Se nao encontrar e tiver
 // vizinho, pula para o novo vizinho. Se nao, interpola na face
-void SemiLagrangean::jumpToElemQuad(int destElem,int iiVert,real R2X,real R2Y,real R2Z)
+void SemiLagrangean::jumpToElemQuad(int destElem,int iiVert,double R2X,double R2Y,double R2Z)
 {
- real l1,l2,l3,l4;
- real N1,N2,N3,N4,N5,N6,N7,N8,N9,N10;
- real Bl1,Bl2,Bl3;
- real BN1,BN2,BN3,BN4,BN5,BN6;
+ double l1,l2,l3,l4;
+ double N1,N2,N3,N4,N5,N6,N7,N8,N9,N10;
+ double Bl1,Bl2,Bl3;
+ double BN1,BN2,BN3,BN4,BN5,BN6;
  int v[NUMGLEU],vjump;
  int ib1=0;
  int ib2=0;
@@ -527,39 +627,39 @@ void SemiLagrangean::jumpToElemQuad(int destElem,int iiVert,real R2X,real R2Y,re
 //       detx          dety
 // x1 = ------   x2 = ------   x3 = 1.0-x1-x2
 //       det            det
-void SemiLagrangean::computeIntercept(int ii,real R2X,real R2Y,real R2Z,
-  int ib1,int ib2,int ib3,real *Bl1,real *Bl2,real *Bl3)
+void SemiLagrangean::computeIntercept(int ii,double R2X,double R2Y,double R2Z,
+  int ib1,int ib2,int ib3,double *Bl1,double *Bl2,double *Bl3)
 {
- real R1X = X->Get(ii); real R1Y = Y->Get(ii); real R1Z = Z->Get(ii);
+ double R1X = X->Get(ii); double R1Y = Y->Get(ii); double R1Z = Z->Get(ii);
 
- real B1X = X->Get(ib1); real B1Y = Y->Get(ib1); real B1Z = Z->Get(ib1);
- real B2X = X->Get(ib2); real B2Y = Y->Get(ib2); real B2Z = Z->Get(ib2);
- real B3X = X->Get(ib3); real B3Y = Y->Get(ib3); real B3Z = Z->Get(ib3);
+ double B1X = X->Get(ib1); double B1Y = Y->Get(ib1); double B1Z = Z->Get(ib1);
+ double B2X = X->Get(ib2); double B2Y = Y->Get(ib2); double B2Z = Z->Get(ib2);
+ double B3X = X->Get(ib3); double B3Y = Y->Get(ib3); double B3Z = Z->Get(ib3);
 
- real a1 = B1X-B3X; real b1 = B2X-B3X; real c1 = R1X-R2X; real d1 = R1X-B3X;
- real a2 = B1Y-B3Y; real b2 = B2Y-B3Y; real c2 = R1Y-R2Y; real d2 = R1Y-B3Y;
- real a3 = B1Z-B3Z; real b3 = B2Z-B3Z; real c3 = R1Z-R2Z; real d3 = R1Z-B3Z;
+ double a1 = B1X-B3X; double b1 = B2X-B3X; double c1 = R1X-R2X; double d1 = R1X-B3X;
+ double a2 = B1Y-B3Y; double b2 = B2Y-B3Y; double c2 = R1Y-R2Y; double d2 = R1Y-B3Y;
+ double a3 = B1Z-B3Z; double b3 = B2Z-B3Z; double c3 = R1Z-R2Z; double d3 = R1Z-B3Z;
 
- real det  = (a1*b2*c3)+(a3*b1*c2)+(a2*b3*c1)-
+ double det  = (a1*b2*c3)+(a3*b1*c2)+(a2*b3*c1)-
              (a3*b2*c1)-(a1*b3*c2)-(a2*b1*c3);
- real detx = (d1*b2*c3)+(d3*b1*c2)+(d2*b3*c1)-
+ double detx = (d1*b2*c3)+(d3*b1*c2)+(d2*b3*c1)-
              (d3*b2*c1)-(d1*b3*c2)-(d2*b1*c3);
- real dety = (a1*d2*c3)+(a3*d1*c2)+(a2*d3*c1)-
+ double dety = (a1*d2*c3)+(a3*d1*c2)+(a2*d3*c1)-
              (a3*d2*c1)-(a1*d3*c2)-(a2*d1*c3);
 
- real x1 = detx/det;
- real x2 = dety/det;
+ double x1 = detx/det;
+ double x2 = dety/det;
 
  *Bl1 = x1;
  *Bl2 = x2;
  *Bl3 = 1.0-*Bl1-*Bl2;
 }
 
-bool SemiLagrangean::testElement(int mele,int ii,real xP,real yP,real zP, real *l1,real *l2,real *l3,real *l4)
+bool SemiLagrangean::testElement(int mele,int ii,double xP,double yP,double zP, double *l1,double *l2,double *l3,double *l4)
 {
  int v[NUMGLE];
- real V,V1,V2,V3;
- real EPSlocal = 10e-6;
+ double V,V1,V2,V3;
+ double EPSlocal = 10e-6;
 
   for( int n=0;n<NUMGLE;n++ )
    v[n] = (int) IEN->Get(mele,n);

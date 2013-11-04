@@ -235,33 +235,33 @@ private:
   clMatrix *IEN;
   SurfaceMesh *surfMesh;
   clVector *interfaceDistance;
-  vector<real> triEdge;
+  vector<double> triEdge;
   clVector *heaviside,*edgeSize;
   clVector *elemIdRegion,*vertIdRegion;
   list<int> *inElem,*outElem;
   vector< list<int> >* neighbourPoint;
-  vector<real> averageTriLength;
+  vector<double> averageTriLength;
   // mesh indexes
   vector<int> isp,ispc,rsp,rspn,rspc,ip,ipd; 
   vector<int> rp,rpi,rpd,rpdist,rph,rpv,csp,flip; 
   vector<int> spc,spp;
   vector<int> idMaxVolume,idMinVolume,intet;
-  vector<real> maxVolume,minVolume;
+  vector<double> maxVolume,minVolume;
   vector<int> idMaxArea,idMinArea;
-  vector<real> maxArea,minArea;
-  vector<real> maxLength,minLength;
+  vector<double> maxArea,minArea;
+  vector<double> maxLength,minLength;
   vector<int> numSurfElems,numSurfVerts;
-  vector<real> initSurfaceVolume,initSurfaceArea,initSurfaceRadius;
-  vector<real> surfaceVolume,surfaceArea,surfaceRadius;
-  vector<real> errorVolume,errorArea;
-  vector<real> dVolume,dArea;
+  vector<double> initSurfaceVolume,initSurfaceArea,initSurfaceRadius;
+  vector<double> surfaceVolume,surfaceArea,surfaceRadius;
+  vector<double> errorVolume,errorArea;
+  vector<double> dVolume,dArea;
 
   Simulator3D *s;
-  real Re,Sc,We,Fr,alpha,beta,simTime;
-  real dt,cfl,dtGravity,dtSurfaceTension;
-  real dtSemiLagrangian,dtLagrangian;
-  real mu_in,mu_out,rho_in,rho_out,sigma;
-  real uRef,vRef,wRef,xRef,yRef,zRef;
+  double Re,Sc,We,Fr,alpha,beta,simTime;
+  double dt,cfl,dtGravity,dtSurfaceTension;
+  double dtSemiLagrangian,dtLagrangian;
+  double mu_in,mu_out,rho_in,rho_out,sigma;
+  double uRef,vRef,wRef,xRef,yRef,zRef;
   clVector *uAnt,*cAnt;
   clMatrix *M,*K,*G,*D,*gx,*gy,*gz;
   clVector *uSol,*vSol,*wSol,*pSol,*cSol;
@@ -272,7 +272,7 @@ private:
   clVector *mu,*rho;
   clVector *hSmooth,*gravity;
   int iter;
-  real c1,c2,c3,d1,d2;
+  double c1,c2,c3,d1,d2;
 };
 
 

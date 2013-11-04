@@ -34,24 +34,24 @@ int main(int argc, char **argv)
   *
   * */
  int iter = 0;
- real Re = 100;
- real Sc = 1;
- real We = 10;
- //real We = 0.1162;
- real Fr = 10;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
+ double Re = 100;
+ double Sc = 1;
+ double We = 10;
+ //double We = 0.1162;
+ double Fr = 10;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 1.0;  // smooth vel
+ double c3 = 10.0;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
+ double alpha = 1;
 
- real cfl = 0.8;
+ double cfl = 0.8;
 
- real mu_in = 0.01;
- real mu_out = 1.00;
- real rho_in = 0.001;
- real rho_out = 1.0;
+ double mu_in = 0.01;
+ double mu_out = 1.00;
+ double rho_in = 0.001;
+ double rho_out = 1.0;
 
  string meshFile = "circular.msh";
  //string meshFile = "micro.msh";
@@ -265,8 +265,8 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- real vinst=0;
- real vref=0;
+ double vinst=0;
+ double vref=0;
  int nIter = 3000;
  int nReMesh = 1;
 

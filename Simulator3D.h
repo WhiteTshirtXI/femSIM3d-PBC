@@ -71,15 +71,22 @@ class Simulator3D
 
   // PBC
   	void assemblePBC();
+  	void assembleCPBC();
     void setUnCoupledPBC();
-    void unCoupledPBC();
+    void unCoupledPBC(); // modified solution velocity+pressure
+	void unCoupledCPBC(); // modified solution scalar
 	void getPeriodic3DToAttrib(Periodic3D &_pbc);
 	void setPressureJump(double _pJump);
+	void setBetaPressureLiquid();
+	void setBetaFlowLiq(const char* _direction);
 	void inputVelocityPBC();
+	void initTaylorVortex();
+	void initTaylorGreenVortex();
 	void inputPurePressurePBC();
 	void setRHS_PBC();
 	void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
 	void sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b);
+	void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
 	void setCopyDirectionPBC(string _direction);
 	void stepSLPBCFix();
 
@@ -248,6 +255,7 @@ class Simulator3D
   clVector* getCAnt();
   clVector* getFint();
   clVector* getGravity();
+  clVector* getBetaFlowLiq();
   double getGrav();
   clDMatrix* getKappa();
   clMatrix* getK();
@@ -313,7 +321,6 @@ class Simulator3D
   string direction;
   clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
   clVector VecXMinGlob, VecXMaxGlob;
-  clVector PFlow;
   
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
@@ -346,6 +353,11 @@ class Simulator3D
   vector<double> centroidPosX,centroidPosY,centroidPosZ;
   vector<double> centroidPosXOld,centroidPosYOld,centroidPosZOld;
 
+  // PBC
+  double betaPressLiq_0, betaPressGas_0;
+  double betaPressLiq, betaPressGas;
+  double betaPressLiqAdimen, betaPressGasAdimen;
+
   // moving referential
   double uRef,vRef,wRef;
   double xRef,yRef,zRef;
@@ -366,13 +378,13 @@ class Simulator3D
   clVector uSL,vSL,wSL,cSL,uALE,vALE,wALE;
   clVector uSmooth,vSmooth,wSmooth,uSmoothCoord,vSmoothCoord,wSmoothCoord;
   clVector uSmoothSurface,vSmoothSurface,wSmoothSurface;
-  clVector fint,gravity,hSmooth,mu,rho,cp,kt;
+  clVector fint,gravity,betaFlowLiq,hSmooth,mu,rho,cp,kt;
   clVector heatFlux,heatFluxOld;
 
   clDMatrix kappaOld;
   clVector uALEOld,vALEOld,wALEOld;
   clVector uSolOld,vSolOld,wSolOld,pSolOld,cSolOld;
-  clVector fintOld,gravityOld,Fold,muOld,rhoOld,hSmoothOld,cpOld,ktOld;
+  clVector fintOld,gravityOld,betaFlowLiqOld,Fold,muOld,rhoOld,hSmoothOld,cpOld,ktOld;
 
   Solver *solverV,*solverP,*solverC;
 };

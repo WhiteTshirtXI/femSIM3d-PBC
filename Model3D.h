@@ -203,8 +203,9 @@ class Model3D
   void set2AxiBubblesBC();
   void setStepBC();
   void setStepPBC(); // <<<
-  void setTaylorVortex(); // <<<
   void setBubbleArrayPeriodicBC(); // <<<
+  void setNeumannPressureBC(); // <<<
+  void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
   void setWallStepBC();
   void setCStepBC();
   void setStepReservBC();
@@ -325,6 +326,10 @@ class Model3D
   list<int>* getInVert();
   list<int>* getOutElem();
   list<int>* getInElem();
+  vector<int>* getPbcIndicesLeft(); // PBC
+  vector<int>* getPbcIndicesRight(); // PBC
+  vector< vector<int> >* getPbcIndicesMaster(); // PBC
+  vector< vector<int> >* getPbcIndicesSlave(); // PBC
   double getMinEdge();
   void setTriEdge();
   void setTriEdge(vector< double > _triEdge);
@@ -432,6 +437,14 @@ class Model3D
   vector< list<int> > neighbourEdge; // elems que compart. a face do triangulo 
   list<int> boundaryVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
+
+  /* PBC */
+  vector<int> pbcIndicesLeft;
+  vector<int> pbcIndicesRight;
+  vector< vector<int> > pbcIndicesMaster;
+  vector< vector<int> > pbcIndicesSlave; 
+
 };
+
 
 #endif

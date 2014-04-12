@@ -794,42 +794,6 @@ void Model3D::setStepPBC()
  }
 }
 
-void Model3D::setTaylorVortex()
-{
-	#if NUMGLEU == 4
- 	double numBCPoints = numVerts;
-	#else
-	double numBCPoints = numNodes;
-	#endif
-
-	double yM = 0.5*( Y.Max() + Y.Min() );
-	double zM = 0.5*( Z.Max() + Z.Min() );
-
-	for ( int i = 0; i < numBCPoints; i++ )
-	{
-		double y = Y.Get(i) - yM;
-		double z = Z.Get(i) - zM;
-	
-		double r = sqrt( y*y + z*z );
-		double theta = atan2(z,y);
-
-		double r2 = ( Y.Max() - Y.Min() )/32;
-
-		double c1 = 10;
-
-		double vtheta = c1*r*( exp ( -r*r/r2 ) );
-
-		double U = 1;
-		double V = 0;
-		double W = 0;
-
-		uc.Set(i,U);
-		vc.Set(i, V - vtheta*sin(theta));
-		wc.Set(i, W + vtheta*cos(theta));
-	}
-
-}
-
 void Model3D::setWallStepBC()
 {
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
@@ -1002,6 +966,38 @@ void Model3D::setCouetteBC()
    pc.Set(i,0.0);
    outflow.Set(i,0);
   }
+ }
+}
+
+void Model3D::setCubeVortexBC()
+{
+#if NUMGLEU == 5
+ double numBCPoints = numVerts;
+#else
+ double numBCPoints = numNodes;
+#endif
+
+ for( int i=0;i<numBCPoints;i++ )
+ {
+	
+  if( (X.Get(i)==X.Max()) || (X.Get(i)==X.Min()) )
+  {
+   	idbcu.AddItem(i);
+  	uc.Set(i,0.0);
+  }
+ 
+  if( (Y.Get(i)==Y.Max()) || (Y.Get(i)==Y.Min()) )
+  {
+   	idbcu.AddItem(i);
+  	vc.Set(i,0.0);
+  }
+
+  if( (Z.Get(i)==Z.Max()) || (Z.Get(i)==Z.Min()) )
+  {
+   	idbcw.AddItem(i);
+  	wc.Set(i,0.0);
+  }
+
  }
 }
 
@@ -5014,6 +5010,25 @@ void Model3D::setBubbleArrayPeriodicBC()
 	     }
 	 }
 }
+
+void Model3D::setNeumannPressureBC()
+{
+	for (int i = 0; i < numVerts; ++i)
+	{
+		if ( ( fabs( X.Get(i) - 0.5*X.Max() ) < 0.01 ) &&
+		     ( fabs( Y.Get(i) - Y.Min()     ) < 0.01 ) &&
+		     ( fabs( Z.Get(i) - 0.5*Z.Max() ) < 0.01 ) )
+		{
+			idbcp.AddItem(i);
+			pc.Set(i,0.0);
+			cout << "Pressure index set: "<< i << endl;
+			break;
+		}
+		   
+	}
+}
+
+
 void Model3D::setGenericBC(double _vel)
 {    
  clearBC();
@@ -6906,6 +6921,10 @@ vector< list<int> >* Model3D::getNeighbourElem(){return &neighbourElem;}
 vector< list<int> >* Model3D::getNeighbourVert(){return &neighbourVert;}
 vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
 vector< list<int> >* Model3D::getNeighbourPoint(){return &neighbourPoint;}
+vector<int>* Model3D::getPbcIndicesLeft(){return &pbcIndicesLeft;} // PBC
+vector<int>* Model3D::getPbcIndicesRight(){return &pbcIndicesRight;} // PBC
+vector< vector<int> >* Model3D::getPbcIndicesMaster(){return &pbcIndicesMaster;} // PBC
+vector< vector<int> >* Model3D::getPbcIndicesSlave(){return &pbcIndicesSlave;} // PBC
 vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
 list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
@@ -7061,6 +7080,10 @@ void Model3D::operator=(Model3D &_mRight)
   inVert = _mRight.inVert;
   outElem = _mRight.outElem;
   inElem = _mRight.inElem;
+  pbcIndicesLeft = _mRight.pbcIndicesLeft; // PBC
+  pbcIndicesRight = _mRight.pbcIndicesRight; // PBC
+  pbcIndicesMaster = _mRight.pbcIndicesMaster; // PBC
+  pbcIndicesSlave = _mRight.pbcIndicesSlave; // PBC
 }
 
 void Model3D::saveVTKSurface( const char* _dir,

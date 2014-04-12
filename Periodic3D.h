@@ -38,6 +38,7 @@
 #include "colors.h"
 #include "Model3D.h"
 #include "LibTypes.h"
+#include "MathTools.h"
 
 class Periodic3D
 {
@@ -60,6 +61,7 @@ public:
     
 	/* VOID functions */
     void MountPeriodicVectors(Model3D &_M3D);
+    void MountPeriodicVectorsNew(Model3D &_M3D);
     void SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
                         clVector &_wVelocity, clVector &_VecXMin,
                         clVector &_VecXMax, int L, string direction);
@@ -91,6 +93,8 @@ private:
 	/* POINTER objects */
     Model3D *M3DPtr; // pointer to class Model3D
     clVector *XPtr, *YPtr, *ZPtr; // pointers to X,Y,Z vectors from class Model3D
+	vector<int> *MasterIndicesPtr;
+	vector<int> *SlaveIndicesPtr;
     
 	/* CLVECTOR objects */
 	clVector VecXMin, VecXMax; // stores indices of points over \Gammas_{left,right}
@@ -100,7 +104,11 @@ private:
     clVector YRightBoundaryVector; // stores the y-components of \Gamma_{right}
     clVector ZLeftBoundaryVector; // stores the z-components of \Gamma_{left}
     clVector ZRightBoundaryVector; // stores the z-components of \Gamma_{right}
-
+	
+	/* VECTOR OBJECTS */
+	vector<int> MasterIndices;
+	vector<int> SlaveIndices;
+	
 };
 
 #endif	/* PERIODIC3D_H */

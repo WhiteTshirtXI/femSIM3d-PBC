@@ -53,6 +53,8 @@ Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )
  yRef = 0.0;
  zRef = 0.0;
 
+ betaPressLiq = 0.0;
+
  allocateMemoryToAttrib();
 
 }
@@ -271,6 +273,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  kappa   = _sRight.kappa;
  fint    = _sRight.fint;
  gravity = _sRight.gravity;
+ betaFlowLiq = _sRight.betaFlowLiq;
  Fold    = _sRight.Fold;
  mu      = _sRight.mu;
  rho     = _sRight.rho;
@@ -296,6 +299,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  kappaOld   = _sRight.kappaOld;
  fintOld    = _sRight.fintOld;
  gravityOld = _sRight.gravityOld;
+ betaFlowLiqOld = _sRight.betaFlowLiqOld;
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
  cpOld      = _sRight.cpOld;
@@ -390,6 +394,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_sRight)
  kappaOld   = *_sRight.getKappa();
  fintOld    = *_sRight.getFint();
  gravityOld = *_sRight.getGravity();
+ betaFlowLiqOld = *_sRight.getBetaFlowLiq();
  muOld      = *_sRight.getMu();
  rhoOld     = *_sRight.getRho();
  cpOld     = *_sRight.getCp();
@@ -2243,6 +2248,7 @@ void Simulator3D::stepALE()
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
  //stepSL();
+ stepSLPBCFix(); // for PBC
 } // fecha metodo stepALE
 
 /* move nodes according to ALE velocity 
@@ -2436,6 +2442,86 @@ void Simulator3D::setGravity(const char* _direction)
  // update RHS
  //va = va + gravity;
 }
+
+
+/* Sets dimensionless pressure gradient for PBC applications, which
+ * acts on the flow in the streamwise direction only. Its construction
+ * is similar to the vector "gravity", except for the value set as
+ * input not always unitary.
+ *
+ * \param[in]: streamwise direction which the periodicity applies to.  
+ * \param[out]: pressure gradient 
+ * */
+void Simulator3D::setBetaFlowLiq(const char* _direction)
+{
+ betaPressLiqAdimen = betaPressLiq;
+
+ clVector px(numNodes);
+ clVector py(numNodes);
+ clVector pz(numNodes);
+
+ if( strcmp( _direction,"x") == 0 || 
+     strcmp( _direction,"+x") == 0 || 
+     strcmp( _direction,"X") == 0 || 
+     strcmp( _direction,"+X") == 0 ) 
+ {
+  px.SetAll(betaPressLiqAdimen);
+  py.SetAll(0.0);
+  pz.SetAll(0.0);
+ }
+ else if( strcmp( _direction,"y") == 0 || 
+     strcmp( _direction,"+y") == 0 || 
+     strcmp( _direction,"Y") == 0 || 
+     strcmp( _direction,"+Y") == 0 ) 
+ {
+  px.SetAll(0.0);
+  py.SetAll(betaPressLiqAdimen);
+  pz.SetAll(0.0);
+ }
+ else if( strcmp( _direction,"z") == 0 || 
+     strcmp( _direction,"+z") == 0 || 
+     strcmp( _direction,"Z") == 0 || 
+     strcmp( _direction,"+Z") == 0 ) 
+ {
+  px.SetAll(0.0);
+  py.SetAll(0.0);
+  pz.SetAll(betaPressLiqAdimen);
+ }
+ else if( strcmp( _direction,"-x") == 0 || 
+     strcmp( _direction,"-X") == 0 ) 
+ {
+  px.SetAll(-1.0*betaPressLiqAdimen);
+  py.SetAll(0.0);
+  pz.SetAll(0.0);
+ }
+ else if( strcmp( _direction,"-y") == 0 || 
+     strcmp( _direction,"-Y") == 0 ) 
+ {
+  px.SetAll(0.0);
+  py.SetAll(-1.0*betaPressLiqAdimen);
+  pz.SetAll(0.0);  
+ }
+ else if( strcmp( _direction,"-z") == 0 || 
+     strcmp( _direction,"-Z") == 0 ) 
+ {
+  px.SetAll(0.0);
+  py.SetAll(0.0);
+  pz.SetAll(-1.0*betaPressLiqAdimen);
+ }
+ else 
+ {
+  px.SetAll(0.0);
+  py.SetAll(0.0);
+  pz.SetAll(0.0);
+ }
+
+ betaFlowLiq.Dim(0);
+ betaFlowLiq.Append(px);
+ betaFlowLiq.Append(py);
+ betaFlowLiq.Append(pz);
+
+}
+
 
 void Simulator3D::setGravityBoussinesq(const char* _direction)
 {
@@ -2690,6 +2776,42 @@ void Simulator3D::unCoupledC()
  cSol = cTilde;
 }
 
+void Simulator3D::unCoupledCPBC()
+{
+ clVector vcIp(numVerts);
+ clVector b1cTilde;
+ Periodic3D pbc;
+
+ vcIp = vcc.MultVec(ipc); // operacao vetor * vetor (elemento a elemento)
+ b1cTilde = b1c + vcIp; //<<< Por que duplicado??
+
+ b1cTilde = b1cTilde + 
+        //dt*invMcLumped*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+        invC*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+
+ //*** modifying r.h.s. for scalar
+ sumIndexPBCScalar(VecXMin,VecXMax,b1cTilde);
+
+ //*** Reassemble (scalar field)
+ assembleCPBC();
+
+ // solving scalar modified system AcTilde cTilde = b1cTilde
+ cout << endl;
+ cout << " --------> solving scalar ----------- " << endl;
+ solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
+ cout << " ------------------------------------ " << endl;
+ cout << endl;
+
+ //*** copying scalar 
+ pbc.SetPureScalarPBC(cTilde,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+
+ // comentar em caso de utilizacao de setInterface()
+ // pois cSol nao pode ser atualizado
+ cSol = cTilde;
+}
+
+
+
 void Simulator3D::saveOldData()
 {
  uSolOld     = uSol;
@@ -2702,6 +2824,7 @@ void Simulator3D::saveOldData()
  wALEOld     = wALE;
  fintOld     = fint;
  gravityOld  = gravity;
+ betaFlowLiqOld  = betaFlowLiq;
  kappaOld    = kappa;
  muOld       = mu;
  rhoOld      = rho;
@@ -2951,8 +3074,7 @@ void Simulator3D::setUnCoupledPBC()
  cout << endl;
 
  ETilde = E; 
- //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
-} // fecha metodo setUnCoupledBC 
+} // fecha metodo setUnCoupledPBC 
 
 
 void Simulator3D::setUnCoupledCBC()
@@ -3864,6 +3986,7 @@ clVector* Simulator3D::getWALE(){return &wALE;}
 clVector* Simulator3D::getWALEOld(){return &wALEOld;} 
 clVector* Simulator3D::getFint(){return &fint;}
 clVector* Simulator3D::getGravity(){return &gravity;}
+clVector* Simulator3D::getBetaFlowLiq(){return &betaFlowLiq;}
 double Simulator3D::getGrav(){return g;}
 clDMatrix* Simulator3D::getKappa(){return &kappa;}
 clMatrix* Simulator3D::getK(){return &K;}
@@ -4062,6 +4185,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappa   = _sRight.kappa;
  fint    = _sRight.fint;
  gravity = _sRight.gravity;
+ betaFlowLiq = _sRight.betaFlowLiq;
  Fold    = _sRight.Fold;
  mu      = _sRight.mu;
  rho     = _sRight.rho;
@@ -4087,6 +4211,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappaOld   = _sRight.kappaOld;
  fintOld    = _sRight.fintOld;
  gravityOld = _sRight.gravityOld;
+ betaFlowLiqOld = _sRight.betaFlowLiqOld;
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
  cpOld      = _sRight.cpOld;
@@ -4739,6 +4864,7 @@ void Simulator3D::allocateMemoryToAttrib()
  kappaOld.Dim( numNodes );
  fintOld.Dim( numNodes );
  gravityOld.Dim( numVerts );
+ betaFlowLiqOld.Dim( numVerts );
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
  cpOld.Dim( numVerts );
@@ -4749,6 +4875,7 @@ void Simulator3D::allocateMemoryToAttrib()
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
  gravity.Dim( 3*numNodes );
+ betaFlowLiq.Dim( 3*numNodes );
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  cp.Dim( numVerts );
@@ -5247,32 +5374,16 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 	VecXMidVerts = pbc->GetVecXMidVerts();
 	VecXMinGlob.Dim(0);
 	VecXMaxGlob.Dim(0);
-	PFlow.Dim(3*numNodes);
+	betaFlowLiq.Dim(3*numNodes);
 
 } // fecha metodo
-
-
-void Simulator3D::setPressureJump(double _pJump)
-{
-	pJump = _pJump;
-	PFlow.SetAll(0);
-
-	for (int i = 0; i < numNodes; i++)
-	{
-	 	PFlow.Set(i,pJump);
-	}
-
-} // fecha metodo
-
 
 void Simulator3D::assemblePBC()
 {
- 	int i,j,ibL,ibR;
-	double aux, diagU, diagV, diagW;
+ 	register int i,j;
+	int ibL,ibR;
 
 	clVector VecXMinAux, VecXMaxAux;
-
-	nyPointsL = pbc->GetNyPointsL(); // nyPointsL was arriving here differently of the initial value. I don't know why... Step forced.
 
 	VecXMinAux.Dim(nyPointsL);
 	VecXMaxAux.Dim(nyPointsL);
@@ -5285,6 +5396,8 @@ void Simulator3D::assemblePBC()
 	 * ii) Now, the positions that stayed opened receive the same 
 	 * values at right. */
 
+	if ( direction == "RL" )
+	{
 	// ATilde
 	  for ( i = 0; i < nyPointsL; i++ ) // loop paired points
 	  {
@@ -5310,7 +5423,7 @@ void Simulator3D::assemblePBC()
 			 ATilde.Set(ibR + 2*numNodes,j,ATildeRowN);
 	      }
 
-		  for ( j =0; j < 3*numNodes; j++ ) // loop columns
+		  for ( j = 0; j < 3*numNodes; j++ ) // loop columns
 		  {
 		   	 // x-direction
 			 double ATildeColumn = ATilde.Get(j,ibR);
@@ -5318,27 +5431,22 @@ void Simulator3D::assemblePBC()
 			 ATilde.Set(j,ibR,ATildeColumn);
 
 		   	 // y-direction
-			 ATildeColumn = ATilde.Get(j,ibR + numNodes);
-			 ATildeColumn += ATilde.Get(j,ibL + numNodes);
-			 ATilde.Set(j,ibR + numNodes,ATildeColumn);
+			 double ATildeColumnN = ATilde.Get(j,ibR + numNodes);
+			 ATildeColumnN += ATilde.Get(j,ibL + numNodes);
+			 ATilde.Set(j,ibR + numNodes,ATildeColumnN);
 
 		   	 // z-direction
-			 ATildeColumn = ATilde.Get(j,ibR + 2*numNodes);
-			 ATildeColumn += ATilde.Get(j,ibL + 2*numNodes);
-			 ATilde.Set(j,ibR + 2*numNodes,ATildeColumn);
+			 ATildeColumnN = ATilde.Get(j,ibR + 2*numNodes);
+			 ATildeColumnN += ATilde.Get(j,ibL + 2*numNodes);
+			 ATilde.Set(j,ibR + 2*numNodes,ATildeColumnN);
 		  }
 	  }
 	
 	  for ( i = 0; i < nyPointsL; i++ )
 	  {
-	     // getting diagonal's values
-	     ibL = VecXMaxAux.Get(i);
-		 diagU = ATilde.Get(ibR,ibR);
-		 diagV = ATilde.Get(ibR + numNodes, ibR + numNodes);
-		 diagW = ATilde.Get(ibR + 2*numNodes, ibR + 2*numNodes);
 
 		 // eliminating rows and columns
-		 ibR = VecXMaxAux.Get(i);
+		 ibL = VecXMinAux.Get(i);
 		 ATilde.SetRowZero(ibL);
 		 ATilde.SetColumnZero(ibL);
 		 ATilde.SetRowZero(ibL + numNodes);
@@ -5347,16 +5455,13 @@ void Simulator3D::assemblePBC()
 		 ATilde.SetColumnZero(ibL + 2*numNodes);
 
 		 // changed diagonal's values
-		 //ATilde.Set(ibL,ibL,diagU);
-		 //ATilde.Set(ibL + numNodes,ibL + numNodes,diagV);
-		 //ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,diagW);
 	     ATilde.Set(ibL,ibL,1.0);
 	     ATilde.Set(ibL + numNodes,ibL + numNodes,1.0);
 	     ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+
 	  }
 
 	  // DTilde
-       
 	  for ( i = 0; i < nyPointsL; i++ )
 	  {
 	     ibL = VecXMinAux.Get(i);
@@ -5390,52 +5495,10 @@ void Simulator3D::assemblePBC()
 	  {
 
 		  ibL = VecXMinAux.Get(i);
-		  aux = DTilde.Get(ibR,ibR);
-
-		  ibR = VecXMaxAux.Get(i);
 		  DTilde.SetRowZero(ibL);
 		  DTilde.SetColumnZero(ibL);
 		  DTilde.SetColumnZero(ibL + numNodes);
 		  DTilde.SetColumnZero(ibL + 2*numNodes);
-
-          // ver 2D, pois o bloco daqui esta comentado.
-
-	  }
-
-	  // ETilde
-	  for (  i = 0; i < nyPointsL; i++ )
-	  {
-		  ibL = VecXMinAux.Get(i);
-		  ibR = VecXMaxAux.Get(i);
-	  
-		  for ( j = 0; j < numVerts; j++ ) // loop rows
-		  {
-			  double ETildeRow = ETilde.Get(ibR,j);
-			  ETildeRow += ETilde.Get(ibL,j);
-			  //<<ETilde.Set(ibR,j,ETildeRow);
-
-		  }
-
-		  for ( j = 0; j < numVerts; j++ ) // loop columns
-		  {
-			  double ETildeColumn = ETilde.Get(j,ibR);
-			  ETildeColumn += ETilde.Get(j,ibL);
-			  //<<ETilde.Set(j,ibR,ETildeColumn);
-              
-		  }
-	 
-	  }
-
-	  for ( i = 0; i < nyPointsL; i++ )
-	  {
-	      ibL = VecXMinAux.Get(i);
-		  aux = ETilde.Get(ibR,ibR);
-
-		  ibR = VecXMaxAux.Get(i);
-		  //<<ETilde.SetRowZero(ibL);
-		  //<<ETilde.SetColumnZero(ibL);
-		  //ETilde.Set(ibL,ibL,aux);
-		  //ETilde.Set(ibL,ibL,1.0);
 
 	  }
 
@@ -5473,42 +5536,143 @@ void Simulator3D::assemblePBC()
 
 	  for ( i = 0; i < nyPointsL; i++ )
 	  {
-		 ibL = VecXMinAux.Get(i);
-		 aux = GTilde.Get(ibR,ibR);
 
-		 ibR = VecXMaxAux.Get(i);
+		 ibL = VecXMinAux.Get(i);
 		 GTilde.SetRowZero(ibL);
 		 GTilde.SetRowZero(ibL + numNodes);
 		 GTilde.SetRowZero(ibL + 2*numNodes);
 		 GTilde.SetColumnZero(ibL);
-		 //GTilde.Set(ibL,ibL,aux);
-		 //GTilde.Set(ibL,ibL,1.0);
+		 GTilde.SetColumnZero(ibL + numNodes);
+		 GTilde.SetColumnZero(ibL + 2*numNodes);
 
-		 aux = GTilde.Get(ibR + numNodes,ibR);
-		 //GTilde.Set(ibL + numNodes,ibL,aux);
-		 //GTilde.Set(ibL + numNodes,ibL,1.0);
-		 //GTilde.Set(ibL + 2*numNodes,ibL,aux);
-		 //GTilde.Set(ibL + 2*numNodes,ibL,1.0);
 
 	  }
-
-	  // bloco da invA...
 	  
 	  //*** ETilde call
 	  ETilde = E - (( DTilde * invA) * GTilde );
 
 	  for ( i = 0; i < nyPointsL; i++ )
 	  {
-		  ibR = VecXMaxAux.Get(i);
-		  aux = ETilde.Get(ibR,ibR);
-
 		  ibL = VecXMinAux.Get(i);
 		  ETilde.SetRowZero(ibL);
 		  ETilde.SetColumnZero(ibL);
 		  ETilde.Set(ibL,ibL,1.0);		  
 	  }
 
+	}
+
+	/* Copying rows and columns from ibR to ibL. Idem, with inversed
+	 * indices. */
+	else
+	{
+		/* copy block! */
+	}
+
 } // fecha metodo
+
+
+/* Method should be used after SetCopyDirectionPBC() */
+void Simulator3D::assembleCPBC()
+{
+    register int i,j;
+	int ibL,ibR;
+  	
+	clVector VecXMinAux, VecXMaxAux;
+
+  	VecXMinAux.Dim(nyPointsL);
+  	VecXMaxAux.Dim(nyPointsL);
+    
+	VecXMin->CopyTo(0,VecXMinAux);
+  	VecXMax->CopyTo(0,VecXMaxAux);
+
+    /* Copying rows and columns from ibL into ibR: 
+	 * i) Remove the contributions from left and overloads in right;
+	 * ii) Now, the positions that stayed opened receive the same
+	 * values at right. */
+	  
+	if ( direction == "RL" )
+	{	 
+	// AcTilde
+      for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+      {
+	    // left and right nodes
+        ibL = VecXMinAux.Get(i);
+        ibR = VecXMaxAux.Get(i);
+        
+          for( j = 0; j < numVerts; j++ ) // loop rows
+          {
+              double AcTildeRow = AcTilde.Get(ibR,j);
+              AcTildeRow += AcTilde.Get(ibL,j);
+              AcTilde.Set(ibR,j,AcTildeRow);
+            
+		  }
+        
+          for( j = 0; j < numVerts; j++ ) // loop columns
+          {
+              double AcTildeColumn = AcTilde.Get(j,ibR);
+              AcTildeColumn += AcTilde.Get(j,ibL);
+              AcTilde.Set(j,ibR,AcTildeColumn);
+          }
+      }
+    
+	  for ( i = 0; i < nyPointsL; i++  )	 
+	  {
+
+		// eliminating rows and columns
+        ibL = VecXMinAux.Get(i);
+        AcTilde.SetRowZero(ibL);
+        AcTilde.SetColumnZero(ibL);
+		
+		// changed diagonal's values
+		AcTilde.Set(ibL,ibL,1.0);
+
+	  }
+    }
+
+	/* Copying rows and columns from ibR to ibL. Idem, with inversed
+	 * indices. */
+	else
+	{
+	// AcTilde
+      for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+      {
+	    // left and right nodes
+        ibL = VecXMinAux.Get(i);
+        ibR = VecXMaxAux.Get(i);
+        
+          for( j = 0; j < numVerts; j++ ) // loop rows
+          {
+              double AcTildeRow = AcTilde.Get(ibL,j);
+              AcTildeRow += AcTilde.Get(ibR,j);
+              AcTilde.Set(ibL,j,AcTildeRow);
+            
+          }
+        
+          for( j = 0; j < numVerts; j++ ) // loop columns
+          {
+              double AcTildeColumn = AcTilde.Get(j,ibL);
+              AcTildeColumn += AcTilde.Get(j,ibR);
+              AcTilde.Set(j,ibL,AcTildeColumn);
+            
+          }
+      }
+    
+	  for ( i = 0; i < nyPointsL; i++  )	 
+	  {
+
+		// eliminating rows and columns
+        ibR = VecXMaxAux.Get(i);
+        AcTilde.SetRowZero(ibR);
+        AcTilde.SetColumnZero(ibR);
+		
+		// changed diagonal's values
+		AcTilde.Set(ibR,ibR,1.0);
+	  }
+    
+     }
+
+} // close method assembleCPBC
+
 
 
 void Simulator3D::unCoupledPBC()
@@ -5535,24 +5699,32 @@ void Simulator3D::unCoupledPBC()
  //*** Reassemble
  assemblePBC();
 
- // resolve sistema ATilde uTilde = b
+ // resolve sistema ATilde uTilde = b1Tilde
  cout << " --------> solving velocity --------- " << endl;
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
  //*** copy uTilde to set it periodic
- uTildeU = uTilde.Copy(0,numNodes -1);
+ uTildeU = uTilde.Copy(0,numNodes - 1);
  uTildeV = uTilde.Copy(numNodes,2*numNodes - 1);
  uTildeW = uTilde.Copy(2*numNodes,3*numNodes - 1);
  pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
  //*** updated periodic velocity
  uTilde = uTildeU;
  uTilde.Append(uTildeV);
  uTilde.Append(uTildeW);
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
- // uvw = uTilde + surface tension + gravity
  if( rho_in <= rho_out ) // BUBBLE
  {
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
@@ -5571,6 +5743,9 @@ void Simulator3D::unCoupledPBC()
  
  //uvw = uTilde;
 
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
  /* 
   * Mass Transfer
@@ -5581,38 +5756,51 @@ void Simulator3D::unCoupledPBC()
                          (1.0/rho_inAdimen - 1.0/rho_outAdimen)
 						 *heatFlux;
 
+ ///*** setting b2 periodic, because DTilde*uvw already is.
+ sumIndexPBCPress(VecXMin,VecXMax,b2);
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
-
- //*** copy to global vector and drop IBR indices - pressure
-
- // resolve sistema E pTilde = b2
+ // resolve sistema E pTilde = b2Tilde
  cout << " --------> solving pressure --------- " << endl;
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
  cout << " ------------------------------------ " << endl;
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
  
  //*** copying pressure
  pbc.SetPurePressurePBC(pTilde,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
- //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
  uvw = uvw - (invA * GTilde * pTilde);
- 
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
  uTildeU = uvw.Copy(0,numNodes - 1);
  uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
  uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
 
+ cout << uTilde.Get(164) << endl;
  pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
 
  //*** updated periodic velocity
- uvw = uTildeU;
- uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
- uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
+ uSol = uTildeU;
+ vSol = uTildeV;
+ wSol = uTildeW;
 
-
- uvw.CopyTo(         0,uSol);
- uvw.CopyTo(  numNodes,vSol);
- uvw.CopyTo(numNodes*2,wSol);
+ cout << getUSol()->Get(164) << endl;
 
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao
@@ -5623,11 +5811,28 @@ void Simulator3D::unCoupledPBC()
 } // fecha metodo unCoupledPBC 
 
 
+/* Sets the dimensionless pressure gradient for PBC application.
+ * 
+ * \param[in]: pressure drop, channel length, density of liquid,
+ * velocity (Quantities of reference).
+ * 
+ * 
+ * \remark Standard values for code verification against the Poiseuille 
+ * flow and recovery of the flow rate are Re = 1.0; betaPressLiq = 12.0.
+ *
+ */
+void Simulator3D::setBetaPressureLiquid()
+{
+     betaPressLiq = 12.0/Re;
+	
+}
+
+
 void Simulator3D::inputVelocityPBC()
 {
 	Periodic3D pbc;
 
-	clVector VecXMinAux, VecXMaxAux, VecXMidAux;
+	clVector VecXMinAux, VecXMaxAux;
 
 	VecXMinAux.Dim(nyPointsL);
 	VecXMaxAux.Dim(nyPointsL);
@@ -5635,7 +5840,6 @@ void Simulator3D::inputVelocityPBC()
 	VecXMin->CopyTo(0,VecXMinAux);
 	VecXMax->CopyTo(0,VecXMaxAux);
 
-	string aux = direction;
 	pbc.SetVelocityPBC(uSol, vSol, wSol, VecXMinAux, VecXMaxAux, nyPointsL, direction);
 
 	*uc = uSol;
@@ -5656,7 +5860,6 @@ void Simulator3D::inputPurePressurePBC()
 	VecXMin->CopyTo(0,VecXMinAux);
 	VecXMax->CopyTo(0,VecXMaxAux);
 
-	string aux = direction;
 	pbc.SetPurePressurePBC(pSol, VecXMinAux, VecXMaxAux, nyPointsL, direction);
 
 	*pc = uSol;
@@ -5666,7 +5869,8 @@ void Simulator3D::inputPurePressurePBC()
 
 void Simulator3D::setRHS_PBC()
 {
-	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + (1/Fr*Fr)*Mrho*gravity;
+	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW 
+	 	 + M*betaFlowLiq;
 
 } // fecha metodo
 
@@ -5687,22 +5891,43 @@ void Simulator3D::sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector&
        _b.Set(ibR + numNodes, uL + uR);
        _b.Set(ibL + numNodes,0);
  
+       uL = _b.Get(ibL + 2*numNodes);
+       uR = _b.Get(ibR + 2*numNodes);
+       _b.Set(ibR + 2*numNodes, uL + uR);
+       _b.Set(ibL + 2*numNodes,0);
+
      }
 } // fecha metodo
 
-void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b)
+void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _p)
 {
    for (int i = 0; i < _indexL->Dim(); i++)
    {
       int ibL = _indexL->Get(i);
       int ibR = _indexR->Get(i);
 
-      double pL = _b.Get(ibL);
-      double pR = _b.Get(ibR);
-      _b.Set(ibR,pL + pR);
-      _b.Set(ibL,0);
+      double pL = _p.Get(ibL);
+      double pR = _p.Get(ibR);
+      _p.Set(ibR,pL + pR);
+      _p.Set(ibL,0);
 
     }
+} // fecha metodo
+
+void Simulator3D::sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _s)
+{
+   for (int i = 0; i < _indexL->Dim(); i++)
+   {
+      int ibL = _indexL->Get(i);
+      int ibR = _indexR->Get(i);
+
+      double qL = _s.Get(ibL);
+      double qR = _s.Get(ibR);
+      _s.Set(ibR,qL + qR);
+      _s.Set(ibL,0);
+
+    }
+
 } // fecha metodo
 
 
@@ -5712,3 +5937,80 @@ void Simulator3D::setCopyDirectionPBC(string _direction)
  	direction = _direction;
 
 } // fecha metodo
+
+
+/* \brief Initializes a Taylor vortex in the flow. */
+void Simulator3D::initTaylorVortex()
+{
+ 	init();
+	#if NUMGLEU == 5
+ 	double numBCPoints = numVerts;
+	#else
+	double numBCPoints = numNodes;
+	#endif
+
+	double xM = 0.25*( 3.0*X->Max() + X->Min() );
+	double yM = 0.5*( Y->Max() + Y->Min() );
+
+	for ( int i = 0; i < numBCPoints; i++ )
+	{
+		double x = X->Get(i) - xM;
+		double y = Y->Get(i) - yM;
+	
+		double r = sqrt( x*x + y*y );
+		double theta = atan2(y,x);
+
+		double r2 = ( Y->Max() - Y->Min() )/40;
+
+		double c1 = 0.5;
+
+		double vtheta = c1*r*( exp ( -r*r/r2 ) );
+
+		double U = 1.0;
+		double V = 0.0;
+		double W = 0.0;
+
+		uSol.Set(i, U - vtheta*sin(theta));
+		vSol.Set(i, V + vtheta*cos(theta));
+		wSol.Set(i, W);
+
+		uSolOld.Set(i, U - vtheta*sin(theta));
+		vSolOld.Set(i, V + vtheta*cos(theta));
+		wSolOld.Set(i, W);
+	}
+
+}
+
+/* \brief Intializes a Taylor-Green  vortex in the flow. */ 
+void Simulator3D::initTaylorGreenVortex()
+{
+ 	init();
+	#if NUMGLEU == 4
+ 	double numBCPoints = numVerts;
+	#else 
+ 	double numBCPoints = numNodes;
+	#endif
+
+	for ( int i = 0; i < numBCPoints; i++ )
+	{
+	   double x = X->Get(i);
+	   double y = Y->Get(i);
+
+	   double u =   sin(PI_CONSTANT*x)*cos(PI_CONSTANT*y);
+	   double v = - cos(PI_CONSTANT*x)*sin(PI_CONSTANT*y);
+	   double w = 0.0;
+
+	   double U = 0.0;
+	   double V = 0.0;
+	   double W = 0.0;
+	  
+	   uSol.Set(i, U + u);
+	   vSol.Set(i, V + v);
+	   wSol.Set(i, W + w);
+
+	   uSolOld.Set(i, U + u);
+	   vSolOld.Set(i, V + v);
+	   wSolOld.Set(i, W + w);
+	}
+}
+

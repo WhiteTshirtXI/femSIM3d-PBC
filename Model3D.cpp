@@ -4645,13 +4645,146 @@ void Model3D::setCDiskBC()
  }
 }
 
+
 void Model3D::setGenericBC()
 {    
  /* This IF selects the priority boundary conditions to be set on the
   * phyBounds vector. Note that only these names will be written on top
   * of the others. For instance if a corner point has 2 types of
   * boundary condition, the phyNames below will be written.
+  * 
+  * \remark PBC has priority over all the conditions already declared, 
+  * namely:
+  * 
+  * - slip walls    : 3rd priority
+  * - inflow walls  : 2nd priority
+  * - no-slip walls : 1st priority
+  *
+  * For this reason, any corner point will be set with periodic condition
+  * and the new ordering is:
+  *
+  * - periodic walls : 4th priority
+  * - slip walls     : 3rd priority
+  * - inflow walls   : 2nd priority
+  * - no-slip walls  : 1st priority
+  *
   * */ 
+
+  /* This algorithm sets up physical groups of periodic boundary
+  * conditions for a unique pair of master/slave boundaries defined as
+  * 
+  * "wallLeft"  and   "wallRight" 
+  *
+  * at ".geo" file. 
+  *
+  */
+
+ // auxiliary x,y,z pbc coordinates
+ vector<double> xpbcMaster(0);
+ vector<double> ypbcMaster(0);
+ vector<double> zpbcMaster(0);
+ vector<double> xpbcSlave(0);
+ vector<double> ypbcSlave(0);
+ vector<double> zpbcSlave(0);
+ 
+ for( int i = 0; i < surfMesh.numElems; i++ )
+ {		
+  	int v1 = surfMesh.IEN.Get(i,0);
+  	int v2 = surfMesh.IEN.Get(i,1);
+	int v3 = surfMesh.IEN.Get(i,2);
+  	int id = surfMesh.idRegion.Get(i);
+	
+	// left indices
+  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+  	{
+		pbcIndicesLeft.push_back(v1);
+		pbcIndicesLeft.push_back(v2);
+		pbcIndicesLeft.push_back(v3);
+	}
+
+	// right indices
+  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	{
+		pbcIndicesRight.push_back(v1);
+		pbcIndicesRight.push_back(v2);
+		pbcIndicesRight.push_back(v3);
+
+	}
+	
+ }
+
+ // removing duplicatas
+ set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+ set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+ set<int>::iterator itsetOne;
+ set<int>::iterator itsetTwo;
+
+ // resizing to reallocate
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+			
+ for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
+ {
+		cout << "Index: " << *itsetOne << endl;
+		pbcIndicesLeft.push_back(*itsetOne);
+				 
+		// master coordinates
+		double xL = surfMesh.X.Get(*itsetOne);
+		double yL = surfMesh.Y.Get(*itsetOne);
+		double zL = surfMesh.Y.Get(*itsetOne);
+		xpbcMaster.push_back(xL);
+		ypbcMaster.push_back(yL);
+		zpbcMaster.push_back(zL);
+ }
+			 
+	cout << "Master nodes stored." << endl;
+			
+ for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+ {
+		cout << "Index: " << *itsetTwo << endl;
+		pbcIndicesRight.push_back(*itsetTwo);
+
+		// slave coordinates
+		double xR = surfMesh.X.Get(*itsetTwo);
+		double yR = surfMesh.Y.Get(*itsetTwo);
+		double zR = surfMesh.Z.Get(*itsetTwo);
+		xpbcSlave.push_back(xR);
+		ypbcSlave.push_back(yR);
+		zpbcSlave.push_back(zR);
+ }
+
+	cout << "Slave nodes stored." << endl;
+
+	int sizeM = pbcIndicesLeft.size();
+	int sizeS = pbcIndicesRight.size();
+			
+	// spatial correspondence checking
+	if ( sizeM != sizeS )
+	{
+		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+		cerr << warn << endl;
+	}
+	// pairing checking
+	else
+	{
+		for (int is = 0; is < sizeM; ++is)
+		{
+			double yM = ypbcMaster.at(is);
+			double zM = zpbcMaster.at(is);
+			double yS = ypbcSlave.at(is);
+			double zS = zpbcSlave.at(is);
+			
+			// simple extrusion assumed
+			if ( ( fabs( yS - yM ) > 1E-8 ) || 
+			     ( fabs( zS - zM ) > 1E-8 ) )
+			{
+				cout << "Index not periodic: " << is << endl;	
+			}
+			
+	 	}
+		
+	 }
+
  for( int i=0; i < surfMesh.numElems; i++ )
  {
   int v1 = surfMesh.IEN.Get(i,0);

@@ -69,11 +69,14 @@ public:
                             clVector &_VecXMax, int L, string direction);
     void SetJumpPressurePBC(clVector &_Pressure, clVector &_VecXMin,
                             clVector &_VecXMax, int L, double jump);
+    void SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin,
+                            clVector &_VecXMax, int L, string direction);
 	void ExtractMiddleVerts(const char *MeshFileName);
 	void ForcedParallelismY(int j, clVector _u, clVector _v);
 	void ForcedParallelismZ(int j, clVector _u, clVector _v);
 
 	void SetIndicesVector(vector<int>* _master, vector<int>* _slave);
+
 	/* POINTER functions */
 	clVector* GetVecXMin();
     clVector* GetVecXMax();

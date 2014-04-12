@@ -15,6 +15,7 @@
 
 #include <list>
 #include <vector>
+#include <set>
 #include <string.h>
 #include <iterator>
 #include <iostream>

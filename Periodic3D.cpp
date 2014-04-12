@@ -356,6 +356,58 @@ void Periodic3D::ForcedParallelismZ(int j, clVector _u, clVector _v)
 } /* End of function */
 
 
+
+/** \brief Sets the Periodic Boundary Condition for scalar through
+ * copy process. 
+ * 
+ *  \param[in] & _Scalar
+ *  \param[in] & _VecXMin;
+ *  \param[in] & _VecXMax;
+ *  \param[in] int L: number of boundary points;
+ *  \param[in] string direction: direction of copy
+ *
+ *  \note See method \link "::"<SetVelocityPBC> \endlink. 
+ *
+ */
+void Periodic3D::SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin, clVector &_VecXMax, int L, string direction)
+{
+    if ( direction == "RL" ) 
+	{
+	 	cout << "Copying scalar field from RIGHT to LEFT..." << endl;
+    	
+		int right;
+		double sRight;
+		
+		for (right = 0; right < L; right++)
+		{
+		  int index2 = _VecXMax.Get(right);
+		  int left = right;
+		  int index = _VecXMin.Get(left);
+		  sRight = _Scalar.Get(index2);
+		  _Scalar.Set(index,sRight);
+		}
+	}
+	else
+	{	
+	 	cout << "Copying scalar field from LEFT to RIGHT..." << endl;
+	    
+		int left;
+    	double sRight;
+    
+    	for (left = 0; left < L; left++) 
+    	{
+          int index = _VecXMin.Get(left); 
+          int right = left;
+          int index2 = _VecXMax.Get(right); 
+          sRight = _Scalar.Get(index2); 
+          _Scalar.Set(index,sRight); 
+    	}
+	}
+
+} /* End of function */
+
+
+
 /** \brief Sets the PBC for velocity through copy process.
  *  \param[in] & _uVelocity;
  *  \param[in] & _vVelocity;

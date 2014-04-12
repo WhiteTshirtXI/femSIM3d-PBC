@@ -35,6 +35,9 @@ Periodic3D::Periodic3D()
     VecXMin.Dim(0);
     VecXMax.Dim(0);
     VecXMid.Dim(0);
+
+	MasterIndices.resize(0);
+	SlaveIndices.resize(0);
 }
 
 
@@ -46,6 +49,8 @@ Periodic3D::Periodic3D(Model3D &_M3D)
     XPtr = M3DPtr->getX();
     YPtr = M3DPtr->getY();
     ZPtr = M3DPtr->getZ();
+	MasterIndicesPtr = M3DPtr->getPbcIndicesLeft();
+	SlaveIndicesPtr = M3DPtr->getPbcIndicesRight();
 }
 
 
@@ -61,10 +66,6 @@ Periodic3D::~Periodic3D() {}
  */
 void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
 {
-    int i, j, ibL, ibR;
-    double YLeft, YRight; // y-coordinates
-    double ZLeft, ZRight; // z-coordinates
-    
     const double XMin = XPtr->Min();
     const double XMax = XPtr->Max();
     
@@ -86,50 +87,135 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     }
     else /* If test of dimension is OK, mounts. */
     {
-        YLeftBoundaryVector.Dim(nyPointsL);
+	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
+        
+		YLeftBoundaryVector.Dim(nyPointsL);
         YRightBoundaryVector.Dim(nyPointsL);
         ZLeftBoundaryVector.Dim(nyPointsL);
         ZRightBoundaryVector.Dim(nyPointsL);
 
         clVector XAux;
         XAux = VecXMax;
-        
-        
-        for ( i = 0; i < nyPointsL; i++ )
+              
+        for ( int i = 0; i < nyPointsL; i++ )
         {
-            ibL = VecXMin.Get(i);
-            YLeft = YPtr->Get(ibL);
+            int ibL = VecXMin.Get(i);
+            int ibRAux = XAux.Get(i);
+
+			double YLeft = YPtr->Get(ibL);
             YLeftBoundaryVector.Set(i,YLeft);
-            ZLeft = ZPtr->Get(ibL);
+            double ZLeft = ZPtr->Get(ibL);
             ZLeftBoundaryVector.Set(i,ZLeft);
             
-            for ( j = 0; j < nyPointsL; j++ )
+            for ( int j = 0; j < nyPointsL; j++ )
             {
-                ibR = XAux.Get(j);
-                YRight = YPtr->Get(ibR);
-                ZRight = ZPtr->Get(ibR);
+                int ibR = XAux.Get(j);
+                double YRight = YPtr->Get(ibR);
+                double ZRight = ZPtr->Get(ibR);
                 
-                if ( YLeft != YRight ) // reorders pairing
+                if ( ( fabs( YLeft - YRight ) <= EPS ) &&
+				     ( fabs( ZLeft - ZRight ) <= EPS )  ) // reorders pairing
                 {
-                    YRightBoundaryVector.Set(j,YRight);
+				 	VecXMax.Set(j,ibRAux);
+					VecXMax.Set(i,ibR);
+                    YRightBoundaryVector.Set(i,YRight);
                 }
             
-                if ( ZLeft != ZRight ) // reorders pairing
-                {
-                    ZRightBoundaryVector.Set(j,ZRight);
-                }
-                    VecXMax.Set(j,ibR);
             }
             
         }
     
     }
     
-    
-    VerifyParallelismY(YLeftBoundaryVector,YRightBoundaryVector);
-    VerifyParallelismZ(ZLeftBoundaryVector,ZRightBoundaryVector);
+    /* Printing pairs */
+	cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
+	for (int i = 0; i < nyPointsL; ++i)
+	{
+		int ibL = VecXMin.Get(i);
+		int ibR = VecXMax.Get(i);
+		
+		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+
+	}	
+
+    //VerifyParallelismY(YLeftBoundaryVector,YRightBoundaryVector);
+    //VerifyParallelismZ(ZLeftBoundaryVector,ZRightBoundaryVector);
     
 } /* End of function */
+
+
+/** \brief It reads VTK mesh file and saves two vectors
+ *  containing the pairing indices. Also, it reorders the pairs,
+ *  otherwise.
+ *
+ *  \attention Mesh extrusion must be over axis X. 
+ *  
+ */
+void Periodic3D::MountPeriodicVectorsNew(Model3D &_M3D)
+{
+    nyPointsL = MasterIndicesPtr->size();
+    nyPointsR = SlaveIndicesPtr->size();
+	SetIndicesVector(MasterIndicesPtr,SlaveIndicesPtr);
+
+    /* Test of dimension */
+    if ( nyPointsL != nyPointsR )
+    {
+        cout << "Error: vectors for PBC don't match dimensions!" << endl;
+        cout << nyPointsL << "!=" << nyPointsR << endl;
+		cerr << "PBC implementation is invalid! Stopping..." << endl;
+		exit(1);
+    }
+    else /* If test of dimension is OK, mounts. */
+    {
+	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
+        
+		vector<int> aux (nyPointsL);
+		aux = SlaveIndices;
+
+        for ( int i = 0; i < nyPointsL; i++ )
+        {
+            int ibL = MasterIndices.at(i);
+
+			double YLeft = YPtr->Get(ibL);
+            double ZLeft = ZPtr->Get(ibL);
+            
+			double deltaYOld = 1000.0;
+
+            for ( int j = 0; j < nyPointsL; j++ )
+            {
+                int ibR = aux.at(j);
+                double YRight = YPtr->Get(ibR);
+                double ZRight = ZPtr->Get(ibR);
+                
+				double deltaY = fabs( YLeft - YRight);
+				double deltaZ = fabs( ZLeft - ZRight);
+
+                if ( ( deltaY < deltaYOld ) &&
+				     ( deltaZ < deltaZOld ) ) // reorders pairing
+                {
+				 	SlaveIndices.at(i) = ibR;
+					deltaYOld = deltaY;
+					deltaZOld = deltaZ;
+                } 
+            }
+        }
+    }
+    
+    /* Printing pairs */
+	cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
+	for (int i = 0; i < nyPointsL; ++i)
+	{
+		int ibL = MasterIndices.at(i);
+		int ibR = SlaveIndices.at(i);
+		
+		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+
+	}	
+    
+} /* End of function */
+
+
+
 
 
 /** \brief Given two vectors u,v in \Rn, it verifies if their
@@ -278,7 +364,7 @@ void Periodic3D::SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
 {
 	if ( direction  == "RL" ) /* copy from right to left */
 	{
-		cout << "Copying boundary data from RIGHT to LEFT..." << endl;
+		cout << "Copying velocity field from RIGHT to LEFT..." << endl;
         
 		int right;
         double uVelRight, vVelRight, wVelRight;
@@ -299,7 +385,7 @@ void Periodic3D::SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
 	}
 	else /* copy from left to right */
     {
-        cout << "Copying boundary data from LEFT to RIGHT..." << endl;
+        cout << "Copying velocity field from LEFT to RIGHT..." << endl;
         
         int left;
         double uVelLeft, vVelLeft, wVelLeft;

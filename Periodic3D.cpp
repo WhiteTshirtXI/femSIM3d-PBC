@@ -180,6 +180,7 @@ void Periodic3D::MountPeriodicVectorsNew(Model3D &_M3D)
             double ZLeft = ZPtr->Get(ibL);
             
 			double deltaYOld = 1000.0;
+			double deltaZOld = 1000.0;
 
             for ( int j = 0; j < nyPointsL; j++ )
             {
@@ -215,7 +216,18 @@ void Periodic3D::MountPeriodicVectorsNew(Model3D &_M3D)
 } /* End of function */
 
 
+void Periodic3D::SetIndicesVector(vector<int>* _master, vector<int>* _slave)
+{
+	MasterIndices.resize(nyPointsL);
+	SlaveIndices.resize(nyPointsL);
 
+	for ( size_t i = 0; i != nyPointsL; ++i )
+	{
+		MasterIndices.at(i) = _master->at(i);
+		SlaveIndices.at(i) = _slave->at(i);
+	}
+
+}
 
 
 /** \brief Given two vectors u,v in \Rn, it verifies if their

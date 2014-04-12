@@ -73,6 +73,7 @@ public:
 	void ForcedParallelismY(int j, clVector _u, clVector _v);
 	void ForcedParallelismZ(int j, clVector _u, clVector _v);
 
+	void SetIndicesVector(vector<int>* _master, vector<int>* _slave);
 	/* POINTER functions */
 	clVector* GetVecXMin();
     clVector* GetVecXMax();

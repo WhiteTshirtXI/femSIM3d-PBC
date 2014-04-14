@@ -205,7 +205,7 @@ class Model3D
   void setStepBC();
   void setStepPBC(); // <<<
   void setBubbleArrayPeriodicBC(); // <<<
-  void setNeumannPressureBC(); // <<<
+  void setOnePointPressureBC(); // <<<
   void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
   void setWallStepBC();
   void setCStepBC();

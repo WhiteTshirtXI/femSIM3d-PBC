@@ -4775,10 +4775,12 @@ void Model3D::setGenericBC()
 			double zS = zpbcSlave.at(is);
 			
 			// simple extrusion assumed
-			if ( ( fabs( yS - yM ) > 1E-8 ) || 
-			     ( fabs( zS - zM ) > 1E-8 ) )
+			if ( ( fabs( yS - yM ) > EPS ) && 
+			     ( fabs( zS - zM ) > EPS ) )
 			{
 				cout << "Index not periodic: " << is << endl;	
+				cout << "yS = " << yS << "\t yM = " << yM << endl;
+				cout << "zS = " << yS << "\t zM = " << yM << endl;
 			}
 			
 	 	}

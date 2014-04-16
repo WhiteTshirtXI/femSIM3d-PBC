@@ -38,12 +38,16 @@ all: single-phase two-phase two-phaseHT
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
               sphereNuCte 
 
+single-phasePBC: channelPBC taylorVortexPBC 
+
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
 	       curvatureAndPressureCylinder curvatureAndPressureTorus\
 		   hyperboloid curvatureAndPressureHyperboloid \
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
-		   2Bubbles micro zalesak vortex curvatureTest shear
+		   2Bubbles micro zalesak vortex curvatureTest shear movingFrame \
+		   
+two-phasePBC: mainChannelPBC mainMovingFramePBC
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -55,8 +59,22 @@ step: ${FEM3D_DIR}/script/mainStep.o $(obj)
 
 stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 #                                                                            #
 # -------------------------------------------------------------------------- #
+
+
+# ------------------------------<< periodic >>------------------------------ #
+#
+channelPBC: ${FEM3D_DIR}/script/mainChannelPBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+taylorVortexPBC: ${FEM3D_DIR}/script/mainTaylorVortexPBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+mainMovingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+	#
 
 
 # ------------------<< rotating disk (single-phase) >>---------------------- #
@@ -154,6 +172,9 @@ risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+movingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 test: ${FEM3D_DIR}/script/mainTest.o $(obj)

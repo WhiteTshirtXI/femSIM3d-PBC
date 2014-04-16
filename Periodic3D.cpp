@@ -88,7 +88,15 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     else /* If test of dimension is OK, mounts. */
     {
 	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
-        
+        		
+		// Eliminating corner points of periodicity
+		for (int i = 0; i < 4; ++i)
+		{
+		  VecXMin.Delete(0);
+		  VecXMax.Delete(0);
+		  nyPointsL--;
+		}
+		
 		YLeftBoundaryVector.Dim(nyPointsL);
         YRightBoundaryVector.Dim(nyPointsL);
         ZLeftBoundaryVector.Dim(nyPointsL);
@@ -100,25 +108,32 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
         for ( int i = 0; i < nyPointsL; i++ )
         {
             int ibL = VecXMin.Get(i);
-            int ibRAux = XAux.Get(i);
 
 			double YLeft = YPtr->Get(ibL);
             YLeftBoundaryVector.Set(i,YLeft);
             double ZLeft = ZPtr->Get(ibL);
             ZLeftBoundaryVector.Set(i,ZLeft);
             
+			double deltaYOld = 1000.0;
+			double deltaZOld = 1000.0;
+
             for ( int j = 0; j < nyPointsL; j++ )
             {
                 int ibR = XAux.Get(j);
                 double YRight = YPtr->Get(ibR);
                 double ZRight = ZPtr->Get(ibR);
                 
-                if ( ( fabs( YLeft - YRight ) <= EPS ) &&
-				     ( fabs( ZLeft - ZRight ) <= EPS )  ) // reorders pairing
+				double deltaY = fabs( YLeft - YRight );
+				double deltaZ = fabs( ZLeft - ZRight );
+
+                if ( ( deltaY < deltaYOld ) &&
+				     ( deltaZ < deltaZOld ) ) // reorders pairing
                 {
-				 	VecXMax.Set(j,ibRAux);
 					VecXMax.Set(i,ibR);
+					deltaYOld = deltaY;
+					deltaZOld = deltaZ;
                     YRightBoundaryVector.Set(i,YRight);
+                    ZRightBoundaryVector.Set(i,ZRight);
                 }
             
             }

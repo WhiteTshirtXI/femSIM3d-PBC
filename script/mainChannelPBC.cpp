@@ -66,9 +66,9 @@ int main(int argc, char **argv)
 
  int iter = 1;
  //double alpha = 1;
- double cfl = 0.1;
+ double cfl = 1.0;
 
- double Re = 10000.0;
+ double Re = 100.0;
  double Sc = 200;
  double Fr = 100;
  double mu_l = 1.0;
@@ -89,10 +89,11 @@ int main(int argc, char **argv)
  //const char *datFolder  = "./dat/";
  //const char *datFolder  = "./sol/";
  //const char *txtFolder  = "./txt/";
+ const char *vtkFolder  = "./vtk/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille-pbc/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/midwall-pbc/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
- const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-green-vortex/";
+ //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-green-vortex/";
 
  //** Model Constructor
  Model3D m1;
@@ -163,8 +164,8 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- //pbc.MountPeriodicVectorsNew(m1);
- pbc.MountPeriodicVectors(m1);
+ pbc.MountPeriodicVectorsNew(m1);
+ //pbc.MountPeriodicVectors(m1);
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -239,13 +240,13 @@ int main(int argc, char **argv)
 	    << iter << endl;
 
    //**** Advective Term
-   //sp.stepSLPBCFix();
+   sp.stepSLPBCFix();
    //sp.stepNoConvection();
-   sp.stepSL();
+   //sp.stepSL();
    
    //**** B.C. update
-   //sp.setUnCoupledPBC(); 
-   sp.setUnCoupledBC(); 
+   sp.setUnCoupledPBC(); 
+   //sp.setUnCoupledBC(); 
 
    //**** Physical Effects
    //sp.setGravity("+X");
@@ -258,7 +259,8 @@ int main(int argc, char **argv)
    sp.setCopyDirectionPBC("RL");
    
    //**** Matricial System Solution
-   sp.unCoupledPBC();
+   sp.unCoupledPBCVector();
+   //sp.unCoupledPBC();
    //sp.unCoupled();
    
    //**** Solution Saving

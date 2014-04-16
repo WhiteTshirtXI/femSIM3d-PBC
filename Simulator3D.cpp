@@ -5376,7 +5376,218 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 	VecXMaxGlob.Dim(0);
 	betaFlowLiq.Dim(3*numNodes);
 
+	MasterIndices = pbc->GetMasterIndices();
+	SlaveIndices = pbc->GetSlaveIndices();
+
 } // fecha metodo
+
+
+/* VelPressMatrixModifierPBC() */
+void Simulator3D::VelPressMatrixModifierPBC()
+{
+   size_t i,j;
+   int ibL,ibR;
+
+   // indices to which PBC will be applied
+   vector<int> indxMasterToModify(0);
+   vector<int> indxSlaveToModify(0);
+   
+   // finding PBC nodes set in Model
+   for ( list<int>::iterator it = boundaryVert->begin(); it != boundaryVert->end(); ++it )
+   {   
+	if ( surfMesh->phyBounds.at(*it) == "\"wallLeft\"" )
+	{
+	  indxMasterToModify.push_back(*it);	  
+	}
+
+    if ( surfMesh->phyBounds.at(*it) == "\"wallRight\"" )
+	{
+	  indxSlaveToModify.push_back(*it);	  
+	}
+  }
+
+   // indxMasterSlave must have the same size. Hence, ny suffices.
+   size_t ny = indxMasterToModify.size();
+   size_t nys = indxSlaveToModify.size();
+
+  /* Copying rows and columns from ibL into ibR:
+   * i) Remove the contributions from left and overloads in right;
+   * ii) Now, the positions that stayed opened receive the same 
+   * values at right. */
+  if ( direction == "RL" )
+  {
+	  // ATilde
+	  for ( i = 0; i < ny; i++ ) // loop paired points
+	  {
+	     // left and right nodes
+	     ibL = indxMasterToModify.at(i);
+	     ibR = indxSlaveToModify.at(i);
+
+		  for ( j = 0; j < 3*numNodes; j++ ) // loop rows
+		  {
+			 // x-direction
+			 double ATildeRow = ATilde.Get(ibR,j);
+			 ATildeRow += ATilde.Get(ibL,j);
+			 ATilde.Set(ibR,j,ATildeRow);
+			  
+			 // y-direction
+			 double ATildeRowN = ATilde.Get(ibR + numNodes,j);
+			 ATildeRowN += ATilde.Get(ibL + numNodes,j);
+			 ATilde.Set(ibR + numNodes,j,ATildeRowN);
+			 
+			 // z-direction
+			 ATildeRowN = ATilde.Get(ibR + 2*numNodes,j);
+			 ATildeRowN += ATilde.Get(ibL + 2*numNodes,j);
+			 ATilde.Set(ibR + 2*numNodes,j,ATildeRowN);
+	      }
+
+		  for ( j = 0; j < 3*numNodes; j++ ) // loop columns
+		  {
+		   	 // x-direction
+			 double ATildeColumn = ATilde.Get(j,ibR);
+			 ATildeColumn += ATilde.Get(j,ibL);
+			 ATilde.Set(j,ibR,ATildeColumn);
+
+		   	 // y-direction
+			 double ATildeColumnN = ATilde.Get(j,ibR + numNodes);
+			 ATildeColumnN += ATilde.Get(j,ibL + numNodes);
+			 ATilde.Set(j,ibR + numNodes,ATildeColumnN);
+
+		   	 // z-direction
+			 ATildeColumnN = ATilde.Get(j,ibR + 2*numNodes);
+			 ATildeColumnN += ATilde.Get(j,ibL + 2*numNodes);
+			 ATilde.Set(j,ibR + 2*numNodes,ATildeColumnN);
+		  }
+	  }
+	
+	  for ( i = 0; i < ny; i++ )
+	  {
+
+		 // eliminating rows and columns
+		 ibL = indxMasterToModify.at(i);
+		 ATilde.SetRowZero(ibL);
+		 ATilde.SetColumnZero(ibL);
+		 ATilde.SetRowZero(ibL + numNodes);
+		 ATilde.SetColumnZero(ibL + numNodes);
+		 ATilde.SetRowZero(ibL + 2*numNodes);
+		 ATilde.SetColumnZero(ibL + 2*numNodes);
+
+		 // changed diagonal's values
+	     ATilde.Set(ibL,ibL,1.0);
+	     ATilde.Set(ibL + numNodes,ibL + numNodes,1.0);
+	     ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+
+	  }
+
+	  // DTilde
+	  for ( i = 0; i < ny; i++ )
+	  {
+	     ibL = indxMasterToModify.at(i);
+		 ibR = indxSlaveToModify.at(i);
+		
+		   for ( j = 0; j < 3*numNodes; j++ ) // loop rows
+		   {
+				double DTildeRow = DTilde.Get(ibR,j);
+				DTildeRow += DTilde.Get(ibL,j);
+				DTilde.Set(ibR,j,DTildeRow);
+		   }
+	  
+           for ( j = 0; j < numVerts; j++ ) // loop columns
+	       {
+				double DTildeColumn = DTilde.Get(j,ibR);
+				DTildeColumn += DTilde.Get(j,ibL);
+				DTilde.Set(j,ibR,DTildeColumn);
+
+				DTildeColumn = DTilde.Get(j, ibR + numNodes);
+				DTildeColumn += DTilde.Get(j, ibL + numNodes);
+				DTilde.Set(j, ibR + numNodes, DTildeColumn);
+
+				DTildeColumn = DTilde.Get(j, ibR + 2*numNodes);
+				DTildeColumn += DTilde.Get(j, ibL + 2*numNodes);
+				DTilde.Set(j, ibR + 2*numNodes, DTildeColumn);
+	       }
+
+	  }	
+	  
+	  for ( i = 0; i < ny; i++ )
+	  {
+
+		  ibL = indxMasterToModify.at(i);
+		  DTilde.SetRowZero(ibL);
+		  DTilde.SetColumnZero(ibL);
+		  DTilde.SetColumnZero(ibL + numNodes);
+		  DTilde.SetColumnZero(ibL + 2*numNodes);
+
+	  }
+
+	  // GTilde
+	  for ( i = 0; i < ny; i++ )
+	  {
+	      ibL = indxMasterToModify.at(i);
+		  ibR = indxSlaveToModify.at(i);
+
+		     for ( j = 0; j < numVerts; j++ ) // loop rows
+			 {
+				double GTildeRow = GTilde.Get(ibR,j);
+				GTildeRow += GTilde.Get(ibL,j);
+				GTilde.Set(ibR,j,GTildeRow);
+
+			 }
+	     
+			 for ( j = 0; j < numNodes; j++ ) // loop columns
+			 {
+			    double GTildeColumn = GTilde.Get(j,ibR);
+				GTildeColumn += GTilde.Get(j,ibL);
+				GTilde.Set(j,ibR,GTildeColumn);
+
+				GTildeColumn = GTilde.Get(j + numNodes,ibR);
+				GTildeColumn += GTilde.Get(j + numNodes,ibL);
+				GTilde.Set(j + numNodes,ibR,GTildeColumn);
+				
+				GTildeColumn = GTilde.Get(j + 2*numNodes,ibR);
+				GTildeColumn += GTilde.Get(j + 2*numNodes,ibL);
+				GTilde.Set(j + 2*numNodes,ibR,GTildeColumn);
+
+			 }
+
+	  }
+
+	  for ( i = 0; i < ny; i++ )
+	  {
+
+		 ibL = indxMasterToModify.at(i);
+		 GTilde.SetRowZero(ibL);
+		 GTilde.SetRowZero(ibL + numNodes);
+		 GTilde.SetRowZero(ibL + 2*numNodes);
+		 GTilde.SetColumnZero(ibL);
+		 GTilde.SetColumnZero(ibL + numNodes);
+		 GTilde.SetColumnZero(ibL + 2*numNodes);
+
+
+	  }
+	  
+	  //*** ETilde call
+	  ETilde = E - (( DTilde * invA) * GTilde );
+
+	  for ( i = 0; i < ny; i++ )
+	  {
+		  ibL = indxMasterToModify.at(i);
+		  ETilde.SetRowZero(ibL);
+		  ETilde.SetColumnZero(ibL);
+		  ETilde.Set(ibL,ibL,1.0);		  
+	  }
+
+	}
+
+	/* Copying rows and columns from ibR to ibL. Idem, with inversed
+	 * indices. */
+	else
+	{
+		/* copy block! */
+	}
+
+} // fecha metodo
+
 
 void Simulator3D::assemblePBC()
 {
@@ -5674,6 +5885,161 @@ void Simulator3D::assembleCPBC()
 } // close method assembleCPBC
 
 
+/* unCoupledPBC with <vector> structure */
+void Simulator3D::unCoupledPBCVector()
+{
+ clVector uvw(3*numNodes);
+ clVector vaIp(3*numNodes);
+ clVector b1Tilde;
+ clVector b2Tilde;
+ clVector uTildeU, uTildeV, uTildeW;
+ Periodic3D pbc;
+
+ vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
+
+ // indices to which PBC will be applied
+ vector<int> indxMasterToModify(0);
+ vector<int> indxSlaveToModify(0);
+   
+ // finding PBC nodes set in Model
+ for ( list<int>::iterator it = boundaryVert->begin(); it != boundaryVert->end(); ++it )
+ {   
+  if ( surfMesh->phyBounds.at(*it) == "\"wallLeft\"" )
+  {
+	  indxMasterToModify.push_back(*it);	  
+  } 
+
+  if ( surfMesh->phyBounds.at(*it) == "\"wallRight\"" )
+  {
+      indxSlaveToModify.push_back(*it);	  
+  }
+ }
+
+ // reallocating indices PBC 
+ MasterIndices = indxMasterToModify;
+ SlaveIndices = indxSlaveToModify;
+ nyPointsL = indxMasterToModify.size();
+
+ b1Tilde = b1 + vaIp;
+
+ //*** sums ibL to ibR on rhs vector - velocity
+ sumIndexPBCVelVector(MasterIndices,SlaveIndices,b1Tilde);
+
+ //*** Reassemble
+ VelPressMatrixModifierPBC();
+
+ // resolve sistema ATilde uTilde = b1Tilde
+ cout << " --------> solving velocity --------- " << endl;
+ solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
+ cout << " ------------------------------------ " << endl;
+
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ //*** copy uTilde to set it periodic
+ uTildeU = uTilde.Copy(0,numNodes - 1);
+ uTildeV = uTilde.Copy(numNodes,2*numNodes - 1);
+ uTildeW = uTilde.Copy(2*numNodes,3*numNodes - 1);
+ pbc.SetVelocityPBCVector(uTildeU,uTildeV,uTildeW,MasterIndices,SlaveIndices,nyPointsL,"RL");
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ //*** updated periodic velocity
+ uTilde = uTildeU;
+ uTilde.Append(uTildeV);
+ uTilde.Append(uTildeW);
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ if( rho_in <= rho_out ) // BUBBLE
+ {
+  cout << setw(70) << "BUBBLE SIMULATION" << endl;
+  uvw = uTilde + 
+        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
+
+ }
+ else // DROPLET
+ {
+  cout << setw(70) << "DROPLET SIMULATION" << endl;
+  uvw = uTilde + 
+        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
+ }
+ 
+ //uvw = uTilde;
+
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ /* 
+  * Mass Transfer
+  * */
+ //clVector massTransfer = dt*invMcLumped*( heatFlux );
+ //clVector massTransfer = ( invMcLumped*heatFlux );
+ clVector massTransfer = invC*
+                         (1.0/rho_inAdimen - 1.0/rho_outAdimen)
+						 *heatFlux;
+
+ ///*** setting b2 periodic, because DTilde*uvw already is.
+ sumIndexPBCPressVector(MasterIndices,SlaveIndices,b2);
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ // resolve sistema E pTilde = b2Tilde
+ cout << " --------> solving pressure --------- " << endl;
+ solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
+ cout << " ------------------------------------ " << endl;
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+ 
+ //*** copying pressure
+ pbc.SetPurePressurePBCVector(pTilde,MasterIndices,SlaveIndices,nyPointsL,"RL");
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ uvw = uvw - (invA * GTilde * pTilde);
+ cout << uTilde.Get(164) << endl;
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+ uTildeU = uvw.Copy(0,numNodes - 1);
+ uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
+ uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
+
+ cout << uTilde.Get(164) << endl;
+ pbc.SetVelocityPBCVector(uTildeU,uTildeV,uTildeW,MasterIndices,SlaveIndices,nyPointsL,"RL");
+ cout << uvw.Get(164) << endl;
+ cout << getUSol()->Get(164) << endl;
+
+ //*** updated periodic velocity
+ uSol = uTildeU;
+ vSol = uTildeV;
+ wSol = uTildeW;
+
+ cout << getUSol()->Get(164) << endl;
+
+ pSol = pTilde;       // sem correcao na pressao
+ //pSol = pSol + pTilde;  // com correcao na pressao
+
+ // compute bubble's centroid velocity
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
+} // fecha metodo unCoupledPBC 
+
+
 
 void Simulator3D::unCoupledPBC()
 {
@@ -5899,6 +6265,35 @@ void Simulator3D::sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector&
      }
 } // fecha metodo
 
+
+void Simulator3D::sumIndexPBCVelVector(vector<int> _indexL, vector<int> _indexR, clVector& _b)
+{
+    for (int i = 0; i < _indexL.size(); i++)
+    {
+       int ibL = _indexL.at(i);
+       int ibR = _indexR.at(i);
+ 
+       double uL = _b.Get(ibL);
+       double uR = _b.Get(ibR);
+       _b.Set(ibR, uL + uR);
+       _b.Set(ibL,0);
+ 
+       uL = _b.Get(ibL + numNodes);
+       uR = _b.Get(ibR + numNodes);
+       _b.Set(ibR + numNodes, uL + uR);
+       _b.Set(ibL + numNodes,0);
+ 
+       uL = _b.Get(ibL + 2*numNodes);
+       uR = _b.Get(ibR + 2*numNodes);
+       _b.Set(ibR + 2*numNodes, uL + uR);
+       _b.Set(ibL + 2*numNodes,0);
+
+     }
+} // fecha metodo
+
+
+
+
 void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _p)
 {
    for (int i = 0; i < _indexL->Dim(); i++)
@@ -5914,12 +6309,46 @@ void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVecto
     }
 } // fecha metodo
 
+
+void Simulator3D::sumIndexPBCPressVector(vector<int> _indexL, vector<int> _indexR, clVector& _p)
+{
+   for (int i = 0; i < _indexL.size(); i++)
+   {
+      int ibL = _indexL.at(i);
+      int ibR = _indexR.at(i);
+
+      double pL = _p.Get(ibL);
+      double pR = _p.Get(ibR);
+      _p.Set(ibR,pL + pR);
+      _p.Set(ibL,0);
+
+    }
+} // fecha metodo
+
+
 void Simulator3D::sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _s)
 {
    for (int i = 0; i < _indexL->Dim(); i++)
    {
       int ibL = _indexL->Get(i);
       int ibR = _indexR->Get(i);
+
+      double qL = _s.Get(ibL);
+      double qR = _s.Get(ibR);
+      _s.Set(ibR,qL + qR);
+      _s.Set(ibL,0);
+
+    }
+
+} // fecha metodo
+
+
+void Simulator3D::sumIndexPBCScalarVector(vector<int> _indexL, vector<int> _indexR, clVector& _s)
+{
+   for (int i = 0; i < _indexL.size(); i++)
+   {
+      int ibL = _indexL.at(i);
+      int ibR = _indexR.at(i);
 
       double qL = _s.Get(ibL);
       double qR = _s.Get(ibR);

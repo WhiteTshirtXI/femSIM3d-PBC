@@ -11,6 +11,7 @@
 *.edge.*
 *.msh
 # executables
+2Bubbles
 curvatureAndPressureCylinder
 curvatureAndPressureHyperboloid
 curvatureAndPressureSphere
@@ -42,3 +43,5 @@ stepALE
 torus
 vortex
 zalesak
+channelPBC
+taylorVortexPBC

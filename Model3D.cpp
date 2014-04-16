@@ -4731,7 +4731,7 @@ void Model3D::setGenericBC()
 		// master coordinates
 		double xL = surfMesh.X.Get(*itsetOne);
 		double yL = surfMesh.Y.Get(*itsetOne);
-		double zL = surfMesh.Y.Get(*itsetOne);
+		double zL = surfMesh.Z.Get(*itsetOne);
 		xpbcMaster.push_back(xL);
 		ypbcMaster.push_back(yL);
 		zpbcMaster.push_back(zL);
@@ -4778,9 +4778,9 @@ void Model3D::setGenericBC()
 			if ( ( fabs( yS - yM ) > EPS ) && 
 			     ( fabs( zS - zM ) > EPS ) )
 			{
-				cout << "Index not periodic: " << is << endl;	
-				cout << "yS = " << yS << "\t yM = " << yM << endl;
-				cout << "zS = " << yS << "\t zM = " << yM << endl;
+				cout << "Entry not periodic: " << is << endl;	
+				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
+				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
 			}
 			
 	 	}

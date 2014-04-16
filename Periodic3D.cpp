@@ -206,10 +206,11 @@ void Periodic3D::MountPeriodicVectorsNew(Model3D &_M3D)
 				double deltaY = fabs( YLeft - YRight);
 				double deltaZ = fabs( ZLeft - ZRight);
 
+				/* Might work with overwriting from setGenericBC() */
                 if ( ( deltaY < deltaYOld ) &&
 				     ( deltaZ < deltaZOld ) ) // reorders pairing
                 {
-				 	SlaveIndices.at(i) = ibR;
+				 	//SlaveIndices.at(i) = ibR;
 					deltaYOld = deltaY;
 					deltaZOld = deltaZ;
                 } 
@@ -628,4 +629,7 @@ clVector* Periodic3D::GetVecXMin() { return &VecXMin; };
 clVector* Periodic3D::GetVecXMax() { return &VecXMax; };
 clVector* Periodic3D::GetVecXMid() { return &VecXMid; };
 clVector* Periodic3D::GetVecXMidVerts() { return &VecXMidVerts; };
+
+vector<int>* Periodic3D::GetMasterIndices() { return &MasterIndices; };
+vector<int>* Periodic3D::GetSlaveIndices() { return &SlaveIndices; };
 

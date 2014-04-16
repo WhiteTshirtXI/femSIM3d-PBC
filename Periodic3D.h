@@ -82,6 +82,9 @@ public:
     clVector* GetVecXMax();
     clVector* GetVecXMid();
     clVector* GetVecXMidVerts();
+	vector<int>* GetMasterIndices();
+	vector<int>* GetSlaveIndices();
+
     
 private:
     

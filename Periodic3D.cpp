@@ -423,6 +423,43 @@ void Periodic3D::SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin, clVecto
 } /* End of function */
 
 
+void Periodic3D::SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master, vector<int> &_slave, int L, string direction)
+{
+    if ( direction == "RL" ) 
+	{
+	 	cout << "Copying scalar field from RIGHT to LEFT..." << endl;
+    	
+		int right;
+		double sRight;
+		
+		for (right = 0; right < L; right++)
+		{
+		  int index2 = _slave.at(right);
+		  int left = right;
+		  int index = _master.at(left);
+		  sRight = _Scalar.Get(index2);
+		  _Scalar.Set(index,sRight);
+		}
+	}
+	else
+	{	
+	 	cout << "Copying scalar field from LEFT to RIGHT..." << endl;
+	    
+		int left;
+    	double sRight;
+    
+    	for (left = 0; left < L; left++) 
+    	{
+          int index = _master.at(left); 
+          int right = left;
+          int index2 = _slave.at(right); 
+          sRight = _Scalar.Get(index2); 
+          _Scalar.Set(index,sRight); 
+    	}
+	}
+
+} /* End of function */
+
 
 /** \brief Sets the PBC for velocity through copy process.
  *  \param[in] & _uVelocity;
@@ -486,6 +523,55 @@ void Periodic3D::SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
 } /* End of function */
 
 
+/* Idem, but with container <vector> */
+void Periodic3D::SetVelocityPBCVector(clVector &_uVelocity, clVector &_vVelocity,
+                                clVector &_wVelocity, vector<int> &_master,
+                                vector<int> &_slave, int L, string direction)
+{
+	if ( direction  == "RL" ) /* copy from right to left */
+	{
+		cout << "Copying velocity field from RIGHT to LEFT..." << endl;
+        
+		int right;
+        double uVelRight, vVelRight, wVelRight;
+        
+        for (right = 0; right < L; right++) 
+        {
+            int index2 = _slave.at(right); 
+            int left = right;
+            int index = _master.at(left); 
+            uVelRight = _uVelocity.Get(index2); 
+            vVelRight = _vVelocity.Get(index2); 
+            wVelRight = _wVelocity.Get(index2); 
+            _uVelocity.Set(index,uVelRight); 
+            _vVelocity.Set(index,vVelRight); 
+            _wVelocity.Set(index,wVelRight); 
+
+        }
+	}
+	else /* copy from left to right */
+    {
+        cout << "Copying velocity field from LEFT to RIGHT..." << endl;
+        
+        int left;
+        double uVelLeft, vVelLeft, wVelLeft;
+        
+        for (left = 0; left < L; left++) 
+        {
+            int index = _master.at(left); 
+            int right = left;
+            int index2 = _slave.at(right); 
+            uVelLeft = _uVelocity.Get(index); 
+            vVelLeft = _vVelocity.Get(index); 
+            wVelLeft = _wVelocity.Get(index); 
+            _uVelocity.Set(index2,uVelLeft); 
+            _vVelocity.Set(index2,vVelLeft); 
+            _wVelocity.Set(index2,wVelLeft); 
+        }
+	}
+} /* End of function */
+
+
 /** \brief Sets the PBC for pressure through copy process.
  *
  * \param[in] & _Pressure
@@ -531,6 +617,48 @@ void Periodic3D::SetPurePressurePBC(clVector &_Pressure, clVector &_VecXMin, clV
           int index = _VecXMin.Get(left); 
           int right = left;
           int index2 = _VecXMax.Get(right);
+          pRight = _Pressure.Get(index2); 
+          _Pressure.Set(index,pRight); // fills entries of p(X_L) indices with p(X_R)
+       }
+	}
+
+} /* End of function */
+
+
+/* Idem, but with container <vector> */
+void Periodic3D::SetPurePressurePBCVector(clVector &_Pressure, vector<int> &_master, vector<int> &_slave, 
+                                                                                 int L, string direction)
+{
+
+ 	if ( direction == "RL" )
+	{
+	 	cout << "Copying pressure field from RIGHT to LEFT..." << endl;
+	 	
+		int right;
+		double pRight;
+
+		for (right = 0; right < L; right++)
+		{
+		   int index2 = _slave.at(right);
+		   int left = right;
+		   int index = _master.at(left);
+		   pRight = _Pressure.Get(index2);
+		   _Pressure.Set(index,pRight);
+		}
+	}
+
+	else
+	{
+	 	cout << "Copying pressure field from LEFT to RIGHT..." << endl;
+
+	 	int left;
+    	double pRight;
+    
+    	for (left = 0; left < L; left++) 
+    	{
+          int index = _master.at(left); 
+          int right = left;
+          int index2 = _slave.at(right);
           pRight = _Pressure.Get(index2); 
           _Pressure.Set(index,pRight); // fills entries of p(X_L) indices with p(X_R)
        }
@@ -630,6 +758,6 @@ clVector* Periodic3D::GetVecXMax() { return &VecXMax; };
 clVector* Periodic3D::GetVecXMid() { return &VecXMid; };
 clVector* Periodic3D::GetVecXMidVerts() { return &VecXMidVerts; };
 
-vector<int>* Periodic3D::GetMasterIndices() { return &MasterIndices; };
-vector<int>* Periodic3D::GetSlaveIndices() { return &SlaveIndices; };
+vector<int> Periodic3D::GetMasterIndices() { return MasterIndices; };
+vector<int> Periodic3D::GetSlaveIndices() { return SlaveIndices; };
 

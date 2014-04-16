@@ -116,7 +116,7 @@ void SemiLagrangean::compute(double dt)
 
 void SemiLagrangean::computePBCFix(double dt)
 {
-   #if NUMGLEU == 4
+   #if NUMGLEU == 5
     getDepartElemPBCFix(dt); // procura de elemento
 
     clVector uVert(numVerts);
@@ -136,9 +136,9 @@ void SemiLagrangean::computePBCFix(double dt)
 	vParticle.Append(zerosConv);
 	wParticle.Append(zerosConv);
 
-	uParticle = setTriCentroid(*IEN,uParticle);
-    vParticle = setTriCentroid(*IEN,vParticle);
-    wParticle = setTriCentroid(*IEN,wParticle);
+	uParticle = setTetCentroid(*IEN,uParticle);
+    vParticle = setTetCentroid(*IEN,vParticle);
+    wParticle = setTetCentroid(*IEN,wParticle);
 
     #else
 	

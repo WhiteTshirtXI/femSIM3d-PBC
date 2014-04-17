@@ -969,6 +969,25 @@ void Model3D::setCouetteBC()
  }
 }
 
+void Model3D::setWallNormalVWBC()
+{
+	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+	{
+		if (surfMesh.phyBounds.at(*it) == "\"wallNormalV\"")
+		{
+			idbcv.AddItem(*it);
+			vc.Set(*it,0.0);
+		}
+		if (surfMesh.phyBounds.at(*it) == "\"wallNormalW\"")
+		{
+			idbcw.AddItem(*it);
+			wc.Set(*it,0.0);
+		}
+
+	}
+
+}
+
 void Model3D::setCubeVortexBC()
 {
 #if NUMGLEU == 5
@@ -988,7 +1007,7 @@ void Model3D::setCubeVortexBC()
  
   if( (Y.Get(i)==Y.Max()) || (Y.Get(i)==Y.Min()) )
   {
-   	idbcu.AddItem(i);
+   	idbcv.AddItem(i);
   	vc.Set(i,0.0);
   }
 

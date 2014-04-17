@@ -130,8 +130,9 @@ int main(int argc, char **argv)
 	#endif
  	
  	m1.setVertNeighbour();
- 	m1.setInOutVert();
-	m1.setGenericBC();
+ 	m1.setInOutVert(); // set of boundaryVert
+	//m1.setGenericBC(); // only useful for PBC with phys. groups defined
+	m1.setWallNormalVWBC();
  	//m1.setOnePointPressureBC();
  }
  else if ( selectionExtension == "vtk" )
@@ -164,8 +165,8 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew(m1);
- //pbc.MountPeriodicVectors(m1);
+ //pbc.MountPeriodicVectorsNew(m1);
+ pbc.MountPeriodicVectors(m1);
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -259,8 +260,8 @@ int main(int argc, char **argv)
    sp.setCopyDirectionPBC("RL");
    
    //**** Matricial System Solution
-   sp.unCoupledPBCVector();
-   //sp.unCoupledPBC();
+   //sp.unCoupledPBCVector();
+   sp.unCoupledPBC();
    //sp.unCoupled();
    
    //**** Solution Saving

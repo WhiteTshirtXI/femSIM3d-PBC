@@ -988,6 +988,35 @@ void Model3D::setWallNormalVWBC()
 
 }
 
+void Model3D::setWallMovingPBC(double _velInf, double _velSup)
+{
+	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+	{
+		if (surfMesh.phyBounds.at(*it) == "\"wallMovingInf\"")
+		{
+			idbcu.AddItem(*it);
+			idbcv.AddItem(*it);
+			idbcw.AddItem(*it);
+
+			uc.Set(*it,_velInf);
+			vc.Set(*it,0.0);
+			wc.Set(*it,0.0);
+		}
+		if (surfMesh.phyBounds.at(*it) == "\"wallMovingSup\"")
+		{
+			idbcu.AddItem(*it);
+			idbcv.AddItem(*it);
+			idbcw.AddItem(*it);
+
+			uc.Set(*it,_velSup);
+			vc.Set(*it,0.0);
+			wc.Set(*it,0.0);
+		}
+
+	}
+
+}
+
 void Model3D::setCubeVortexBC()
 {
 #if NUMGLEU == 5
@@ -1001,8 +1030,8 @@ void Model3D::setCubeVortexBC()
 	
   if( (X.Get(i)==X.Max()) || (X.Get(i)==X.Min()) )
   {
-   	idbcu.AddItem(i);
-  	uc.Set(i,0.0);
+   	//idbcu.AddItem(i);
+  	//uc.Set(i,0.0);
   }
  
   if( (Y.Get(i)==Y.Max()) || (Y.Get(i)==Y.Min()) )

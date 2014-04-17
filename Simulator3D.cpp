@@ -6070,26 +6070,16 @@ void Simulator3D::unCoupledPBC()
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
 
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
-
  //*** copy uTilde to set it periodic
  uTildeU = uTilde.Copy(0,numNodes - 1);
  uTildeV = uTilde.Copy(numNodes,2*numNodes - 1);
  uTildeW = uTilde.Copy(2*numNodes,3*numNodes - 1);
  pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  //*** updated periodic velocity
  uTilde = uTildeU;
  uTilde.Append(uTildeV);
  uTilde.Append(uTildeW);
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  if( rho_in <= rho_out ) // BUBBLE
  {
@@ -6109,10 +6099,6 @@ void Simulator3D::unCoupledPBC()
  
  //uvw = uTilde;
 
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
-
  /* 
   * Mass Transfer
   * */
@@ -6124,49 +6110,29 @@ void Simulator3D::unCoupledPBC()
 
  ///*** setting b2 periodic, because DTilde*uvw already is.
  sumIndexPBCPress(VecXMin,VecXMax,b2);
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  // resolve sistema E pTilde = b2Tilde
  cout << " --------> solving pressure --------- " << endl;
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
  cout << " ------------------------------------ " << endl;
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
  
  //*** copying pressure
  pbc.SetPurePressurePBC(pTilde,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  uvw = uvw - (invA * GTilde * pTilde);
- cout << uTilde.Get(164) << endl;
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
  uTildeU = uvw.Copy(0,numNodes - 1);
  uTildeV = uvw.Copy(numNodes,2*numNodes - 1);
  uTildeW = uvw.Copy(2*numNodes,3*numNodes - 1);
 
- cout << uTilde.Get(164) << endl;
  pbc.SetVelocityPBC(uTildeU,uTildeV,uTildeW,VecXMinGlob,VecXMaxGlob,nyPointsL,"RL");
- cout << uvw.Get(164) << endl;
- cout << getUSol()->Get(164) << endl;
 
  //*** updated periodic velocity
  uSol = uTildeU;
  vSol = uTildeV;
  wSol = uTildeW;
-
- cout << getUSol()->Get(164) << endl;
 
  pSol = pTilde;       // sem correcao na pressao
  //pSol = pSol + pTilde;  // com correcao na pressao

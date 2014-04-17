@@ -208,6 +208,7 @@ class Model3D
   void setOnePointPressureBC(); // <<<
   void setWallNormalVWBC(); // << slip condition, except PBC walls
   void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
+  void setWallMovingPBC(double _velInf, double _velSup); 
   void setWallStepBC();
   void setCStepBC();
   void setStepReservBC();

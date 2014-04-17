@@ -75,7 +75,6 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     nyPointsL = VecXMin.Dim(); 
     nyPointsR = VecXMax.Dim(); 
     nyPointsM = VecXMid.Dim();
-   
 
     /* Test of dimension */
     if ( nyPointsL != nyPointsR )
@@ -88,15 +87,86 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     else /* If test of dimension is OK, mounts. */
     {
 	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
-        		
-		// Eliminating corner points of periodicity
-		for (int i = 0; i < 4; ++i)
+        
+		// Eliminating points of periodicity
+		vector<int> auxXMin(0);
+		vector<int> auxXMax(0);
+		auxXMin = CopyClVectorToVectorInt(VecXMin);
+		auxXMax = CopyClVectorToVectorInt(VecXMax);
+		
+		for ( int i = 0; i != auxXMin.size(); ++i )
 		{
-		  VecXMin.Delete(0);
-		  VecXMax.Delete(0);
-		  nyPointsL--;
+		  int ibL = auxXMin.at(i);
+		  int ibR = auxXMax.at(i);
+		  double yL = YPtr->Get(ibL);
+		  double zL = ZPtr->Get(ibL);
+		  double yR = YPtr->Get(ibR);
+		  double zR = ZPtr->Get(ibR);
+
+		  double yMin = YPtr->Min(); 
+		  double yMax = YPtr->Max(); 
+		  double zMin = ZPtr->Min(); 
+		  double zMax = ZPtr->Max(); 
+
+		  // marking to delete
+		  if ( ( (zL == zMax) || (zL == zMin) ) &&
+			   ( (yL >= yMin) && (yL <= yMax) ) )
+		  {
+		   	auxXMin.at(i) = -1;		
+		  }
+		  if ( ( (yL == yMax) || (yL == yMin) ) &&
+			   ( (zL  > zMin) && (zL < zMax) ) )
+		  {
+		   	auxXMin.at(i) = -1;			
+		  }
+		  if ( ( (zR == zMax) || (zR == zMin) ) &&
+			   ( (yR >= yMin) && (yR <= yMax) ) )
+		  {
+		   	auxXMax.at(i) = -1;		
+		  }
+		  if ( ( (yR == yMax) || (yR == yMin) ) &&
+			   ( (zR  > zMin) && (zR < zMax) ) )
+		  {
+		   	auxXMax.at(i) = -1;		
+		  }
+		  
 		}
 		
+		// sorting
+		sort(auxXMin.begin(),auxXMin.end());
+		sort(auxXMax.begin(),auxXMax.end());
+		
+		// eliminating entries with -1
+		vector<int>::iterator it;
+		vector<int>::iterator itt;
+		it  = auxXMin.end();
+		itt = auxXMax.end();
+
+		while (it != auxXMin.begin()) 
+		{
+			if ( *it == -1 )
+			 auxXMin.erase(it);
+			  it--;
+		}
+
+		while (itt != auxXMax.begin()) 
+		{
+			if ( *itt == -1 )
+			 auxXMax.erase(itt);
+			  itt--;
+		}
+		// erasing last entry with -1
+		auxXMin.erase(auxXMin.begin());
+		auxXMax.erase(auxXMax.begin());
+
+		//redefining number of periodics and reallocating
+		nyPointsL = auxXMin.size();
+		VecXMin.Dim(nyPointsL);
+		VecXMax.Dim(nyPointsL);		
+		VecXMin = CopyVectorToClVectorInt(auxXMin);  
+		VecXMax = CopyVectorToClVectorInt(auxXMax);
+		
+
 		YLeftBoundaryVector.Dim(nyPointsL);
         YRightBoundaryVector.Dim(nyPointsL);
         ZLeftBoundaryVector.Dim(nyPointsL);

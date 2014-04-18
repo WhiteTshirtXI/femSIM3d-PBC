@@ -65,12 +65,19 @@ public:
     void SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
                         clVector &_wVelocity, clVector &_VecXMin,
                         clVector &_VecXMax, int L, string direction);
+    void SetVelocityPBCVector(clVector &_uVelocity, clVector &_vVelocity,
+                        clVector &_wVelocity, vector<int> &_master,
+                        vector<int> &_slave, int L, string direction);
     void SetPurePressurePBC(clVector &_Pressure, clVector &_VecXMin,
                             clVector &_VecXMax, int L, string direction);
+    void SetPurePressurePBCVector(clVector &_Pressure, vector<int> &_master,
+                            vector<int> &_slave, int L, string direction);
     void SetJumpPressurePBC(clVector &_Pressure, clVector &_VecXMin,
                             clVector &_VecXMax, int L, double jump);
     void SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin,
                             clVector &_VecXMax, int L, string direction);
+    void SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master,
+                            vector<int> &_slave, int L, string direction);
 	void ExtractMiddleVerts(const char *MeshFileName);
 	void ForcedParallelismY(int j, clVector _u, clVector _v);
 	void ForcedParallelismZ(int j, clVector _u, clVector _v);
@@ -82,8 +89,8 @@ public:
     clVector* GetVecXMax();
     clVector* GetVecXMid();
     clVector* GetVecXMidVerts();
-	vector<int>* GetMasterIndices();
-	vector<int>* GetSlaveIndices();
+	vector<int> GetMasterIndices();
+	vector<int> GetSlaveIndices();
 
     
 private:

@@ -1049,6 +1049,39 @@ void Model3D::setCubeVortexBC()
  }
 }
 
+void Model3D::setWallSlipEdgesBC()
+{
+  for ( int i = 0; i < numVerts; ++i )
+  {
+	double x = X.Get(i);
+	double y = Y.Get(i);
+	double z = Z.Get(i);
+
+	double xm = X.Min();
+	double ym = Y.Min();
+	double zm = Z.Min();
+
+	double xM = X.Max();
+	double yM = Y.Max();
+	double zM = Z.Max();
+  
+	if ( ( (x == xm) || (x == xM) ) && ( (z == zm) || (z == zM) ) && ( (y > ym) || (y < yM) ) )
+	{
+		idbcu.AddItem(i);
+		idbcw.AddItem(i);
+		uc.Set(i,0.0);
+		wc.Set(i,0.0);
+	}
+	if ( ( (x == xm) || (x == xM) ) && ( (y == ym) || (y == yM) ) && ( (z > zm) || (z < zM) ) )
+	{
+		idbcu.AddItem(i);
+		idbcv.AddItem(i);
+		uc.Set(i,0.0);
+		vc.Set(i,0.0);
+	}
+
+  }
+}
 void Model3D::setAdimenStep()
 {
  double aux;

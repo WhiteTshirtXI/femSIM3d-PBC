@@ -207,6 +207,7 @@ class Model3D
   void setBubbleArrayPeriodicBC(); // <<<
   void setOnePointPressureBC(); // <<<
   void setWallNormalVWBC(); // << slip condition, except PBC walls
+  void setWallSlipEdgesBC();
   void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
   void setWallMovingPBC(double _velInf, double _velSup); 
   void setWallStepBC();

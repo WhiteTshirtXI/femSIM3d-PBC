@@ -199,7 +199,7 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
                 if ( ( deltaY < deltaYOld ) &&
 				     ( deltaZ < deltaZOld ) ) // reorders pairing
                 {
-					VecXMax.Set(i,ibR);
+					//VecXMax.Set(i,ibR);
 					deltaYOld = deltaY;
 					deltaZOld = deltaZ;
                     YRightBoundaryVector.Set(i,YRight);

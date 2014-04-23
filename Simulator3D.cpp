@@ -6155,7 +6155,7 @@ void Simulator3D::unCoupledPBC()
  */
 void Simulator3D::setBetaPressureLiquid()
 {
-     betaPressLiq = 12.0/Re;
+     betaPressLiq = 32.0/Re;
 	
 }
 
@@ -6361,7 +6361,7 @@ void Simulator3D::initTaylorVortex()
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
-		double U = 1.0;
+		double U = 0.0;
 		double V = 0.0;
 		double W = 0.0;
 

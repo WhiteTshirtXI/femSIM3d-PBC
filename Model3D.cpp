@@ -999,8 +999,8 @@ void Model3D::setJetMesh(double _radius)
 
 		if ( r >= _radius )
 		{
-			y *= r*r;
-			z *= r*r;
+			y *= r*r*r;
+			z *= r*r*r;
 			Y.Set(i,y);
 			Z.Set(i,z);
 		}
@@ -1368,7 +1368,7 @@ void Model3D::mesh2Dto3D(const char* _param)
 
 void Model3D::mesh2Dto3D()
 {
- mesh2Dto3D("QYYApa");
+ mesh2Dto3D("QYYApaq1.414");
 }
 
 /*

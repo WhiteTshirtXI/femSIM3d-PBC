@@ -6376,6 +6376,39 @@ void Simulator3D::initTaylorVortex()
 
 }
 
+void Simulator3D::initTanHJetProfile()
+{
+    init();
+	#if NUMGLEU == 5
+ 		double numBCPoints = numVerts;
+	#else
+		double numBCPoints = numNodes;
+	#endif
+
+	for ( int i = 0; i < numBCPoints; i++ )
+	{
+		double y = Y->Get(i);
+		double z = Z->Get(i);
+	
+		double r = sqrt( y*y + z*z );
+		double thetaZero = 1.0;
+
+		double U = 0.5 - 0.5*tanh( (0.25/thetaZero)*( r - 1.0/r ) );
+		double V = 0.0;
+		double W = 0.0;
+
+		uSol.Set(i, U);
+		vSol.Set(i, V);
+		wSol.Set(i, W);
+
+		uSolOld.Set(i, U);
+		vSolOld.Set(i, V);
+		wSolOld.Set(i, W);
+	}
+
+
+}
+
 /* \brief Intializes a Taylor-Green  vortex in the flow. */ 
 void Simulator3D::initTaylorGreenVortex()
 {

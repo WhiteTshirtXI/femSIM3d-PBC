@@ -5,8 +5,8 @@
 ## =================================================================== ##
 
 # Compilers
-CXX = g++ 
-#CXX = clang
+#CXX = g++ 
+CXX = clang++
 
 # Flags
 CXXFLAGS = -g -fPIC

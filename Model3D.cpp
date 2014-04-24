@@ -997,10 +997,18 @@ void Model3D::setJetMesh(double _radius)
 		double z = Z.Get(i);
 		double r = sqrt(y*y + z*z);
 
-		if ( r >= _radius )
+
+		if ( r <= _radius )
 		{
-			y *= r*r*r;
-			z *= r*r*r;
+			y *= r;
+			z *= r;
+			Y.Set(i,y);
+			Z.Set(i,z);
+		}
+		else
+		{
+			y *= r*r;
+			z *= r*r;
 			Y.Set(i,y);
 			Z.Set(i,z);
 		}

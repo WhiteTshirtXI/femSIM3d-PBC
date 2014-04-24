@@ -68,7 +68,7 @@ int main(int argc, char **argv)
  //double alpha = 1;
  double cfl = 1.0;
 
- double Re = 100.0;
+ double Re = 1.0;
  double Sc = 200;
  double Fr = 100;
  double mu_l = 1.0;
@@ -89,8 +89,7 @@ int main(int argc, char **argv)
  //const char *datFolder  = "./dat/";
  //const char *datFolder  = "./sol/";
  //const char *txtFolder  = "./txt/";
- const char *vtkFolder  = "./vtk/";
- //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille-pbc/";
+ const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille-pbc/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/midwall-pbc/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-green-vortex/";
@@ -106,10 +105,11 @@ int main(int argc, char **argv)
  if ( selectionExtension == "msh")
  {
   	//*** File
- 	string meshFile = "cuboid-3d.msh";
+ 	//string meshFile = "cuboid-3d.msh";
  	//string meshFile = "thesis-jet.msh";
  	//string meshFile = "cuboid-3d-w0.1.msh";
  	//string meshFile = "cylinder-3d.msh";
+ 	string meshFile = "cylinder-3d-L0.5D-w0.01.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
  	meshDir += "/" + meshFile;
@@ -121,6 +121,7 @@ int main(int argc, char **argv)
  	m1.setInterfaceBC();
  	m1.setTriEdge();
  	m1.mesh2Dto3D();
+	m1.setJetMesh(0.05); // mesh geometrical transform
  	m1.setMapping();
  
 	#if NUMGLEU == 5
@@ -133,6 +134,7 @@ int main(int argc, char **argv)
  	m1.setInOutVert(); // set of boundaryVert
 	//m1.setGenericBC(); // only useful for PBC with phys. groups defined
 	m1.setWallNormalVWBC();
+	m1.setWallMovingPBC(0.0,0.0);
  	//m1.setOnePointPressureBC();
  }
  else if ( selectionExtension == "vtk" )
@@ -189,12 +191,13 @@ int main(int argc, char **argv)
  sp.setSolverConcentration(solverC);
 
  //*** Initial Conditions
- //sp.init(); // default
- sp.initTaylorVortex(); // Taylor vortex
+ sp.init(); // default
+ //sp.initTaylorVortex(); // Taylor vortex
  //sp.initTaylorGreenVortex();
 
  //*** Matrix Mounting and b.c. Setting - Velocity, Pressure
  sp.assemble();
+ //sp.assembleSlip();
  sp.matMount();
  //sp.matMountC();
 
@@ -231,7 +234,7 @@ int main(int argc, char **argv)
  save.saveVTK(vtkFolder,"initial",0);
 
  //*** Iterative Process (Temporal Loop)
- int nIter = 50;
+ int nIter = 100;
  int nRe = 1;
  for( int i=0;i<nIter;i++ )
  {
@@ -251,7 +254,7 @@ int main(int argc, char **argv)
 
    //**** Physical Effects
    //sp.setGravity("+X");
-   //sp.setBetaFlowLiq("+X");
+   sp.setBetaFlowLiq("+X");
 
    //**** r.h.s Vector
    sp.setRHS_PBC();

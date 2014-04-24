@@ -988,6 +988,27 @@ void Model3D::setWallNormalVWBC()
 
 }
 
+
+void Model3D::setJetMesh(double _radius)
+{
+	for (int i = 0; i < numVerts; ++i )
+	{
+		double y = Y.Get(i);
+		double z = Z.Get(i);
+		double r = sqrt(y*y + z*z);
+
+		if ( r >= _radius )
+		{
+			y *= r*r;
+			z *= r*r;
+			Y.Set(i,y);
+			Z.Set(i,z);
+		}
+
+	}
+}
+
+
 void Model3D::setWallMovingPBC(double _velInf, double _velSup)
 {
 	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)

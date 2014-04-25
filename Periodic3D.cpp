@@ -38,6 +38,8 @@ Periodic3D::Periodic3D()
 
 	MasterIndices.resize(0);
 	SlaveIndices.resize(0);
+
+	GEOMETRICAL_SHAPE = "default";
 }
 
 
@@ -88,6 +90,9 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     {
 	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
         
+		if ( GEOMETRICAL_SHAPE == "square" )
+		{
+		
 		// Eliminating points of periodicity
 		vector<int> auxXMin(0);
 		vector<int> auxXMax(0);
@@ -166,6 +171,7 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
 		VecXMin = CopyVectorToClVectorInt(auxXMin);  
 		VecXMax = CopyVectorToClVectorInt(auxXMax);
 		
+		} // end if 
 
 		YLeftBoundaryVector.Dim(nyPointsL);
         YRightBoundaryVector.Dim(nyPointsL);
@@ -816,6 +822,20 @@ void Periodic3D::ExtractMiddleVerts(const char *MeshFileName)
     }
 } /* End of function */
 
+
+/* \brief Sets geometry of the of the PBC walls. TEST..." 
+ * 
+ **/
+void Periodic3D::SetGeometricalShape(string _shape)
+{
+ 	if ( _shape == "default" )
+	{
+ 	  GEOMETRICAL_SHAPE = "circular";
+	}
+ 	 
+	GEOMETRICAL_SHAPE = _shape;
+	
+}
 
 /** Get blocks */
 int Periodic3D::GetNyPointsL() { return nyPointsL; };

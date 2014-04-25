@@ -83,6 +83,7 @@ public:
 	void ForcedParallelismZ(int j, clVector _u, clVector _v);
 
 	void SetIndicesVector(vector<int>* _master, vector<int>* _slave);
+	void SetGeometricalShape(string _shape);
 
 	/* POINTER functions */
 	clVector* GetVecXMin();
@@ -103,6 +104,7 @@ private:
     int nyPointsR; // number of y points over \Gamma_{right}
     int nyPointsM; // number of points over \Omega - ( \Gammas_{left,right} )
     
+	string GEOMETRICAL_SHAPE;
     
 	/* POINTER objects */
     Model3D *M3DPtr; // pointer to class Model3D

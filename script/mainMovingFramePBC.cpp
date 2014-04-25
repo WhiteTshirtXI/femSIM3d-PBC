@@ -102,7 +102,8 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
+ const char *vtkFolder  = "./vtk/";
  
  
  //*** Peixoto's tree
@@ -143,6 +144,7 @@ int main(int argc, char **argv)
  //*** Periodic Constructor
  Periodic3D pbc(m1);
  pbc.MountPeriodicVectors(m1);
+ pbc.SetGeometricalShape("default");
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
@@ -179,6 +181,9 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
+
+ //*** Output (Initial Condition)
+ save.saveVTK(vtkFolder,"initial",0);
 
  // Point's distribution
  Helmholtz3D h1(m1);

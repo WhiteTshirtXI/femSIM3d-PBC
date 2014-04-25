@@ -5236,12 +5236,10 @@ void Model3D::setBubbleArrayPeriodicBC()
 	        idbcu.AddItem(*it);
 	        idbcv.AddItem(*it);
 	        idbcw.AddItem(*it);
-	        idbcp.AddItem(*it);
 	 
 	        uc.Set(*it,-1.0);
 	        vc.Set(*it,0.0);
 	        wc.Set(*it,0.0);
-	        pc.Set(*it,0.0);
 	     }
 	 }
 }

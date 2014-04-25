@@ -989,7 +989,7 @@ void Model3D::setWallNormalVWBC()
 }
 
 
-void Model3D::setJetMesh(double _radius)
+void Model3D::setJetMesh()
 {
 	for (int i = 0; i < numVerts; ++i )
 	{
@@ -997,20 +997,11 @@ void Model3D::setJetMesh(double _radius)
 		double z = Z.Get(i);
 		double r = sqrt(y*y + z*z);
 
-		if ( r <= _radius )
-		{
-			y *= r;
-			z *= r;
-			Y.Set(i,y);
-			Z.Set(i,z);
-		}
-		else  
-		{
-			y *= r*r/20;
-			z *= r*r/20;
-			Y.Set(i,y);
-			Z.Set(i,z);
-		}
+		double factor = 1.0 + 8.0*pow(r/10.0,3);
+		y *= factor;
+		z *= factor;
+		Y.Set(i,y);
+		Z.Set(i,z);
 
 	}
 }

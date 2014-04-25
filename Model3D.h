@@ -205,6 +205,7 @@ class Model3D
   void setStepBC();
   void setStepPBC(); // <<<
   void setBubbleArrayPeriodicBC(); // <<<
+  void setBubbleArrayPeriodicBC(double _vel); // <<<
   void setOnePointPressureBC(); // <<<
   void setWallNormalVWBC(); // << slip condition, except PBC walls
   void setWallSlipEdgesBC();

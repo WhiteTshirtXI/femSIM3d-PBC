@@ -321,7 +321,7 @@ class Simulator3D
 
   // PBC
   Periodic3D *pbc;
-  int nyPointsL, nyPointsR, nyPointsM, NumVertsMid;
+  int nyPointsL;
   double pJump;
   int IBR;
   string direction;

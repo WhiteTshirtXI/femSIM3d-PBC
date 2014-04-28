@@ -27,14 +27,12 @@ Periodic3D::Periodic3D()
 {
     nyPointsL = 0;
     nyPointsR = 0;
-    nyPointsM = 0;
     YLeftBoundaryVector.Dim(0);
     YRightBoundaryVector.Dim(0);
     ZLeftBoundaryVector.Dim(0);
     ZRightBoundaryVector.Dim(0);
     VecXMin.Dim(0);
     VecXMax.Dim(0);
-    VecXMid.Dim(0);
 
 	MasterIndices.resize(0);
 	SlaveIndices.resize(0);
@@ -72,11 +70,9 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     
     VecXMin = XPtr->FindValue(XMin); // returns vector with indices xMin
     VecXMax = XPtr->FindValue(XMax); // returns vector with indices xMax
-    VecXMid = XPtr->FindComplementaryValues(XMin,XMax);
     
 	nyPointsL = VecXMin.Dim(); 
     nyPointsR = VecXMax.Dim(); 
-    nyPointsM = VecXMid.Dim();
     
 	clVector XAux;
     XAux.Dim(nyPointsL);
@@ -687,68 +683,12 @@ void Periodic3D::SetJumpPressurePBC(clVector &_Pressure, clVector &_VecXMin, clV
 } /* End of function */
 
 
-/**  \brief It extracts mesh vertices (without centroid) over
- *   \Omega - \Gammas_{left,right} (but includes top, bottom) before
- *   setting centroids. 
- *   
- *   \note Approach to be used when considering future implementation
- *         of PBC with full reassembling of the global matrices. 
- *
- */
-void Periodic3D::ExtractMiddleVerts(const char *MeshFileName)
-{
- 	char auxstr[255];
-	int i;
-	double coords[3];
-	clVector XAux;
-    
-	ifstream vtkFile( MeshFileName, ios::in);
-    
-	if ( !vtkFile )
-	{
-		cerr << "Missing 'file'.vtk. Nothing to read..." << endl;
-		exit(1);
-	}
-    
-	while ( ( !vtkFile.eof() && strcmp( auxstr,"POINTS" ) != 0 ) )
-	{
-	 	vtkFile >> auxstr;
-	}
-    
-	if ( !vtkFile.eof() )
-	{
-		vtkFile >> NumVerts;
-		vtkFile >> auxstr;
-        
-		XAux.Dim(NumVerts);
-		
-		for ( i = 0; i < NumVerts; i++ )
-		{
-            vtkFile >> coords[0];
-            XAux.Set(i,coords[0]);
-		}
-    
-    }
-    
-    for ( i = 0; i < NumVerts; i++ )
-    {
-	  	if ( XAux.Get(i) > XAux.Min() && XAux.Get(i) < XAux.Max() )
-		{
-		 	VecXMidVerts.Append(i);
-		}
-    }
-} /* End of function */
-
 /** Get blocks */
 int Periodic3D::GetNyPointsL() { return nyPointsL; };
 int Periodic3D::GetNyPointsR() { return nyPointsR; };
-int Periodic3D::GetNyPointsM() { return nyPointsM; };
-int Periodic3D::GetNumVertsMid() { return NumVertsMid; };
 
 clVector* Periodic3D::GetVecXMin() { return &VecXMin; };
 clVector* Periodic3D::GetVecXMax() { return &VecXMax; };
-clVector* Periodic3D::GetVecXMid() { return &VecXMid; };
-clVector* Periodic3D::GetVecXMidVerts() { return &VecXMidVerts; };
 
 vector<int> Periodic3D::GetMasterIndices() { return MasterIndices; };
 vector<int> Periodic3D::GetSlaveIndices() { return SlaveIndices; };

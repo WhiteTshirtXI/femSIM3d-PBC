@@ -5372,12 +5372,8 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 {
 	pbc = &_pbc;
 	nyPointsL = pbc->GetNyPointsL();
-	nyPointsM = pbc->GetNyPointsM();
-	NumVertsMid = pbc->GetNumVertsMid();
 	VecXMin = pbc->GetVecXMin();
 	VecXMax = pbc->GetVecXMax();
-	VecXMid = pbc->GetVecXMid();
-	VecXMidVerts = pbc->GetVecXMidVerts();
 	VecXMinGlob.Dim(0);
 	VecXMaxGlob.Dim(0);
 	betaFlowLiq.Dim(3*numNodes);
@@ -6367,7 +6363,7 @@ void Simulator3D::initTaylorVortex()
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
-		double U = 0.0;
+		double U = 1.0;
 		double V = 0.0;
 		double W = 0.0;
 

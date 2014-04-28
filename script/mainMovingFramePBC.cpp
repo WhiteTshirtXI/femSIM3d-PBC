@@ -104,8 +104,9 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
- const char *vtkFolder  = "./vtk/";
+ //const char *vtkFolder  = "./vtk/";
  
  
  //*** Peixoto's tree
@@ -244,6 +245,8 @@ int main(int argc, char **argv)
       //s2.setInterface();
       s2.setInterfaceGeo();
       
+	  s2.setCopyDirectionPBC("RL");
+
 	  //s2.unCoupled();
       s2.unCoupledPBC(); // <<<
 

@@ -88,14 +88,16 @@ int main(int argc, char **argv)
  double rho_out = 0.0728;
 
  //*** File
- string meshFile = "bubble-elongated-3d-nb3.msh";
+ string meshFile = "bubble-elongated-3d-nb2.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCICC);
- Solver *solverC = new PetscSolver(KSPCG,PCICC);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverC = new PetscSolver(KSPCG,PCJACOBI);
+ //Solver *solverC = new PCGSolver();
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
 
  //** Data Saving Directories
@@ -122,7 +124,7 @@ int main(int argc, char **argv)
 
   const char *mesh1 = mesh;
 
-  m1.readMSH(mesh1);
+  m1.readMSH(mesh1); 
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
@@ -132,19 +134,18 @@ int main(int argc, char **argv)
    #else
  	m1.setQuadElement();
   #endif
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
+  m1.setSurfaceConfig(); // configurations of interfaces
+  m1.setInitSurfaceVolume(); // gets volume of the bubbles
+  m1.setInitSurfaceArea(); // gets surface area of the bubbles
 
  //*** B.C.
  //m1.setGenericBC();
  m1.setBubbleArrayPeriodicBC(); // <<<
-  	
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectors(m1);
  pbc.SetGeometricalShape("default");
+ pbc.MountPeriodicVectors(m1);
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
@@ -174,16 +175,17 @@ int main(int argc, char **argv)
  s2.setSolverConcentration(solverC);
 
  s2.init();
+ 
+ InOut save(m1,s2);
+ 
+ //*** Output (Initial Condition)
+ save.saveVTK(vtkFolder,"initial",0);
 
  /* Saving mesh info */
- InOut save(m1,s2);
  save.saveVTK(vtkFolder,"geometry");
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
-
- //*** Output (Initial Condition)
- save.saveVTK(vtkFolder,"initial",0);
 
  // Point's distribution
  Helmholtz3D h1(m1);
@@ -224,13 +226,11 @@ int main(int argc, char **argv)
       save.printSimulationReport();
 
       //s2.stepLagrangian();
-      //s2.stepALE();
-      s2.stepSLPBCFix(); // <<< 
+      s2.stepALE();
 
       s2.movePoints();
 
-      //s2.assemble();
-      s2.assemblePBC(); // <<<
+      s2.assemble();
       s2.matMount();
 
       //s2.setUnCoupledBC();
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 	  //s2.setRHS();
       s2.setRHS_PBC(); // <<<
       
-	  //s2.setGravity("-Z");
+	  s2.setGravity("+X");
 
       //s2.setInterface();
       s2.setInterfaceGeo();

@@ -52,8 +52,6 @@ public:
 	/* INT functions */
     int GetNyPointsL();
     int GetNyPointsR();
-    int GetNyPointsM();
-    int GetNumVertsMid();
     
 	/* BOOL functions */
     bool VerifyParallelismY(clVector _u, clVector _v);
@@ -98,11 +96,9 @@ private:
     
 	/* INT objects */
     int NumVerts; // number of mesh vertices
-    int NumVertsMid; // number of interior mesh vertices without centroids
     int NumNodes; // number of mesh vertices + centroids
     int nyPointsL; // number of y points over \Gamma_{left}
     int nyPointsR; // number of y points over \Gamma_{right}
-    int nyPointsM; // number of points over \Omega - ( \Gammas_{left,right} )
     
 	/* POINTER objects */
     Model3D *M3DPtr; // pointer to class Model3D
@@ -112,8 +108,6 @@ private:
     
 	/* CLVECTOR objects */
 	clVector VecXMin, VecXMax; // stores indices of points over \Gammas_{left,right}
-    clVector VecXMid; // stores indices of points over \Omega - ( \Gammas_{left,right} )
-    clVector VecXMidVerts; // store indices according to NumVertsMid
     clVector YLeftBoundaryVector; // stores the y-components of \Gamma_{left}
     clVector YRightBoundaryVector; // stores the y-components of \Gamma_{right}
     clVector ZLeftBoundaryVector; // stores the z-components of \Gamma_{left}

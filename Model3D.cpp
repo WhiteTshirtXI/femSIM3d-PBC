@@ -5013,6 +5013,10 @@ void Model3D::setGenericBC()
    wc.Set(*it,0.0);
   }
 
+  // Nao faz nada
+  else if( surfMesh.phyBounds.at(*it) == "\"wallL\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallR\"" ) {}
+
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
   {
@@ -5226,43 +5230,6 @@ void Model3D::setGenericBC()
  //integralParabolic();
 }
 
-void Model3D::setBubbleArrayPeriodicBC()
-{
-
-	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
-    {
-        if ( surfMesh.phyBounds.at(*it) == "\"wallMoving\"" )
-        {
-	        idbcu.AddItem(*it);
-	        idbcv.AddItem(*it);
-	        idbcw.AddItem(*it);
-	 
-	        uc.Set(*it,-1.0);
-	        vc.Set(*it,0.0);
-	        wc.Set(*it,0.0);
-	     }
-	 }
-}
-
-void Model3D::setBubbleArrayPeriodicBC(double _vel)
-{
-
-	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
-    {
-        if ( surfMesh.phyBounds.at(*it) == "\"wallMoving\"" )
-        {
-	        idbcu.AddItem(*it);
-	        idbcv.AddItem(*it);
-	        idbcw.AddItem(*it);
-	        idbcp.AddItem(*it);
-	 
-	        uc.Set(*it,-1.0 - _vel);
-	        vc.Set(*it,0.0);
-	        wc.Set(*it,0.0);
-	        pc.Set(*it,0.0);
-	     }
-	 }
-}
 
 
 void Model3D::setOnePointPressureBC()

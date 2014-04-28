@@ -427,6 +427,12 @@ void Simulator3D::init()
  wSolOld.CopyFrom( 0,*wc );
  pSolOld.CopyFrom( 0,*pc );
  cSolOld.CopyFrom( 0,*cc );
+
+ uSol.CopyFrom( 0,*uc );
+ vSol.CopyFrom( 0,*vc );
+ wSol.CopyFrom( 0,*wc );
+ pSol.CopyFrom( 0,*pc );
+ cSol.CopyFrom( 0,*cc );
 }
 
 void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
@@ -5408,7 +5414,6 @@ void Simulator3D::VelPressMatrixModifierPBC()
 
    // indxMasterSlave must have the same size. Hence, ny suffices.
    size_t ny = indxMasterToModify.size();
-   size_t nys = indxSlaveToModify.size();
 
   /* Copying rows and columns from ibL into ibR:
    * i) Remove the contributions from left and overloads in right;

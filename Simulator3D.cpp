@@ -5388,7 +5388,7 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 /* VelPressMatrixModifierPBC() */
 void Simulator3D::VelPressMatrixModifierPBC()
 {
-   size_t i,j;
+   int i,j;
    int ibL,ibR;
 
    // indices to which PBC will be applied
@@ -5410,7 +5410,7 @@ void Simulator3D::VelPressMatrixModifierPBC()
   }
 
    // indxMasterSlave must have the same size. Hence, ny suffices.
-   size_t ny = indxMasterToModify.size();
+   int ny = indxMasterToModify.size();
 
   /* Copying rows and columns from ibL into ibR:
    * i) Remove the contributions from left and overloads in right;
@@ -6236,7 +6236,7 @@ void Simulator3D::sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector&
 
 void Simulator3D::sumIndexPBCVelVector(vector<int> _indexL, vector<int> _indexR, clVector& _b)
 {
-    for (int i = 0; i < _indexL.size(); i++)
+    for (size_t i = 0; i < _indexL.size(); i++)
     {
        int ibL = _indexL.at(i);
        int ibR = _indexR.at(i);
@@ -6280,7 +6280,7 @@ void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVecto
 
 void Simulator3D::sumIndexPBCPressVector(vector<int> _indexL, vector<int> _indexR, clVector& _p)
 {
-   for (int i = 0; i < _indexL.size(); i++)
+   for (size_t i = 0; i < _indexL.size(); i++)
    {
       int ibL = _indexL.at(i);
       int ibR = _indexR.at(i);
@@ -6313,7 +6313,7 @@ void Simulator3D::sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVect
 
 void Simulator3D::sumIndexPBCScalarVector(vector<int> _indexL, vector<int> _indexR, clVector& _s)
 {
-   for (int i = 0; i < _indexL.size(); i++)
+   for (size_t i = 0; i < _indexL.size(); i++)
    {
       int ibL = _indexL.at(i);
       int ibR = _indexR.at(i);

@@ -27,10 +27,6 @@ Periodic3D::Periodic3D()
 {
     nyPointsL = 0;
     nyPointsR = 0;
-    YLeftBoundaryVector.Dim(0);
-    YRightBoundaryVector.Dim(0);
-    ZLeftBoundaryVector.Dim(0);
-    ZRightBoundaryVector.Dim(0);
     VecXMin.Dim(0);
     VecXMax.Dim(0);
 
@@ -91,12 +87,6 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     else /* If test of dimension is OK, mounts. */
     {
 	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
-        
-		YLeftBoundaryVector.Dim(nyPointsL);
-        YRightBoundaryVector.Dim(nyPointsL);
-        ZLeftBoundaryVector.Dim(nyPointsL);
-        ZRightBoundaryVector.Dim(nyPointsL);
-
               
         for ( int i = 0; i < nyPointsL; i++ )
         {
@@ -104,9 +94,7 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
 			int ibL = VecXMin.Get(i);
 
 			double YLeft = YPtr->Get(ibL);
-            YLeftBoundaryVector.Set(i,YLeft);
             double ZLeft = ZPtr->Get(ibL);
-            ZLeftBoundaryVector.Set(i,ZLeft);
 
             for ( int j = 0; j < nyPointsR; j++ )
             {
@@ -124,8 +112,6 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
 			}
 			
 			XAux.Set(i,ibR); // reorders after 'break'
-            YRightBoundaryVector.Set(i,YRight);
-            ZRightBoundaryVector.Set(i,ZRight);
                     
         }
     
@@ -226,7 +212,7 @@ void Periodic3D::SetIndicesVector(vector<int>* _master, vector<int>* _slave)
 	MasterIndices.resize(nyPointsL);
 	SlaveIndices.resize(nyPointsL);
 
-	for ( size_t i = 0; i != nyPointsL; ++i )
+	for ( int i = 0; i != nyPointsL; ++i )
 	{
 		MasterIndices.at(i) = _master->at(i);
 		SlaveIndices.at(i) = _slave->at(i);

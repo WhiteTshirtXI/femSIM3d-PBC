@@ -97,10 +97,6 @@ private:
     
 	/* CLVECTOR objects */
 	clVector VecXMin, VecXMax; // stores indices of points over \Gammas_{left,right}
-    clVector YLeftBoundaryVector; // stores the y-components of \Gamma_{left}
-    clVector YRightBoundaryVector; // stores the y-components of \Gamma_{right}
-    clVector ZLeftBoundaryVector; // stores the z-components of \Gamma_{left}
-    clVector ZRightBoundaryVector; // stores the z-components of \Gamma_{right}
 	
 	/* VECTOR OBJECTS */
 	vector<int> MasterIndices;

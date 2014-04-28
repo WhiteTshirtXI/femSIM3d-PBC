@@ -5384,6 +5384,7 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 
 	MasterIndices = pbc->GetMasterIndices();
 	SlaveIndices = pbc->GetSlaveIndices();
+	direction = "RL"; // right to left as default value
 
 } // fecha metodo
 

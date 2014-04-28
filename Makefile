@@ -47,7 +47,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
 		   2Bubbles micro zalesak vortex curvatureTest shear movingFrame \
 		   
-two-phasePBC: mainChannelPBC mainMovingFramePBC
+two-phasePBC: channelPBC movingFramePBC
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -72,7 +72,7 @@ channelPBC: ${FEM3D_DIR}/script/mainChannelPBC.o $(obj)
 taylorVortexPBC: ${FEM3D_DIR}/script/mainTaylorVortexPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-mainMovingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
+movingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 	#
 
@@ -172,9 +172,6 @@ risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
-	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-
-movingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 test: ${FEM3D_DIR}/script/mainTest.o $(obj)

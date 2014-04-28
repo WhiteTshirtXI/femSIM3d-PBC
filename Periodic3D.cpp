@@ -39,7 +39,6 @@ Periodic3D::Periodic3D()
 	MasterIndices.resize(0);
 	SlaveIndices.resize(0);
 
-	GEOMETRICAL_SHAPE = "default";
 }
 
 
@@ -74,10 +73,17 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     VecXMin = XPtr->FindValue(XMin); // returns vector with indices xMin
     VecXMax = XPtr->FindValue(XMax); // returns vector with indices xMax
     VecXMid = XPtr->FindComplementaryValues(XMin,XMax);
-    nyPointsL = VecXMin.Dim(); 
+    
+	nyPointsL = VecXMin.Dim(); 
     nyPointsR = VecXMax.Dim(); 
     nyPointsM = VecXMid.Dim();
+    
+	clVector XAux;
+    XAux.Dim(nyPointsL);
 
+	int ibR = 0;
+	double YRight = 0.0;
+	double ZRight = 0.0;
     /* Test of dimension */
     if ( nyPointsL != nyPointsR )
     {
@@ -90,135 +96,48 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
     {
 	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
         
-		if ( GEOMETRICAL_SHAPE == "square" )
-		{
-		
-		// Eliminating points of periodicity
-		vector<int> auxXMin(0);
-		vector<int> auxXMax(0);
-		auxXMin = CopyClVectorToVectorInt(VecXMin);
-		auxXMax = CopyClVectorToVectorInt(VecXMax);
-		
-		for ( int i = 0; i != auxXMin.size(); ++i )
-		{
-		  int ibL = auxXMin.at(i);
-		  int ibR = auxXMax.at(i);
-		  double yL = YPtr->Get(ibL);
-		  double zL = ZPtr->Get(ibL);
-		  double yR = YPtr->Get(ibR);
-		  double zR = ZPtr->Get(ibR);
-
-		  double yMin = YPtr->Min(); 
-		  double yMax = YPtr->Max(); 
-		  double zMin = ZPtr->Min(); 
-		  double zMax = ZPtr->Max(); 
-
-		  // marking to delete
-		  if ( ( (zL == zMax) || (zL == zMin) ) &&
-			   ( (yL >= yMin) && (yL <= yMax) ) )
-		  {
-		   	auxXMin.at(i) = -1;		
-		  }
-		  if ( ( (yL == yMax) || (yL == yMin) ) &&
-			   ( (zL  > zMin) && (zL < zMax) ) )
-		  {
-		   	auxXMin.at(i) = -1;			
-		  }
-		  if ( ( (zR == zMax) || (zR == zMin) ) &&
-			   ( (yR >= yMin) && (yR <= yMax) ) )
-		  {
-		   	auxXMax.at(i) = -1;		
-		  }
-		  if ( ( (yR == yMax) || (yR == yMin) ) &&
-			   ( (zR  > zMin) && (zR < zMax) ) )
-		  {
-		   	auxXMax.at(i) = -1;		
-		  }
-		  
-		}
-		
-		// sorting
-		sort(auxXMin.begin(),auxXMin.end());
-		sort(auxXMax.begin(),auxXMax.end());
-		
-		// eliminating entries with -1
-		vector<int>::iterator it;
-		vector<int>::iterator itt;
-		it  = auxXMin.end();
-		itt = auxXMax.end();
-
-		while (it != auxXMin.begin()) 
-		{
-			if ( *it == -1 )
-			 auxXMin.erase(it);
-			  it--;
-		}
-
-		while (itt != auxXMax.begin()) 
-		{
-			if ( *itt == -1 )
-			 auxXMax.erase(itt);
-			  itt--;
-		}
-		// erasing last entry with -1
-		auxXMin.erase(auxXMin.begin());
-		auxXMax.erase(auxXMax.begin());
-
-		//redefining number of periodics and reallocating
-		nyPointsL = auxXMin.size();
-		VecXMin.Dim(nyPointsL);
-		VecXMax.Dim(nyPointsL);		
-		VecXMin = CopyVectorToClVectorInt(auxXMin);  
-		VecXMax = CopyVectorToClVectorInt(auxXMax);
-		
-		} // end if 
-
 		YLeftBoundaryVector.Dim(nyPointsL);
         YRightBoundaryVector.Dim(nyPointsL);
         ZLeftBoundaryVector.Dim(nyPointsL);
         ZRightBoundaryVector.Dim(nyPointsL);
 
-        clVector XAux;
-        XAux = VecXMax;
               
         for ( int i = 0; i < nyPointsL; i++ )
         {
-            int ibL = VecXMin.Get(i);
+            
+			int ibL = VecXMin.Get(i);
 
 			double YLeft = YPtr->Get(ibL);
             YLeftBoundaryVector.Set(i,YLeft);
             double ZLeft = ZPtr->Get(ibL);
             ZLeftBoundaryVector.Set(i,ZLeft);
-            
-			double deltaYOld = 1000.0;
-			double deltaZOld = 1000.0;
 
-            for ( int j = 0; j < nyPointsL; j++ )
+            for ( int j = 0; j < nyPointsR; j++ )
             {
-                int ibR = XAux.Get(j);
-                double YRight = YPtr->Get(ibR);
-                double ZRight = ZPtr->Get(ibR);
+                ibR = VecXMax.Get(j);
+				YRight = YPtr->Get(ibR);
+				ZRight = ZPtr->Get(ibR);
                 
 				double deltaY = fabs( YLeft - YRight );
 				double deltaZ = fabs( ZLeft - ZRight );
 
-                if ( ( deltaY < deltaYOld ) &&
-				     ( deltaZ < deltaZOld ) ) // reorders pairing
-                {
-					//VecXMax.Set(i,ibR);
-					deltaYOld = deltaY;
-					deltaZOld = deltaZ;
-                    YRightBoundaryVector.Set(i,YRight);
-                    ZRightBoundaryVector.Set(i,ZRight);
-                }
-            
-            }
-            
+				// if finds pair, jumps out
+                if ( ( deltaY < 1E-10 ) &&
+				     ( deltaZ < 1E-10 ) )
+				    break;				
+			}
+			
+			XAux.Set(i,ibR); // reorders after 'break'
+            YRightBoundaryVector.Set(i,YRight);
+            ZRightBoundaryVector.Set(i,ZRight);
+                    
         }
     
     }
     
-    /* Printing pairs */
+    VecXMax = XAux;
+    
+	/* Printing pairs */
 	cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
 	for (int i = 0; i < nyPointsL; ++i)
 	{
@@ -227,10 +146,8 @@ void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
 		
 		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
 
-	}	
+	}
 
-    //VerifyParallelismY(YLeftBoundaryVector,YRightBoundaryVector);
-    //VerifyParallelismZ(ZLeftBoundaryVector,ZRightBoundaryVector);
     
 } /* End of function */
 
@@ -821,21 +738,6 @@ void Periodic3D::ExtractMiddleVerts(const char *MeshFileName)
 		}
     }
 } /* End of function */
-
-
-/* \brief Sets geometry of the of the PBC walls. TEST..." 
- * 
- **/
-void Periodic3D::SetGeometricalShape(string _shape)
-{
- 	if ( _shape == "default" )
-	{
- 	  GEOMETRICAL_SHAPE = "circular";
-	}
- 	 
-	GEOMETRICAL_SHAPE = _shape;
-	
-}
 
 /** Get blocks */
 int Periodic3D::GetNyPointsL() { return nyPointsL; };

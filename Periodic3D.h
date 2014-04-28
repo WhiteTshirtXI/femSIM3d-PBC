@@ -53,10 +53,6 @@ public:
     int GetNyPointsL();
     int GetNyPointsR();
     
-	/* BOOL functions */
-    bool VerifyParallelismY(clVector _u, clVector _v);
-    bool VerifyParallelismZ(clVector _u, clVector _v);
-    
 	/* VOID functions */
     void MountPeriodicVectors(Model3D &_M3D);
     void MountPeriodicVectorsNew(Model3D &_M3D);
@@ -76,18 +72,11 @@ public:
                             clVector &_VecXMax, int L, string direction);
     void SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master,
                             vector<int> &_slave, int L, string direction);
-	void ExtractMiddleVerts(const char *MeshFileName);
-	void ForcedParallelismY(int j, clVector _u, clVector _v);
-	void ForcedParallelismZ(int j, clVector _u, clVector _v);
-
 	void SetIndicesVector(vector<int>* _master, vector<int>* _slave);
-	void SetGeometricalShape(string _shape);
 
 	/* POINTER functions */
 	clVector* GetVecXMin();
     clVector* GetVecXMax();
-    clVector* GetVecXMid();
-    clVector* GetVecXMidVerts();
 	vector<int> GetMasterIndices();
 	vector<int> GetSlaveIndices();
 

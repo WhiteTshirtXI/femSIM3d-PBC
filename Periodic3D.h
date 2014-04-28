@@ -104,8 +104,6 @@ private:
     int nyPointsR; // number of y points over \Gamma_{right}
     int nyPointsM; // number of points over \Omega - ( \Gammas_{left,right} )
     
-	string GEOMETRICAL_SHAPE;
-    
 	/* POINTER objects */
     Model3D *M3DPtr; // pointer to class Model3D
     clVector *XPtr, *YPtr, *ZPtr; // pointers to X,Y,Z vectors from class Model3D

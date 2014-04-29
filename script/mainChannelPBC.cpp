@@ -110,7 +110,8 @@ int main(int argc, char **argv)
  	//string meshFile = "cuboid-3d-w0.1.msh";
  	//string meshFile = "cylinder-3d.msh";
  	//string meshFile = "cylinder-3d-L0.5D-w0.01.msh";
- 	string meshFile = "cylinder-3d-L0.5D-w0.5.msh";
+ 	//string meshFile = "cylinder-3d-L0.5D-w0.5.msh";
+ 	string meshFile = "cylinder-3d-L0.5D-w0.5-transfinite.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
  	meshDir += "/" + meshFile;
@@ -122,7 +123,7 @@ int main(int argc, char **argv)
  	m1.setInterfaceBC();
  	m1.setTriEdge();
  	m1.mesh2Dto3D();
-	m1.setJetMesh(1.0); // mesh geometrical transform
+	m1.setJetMesh(); // mesh geometrical transform
  	m1.setMapping();
  
 	#if NUMGLEU == 5
@@ -246,9 +247,9 @@ int main(int argc, char **argv)
 	    << iter << endl;
 
    //**** Advective Term
-   //sp.stepSLPBCFix();
+   sp.stepSLPBCFix();
    //sp.stepNoConvection();
-   sp.stepSL();
+   //sp.stepSL();
    
    //**** B.C. update
    sp.setUnCoupledPBC(); 

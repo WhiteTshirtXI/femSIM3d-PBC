@@ -69,7 +69,7 @@ int main(int argc, char **argv)
  double cfl = 1.0;
 
  //** Physical Parameters
- double Re = 300;
+ double Re = 1000;
  double Sc = 200;
  double Fr = 10;
  double mu_l = 1.0002E-3;
@@ -108,9 +108,8 @@ int main(int argc, char **argv)
  if ( selectionExtension == "msh")
  {
   	//*** File
- 	//string meshFile = "cuboid-3d.msh";
  	//string meshFile = "thesis-jet.msh";
- 	string meshFile = "cuboid-3d-w0.1.msh";
+ 	string meshFile = "cuboid-3d.msh";
  	//string meshFile = "cylinder-3d.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
@@ -160,7 +159,7 @@ int main(int argc, char **argv)
  }
  else
  {
-	cerr << "Error Check mesh file: vtk/msh." << endl; 
+	cerr << "Error. Check mesh file: vtk/msh." << endl; 
 	exit(1);
  }
 
@@ -196,6 +195,11 @@ int main(int argc, char **argv)
  //*** Starting Flow: Pressure Gradient Setting
  sp.setBetaPressureLiquid();
 
+ //**** Mounting
+ //sp.assemble(); 
+ sp.assembleSlip(); 
+ sp.matMount();
+ //sp.matMountC();
 
  /* PROCESSING / POST-PROCESSING SECTION */
 
@@ -226,7 +230,7 @@ int main(int argc, char **argv)
  save.saveVTK(vtkFolder,"initial",0);
 
  //*** Iterative Process (Temporal Loop)
- int nIter = 50;
+ int nIter = 10;
  int nRe = 1;
  for( int i=0;i<nIter;i++ )
  {
@@ -236,18 +240,13 @@ int main(int argc, char **argv)
 	    << iter << endl;
 
    //**** Advective Term
-   //sp.stepSLPBCFix(); // semi-lagrangian repair
+   sp.stepSLPBCFix(); // semi-lagrangian repair
    //sp.stepNoConvection();
-   sp.stepSL();
+   //sp.stepSL();
    //sp.stepSLHighOrderOne(); // to be implemented to 3D
 
-   //**** Mounting and B.C. update
-   //sp.assemble(); 
-   sp.assembleSlip(); 
-   sp.matMount();
-   //sp.matMountC();
-   sp.setUnCoupledBC();
-   //sp.setUnCoupledPBC(); 
+   //sp.setUnCoupledBC();
+   sp.setUnCoupledPBC(); 
    //sp.setUnCoupledCBC();
 
    //**** Physical Effects
@@ -262,8 +261,8 @@ int main(int argc, char **argv)
    sp.setCopyDirectionPBC("RL");
    
    //**** Matricial System Solution
-   sp.unCoupled();
-   //sp.unCoupledPBC();
+   //sp.unCoupled();
+   sp.unCoupledPBC();
    //sp.unCoupledCPBC();
    
    //**** Solution Saving

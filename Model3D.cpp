@@ -5013,7 +5013,7 @@ void Model3D::setGenericBC()
    wc.Set(*it,0.0);
   }
 
-  // Nao faz nada
+  // periodic boundaries. Any Dirichlet condition is imposed.
   else if( surfMesh.phyBounds.at(*it) == "\"wallL\"" ) {}
   else if( surfMesh.phyBounds.at(*it) == "\"wallR\"" ) {}
 

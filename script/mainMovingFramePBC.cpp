@@ -69,7 +69,6 @@ int main(int argc, char **argv)
  //** Numerical Parameters
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- double vel = 0;
  double c1 = 0.0;      // lagrangian
  double c2 = 0.0;      // smooth vel
  double c3 = 3.0;      // smooth coord (fujiwara)
@@ -88,7 +87,7 @@ int main(int argc, char **argv)
  double rho_out = 0.0728;
 
  //*** File
- string meshFile = "bubble-elongated-3d-nb2.msh";
+ string meshFile = "bubble-elongated-3d-nb3.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
@@ -104,8 +103,8 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
  //const char *vtkFolder  = "./vtk/";
  
  
@@ -140,12 +139,10 @@ int main(int argc, char **argv)
   m1.setInitSurfaceArea(); // gets surface area of the bubbles
 
  //*** B.C.
- //m1.setGenericBC();
- m1.setBubbleArrayPeriodicBC(); // <<<
+ m1.setGenericBC();
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.SetGeometricalShape("default");
  pbc.MountPeriodicVectors(m1);
  
  //*** Simulator Constructor
@@ -174,6 +171,9 @@ int main(int argc, char **argv)
  s2.setSolverPressure(solverP);
  s2.setSolverVelocity(solverV);
  s2.setSolverConcentration(solverC);
+
+ //*** Starting flow
+ s2.setBetaPressureLiquid();
 
  s2.init();
  
@@ -218,8 +218,8 @@ int main(int argc, char **argv)
       vref += vinst;
       cout << vref << " " << vinst << endl;
       s2.setUSol(vinst);
-      //m1.setGenericBC(vref);
-	  m1.setBubbleArrayPeriodicBC(vref);
+      m1.setGenericBC(vref);
+	  pbc.MountPeriodicVectors(m1);
       s2.setURef(vref);
 
       s2.setDtALETwoPhase();
@@ -240,7 +240,8 @@ int main(int argc, char **argv)
 	  //s2.setRHS();
       s2.setRHS_PBC(); // <<<
       
-	  s2.setGravity("+X");
+	  //s2.setGravity("+X");
+	  s2.setBetaFlowLiq("+X");
 
       //s2.setInterface();
       s2.setInterfaceGeo();
@@ -253,6 +254,7 @@ int main(int argc, char **argv)
 	  //*** Solution Saving 
       save.saveMSH(mshFolder,"newMesh",iter);
       save.saveVTK(vtkFolder,"sim",iter);
+      save.saveVTU(vtkFolder,"sim",iter);
       save.saveVTKSurface(vtkFolder,"sim",iter);
       save.saveSol(binFolder,"sim",iter);
       save.saveBubbleInfo(datFolder);
@@ -324,8 +326,8 @@ int main(int argc, char **argv)
     #endif
     m1.setSurfaceConfig();
     m1.setInterfaceBC();
-    //m1.setGenericBC(vref);
-	m1.setBubbleArrayPeriodicBC(vref);
+    m1.setGenericBC(vref);
+	pbc.MountPeriodicVectors(m1);
 
     Simulator3D s3(m1,s2);
     s3.applyLinearInterpolation(mOld);

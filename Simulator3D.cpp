@@ -4523,6 +4523,13 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravityOld.CopyTo(_mOld.getNumNodes()*1,yGravityOld);
  gravityOld.CopyTo(_mOld.getNumNodes()*2,zGravityOld);
  
+ clVector xBetaFlowLiqOld(_mOld.getNumVerts());
+ clVector yBetaFlowLiqOld(_mOld.getNumVerts());
+ clVector zBetaFlowLiqOld(_mOld.getNumVerts());
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*0,xBetaFlowLiqOld);
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*1,yBetaFlowLiqOld);
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*2,zBetaFlowLiqOld);
+ 
  // setting dimension of numVertsOld for all vectors.
  int numVertsOld =  _mOld.getNumVerts();
  clVector uSolOldVert(numVertsOld);
@@ -4536,6 +4543,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  clDMatrix kappaOldVert(numVertsOld);
  clVector fintOldVert(numVertsOld);
  clVector gravityOldVert(numVertsOld);
+ clVector betaFlowLiqOldVert(numVertsOld);
  clVector muOldVert(numVertsOld);
  clVector rhoOldVert(numVertsOld);
  clVector cpOldVert(numVertsOld);
@@ -4554,6 +4562,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALEOld.CopyTo(0,wALEOldVert);
  fintOld.CopyTo(0,fintOldVert);
  gravityOld.CopyTo(0,gravityOldVert);
+ betaFlowLiqOld.CopyTo(0,betaFlowLiqOldVert);
  muOld.CopyTo(0,muOldVert);
  rhoOld.CopyTo(0,rhoOldVert);
  cpOld.CopyTo(0,cpOldVert);
@@ -4670,6 +4679,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALEOld     = wALE;
  fintOld     = fint;
  gravityOld  = gravity;
+ betaFlowLiqOld  = betaFlowLiq;
  kappaOld    = kappa;
  muOld       = mu;
  rhoOld      = rho;

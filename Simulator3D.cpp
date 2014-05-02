@@ -6152,12 +6152,14 @@ void Simulator3D::unCoupledPBC()
  * 
  * 
  * \remark Standard values for code verification against the Poiseuille 
- * flow and recovery of the flow rate are Re = 1.0; betaPressLiq = 12.0.
+ * flow and recovery of the flow rate are Re = 1.0; betaPressLiq =
+ * 32.0/Re.
  *
  */
 void Simulator3D::setBetaPressureLiquid()
 {
-     betaPressLiq = 32.0/Re;
+     //betaPressLiq = 32.0/Re; // Poiseuille flow
+	 betaPressLiq = 1.0;
 	
 }
 

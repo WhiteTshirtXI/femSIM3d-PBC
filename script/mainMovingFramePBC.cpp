@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 
  //*** File
  //string meshFile = "bubble-elongated-3d-nb3.msh";
- string meshFile = "bubble-elongated-nb3-b0.08-w0.1.msh";
+ string meshFile = "bubble-elongated-nb3-b0.05-w0.1.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar

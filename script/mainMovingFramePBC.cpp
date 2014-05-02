@@ -116,8 +116,8 @@ int main(int argc, char **argv)
  //** Model Constructor
  Model3D m1;
 
- if( *(argv+1) == NULL )     
- {
+ // Printing -- no args
+ 
   cout << endl;
   cout << "--------------> STARTING FROM 0" << endl;
   cout << endl;
@@ -234,10 +234,8 @@ int main(int argc, char **argv)
       s2.assemble();
       s2.matMount();
 
-      //s2.setUnCoupledBC();
       s2.setUnCoupledPBC(); // <<<
       
-	  //s2.setRHS();
       s2.setRHS_PBC(); // <<<
       
 	  //s2.setGravity("+X");
@@ -248,7 +246,6 @@ int main(int argc, char **argv)
       
 	  s2.setCopyDirectionPBC("RL");
 
-	  //s2.unCoupled();
       s2.unCoupledPBC(); // <<<
 
 	  //*** Solution Saving 
@@ -341,8 +338,6 @@ int main(int argc, char **argv)
     saveEnd.saveMeshInfo(datFolder);
     
    } // end for
-
-  } // end if 
  
   PetscFinalize();
   return 0;

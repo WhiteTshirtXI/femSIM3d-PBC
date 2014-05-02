@@ -69,8 +69,8 @@ int main(int argc, char **argv)
  //** Numerical Parameters
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- double c1 = 0.0;      // lagrangian
- double c2 = 0.0;      // smooth vel
+ double c1 = 0.1;      // lagrangian
+ double c2 = 0.1;      // smooth vel
  double c3 = 3.0;      // smooth coord (fujiwara)
  double d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
  double d2 = 0.1;      // surface smooth cord (fujiwara)
@@ -87,7 +87,8 @@ int main(int argc, char **argv)
  double rho_out = 0.0728;
 
  //*** File
- string meshFile = "bubble-elongated-3d-nb3.msh";
+ //string meshFile = "bubble-elongated-3d-nb3.msh";
+ string meshFile = "bubble-elongated-nb3-b0.08-w0.1.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
@@ -202,7 +203,7 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
- int nIter = 30;
+ int nIter = 5;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -226,26 +227,34 @@ int main(int argc, char **argv)
 
       save.printSimulationReport();
 
+	  // Convection
       //s2.stepLagrangian();
       s2.stepALE();
 
       s2.movePoints();
 
+	  // Assembling
       s2.assemble();
       s2.matMount();
 
+	  // B.C.
       s2.setUnCoupledPBC(); // <<<
       
-      s2.setRHS_PBC(); // <<<
-      
+	  // Physical effects
 	  //s2.setGravity("+X");
 	  s2.setBetaFlowLiq("+X");
+      
+	  // R.H.S.
+	  s2.setRHS_PBC();
 
+	  // Interface
       //s2.setInterface();
       s2.setInterfaceGeo();
       
+	  // Copy
 	  s2.setCopyDirectionPBC("RL");
 
+	  // System solving
       s2.unCoupledPBC(); // <<<
 
 	  //*** Solution Saving 

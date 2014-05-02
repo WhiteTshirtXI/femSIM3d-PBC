@@ -5238,9 +5238,12 @@ void Model3D::setOnePointPressureBC()
 	{
 	    // Neumman for pressure ("one-point")
 		
-	    if ( ( fabs( X.Get(i) - 0.5*X.Max() ) < 0.01 ) &&
-		     ( fabs( Y.Get(i) - Y.Min()     ) < 0.01 ) &&
-		     ( fabs( Z.Get(i) - Z.Max()     ) < 0.01 ) )
+	 	double xp = 3.20;
+	 	double yp = Y.Max();
+	 	double zp = 0.0;
+	    if ( ( fabs( X.Get(i) - xp ) < 1E-10 ) &&
+		     ( fabs( Y.Get(i) - yp ) < 1E-10 ) &&
+		     ( fabs( Z.Get(i) - zp ) < 1E-10 ) )
 		{
 			idbcp.AddItem(i);
 			pc.Set(i,0.0);

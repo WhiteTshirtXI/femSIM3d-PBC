@@ -1366,7 +1366,7 @@ void Model3D::mesh2Dto3D(const char* _param)
 
 void Model3D::mesh2Dto3D()
 {
- mesh2Dto3D("QYYApaq1.414");
+ mesh2Dto3D("QYYApaq");
 }
 
 /*
@@ -5241,9 +5241,9 @@ void Model3D::setOnePointPressureBC()
 	 	double xp = 3.20;
 	 	double yp = Y.Max();
 	 	double zp = 0.0;
-	    if ( ( fabs( X.Get(i) - xp ) < 1E-10 ) &&
-		     ( fabs( Y.Get(i) - yp ) < 1E-10 ) &&
-		     ( fabs( Z.Get(i) - zp ) < 1E-10 ) )
+	    if ( ( fabs( X.Get(i) - xp ) < 1E-1 ) &&
+		     ( fabs( Y.Get(i) - yp ) < 1E-1 ) &&
+		     ( fabs( Z.Get(i) - zp ) < 1E-1 ) )
 		{
 			idbcp.AddItem(i);
 			pc.Set(i,0.0);

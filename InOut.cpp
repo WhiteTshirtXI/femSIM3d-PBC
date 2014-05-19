@@ -4801,7 +4801,9 @@ void InOut::savePressureError(const char* _dir)
 
 void InOut::saveVolumeError(const char* _dir)
 {
- for(int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
+ 
+ int v = surfMesh->elemIdRegion.Max();
+ for(int nb=0;nb<=v;nb++ )
  {
   stringstream ss;  //convertendo int --> string
   string str;
@@ -4825,6 +4827,9 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "vel centroid X" 
                    << setw(18) << "vel centroid Y" 
                    << setw(18) << "vel centroid Z" 
+                   << setw(18) << "vel average centroid X" 
+                   << setw(18) << "vel average centroid Y" 
+                   << setw(18) << "vel average centroid Z" 
                    << setw(18) << "vel refenrece X" 
                    << setw(18) << "vel refenrece Y" 
                    << setw(18) << "vel refenrece Z" 
@@ -4844,6 +4849,9 @@ void InOut::saveVolumeError(const char* _dir)
        << setw(17) << s->getCentroidVelX()[nb] << " " 
        << setw(17) << s->getCentroidVelY()[nb] << " " 
        << setw(17) << s->getCentroidVelZ()[nb] << " " 
+       << setw(17) << (1.0/v)*(s->getCentroidVelX()[nb]) << " " 
+       << setw(17) << (1.0/v)*(s->getCentroidVelY()[nb]) << " " 
+       << setw(17) << (1.0/v)*(s->getCentroidVelZ()[nb]) << " " 
        << setw(17) << s->getURef() << " " 
        << setw(17) << s->getVRef() << " " 
        << setw(17) << s->getWRef() << " " 

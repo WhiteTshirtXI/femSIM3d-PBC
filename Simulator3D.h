@@ -96,6 +96,10 @@ class Simulator3D
 	void setCopyDirectionPBC(string _direction);
 	void stepSLPBCFix();
 
+	double getPeriodicFaceVelXAverage();
+	double getPeriodicFaceVelYAverage();
+	double getPeriodicFaceVelZAverage();
+
   void step();
   void stepSL();
   void stepNoConvection();

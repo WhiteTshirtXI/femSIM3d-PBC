@@ -5032,6 +5032,179 @@ double Simulator3D::getCentroidVelZAverage()
  return sum/v;
 }
 
+double Simulator3D::getPeriodicFaceVelXAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e > surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+	  cout << "Element " << e << " on periodic face." << endl;
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( uSol.Get(v1) + uSol.Get(v2) + uSol.Get(v3) ); 
+	  //double vMedE = 1.0/3.0*( vSol.Get(v1) + vSol.Get(v2) + vSol.Get(v3) ); 
+	  //double vMedE = 1.0/3.0*( wSol.Get(v1) + wSol.Get(v2) + wSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
+
+double Simulator3D::getPeriodicFaceVelYAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e > surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+	  cout << "Element " << e << " on periodic face." << endl;
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( vSol.Get(v1) + vSol.Get(v2) + vSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
+
+double Simulator3D::getPeriodicFaceVelZAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e > surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+	  cout << "Element " << e << " on periodic face." << endl;
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( wSol.Get(v1) + wSol.Get(v2) + wSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
+
 double Simulator3D::getCentroidPosXAverage()
 {
  double sum=0;

@@ -5037,7 +5037,7 @@ double Simulator3D::getPeriodicFaceVelXAverage()
   vector<double> areaFace(0);
   vector<double> vMedFace(0);
 
-  for (int e = 0; e > surfMesh->numElems; ++e)
+  for (int e = 0; e < surfMesh->numElems; ++e)
   {
     int v1 = surfMesh->IEN.Get(e,0);
     double p1x = surfMesh->X.Get(v1);
@@ -5063,14 +5063,11 @@ double Simulator3D::getPeriodicFaceVelXAverage()
 	     ( p3x == surfMesh->X.Min() ) &&
 		 ( id  == 0 ) )
 	{
-	  cout << "Element " << e << " on periodic face." << endl;
 
 	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
 	  areaFace.push_back(areaE);
 
 	  double vMedE = 1.0/3.0*( uSol.Get(v1) + uSol.Get(v2) + uSol.Get(v3) ); 
-	  //double vMedE = 1.0/3.0*( vSol.Get(v1) + vSol.Get(v2) + vSol.Get(v3) ); 
-	  //double vMedE = 1.0/3.0*( wSol.Get(v1) + wSol.Get(v2) + wSol.Get(v3) ); 
 	  double vE = vMedE*areaE;
 	  vMedFace.push_back(vE);
 
@@ -5096,7 +5093,7 @@ double Simulator3D::getPeriodicFaceVelYAverage()
   vector<double> areaFace(0);
   vector<double> vMedFace(0);
 
-  for (int e = 0; e > surfMesh->numElems; ++e)
+  for (int e = 0; e < surfMesh->numElems; ++e)
   {
     int v1 = surfMesh->IEN.Get(e,0);
     double p1x = surfMesh->X.Get(v1);
@@ -5122,7 +5119,6 @@ double Simulator3D::getPeriodicFaceVelYAverage()
 	     ( p3x == surfMesh->X.Min() ) &&
 		 ( id  == 0 ) )
 	{
-	  cout << "Element " << e << " on periodic face." << endl;
 
 	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
 	  areaFace.push_back(areaE);
@@ -5153,7 +5149,7 @@ double Simulator3D::getPeriodicFaceVelZAverage()
   vector<double> areaFace(0);
   vector<double> vMedFace(0);
 
-  for (int e = 0; e > surfMesh->numElems; ++e)
+  for (int e = 0; e < surfMesh->numElems; ++e)
   {
     int v1 = surfMesh->IEN.Get(e,0);
     double p1x = surfMesh->X.Get(v1);
@@ -5179,7 +5175,6 @@ double Simulator3D::getPeriodicFaceVelZAverage()
 	     ( p3x == surfMesh->X.Min() ) &&
 		 ( id  == 0 ) )
 	{
-	  cout << "Element " << e << " on periodic face." << endl;
 
 	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
 	  areaFace.push_back(areaE);
@@ -6342,7 +6337,7 @@ void Simulator3D::unCoupledPBC()
 void Simulator3D::setBetaPressureLiquid()
 {
      //betaPressLiq = 32.0/Re; // Poiseuille flow
-	 betaPressLiq = 1.0;
+	 betaPressLiq = 10.0;
 	
 }
 

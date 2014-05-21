@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 
  //*** File
  //string meshFile = "bubble-elongated-3d-nb3.msh";
- string meshFile = "bubble-elongated-nb3-b0.05-w0.1.msh";
+ string meshFile = "long-bubble-test.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
@@ -105,8 +105,8 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
- //const char *vtkFolder  = "./vtk/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
+ const char *vtkFolder  = "./vtk/";
  
  
  //*** Peixoto's tree
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
- int nIter = 5;
+ int nIter = 100;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )

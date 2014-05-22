@@ -84,11 +84,14 @@ int main(int argc, char **argv)
  double mu_in = 1.820E-05;
  double mu_out = 1.002E-3;
  double rho_in = 1.205;
- double rho_out = 0.0728;
+ double rho_out = 998.63;
+ double sigma = 0.0728;
 
  //*** File
  //string meshFile = "bubble-elongated-3d-nb3.msh";
- string meshFile = "long-bubble-test.msh";
+ //string meshFile = "3bubbles-V.msh";
+ string meshFile = "2bubbles-2V.msh";
+ //string meshFile = "long-bubble2-3V.msh";
  
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
@@ -103,10 +106,13 @@ int main(int argc, char **argv)
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- const char *datFolder  = "./dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3/";
- const char *vtkFolder  = "./vtk/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/";
+ //const char *vtkFolder  = "./vtk/";
  
  
  //*** Peixoto's tree
@@ -155,6 +161,7 @@ int main(int argc, char **argv)
  s2.setFr(Fr);
  s2.setMu(mu_in,mu_out);
  s2.setRho(rho_in,rho_out);
+ s2.setSigma(sigma);
   	
  //*** ALE parameters
  s2.setC1(c1);
@@ -203,7 +210,7 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
- int nIter = 100;
+ int nIter = 10000;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )

@@ -6384,7 +6384,7 @@ void Simulator3D::inputPurePressurePBC()
 void Simulator3D::setRHS_PBC()
 {
 	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW 
-	 	 + M*betaFlowLiq;
+	 	 + Mrho*betaFlowLiq;
 
 } // fecha metodo
 

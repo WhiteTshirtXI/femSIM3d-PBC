@@ -220,6 +220,45 @@ void Helmholtz3D::initSessile()
  }
 }
 
+/**
+ *
+ **/ 
+void Helmholtz3D::initJet(double _dr, double factor)
+{
+  init();
+  convC.Dim(numVerts);
+
+  double gap = 0.5;
+  double rb = 0.5; // bubble radius
+  double wrap_radius = rb + _dr;
+  double yAxis = Y->Min();
+  double zAxis = Z->Min();
+
+  double xLimU = X->Max() - gap/2.0; // upper limit of wrap
+  double xLimB = X->Min() + gap/2.0; // lower limit of wrap
+
+  double triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
+  
+  for (int i = 0; i < numVerts; ++i)
+  {
+    if (heaviside->Get(i) == 1.0)
+	{
+      double x = X->Get(i);
+      double y = Y->Get(i);
+      double z = Z->Get(i);
+
+	  double dist = distance(yAxis,zAxis,y,z); // distance to axis
+
+	  if ( ( dist < wrap_radius ) && ( x > xLimB ) && ( x < xLimU ) )
+	  {
+        double edge = triEdgeMin/factor;
+		convC.Set(i,edge);
+	  }
+	}
+  }
+}
+
+
 void Helmholtz3D::initMicro()
 {
  // init closer

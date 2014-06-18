@@ -6337,7 +6337,7 @@ void Simulator3D::unCoupledPBC()
 void Simulator3D::setBetaPressureLiquid()
 {
      //betaPressLiq = 32.0/Re; // Poiseuille flow
-	 betaPressLiq = 10.0;
+	 betaPressLiq = 1.0;
 	
 }
 

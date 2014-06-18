@@ -35,6 +35,7 @@ class Helmholtz3D
   void getModel3DAttrib(Model3D &_m);
   void allocateMemoryToAttrib();
   void init();
+  void initJet(double _dr, double _cl); // jet 
   void initMicro();
   void initSquareChannel();
   void initBackwardStep();

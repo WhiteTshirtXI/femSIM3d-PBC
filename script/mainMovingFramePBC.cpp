@@ -69,15 +69,12 @@ int main(int argc, char **argv)
  //** Numerical Parameters
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- double c1 = 0.1;      // lagrangian
- double c2 = 0.1;      // smooth vel
- double c3 = 3.0;      // smooth coord (fujiwara)
- double d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
- double d2 = 0.1;      // surface smooth cord (fujiwara)
  double alpha = 1.0;   // time discrete method
  double cfl = 1.0;
 
  //** Physical Parameters
+ /*
+ double Re = 14.5767; 
  double Re = 14.5767; 
  double We = 0.2007;
  double Fr = 13.2160;
@@ -86,11 +83,41 @@ int main(int argc, char **argv)
  double rho_in = 1.205;
  double rho_out = 998.63;
  double sigma = 0.0728;
+ */
+
+ double Re = 100.0; 
+ double We = 10.0;
+ double Fr = 1.0;
+ double mu_in = 0.1;
+ double mu_out = 1.0;
+ double rho_in = 0.001;
+ double rho_out = 1.0;
+ double sigma = 1.0;
+
+ //** Moving Frame Settings
+ const char* _frame = "moving";
+
+ // fixed
+ double c1 = 0.1;      // lagrangian
+ double c2 = 0.1;      // smooth vel
+ double c3 = 3.0;      // smooth coord (fujiwara)
+ double d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;      // surface smooth cord (fujiwara)
+ 
+ // moving
+ if ( strcmp( _frame,"moving") == 0 )
+ {
+   c1 = 0.0;      // lagrangian
+   c2 = 0.0;      // smooth vel
+   c3 = 10.0;      // smooth coord (fujiwara)
+   d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
+   d2 = 0.1;      // surface smooth cord (fujiwara)
+ }
 
  //*** File
- //string meshFile = "bubble-elongated-3d-nb3.msh";
+ string meshFile = "3bubbles-jet-cylinder-wrap.msh";
  //string meshFile = "3bubbles-V.msh";
- string meshFile = "2bubbles-2V.msh";
+ //string meshFile = "2bubbles-2V.msh";
  //string meshFile = "long-bubble2-3V.msh";
  
  
@@ -108,10 +135,12 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/";
  //const char *vtkFolder  = "./vtk/";
  
  
@@ -135,6 +164,7 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
+  //m1.setJetMesh(); // mesh transform
   m1.setMapping();
   #if NUMGLEU == 5
  	m1.setMiniElement();
@@ -199,7 +229,8 @@ int main(int argc, char **argv)
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initRisingBubble();
+ h1.initJet(1.0,4.0); //<<< 
+ //h1.initRisingBubble();
  h1.assemble();
  h1.setk(0.2);
  h1.matMountC();
@@ -208,9 +239,23 @@ int main(int argc, char **argv)
  h1.unCoupledC();
  h1.setModel3DEdgeSize();
 
+ //** Moving Frame variables
  double vinst=0;
  double vref=0;
- int nIter = 10000;
+ double xref=0;
+ double xinit=0;
+ double dx=0;
+
+ if ( strcmp( _frame,"moving") == 0 )
+ {
+    // moving
+	vref = s2.getURef();
+	xref = s2.getXRef();
+	s2.setCentroidVelPos();
+	xinit = s2.getCentroidPosXAverage();
+ }
+
+ int nIter = 20000;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -222,13 +267,21 @@ int main(int argc, char **argv)
 	       << iter << endl << endl;
       cout << resetColor();
 
-      vinst = s2.getCentroidVelXAverage();
-      vref += vinst;
-      cout << vref << " " << vinst << endl;
-      s2.setUSol(vinst);
-      m1.setGenericBC(vref);
-	  pbc.MountPeriodicVectors(m1);
-      s2.setURef(vref);
+      // moving frame correction
+	  if( strcmp( _frame,"moving") == 0 )
+	  {
+	    dx = s2.getCentroidPosXAverage() - xinit;
+		vinst = s2.getCentroidVelXAverage() + dx/s2.getDt();
+		vref += vinst;
+		xref += vref*s2.getDt();
+		cout << "vref: " << vref << " xref: " << xref << endl;
+		cout << "dx: "<< dx << endl;
+		s2.setUSol(vinst);
+		m1.setGenericBC(vref);
+		pbc.MountPeriodicVectors(m1);
+		s2.setURef(vref);
+		s2.setXRef(xref);
+	  }
 
       s2.setDtALETwoPhase();
 
@@ -248,8 +301,8 @@ int main(int argc, char **argv)
       s2.setUnCoupledPBC(); // <<<
       
 	  // Physical effects
-	  //s2.setGravity("+X");
-	  s2.setBetaFlowLiq("+X");
+	  s2.setGravity("-X");
+	  //s2.setBetaFlowLiq("+X");
       
 	  // R.H.S.
 	  s2.setRHS_PBC();
@@ -271,7 +324,6 @@ int main(int argc, char **argv)
       save.saveVTKSurface(vtkFolder,"sim",iter);
       save.saveSol(binFolder,"sim",iter);
       save.saveBubbleInfo(datFolder);
-      //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
       s2.saveOldData();
 
       s2.timeStep();
@@ -287,7 +339,8 @@ int main(int argc, char **argv)
 
      Helmholtz3D h2(m1,h1);
      h2.setBC();
-     h2.initRisingBubble();
+     h2.initJet(1.0,4.0); //<<<
+	 //h2.initRisingBubble();
      h2.assemble();
      h2.setk(0.2);
      h2.matMountC();
@@ -303,7 +356,7 @@ int main(int argc, char **argv)
      // set normal and kappa values
      m1.setNormalAndKappa();
      m1.initMeshParameters();
-
+	 
      /* 3D operations */
      
 	 //m1.insert3dMeshPointsByDiffusion();
@@ -339,8 +392,17 @@ int main(int argc, char **argv)
     #endif
     m1.setSurfaceConfig();
     m1.setInterfaceBC();
-    m1.setGenericBC(vref);
-	pbc.MountPeriodicVectors(m1);
+    
+	if ( strcmp( _frame,"moving") == 0 )
+	{
+	  m1.setGenericBC(vref);
+	  pbc.MountPeriodicVectors(m1);
+	}
+	else
+	{
+	  m1.setGenericBC();
+	  pbc.MountPeriodicVectors(m1);
+	}
 
     Simulator3D s3(m1,s2);
     s3.applyLinearInterpolation(mOld);

@@ -208,7 +208,8 @@ class Model3D
   void setWallNormalVWBC(); // << slip condition, except PBC walls
   void setWallSlipEdgesBC();
   void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
-  void setJetMesh(); // geometrical transform
+  void setStretchJetMesh(); // geometrical transform
+  void setUnstretchJetMesh(); // geometrical transform
   void setWallMovingPBC(double _velInf, double _velSup); 
   void setWallStepBC();
   void setCStepBC();

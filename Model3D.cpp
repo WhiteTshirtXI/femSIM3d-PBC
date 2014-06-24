@@ -989,23 +989,37 @@ void Model3D::setWallNormalVWBC()
 }
 
 
-void Model3D::setJetMesh()
+void Model3D::setStretchJetMesh()
 {
-	for (int i = 0; i < numVerts; ++i )
+	for ( int i = 0; i < numVerts; ++i )
 	{
 		double y = Y.Get(i);
 		double z = Z.Get(i);
 		double r = sqrt(y*y + z*z);
 
-		double factor = 1.0 + 8.0*pow(r/10.0,3);
+		double factor = ( 3.0 + r )/4.0;
 		y *= factor;
 		z *= factor;
 		Y.Set(i,y);
 		Z.Set(i,z);
-
 	}
 }
 
+void Model3D::setUnstretchJetMesh()
+{
+	for ( int i = 0; i < numVerts; ++i )
+	{
+		double y = Y.Get(i);
+		double z = Z.Get(i);
+		double r = sqrt(y*y + z*z);
+
+		double factor = 1.0/r*( 0.5*( sqrt( 9.0 + 16.0*r ) - 3.0 ) );
+		y *= factor;
+		z *= factor;
+		Y.Set(i,y);
+		Z.Set(i,z);
+	}
+}
 
 void Model3D::setWallMovingPBC(double _velInf, double _velSup)
 {

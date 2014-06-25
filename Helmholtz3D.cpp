@@ -258,6 +258,64 @@ void Helmholtz3D::initJet(double _dr, double factor)
   }
 }
 
+void Helmholtz3D::initThreeBubbles()
+{
+ init();
+
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
+
+  double sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
+
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
+ }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  double radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 3.5*radius )
+   {
+	double aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   double aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
 
 void Helmholtz3D::initMicro()
 {

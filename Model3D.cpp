@@ -3421,7 +3421,7 @@ void Model3D::remove3dMeshPointsByDistance()
  * given by the class Helmholtz3D.
  *
  * */
-void Model3D::insert3dMeshPointsByDiffusion()
+void Model3D::insert3dMeshPointsByDiffusion(double _param)
 {
  /*
   * mapEdge.Set(edge,0,numVerts+edge); // numero da aresta
@@ -3458,7 +3458,7 @@ void Model3D::insert3dMeshPointsByDiffusion()
   //double hSum = heaviside.Get(v1) + heaviside.Get(v2);
 
   // edgeSize is the result of \nabla^2 edge = 0
-  if( length > 2.5*maxEdge && 
+  if( length > _param*maxEdge && 
 	//--------------------------------------------------
 	//   interfaceDistance.Get(v1) > 2*triEdge[1] &&
 	//   interfaceDistance.Get(v2) > 2*triEdge[1] &&
@@ -3466,12 +3466,14 @@ void Model3D::insert3dMeshPointsByDiffusion()
 	  //ipd[vertID] < 200 &&
 	  maxVert > surfMesh.numVerts )
   {
-   cout << v1 << " (" << edgeSize.Get(v1) << ") " 
-	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
-   cout << x1 << " " << y1 << " " << z1 << endl;
-   cout << x2 << " " << y2 << " " << z2 << endl;
-   cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
-   cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+ // ------
+ //cout << v1 << " (" << edgeSize.Get(v1) << ") " 
+ //	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
+ //cout << x1 << " " << y1 << " " << z1 << endl;
+ //cout << x2 << " " << y2 << " " << z2 << endl;
+ //cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
+ //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+ // -------  
    int vAdd = numVerts; // aditional vertice
 
    cout << "- " << color(none,blue,black) 
@@ -3494,12 +3496,17 @@ void Model3D::insert3dMeshPointsByDiffusion()
  //cout << "  inserted by diffusion: " << ipd[vertID] << endl;
 }
 
+void Model3D::insert3dMeshPointsByDiffusion()
+{
+	insert3dMeshPointsByDiffusion(3.0);
+}
+
 /*
  * Remove point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
  *
  * */
-void Model3D::remove3dMeshPointsByDiffusion()
+void Model3D::remove3dMeshPointsByDiffusion(double _param)
 {
  int vertID = 0;
  for( int e=0;e<mapEdge.DimI();e++ )
@@ -3525,7 +3532,7 @@ void Model3D::remove3dMeshPointsByDiffusion()
 
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
-  if( length < 0.3*size && 
+  if( length < _param*size && 
   //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
@@ -3535,6 +3542,11 @@ void Model3D::remove3dMeshPointsByDiffusion()
   }
  }
  cout << "  removed by diffusion: " << rpd[vertID] << endl;
+}
+
+void Model3D::remove3dMeshPointsByDiffusion()
+{
+  remove3dMeshPointsByDiffusion(0.7);
 }
 
 /* 

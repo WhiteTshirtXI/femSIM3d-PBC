@@ -115,7 +115,7 @@ int main(int argc, char **argv)
  }
 
  //*** File
- string meshFile = "3bubbles-jet-cylinder-wrap.msh";
+ string meshFile = "bubble-jet.msh";
  //string meshFile = "3bubbles-V.msh";
  //string meshFile = "2bubbles-2V.msh";
  //string meshFile = "long-bubble2-3V.msh";
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
-  //m1.setJetMesh(); // mesh transform
+  //m1.setStretchJetMesh(); // mesh transform
   m1.setMapping();
   #if NUMGLEU == 5
  	m1.setMiniElement();
@@ -215,6 +215,20 @@ int main(int argc, char **argv)
 
  s2.init();
  
+  // Point's distribution
+ Helmholtz3D h1(m1);
+ h1.setBC();
+ h1.initThreeBubbles();
+ //h1.initJet(1.0,4.0); //<<< 
+ //h1.initRisingBubble();
+ h1.assemble();
+ h1.setk(0.05);
+ h1.matMountC();
+ h1.setUnCoupledCBC(); 
+ h1.setCRHS();
+ h1.unCoupledC();
+ h1.setModel3DEdgeSize();
+
  InOut save(m1,s2);
  
  //*** Output (Initial Condition)
@@ -225,19 +239,6 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
-
- // Point's distribution
- Helmholtz3D h1(m1);
- h1.setBC();
- h1.initJet(1.0,4.0); //<<< 
- //h1.initRisingBubble();
- h1.assemble();
- h1.setk(0.2);
- h1.matMountC();
- h1.setUnCoupledCBC(); 
- h1.setCRHS();
- h1.unCoupledC();
- h1.setModel3DEdgeSize();
 
  //** Moving Frame variables
  double vinst=0;
@@ -301,8 +302,8 @@ int main(int argc, char **argv)
       s2.setUnCoupledPBC(); // <<<
       
 	  // Physical effects
-	  s2.setGravity("-X");
-	  //s2.setBetaFlowLiq("+X");
+	  //s2.setGravity("-X");
+	  s2.setBetaFlowLiq("+X");
       
 	  // R.H.S.
 	  s2.setRHS_PBC();
@@ -339,10 +340,11 @@ int main(int argc, char **argv)
 
      Helmholtz3D h2(m1,h1);
      h2.setBC();
-     h2.initJet(1.0,4.0); //<<<
+	 h2.initThreeBubbles();
+     //h2.initJet(1.0,4.0); //<<<
 	 //h2.initRisingBubble();
      h2.assemble();
-     h2.setk(0.2);
+     h2.setk(0.05);
      h2.matMountC();
      h2.setUnCoupledCBC(); 
      h2.setCRHS();
@@ -352,6 +354,8 @@ int main(int argc, char **argv)
 
      Model3D mOld = m1; 
 
+	 // m1.setUnstretchJetMesh(); // MESH TRANSFORM
+
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
      m1.setNormalAndKappa();
@@ -359,8 +363,8 @@ int main(int argc, char **argv)
 	 
      /* 3D operations */
      
-	 //m1.insert3dMeshPointsByDiffusion();
-     m1.remove3dMeshPointsByDiffusion();
+	 m1.insert3dMeshPointsByDiffusion(4.0);
+     m1.remove3dMeshPointsByDiffusion(0.5);
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();
      //m1.remove3dMeshPointsByDistance();
@@ -370,13 +374,14 @@ int main(int argc, char **argv)
      // surface operations
      m1.smoothPointsByCurvature();
 
-     m1.insertPointsByLength("flat");
+     m1.insertPointsByLength("curvature");
+     //m1.insertPointsByLength("flat");
      //m1.insertPointsByCurvature("flat");
      //m1.removePointsByCurvature();
      //m1.insertPointsByInterfaceDistance("flat");
-     m1.contractEdgesByLength("flat");
+     m1.contractEdgesByLength("curvature");
+     //m1.contractEdgesByLength("flat");
      //m1.removePointsByLength();
-    
      m1.flipTriangleEdges();
      m1.removePointsByNeighbourCheck();
      //m1.checkAngleBetweenPlanes();
@@ -384,6 +389,7 @@ int main(int argc, char **argv)
 
      //m1.mesh2Dto3DOriginal();
      m1.mesh3DPoints();
+	 //m1.setStretchJetMesh(); // MESH TRANSFORM
      m1.setMapping();
     #if NUMGLEU == 5
      m1.setMiniElement();

@@ -98,7 +98,9 @@ class Model3D
   void removePointsByInterfaceDistance();
   void remove3dMeshPointsByDistance();
   void remove3dMeshPointsByDiffusion();
+  void remove3dMeshPointsByDiffusion(double _param);
   void insert3dMeshPointsByDiffusion();
+  void insert3dMeshPointsByDiffusion(double _param);
   void insert3dMeshPointsByVolume();
   void remove3dMeshPointsByVolume();
   void remove3dMeshPointsByHeight();

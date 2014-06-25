@@ -36,6 +36,7 @@ class Helmholtz3D
   void allocateMemoryToAttrib();
   void init();
   void initJet(double _dr, double _cl); // jet 
+  void initThreeBubbles();
   void initMicro();
   void initSquareChannel();
   void initBackwardStep();

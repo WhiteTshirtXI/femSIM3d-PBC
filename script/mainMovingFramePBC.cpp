@@ -164,7 +164,7 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
-  //m1.setStretchJetMesh(); // mesh transform
+  m1.setStretchJetMesh(); // mesh transform
   m1.setMapping();
   #if NUMGLEU == 5
  	m1.setMiniElement();
@@ -300,13 +300,15 @@ int main(int argc, char **argv)
 
 	  // B.C.
       s2.setUnCoupledPBC(); // <<<
+      //s2.setUnCoupledBC();
       
 	  // Physical effects
-	  //s2.setGravity("-X");
-	  s2.setBetaFlowLiq("+X");
+	  s2.setGravity("-X");
+	  //s2.setBetaFlowLiq("+X");
       
 	  // R.H.S.
 	  s2.setRHS_PBC();
+	  //s2.setRHS();
 
 	  // Interface
       //s2.setInterface();
@@ -317,6 +319,7 @@ int main(int argc, char **argv)
 
 	  // System solving
       s2.unCoupledPBC(); // <<<
+      //s2.unCoupled();
 
 	  //*** Solution Saving 
       save.saveMSH(mshFolder,"newMesh",iter);
@@ -354,7 +357,7 @@ int main(int argc, char **argv)
 
      Model3D mOld = m1; 
 
-	 // m1.setUnstretchJetMesh(); // MESH TRANSFORM
+	 m1.setUnstretchJetMesh(); // MESH TRANSFORM
 
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
@@ -363,7 +366,7 @@ int main(int argc, char **argv)
 	 
      /* 3D operations */
      
-	 m1.insert3dMeshPointsByDiffusion(4.0);
+	 m1.insert3dMeshPointsByDiffusion(1.0);
      m1.remove3dMeshPointsByDiffusion(0.5);
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();
@@ -389,7 +392,7 @@ int main(int argc, char **argv)
 
      //m1.mesh2Dto3DOriginal();
      m1.mesh3DPoints();
-	 //m1.setStretchJetMesh(); // MESH TRANSFORM
+	 m1.setStretchJetMesh(); // MESH TRANSFORM
      m1.setMapping();
     #if NUMGLEU == 5
      m1.setMiniElement();

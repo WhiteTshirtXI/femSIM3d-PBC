@@ -5040,14 +5040,8 @@ void Model3D::setGenericBC()
   }
 
   // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) 
-  { 
-  	cout << "Left " << *it << endl;
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
-  {
-  	cout << "Right" << *it << endl;
-  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )

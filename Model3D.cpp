@@ -5040,8 +5040,14 @@ void Model3D::setGenericBC()
   }
 
   // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) 
+  { 
+  	cout << "Left " << *it << endl;
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
+  {
+  	cout << "Right" << *it << endl;
+  }
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -5243,6 +5249,7 @@ void Model3D::setGenericBC()
   // no slip condition if any other is imposed
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
+   cout << "NoSlip: " << *it << endl;
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
@@ -5482,8 +5489,7 @@ void Model3D::setGenericBC(double _vel)
    }
   }
 
-  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
-  else
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);

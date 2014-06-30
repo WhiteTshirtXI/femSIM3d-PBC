@@ -164,7 +164,7 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
-  m1.setStretchJetMesh(); // mesh transform
+  //m1.setStretchJetMesh(); // mesh transform
   m1.setMapping();
   #if NUMGLEU == 5
  	m1.setMiniElement();
@@ -304,7 +304,7 @@ int main(int argc, char **argv)
       
 	  // Physical effects
 	  s2.setGravity("-X");
-	  //s2.setBetaFlowLiq("+X");
+	  s2.setBetaFlowLiq("+X");
       
 	  // R.H.S.
 	  s2.setRHS_PBC();
@@ -357,7 +357,7 @@ int main(int argc, char **argv)
 
      Model3D mOld = m1; 
 
-	 m1.setUnstretchJetMesh(); // MESH TRANSFORM
+	 //m1.setUnstretchJetMesh(); // MESH TRANSFORM
 
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
 
      //m1.mesh2Dto3DOriginal();
      m1.mesh3DPoints();
-	 m1.setStretchJetMesh(); // MESH TRANSFORM
+	 //m1.setStretchJetMesh(); // MESH TRANSFORM
      m1.setMapping();
     #if NUMGLEU == 5
      m1.setMiniElement();

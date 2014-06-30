@@ -6381,10 +6381,12 @@ void Simulator3D::inputPurePressurePBC()
 } // fecha metodo
 
 
+/* The term M \beta is the pressure acting over the two phases
+ * independently of the density. */
 void Simulator3D::setRHS_PBC()
 {
 	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW 
-	 	 + Mrho*betaFlowLiq;
+	 	 + M*betaFlowLiq;
 
 } // fecha metodo
 

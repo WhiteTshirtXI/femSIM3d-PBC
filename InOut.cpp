@@ -3082,8 +3082,17 @@ void InOut::vtkScalar(ofstream& _file,string _name,clVector &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
-  _file << _scalar.Get(i) << endl;
-
+ {
+   if ( fabs(_scalar.Get(i) ) < 1E-20 )
+   {
+	double zero = 0.0;
+	_file << zero << endl;
+   }
+   else
+   {
+	_file << _scalar.Get(i) << endl;
+   }
+ }
  _file << endl;
 }
 
@@ -3094,8 +3103,17 @@ void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
-  _file << _scalar.Get(i) << endl;
-
+ {
+   if ( fabs(_scalar.Get(i) ) < 1E-20 )
+   {
+	double zero = 0.0;
+	_file << zero << endl;
+   }
+   else
+   {
+	_file << _scalar.Get(i) << endl;
+   }
+ }
  _file << endl;
 }
 

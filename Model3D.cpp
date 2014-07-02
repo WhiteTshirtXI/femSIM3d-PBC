@@ -5245,7 +5245,6 @@ void Model3D::setGenericBC()
   // no slip condition if any other is imposed
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
-   cout << "NoSlip: " << *it << endl;
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);

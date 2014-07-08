@@ -70,7 +70,7 @@ int main(int argc, char **argv)
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
  double alpha = 1.0;   // time discrete method
- double cfl = 1.0;
+ double cfl = 0.8;
 
  //** Physical Parameters
  /*
@@ -85,6 +85,7 @@ int main(int argc, char **argv)
  double sigma = 0.0728;
  */
 
+ /* test
  double Re = 100.0; 
  double We = 10.0;
  double Fr = 1.0;
@@ -93,6 +94,18 @@ int main(int argc, char **argv)
  double rho_in = 0.001;
  double rho_out = 1.0;
  double sigma = 1.0;
+*/
+ 
+ // Gustavo thesis: sugar-syrup 1
+ double N = 194.88;
+ double Re = sqrt(N); 
+ double We = 116.0;
+ double Fr = 1.0;
+ double mu_in = 1.78E-5;
+ double mu_out = 2.73;
+ double rho_in = 1.225;
+ double rho_out = 1350.0;
+ double sigma = 0.078;
 
  //** Moving Frame Settings
  const char* _frame = "moving";
@@ -108,18 +121,18 @@ int main(int argc, char **argv)
  if ( strcmp( _frame,"moving") == 0 )
  {
    c1 = 0.0;      // lagrangian
-   c2 = 0.0;      // smooth vel
+   c2 = 1.0;      // smooth vel
    c3 = 10.0;      // smooth coord (fujiwara)
    d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
    d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
  //*** File
- string meshFile = "bubble-jet.msh";
+ //string meshFile = "bubble-jet.msh";
  //string meshFile = "3bubbles-V.msh";
  //string meshFile = "2bubbles-2V.msh";
  //string meshFile = "long-bubble2-3V.msh";
- 
+ string meshFile = "rising-bubble-pbc-g4D.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -139,9 +152,12 @@ int main(int argc, char **argv)
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-pbc-mul2.73/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-pbc-mul2.73/";
  //const char *vtkFolder  = "./vtk/";
+ //const char *datFolder  = "./dat/";
  
  
  //*** Peixoto's tree
@@ -256,7 +272,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 20000;
+ int nIter = 30000;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -366,7 +382,7 @@ int main(int argc, char **argv)
 	 
      /* 3D operations */
      
-	 m1.insert3dMeshPointsByDiffusion(1.0);
+	 m1.insert3dMeshPointsByDiffusion(6.0);
      m1.remove3dMeshPointsByDiffusion(0.5);
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();

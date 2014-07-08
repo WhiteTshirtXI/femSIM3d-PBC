@@ -5404,3 +5404,91 @@ void InOut::savePoint( const char* _dir,int _point )
 
  filePoint.close();
 }
+
+
+void InOut::saveBubbleShapeFactors(const char* _dir,const char* _filename, int _iter)
+{
+ 
+ for(int nb=1;nb<=elemIdRegion->Max();nb++ )
+ {
+   stringstream ss;  //convertendo int --> string
+   string str;
+   ss << nb;
+   ss >> str;
+
+   // concatenando nomes para o nome do arquivo final
+   string fileAux = (string) _dir + (string) _filename + str + ".dat";
+   const char* filename = fileAux.c_str();
+  
+   ifstream testFile( filename );
+   ofstream file( filename,ios::app );
+   if( testFile )
+   {
+  	 testFile.close();
+	 cout << "appending on file " << _filename << nb << ".dat" << endl;
+   }
+   else
+   {
+	 cout << "Creating file " << _filename << nb << ".dat" << endl; 
+	 file << "#time" << setw(17) << " bubble Length (x-axis)" 
+	     			 << setw(17) << " bubble Breadth (y-axis)" 
+				     << setw(17) << " bubble Thickness (z-axis)"
+				     << setw(17) << " flatness ratio (B/T)"
+				     << setw(17) << " elongation ratio (L/B) "
+				     << setw(6) << "iter" 
+				     << endl;
+   }
+
+   double aux;
+
+   int dim = surface->Dim();
+   clVector xSurface(dim);
+   clVector ySurface(dim);
+   clVector zSurface(dim);
+
+   for( int i=0;i<dim;i++ )
+   {
+	 aux = surface->Get(i);
+	 xSurface.Set(i,X->Get(aux));
+	 ySurface.Set(i,Y->Get(aux));
+	 zSurface.Set(i,Z->Get(aux));
+   }
+   
+   clVector xSurfaceAux = xSurface==xSurface.Max();
+   clVector xSurfaceMax = xSurfaceAux.Find(); // retorna o vertice de maior X
+   xSurfaceAux = xSurface==xSurface.Min();
+   clVector xSurfaceMin = xSurfaceAux.Find(); // retorna o vertice de menor X
+   
+   clVector ySurfaceAux = ySurface==ySurface.Max();
+   clVector ySurfaceMax = ySurfaceAux.Find(); // retorna o vertice de maior Y
+   ySurfaceAux = ySurface==ySurface.Min();
+   clVector ySurfaceMin = ySurfaceAux.Find(); // retorna o vertice de menor Y
+   
+   clVector zSurfaceAux = zSurface==zSurface.Max();
+   clVector zSurfaceMax = zSurfaceAux.Find(); // retorna o vertice de maior Z
+   zSurfaceAux = zSurface==zSurface.Min();
+   clVector zSurfaceMin = zSurfaceAux.Find(); // retorna o vertice de menor Z
+
+   // retorna o valor de maior Y da interface 
+   double xMin = (int) xSurfaceMin.Get(0);
+   double xMax = (int) xSurfaceMax.Get(0);
+
+   double yMin = (int) ySurfaceMin.Get(0);
+   double yMax = (int) ySurfaceMax.Get(0);
+
+   double zMin = (int) zSurfaceMin.Get(0);
+   double zMax = (int) zSurfaceMax.Get(0);
+
+   file << setprecision(10) << scientific; 
+   file << setw(10) << s->getTime() << " " 
+					<< fabs( xMax - xMin ) << " " 
+					<< fabs( yMax - yMin ) << " " 
+					<< fabs( zMax - zMin ) << " " 
+					<< fabs( yMax - yMin )/fabs( xMax - xMin ) << " " 
+					<< fabs( xMax - xMin )/fabs( yMax - yMin ) << " " 
+					<< setprecision(0) << fixed << _iter 
+					<< endl;
+
+   file.close();
+ }
+}

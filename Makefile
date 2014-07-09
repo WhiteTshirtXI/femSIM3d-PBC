@@ -38,7 +38,7 @@ all: single-phase two-phase two-phaseHT
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
               sphereNuCte 
 
-single-phasePBC: channelPBC taylorVortexPBC 
+single-phasePBC: channelPBC taylorVortexPBC testMesh
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
@@ -174,7 +174,7 @@ risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-test: ${FEM3D_DIR}/script/mainTest.o $(obj)
+testMesh: ${FEM3D_DIR}/script/mainTestMesh.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)

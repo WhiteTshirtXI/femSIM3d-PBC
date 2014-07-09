@@ -5454,30 +5454,15 @@ void InOut::saveBubbleShapeFactors(const char* _dir,const char* _filename, int _
 	 zSurface.Set(i,Z->Get(aux));
    }
    
-   clVector xSurfaceAux = xSurface==xSurface.Max();
-   clVector xSurfaceMax = xSurfaceAux.Find(); // retorna o vertice de maior X
-   xSurfaceAux = xSurface==xSurface.Min();
-   clVector xSurfaceMin = xSurfaceAux.Find(); // retorna o vertice de menor X
+   // extrema surface points
+   double xMin = xSurface.Min();
+   double xMax = xSurface.Max();
    
-   clVector ySurfaceAux = ySurface==ySurface.Max();
-   clVector ySurfaceMax = ySurfaceAux.Find(); // retorna o vertice de maior Y
-   ySurfaceAux = ySurface==ySurface.Min();
-   clVector ySurfaceMin = ySurfaceAux.Find(); // retorna o vertice de menor Y
+   double yMin = ySurface.Min();
+   double yMax = ySurface.Max();
    
-   clVector zSurfaceAux = zSurface==zSurface.Max();
-   clVector zSurfaceMax = zSurfaceAux.Find(); // retorna o vertice de maior Z
-   zSurfaceAux = zSurface==zSurface.Min();
-   clVector zSurfaceMin = zSurfaceAux.Find(); // retorna o vertice de menor Z
-
-   // retorna o valor de maior Y da interface 
-   double xMin = (int) xSurfaceMin.Get(0);
-   double xMax = (int) xSurfaceMax.Get(0);
-
-   double yMin = (int) ySurfaceMin.Get(0);
-   double yMax = (int) ySurfaceMax.Get(0);
-
-   double zMin = (int) zSurfaceMin.Get(0);
-   double zMax = (int) zSurfaceMax.Get(0);
+   double zMin = zSurface.Min();
+   double zMax = zSurface.Max();
 
    file << setprecision(10) << scientific; 
    file << setw(10) << s->getTime() << " " 

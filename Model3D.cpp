@@ -1380,7 +1380,7 @@ void Model3D::mesh2Dto3D(const char* _param)
 
 void Model3D::mesh2Dto3D()
 {
- mesh2Dto3D("QYYApaq");
+ mesh2Dto3D("QYYApa");
 }
 
 /*
@@ -4851,7 +4851,7 @@ void Model3D::setGenericBC()
 			
  for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
  {
-		cout << "Index: " << *itsetOne << endl;
+		//cout << "Index: " << *itsetOne << endl;
 		pbcIndicesLeft.push_back(*itsetOne);
 				 
 		// master coordinates
@@ -4867,7 +4867,7 @@ void Model3D::setGenericBC()
 			
  for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
  {
-		cout << "Index: " << *itsetTwo << endl;
+		//cout << "Index: " << *itsetTwo << endl;
 		pbcIndicesRight.push_back(*itsetTwo);
 
 		// slave coordinates
@@ -6204,7 +6204,6 @@ void Model3D::checkTetrahedronOrientation()
 void Model3D::setMapping()
 {
  setNeighbour();
-
  int numFaces = 4; // teraedro tem 6 arestas
  clVector faceaux(3);
  IFACE3D *faces = NULL;
@@ -6269,49 +6268,49 @@ void Model3D::setMapping()
   faces[numFaces*mele+3].p5 = 0; // ID of v1
 
   // 1st. edge
-  faceaux.Set(0,v1);
-  faceaux.Set(1,v2);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v1);
+  edgeaux.Set(1,v2);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+0].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+0].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+0].p3 = mele;
 
   // 2nd. edge
-  faceaux.Set(0,v1);
-  faceaux.Set(1,v3);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v1);
+  edgeaux.Set(1,v3);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+1].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+1].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+1].p3 = mele;
 
   // 3rd. edge
-  faceaux.Set(0,v1);
-  faceaux.Set(1,v4);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v1);
+  edgeaux.Set(1,v4);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+2].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+2].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+2].p3 = mele;
 
   // 4th. edge
-  faceaux.Set(0,v2);
-  faceaux.Set(1,v3);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v2);
+  edgeaux.Set(1,v3);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+3].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+3].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+3].p3 = mele;
 
   // 5th. edge
-  faceaux.Set(0,v2);
-  faceaux.Set(1,v4);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v2);
+  edgeaux.Set(1,v4);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+4].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+4].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+4].p3 = mele;
 
   // 6th. edge
-  faceaux.Set(0,v3);
-  faceaux.Set(1,v4);
-  faceaux.Sort(); // para ordenar os vertices de uma aresta
+  edgeaux.Set(0,v3);
+  edgeaux.Set(1,v4);
+  edgeaux.Sort(); // para ordenar os vertices de uma aresta
   edges[numEdges*mele+5].p1 = (int) edgeaux.Get(0);
   edges[numEdges*mele+5].p2 = (int) edgeaux.Get(1);
   edges[numEdges*mele+5].p3 = mele;
@@ -6320,13 +6319,13 @@ void Model3D::setMapping()
  // ordena uma estrutura (matriz) em ordem crescente na linha e coluna
  // as faces continuam repetidas neste ponto.
  qsort(faces,numFaces*numElems,sizeof(IFACE3D),IFACE3DCompare);
- qsort(edges,numEdges*numEdges,sizeof(IFACE2D),IFACE2DCompare);
+ qsort(edges,numEdges*numElems,sizeof(IFACE2D),IFACE2DCompare);
 
 //--------------------------------------------------
 //  for( int i=0;i<numFaces*numElems;i++ )
-//   cout << faces[i].p1 << " "
-//        << faces[i].p2 << " "
-//        << faces[i].p3 << endl;
+//   cout << edges[i].p1 << " "
+//        << edges[i].p2 << " "
+//        << edges[i].p3 << endl;
 //-------------------------------------------------- 
 
  /*        - nome: oFace
@@ -6367,7 +6366,7 @@ void Model3D::setMapping()
   * p5 = v postition (0,1,2 or 3)
   * */
  int i = 0;
- while( i < numFaces*numElems-1 )
+ while( i < numFaces*numElems )
  {
   if( faces[i].p1 == faces[i+1].p1 && 
 	  faces[i].p2 == faces[i+1].p2 &&
@@ -6384,6 +6383,14 @@ void Model3D::setMapping()
    boundaryVert.push_back(faces[i].p3);
    i += 1;
   }
+ }
+
+ // treating faces[last]
+ if( i == numFaces*numElems-1 )
+ {
+  boundaryVert.push_back(faces[i].p1);
+  boundaryVert.push_back(faces[i].p2);
+  boundaryVert.push_back(faces[i].p3);
  }
  boundaryVert.sort();
  boundaryVert.unique();
@@ -6408,7 +6415,7 @@ void Model3D::setMapping()
 	       |____________ h ____________|                                           
 		   |                           |  g = elemento que contem o noh da aresta
                                                                                    
-		                                  h = numero de arestas (inclui repetidas) 
+		                                  h = numero de arestas (inclui repetidas)
 
 										  i = 7 colunas
  
@@ -6431,7 +6438,7 @@ void Model3D::setMapping()
  // numEdges*numElems-1. This can be done because the last line of edges
  // (edges[numEdges*numElems-1]) is always a repetion of the previous one
  // (edges[numEdges*numElems-2]).
- for( int i=0;i<numEdges*numElems-1;i++ )
+ for( int i=0;i<numEdges*numElems;i++ )
  {
   double x1=X.Get(edges[i].p1);
   double y1=Y.Get(edges[i].p1);
@@ -6488,6 +6495,7 @@ void Model3D::setMapping()
  delete[] faces;
  delete[] edges;
 }
+
 
 void Model3D::setQuadElement()
 {

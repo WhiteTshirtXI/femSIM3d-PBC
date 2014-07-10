@@ -59,9 +59,8 @@ int main(int argc, char **argv)
  double cfl = 0.8;
 
  //string meshFile = "airWaterSugar.msh";
- //string meshFile = "rising-bubble-g1.5D.msh";
- string meshFile = "rising-bubble-pbc-g4D.msh";
- //string meshFile = "test.msh";
+ string meshFile = "rising-periodic-mesh.msh";
+ //string meshFile = "rising-bubble-pbc-g4D.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -71,8 +70,8 @@ int main(int argc, char **argv)
 
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-mul2.73-mesh/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-mul2.73-mesh/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
  //const char *vtkFolder  = "./vtk/";
  //const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -273,7 +272,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 1000;
+ int nIter = 3000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -297,8 +296,8 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("-Z");
-   //s1.setGravity("-X");
+   //s1.setGravity("-Z");
+   s1.setGravity("-X");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -309,6 +308,7 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
+   save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter); ///<<< 
 
    s1.saveOldData();
 

@@ -97,23 +97,24 @@ int main(int argc, char **argv)
 */
  
  // Gustavo thesis: sugar-syrup 1
- double N = 194.88;
- double Re = sqrt(N); 
- double We = 116.0;
+ //double N = 194.88;
+ double Re = 33.0413; 
+ double We = 115.662;
  double Fr = 1.0;
  double mu_in = 1.78E-5;
- double mu_out = 2.73;
+ //double mu_out = 2.73;
+ double mu_out = 0.5396;
  double rho_in = 1.225;
  double rho_out = 1350.0;
  double sigma = 0.078;
 
  //** Moving Frame Settings
- const char* _frame = "moving";
+ const char* _frame = "rising";
 
  // fixed
  double c1 = 0.1;      // lagrangian
  double c2 = 0.1;      // smooth vel
- double c3 = 3.0;      // smooth coord (fujiwara)
+ double c3 = 10.0;      // smooth coord (fujiwara)
  double d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
  double d2 = 0.1;      // surface smooth cord (fujiwara)
  
@@ -132,7 +133,8 @@ int main(int argc, char **argv)
  //string meshFile = "3bubbles-V.msh";
  //string meshFile = "2bubbles-2V.msh";
  //string meshFile = "long-bubble2-3V.msh";
- string meshFile = "rising-bubble-pbc-g4D.msh";
+ //string meshFile = "rising-bubble-pbc-g4D.msh";
+ string meshFile = "rising-periodic-mesh-pbc.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -154,8 +156,8 @@ int main(int argc, char **argv)
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-pbc-mul2.73/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-bubble-pbc-mul2.73/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
  //const char *vtkFolder  = "./vtk/";
  //const char *datFolder  = "./dat/";
  
@@ -272,7 +274,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 30000;
+ int nIter = 3000;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )

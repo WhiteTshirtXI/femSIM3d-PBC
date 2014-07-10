@@ -161,6 +161,7 @@ int main(int argc, char **argv)
  // VEJA QUE INITTHREEBUBBLES EM HELMHOLTZ3D TE DARA UMA DISTRIBUICAO DE
  // EDGESIZE BASEADA EM UMA FUNCAO DISTANCIA DA INTERFACE
  //
+ //h1.initMicro();
  h1.initThreeBubbles();
  h1.assemble();
  h1.setk(0.05);
@@ -196,6 +197,7 @@ int main(int argc, char **argv)
  // VEJA QUE INITTHREEBUBBLES EM HELMHOLTZ3D TE DARA UMA DISTRIBUICAO DE
  // EDGESIZE BASEADA EM UMA FUNCAO DISTANCIA DA INTERFACE
  //
+  //h2.initMicro();
   h2.initThreeBubbles();
   h2.assemble();
   h2.setk(0.05);
@@ -225,7 +227,7 @@ int main(int argc, char **argv)
   //
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(5.0);
+  m1.insert3dMeshPointsByDiffusion(3.0);
   m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -257,6 +259,7 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.setSurfaceConfig();
+  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

@@ -269,15 +269,17 @@ void Helmholtz3D::initThreeBubbles()
  convC.Dim(numVerts);
  for( int i=0;i<surfMesh->numVerts;i++ )
  {
+  // coordinates of the ''hook'' node
   double P0x = surfMesh->X.Get(i);
   double P0y = surfMesh->Y.Get(i);
   double P0z = surfMesh->Z.Get(i);
 
   double sumEdgeLength = 0;
-  int listSize = neighbourPoint->at(i).size();
-  list<int> plist = neighbourPoint->at(i);
+  int listSize = neighbourPoint->at(i).size(); // number of neighbours
+  list<int> plist = neighbourPoint->at(i); // list of neighbours
   for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
   {
+   // coordinates of each umbrella's nodes
    double P1x = surfMesh->X.Get(*vert);
    double P1y = surfMesh->Y.Get(*vert);
    double P1z = surfMesh->Z.Get(*vert);
@@ -285,16 +287,16 @@ void Helmholtz3D::initThreeBubbles()
    double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
    sumEdgeLength += edgeLength;
   }
-  convC.Set(i,sumEdgeLength/listSize);
+  convC.Set(i,sumEdgeLength/listSize); // setting with average edge length of umbrella
  }
 
  clVector* vertIdRegion = m->getVertIdRegion();
- double minEdge = *min_element(triEdge.begin(),triEdge.end());
+ double minEdge = *min_element(triEdge.begin(),triEdge.end()); // smallest triangle size (given by average of its three edges) at each region
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
   double radius = 0.5; // sphere radius
   // outside mesh
-  if( heaviside->Get(i) < 0.5 ) 
+  if( heaviside->Get(i) < 0.5 ) // on convex hull
   {
    double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
    if( interfaceDistance->Get(i) < 3.5*radius )

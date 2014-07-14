@@ -51,159 +51,80 @@ Periodic3D::Periodic3D(Model3D &_M3D)
 
 Periodic3D::~Periodic3D() {}
 
-
 /** \brief It reads VTK mesh file and saves two vectors
  *  containing the pairing indices. Also, it reorders the pairs,
  *  otherwise.
  *
- *  \attention Mesh extrusion must be over axis X. 
+ *  \return{ void }
  *  
  */
-void Periodic3D::MountPeriodicVectors(Model3D &_M3D)
+void Periodic3D::MountPeriodicVectorsNew()
 {
-    const double XMin = XPtr->Min();
-    const double XMax = XPtr->Max();
-    
-    VecXMin = XPtr->FindValue(XMin); // returns vector with indices xMin
-    VecXMax = XPtr->FindValue(XMax); // returns vector with indices xMax
-    
-	nyPointsL = VecXMin.Dim(); 
-    nyPointsR = VecXMax.Dim(); 
-    
-	clVector XAux;
-    XAux.Dim(nyPointsL);
+   nyPointsL = MasterIndicesPtr->size();
+   nyPointsR = SlaveIndicesPtr->size();
+   SetIndicesVector(MasterIndicesPtr,SlaveIndicesPtr);
+ 
+   vector<int> xAux(nyPointsL);
+   int ibR = 0;
+   double YRight = 0.0;
+   double ZRight = 0.0;
+   /** Test of dimension:
+	*  
+	* \remark{It is already done in setGenericBC(). However, it only
+	* checks the spatial correspondence based on simple extrusion.}
+	*
+	**/
+   if ( nyPointsL != nyPointsR )
+   { 
+	   cout << "Error: vectors for PBC don't match dimensions!" << endl;
+	   cout << nyPointsL << "!=" << nyPointsR << endl;
+	   cerr << "PBC implementation is invalid! Stopping..." << endl;
+	   exit(1);
+   }
+   else /* If test of dimension is OK, mounts. */
+   {
+	   cout << "Mounting vectors of periodic nodes...\n" << endl;
+  
+	   for ( int i = 0; i < nyPointsL; i++ )
+	   {
+		   int ibL = MasterIndices.at(i);
 
-	int ibR = 0;
-	double YRight = 0.0;
-	double ZRight = 0.0;
-    /* Test of dimension */
-    if ( nyPointsL != nyPointsR )
-    {
-        cout << "Error: vectors for PBC don't match dimensions!" << endl;
-        cout << nyPointsL << "!=" << nyPointsR << endl;
-		cerr << "PBC implementation is invalid! Stopping..." << endl;
-		exit(1);
-    }
-    else /* If test of dimension is OK, mounts. */
-    {
-	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
-              
-        for ( int i = 0; i < nyPointsL; i++ )
-        {
-            
-			int ibL = VecXMin.Get(i);
+		   double YLeft = YPtr->Get(ibL);
+		   double ZLeft = ZPtr->Get(ibL);
+		   
+		   for ( int j = 0; j < nyPointsR; j++ )
+		   {
+			   ibR = SlaveIndices.at(j);
+			   YRight = YPtr->Get(ibR);
+			   ZRight = ZPtr->Get(ibR);
+			   
+			   double deltaY = fabs( YLeft - YRight);
+			   double deltaZ = fabs( ZLeft - ZRight);
 
-			double YLeft = YPtr->Get(ibL);
-            double ZLeft = ZPtr->Get(ibL);
+			   // if finds pair, jumps out
+			   if ( ( deltaY < 1E-10 )
+			     && ( deltaZ < 1E-10 ) )
+				 break;
 
-            for ( int j = 0; j < nyPointsR; j++ )
-            {
-                ibR = VecXMax.Get(j);
-				YRight = YPtr->Get(ibR);
-				ZRight = ZPtr->Get(ibR);
-                
-				double deltaY = fabs( YLeft - YRight );
-				double deltaZ = fabs( ZLeft - ZRight );
+			   
+		   }
 
-				// if finds pair, jumps out
-                if ( ( deltaY < 1E-10 ) &&
-				     ( deltaZ < 1E-10 ) )
-				    break;				
-			}
-			
-			XAux.Set(i,ibR); // reorders after 'break'
-                    
-        }
-    
-    }
-    
-    VecXMax = XAux;
-    
-	/* Printing pairs */
-	cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
-	for (int i = 0; i < nyPointsL; ++i)
-	{
-		int ibL = VecXMin.Get(i);
-		int ibR = VecXMax.Get(i);
-		
-		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+		   xAux.at(i) = ibR; // reorders after 'break'
+	   }
+   }
 
-	}
+   SlaveIndices = xAux;
+   
+   /*Printing pairs */
+   cout << "\t >>>> Periodic Pairing Mounted <<<<"  << endl;
+   for (int i = 0; i < nyPointsL; ++i)
+   {
+	  int ibL = MasterIndices.at(i);
+	  int ibR = SlaveIndices.at(i);
+	  
+	  cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+   }
 
-    
-} /* End of function */
-
-
-/** \brief It reads VTK mesh file and saves two vectors
- *  containing the pairing indices. Also, it reorders the pairs,
- *  otherwise.
- *
- *  \attention Mesh extrusion must be over axis X. 
- *  
- */
-void Periodic3D::MountPeriodicVectorsNew(Model3D &_M3D)
-{
-    nyPointsL = MasterIndicesPtr->size();
-    nyPointsR = SlaveIndicesPtr->size();
-	SetIndicesVector(MasterIndicesPtr,SlaveIndicesPtr);
-
-    /* Test of dimension */
-    if ( nyPointsL != nyPointsR )
-    {
-        cout << "Error: vectors for PBC don't match dimensions!" << endl;
-        cout << nyPointsL << "!=" << nyPointsR << endl;
-		cerr << "PBC implementation is invalid! Stopping..." << endl;
-		exit(1);
-    }
-    else /* If test of dimension is OK, mounts. */
-    {
-	 	cout << "Mounting vectors of periodic nodes...\n" << endl;
-        
-		vector<int> aux (nyPointsL);
-		aux = SlaveIndices;
-
-        for ( int i = 0; i < nyPointsL; i++ )
-        {
-            int ibL = MasterIndices.at(i);
-
-			double YLeft = YPtr->Get(ibL);
-            double ZLeft = ZPtr->Get(ibL);
-            
-			double deltaYOld = 1000.0;
-			double deltaZOld = 1000.0;
-
-            for ( int j = 0; j < nyPointsL; j++ )
-            {
-                int ibR = aux.at(j);
-                double YRight = YPtr->Get(ibR);
-                double ZRight = ZPtr->Get(ibR);
-                
-				double deltaY = fabs( YLeft - YRight);
-				double deltaZ = fabs( ZLeft - ZRight);
-
-				/* Might work with overwriting from setGenericBC() */
-                if ( ( deltaY < deltaYOld ) &&
-				     ( deltaZ < deltaZOld ) ) // reorders pairing
-                {
-				 	//SlaveIndices.at(i) = ibR;
-					deltaYOld = deltaY;
-					deltaZOld = deltaZ;
-                } 
-            }
-        }
-    }
-    
-    /* Printing pairs */
-	cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
-	for (int i = 0; i < nyPointsL; ++i)
-	{
-		int ibL = MasterIndices.at(i);
-		int ibR = SlaveIndices.at(i);
-		
-		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
-
-	}	
-    
 } /* End of function */
 
 

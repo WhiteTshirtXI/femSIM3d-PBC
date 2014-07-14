@@ -192,7 +192,7 @@ void Periodic3D::SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin, clVecto
 } /* End of function */
 
 
-void Periodic3D::SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master, vector<int> &_slave, int L, string direction)
+void Periodic3D::SetPureScalarPBCNew(clVector &_Scalar, vector<int>* _master, vector<int>* _slave, int L, string direction)
 {
     if ( direction == "RL" ) 
 	{
@@ -203,9 +203,9 @@ void Periodic3D::SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master,
 		
 		for (right = 0; right < L; right++)
 		{
-		  int index2 = _slave.at(right);
+		  int index2 = _slave->at(right);
 		  int left = right;
-		  int index = _master.at(left);
+		  int index = _master->at(left);
 		  sRight = _Scalar.Get(index2);
 		  _Scalar.Set(index,sRight);
 		}
@@ -219,9 +219,9 @@ void Periodic3D::SetPureScalarPBCVector(clVector &_Scalar, vector<int> &_master,
     
     	for (left = 0; left < L; left++) 
     	{
-          int index = _master.at(left); 
+          int index = _master->at(left); 
           int right = left;
-          int index2 = _slave.at(right); 
+          int index2 = _slave->at(right); 
           sRight = _Scalar.Get(index2); 
           _Scalar.Set(index,sRight); 
     	}
@@ -293,9 +293,9 @@ void Periodic3D::SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
 
 
 /* Idem, but with container <vector> */
-void Periodic3D::SetVelocityPBCVector(clVector &_uVelocity, clVector &_vVelocity,
-                                clVector &_wVelocity, vector<int> &_master,
-                                vector<int> &_slave, int L, string direction)
+void Periodic3D::SetVelocityPBCNew(clVector &_uVelocity, clVector &_vVelocity,
+                                clVector &_wVelocity, vector<int>* _master,
+                                vector<int>* _slave, int L, string direction)
 {
 	if ( direction  == "RL" ) /* copy from right to left */
 	{
@@ -306,9 +306,9 @@ void Periodic3D::SetVelocityPBCVector(clVector &_uVelocity, clVector &_vVelocity
         
         for (right = 0; right < L; right++) 
         {
-            int index2 = _slave.at(right); 
+            int index2 = _slave->at(right); 
             int left = right;
-            int index = _master.at(left); 
+            int index = _master->at(left); 
             uVelRight = _uVelocity.Get(index2); 
             vVelRight = _vVelocity.Get(index2); 
             wVelRight = _wVelocity.Get(index2); 
@@ -327,9 +327,9 @@ void Periodic3D::SetVelocityPBCVector(clVector &_uVelocity, clVector &_vVelocity
         
         for (left = 0; left < L; left++) 
         {
-            int index = _master.at(left); 
+            int index = _master->at(left); 
             int right = left;
-            int index2 = _slave.at(right); 
+            int index2 = _slave->at(right); 
             uVelLeft = _uVelocity.Get(index); 
             vVelLeft = _vVelocity.Get(index); 
             wVelLeft = _wVelocity.Get(index); 
@@ -395,7 +395,7 @@ void Periodic3D::SetPurePressurePBC(clVector &_Pressure, clVector &_VecXMin, clV
 
 
 /* Idem, but with container <vector> */
-void Periodic3D::SetPurePressurePBCVector(clVector &_Pressure, vector<int> &_master, vector<int> &_slave, 
+void Periodic3D::SetPurePressurePBCNew(clVector &_Pressure, vector<int>* _master, vector<int>* _slave, 
                                                                                  int L, string direction)
 {
 
@@ -408,9 +408,9 @@ void Periodic3D::SetPurePressurePBCVector(clVector &_Pressure, vector<int> &_mas
 
 		for (right = 0; right < L; right++)
 		{
-		   int index2 = _slave.at(right);
+		   int index2 = _slave->at(right);
 		   int left = right;
-		   int index = _master.at(left);
+		   int index = _master->at(left);
 		   pRight = _Pressure.Get(index2);
 		   _Pressure.Set(index,pRight);
 		}
@@ -425,9 +425,9 @@ void Periodic3D::SetPurePressurePBCVector(clVector &_Pressure, vector<int> &_mas
     
     	for (left = 0; left < L; left++) 
     	{
-          int index = _master.at(left); 
+          int index = _master->at(left); 
           int right = left;
-          int index2 = _slave.at(right);
+          int index2 = _slave->at(right);
           pRight = _Pressure.Get(index2); 
           _Pressure.Set(index,pRight); // fills entries of p(X_L) indices with p(X_R)
        }
@@ -470,6 +470,6 @@ int Periodic3D::GetNyPointsR() { return nyPointsR; };
 clVector* Periodic3D::GetVecXMin() { return &VecXMin; };
 clVector* Periodic3D::GetVecXMax() { return &VecXMax; };
 
-vector<int> Periodic3D::GetMasterIndices() { return MasterIndices; };
-vector<int> Periodic3D::GetSlaveIndices() { return SlaveIndices; };
+vector<int>* Periodic3D::GetMasterIndices() { return &MasterIndices; };
+vector<int>* Periodic3D::GetSlaveIndices() { return &SlaveIndices; };
 

@@ -71,11 +71,12 @@ class Simulator3D
 
   // PBC
   	void assemblePBC();
-	void VelPressMatrixModifierPBC(); // idem assemblePBC with vector structure
+	void assemblePBCNew(); // idem assemblePBC with vector structure
+	void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
   	void assembleCPBC();
     void setUnCoupledPBC();
     void unCoupledPBC(); // modified solution velocity+pressure
-    void unCoupledPBCVector(); 
+    void unCoupledPBCNew(); 
 	void unCoupledCPBC(); // modified solution scalar
 	void getPeriodic3DToAttrib(Periodic3D &_pbc);
 	void setPressureJump(double _pJump);
@@ -88,11 +89,11 @@ class Simulator3D
 	void inputPurePressurePBC();
 	void setRHS_PBC();
 	void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCVelVector(vector<int> _indexL, vector<int> _indexR, clVector& _b);
+	void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
 	void sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCPressVector(vector<int> _indexL, vector<int> _indexR, clVector& _b);
+	void sumIndexPBCPressNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
 	void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCScalarVector(vector<int> _indexL, vector<int> _indexR, clVector& _b);
+	void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
 	void setCopyDirectionPBC(string _direction);
 	void stepSLPBCFix();
 
@@ -331,8 +332,8 @@ class Simulator3D
   string direction;
   clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
   clVector VecXMinGlob, VecXMaxGlob;
-  vector<int> MasterIndices;
-  vector<int> SlaveIndices;
+  vector<int> *MasterIndices;
+  vector<int> *SlaveIndices;
   
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;

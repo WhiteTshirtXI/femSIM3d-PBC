@@ -46,6 +46,7 @@ int main(int argc, char **argv)
  double cfl = 0.8;
 
  string meshFile = "rising-periodic-mesh-pbc.msh";
+ //string meshFile = "gustavoMesh.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -227,13 +228,13 @@ int main(int argc, char **argv)
   //
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(3.0);
-  m1.remove3dMeshPointsByDiffusion(0.5);
+  m1.insert3dMeshPointsByDiffusion(5.0);
+  //m1.remove3dMeshPointsByDiffusion(0.5); //<<<
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
-  m1.delete3DPoints();
+  //m1.remove3dMeshPointsByHeight(); //<<<
+  //m1.delete3DPoints(); //<<<
 
   // surface operations
   m1.smoothPointsByCurvature();
@@ -242,11 +243,11 @@ int main(int argc, char **argv)
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("curvature");
+  //m1.contractEdgesByLength("curvature"); //<<<
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 
-  m1.removePointsByNeighbourCheck();
+  //m1.removePointsByNeighbourCheck(); //<<<
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

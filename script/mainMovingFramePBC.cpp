@@ -109,7 +109,7 @@ int main(int argc, char **argv)
  double sigma = 0.078;
 
  //** Moving Frame Settings
- const char* _frame = "rising";
+ const char* _frame = "moving";
 
  // fixed
  double c1 = 0.1;      // lagrangian
@@ -134,7 +134,8 @@ int main(int argc, char **argv)
  //string meshFile = "2bubbles-2V.msh";
  //string meshFile = "long-bubble2-3V.msh";
  //string meshFile = "rising-bubble-pbc-g4D.msh";
- string meshFile = "rising-periodic-mesh-pbc.msh";
+ //string meshFile = "rising-periodic-mesh-pbc.msh";
+ string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectors(m1);
+ pbc.MountPeriodicVectorsNew();
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
@@ -233,6 +234,7 @@ int main(int argc, char **argv)
 
  s2.init();
  
+ /*
   // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
@@ -246,6 +248,7 @@ int main(int argc, char **argv)
  h1.setCRHS();
  h1.unCoupledC();
  h1.setModel3DEdgeSize();
+ */
 
  InOut save(m1,s2);
  
@@ -274,7 +277,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 3000;
+ int nIter = 5;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -297,7 +300,7 @@ int main(int argc, char **argv)
 		cout << "dx: "<< dx << endl;
 		s2.setUSol(vinst);
 		m1.setGenericBC(vref);
-		pbc.MountPeriodicVectors(m1);
+		pbc.MountPeriodicVectorsNew();
 		s2.setURef(vref);
 		s2.setXRef(xref);
 	  }
@@ -336,16 +339,18 @@ int main(int argc, char **argv)
 	  s2.setCopyDirectionPBC("RL");
 
 	  // System solving
-      s2.unCoupledPBC(); // <<<
+      //s2.unCoupledPBC(); // <<<
+      s2.unCoupledPBCNew(); // <<<
       //s2.unCoupled();
 
 	  //*** Solution Saving 
-      save.saveMSH(mshFolder,"newMesh",iter);
+      //save.saveMSH(mshFolder,"newMesh",iter);
       save.saveVTK(vtkFolder,"sim",iter);
-      save.saveVTU(vtkFolder,"sim",iter);
+      //save.saveVTU(vtkFolder,"sim",iter);
       save.saveVTKSurface(vtkFolder,"sim",iter);
-      save.saveSol(binFolder,"sim",iter);
-      save.saveBubbleInfo(datFolder);
+      //save.saveSol(binFolder,"sim",iter);
+      //save.saveBubbleInfo(datFolder);
+	  //save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter);
       s2.saveOldData();
 
       s2.timeStep();
@@ -359,6 +364,7 @@ int main(int argc, char **argv)
      }
      /* Points distribution - Helmholtz eq. */
 
+     /*
      Helmholtz3D h2(m1,h1);
      h2.setBC();
 	 h2.initThreeBubbles();
@@ -372,6 +378,7 @@ int main(int argc, char **argv)
      h2.unCoupledC();
      h2.saveChordalEdge(datFolder,"edge",iter-1);
      h2.setModel3DEdgeSize();
+	 */
 
      Model3D mOld = m1; 
 
@@ -380,38 +387,38 @@ int main(int argc, char **argv)
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
      m1.setNormalAndKappa();
-     m1.initMeshParameters();
+     //m1.initMeshParameters(); //<<<
 	 
      /* 3D operations */
      
-	 m1.insert3dMeshPointsByDiffusion(6.0);
-     m1.remove3dMeshPointsByDiffusion(0.5);
+	 //m1.insert3dMeshPointsByDiffusion(3.0);
+     //m1.remove3dMeshPointsByDiffusion(0.5);
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();
      //m1.remove3dMeshPointsByDistance();
-     m1.remove3dMeshPointsByHeight();
-     m1.delete3DPoints();
+     //m1.remove3dMeshPointsByHeight();
+     //m1.delete3DPoints();
 
      // surface operations
-     m1.smoothPointsByCurvature();
+     //m1.smoothPointsByCurvature();
 
-     m1.insertPointsByLength("curvature");
+     //m1.insertPointsByLength("curvature");
      //m1.insertPointsByLength("flat");
      //m1.insertPointsByCurvature("flat");
      //m1.removePointsByCurvature();
      //m1.insertPointsByInterfaceDistance("flat");
-     m1.contractEdgesByLength("curvature");
+     //m1.contractEdgesByLength("curvature");
      //m1.contractEdgesByLength("flat");
      //m1.removePointsByLength();
-     m1.flipTriangleEdges();
-     m1.removePointsByNeighbourCheck();
+     //m1.flipTriangleEdges();
+     //m1.removePointsByNeighbourCheck();
      //m1.checkAngleBetweenPlanes();
      /* **************************************** */
 
      //m1.mesh2Dto3DOriginal();
-     m1.mesh3DPoints();
+     m1.mesh3DPoints(); //<<<
 	 //m1.setStretchJetMesh(); // MESH TRANSFORM
-     m1.setMapping();
+     m1.setMapping(); //<<<
     #if NUMGLEU == 5
      m1.setMiniElement();
     #else
@@ -423,12 +430,12 @@ int main(int argc, char **argv)
 	if ( strcmp( _frame,"moving") == 0 )
 	{
 	  m1.setGenericBC(vref);
-	  pbc.MountPeriodicVectors(m1);
+	  pbc.MountPeriodicVectorsNew();
 	}
 	else
 	{
 	  m1.setGenericBC();
-	  pbc.MountPeriodicVectors(m1);
+	  pbc.MountPeriodicVectorsNew();
 	}
 
     Simulator3D s3(m1,s2);

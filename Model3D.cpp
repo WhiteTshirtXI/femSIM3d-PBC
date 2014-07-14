@@ -3416,11 +3416,37 @@ void Model3D::remove3dMeshPointsByDistance()
  }
 }
 
-/*
- * Insert point(s) according to the solution of the diffusion equation
+/** \brief Insert point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
  *
- * */
+ *  @param[in] _param Relaxation factor
+ *  
+ *  \returns {void}
+ *
+ * \details{ The ``relaxation factor (shrinker or stretcher)'' \f$ \lambda \f$ controls
+ * a ratio between the edge length \f$ l \f$ for the pair of vertices
+ * \f$ \{ v_1,v_2 \} \f$ and the maximum edge length \f$ l_{max} \f$ of the umbrella's
+ * partial edge lengths \f$ \{ l_1, l_2 \} \f$ to manage the point
+ * insertion.
+ * 
+ * To put it another way, \f$ l_{max} = \max \{ l_1,l_2 \} \f$, where
+ *
+ * \f[ l_1 = \bar{l}(v_1) = \frac{\sum_{i=1}^{ne} l_i(v_1) }{ne} \f]
+ * \f[ l_2 = \bar{l}(v_2) = \frac{\sum_{i=1}^{ne} l_i(v_2) }{ne} \f]
+ * 
+ * are the average lengths of the umbrella's edges associated to the
+ * vertices \f$ v_1,v_2 \f$. 
+ *
+ * Thus, the if-condition 
+ * 
+ * \f[ \frac{l}{l_{max}} > \lambda \f], \ \ \ \lambda \in (0,+\infty) 
+ * 
+ * determines the insertion of points, given that the Helmholtz equation was
+ * previously solved. Note that if \f$ \lambda > 1.0 \f$, the tolerance
+ * to have mesh refinement is loosed and a finer volume mesh is
+ * obtained. } 
+ *
+ */
 void Model3D::insert3dMeshPointsByDiffusion(double _param)
 {
  /*
@@ -3501,11 +3527,15 @@ void Model3D::insert3dMeshPointsByDiffusion()
 	insert3dMeshPointsByDiffusion(3.0);
 }
 
-/*
- * Remove point(s) according to the solution of the diffusion equation
+/** \brief Removes point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
  *
- * */
+ * @param[in] _param Relaxation factor
+ *
+ * \returns {void}
+ *
+ * \details{ See Model3D::insert3dMeshPointsByDiffusion(double _param). }
+ */
 void Model3D::remove3dMeshPointsByDiffusion(double _param)
 {
  int vertID = 0;
@@ -3572,11 +3602,11 @@ void Model3D::breakup()
  }
 }
 
-/*
- * Insert point where the area of the surface triangle is bigger than a
- * value given by the "test" variable.
+/** \brief Insert points where the area of the surface triangle is bigger than a
+ *  value given by the "test" variable.
  *
- * */
+ *  \returns {void}
+ */
 void Model3D::insertPointsByArea()
 {
  int lastRow;
@@ -3649,10 +3679,9 @@ void Model3D::insertPointsByArea()
  }
 }
 
-/* 
- * strategy to ADD points - to be validated
+/** \brief Strategy to ADD points - to be validated
  * This method works where two bubbles interact.
- *
+ * \returns {void}
  */
 void Model3D::insertPointsBetweenBubblesByPosition()
 {
@@ -4187,12 +4216,12 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  return flag;
 }
 
-/*
- * Remove point(s) according to the tetrahedron volume. If such a volume
- * is smaller then the variable "tetVol", one of the four nodes are
+/** \brief Removes points according to the tetrahedron volume. If such a volume
+ * is smaller then the variable "tetVol", one of the four nodes is
  * deleted.
- *
- * */
+ * 
+ * \returns {void}
+ */
 void Model3D::remove3dMeshPointsByVolume()
 {
  double vSum;
@@ -4264,21 +4293,21 @@ void Model3D::remove3dMeshPointsByVolume()
  cout << "  removed by volume: " << rpv[elemID] << endl;
 }
 
-/*
- * Mark point of the 3D mesh structure to be deleted by setting the
+/** \brief Marks points of the 3D mesh structure to be deleted by setting the
  * heaviside vector to -1
  *
- * */
+ * \returns {void}
+ */
 void Model3D::mark3DPointForDeletion(int _vert)
 {
  heaviside.Set(_vert,-1);
 }
 
-/* 
- * Perform 3D mesh point deletion according to the vector heaviside (set
+/** \brief Performs 3D mesh point deletion according to the vector heaviside (set
  * -1)
- *
- * */
+ * 
+ *  \returns {void} 
+ */
 void Model3D::delete3DPoints()
 {
  for( int dp=0;dp<heaviside.Dim();dp++ )
@@ -8807,29 +8836,29 @@ void Model3D::checkAngleBetweenPlanes()
  }
 }
 
-/* 
- * This if checks whether the point on the surface has only 3 surface
- * elements. This is caused by the re-meshing process that sometimes
- * creates these problematic local mesh. Such a point should be
- * removed to avoid mesh problems.
- * */
+/** \brief Removes points over the interface by neighbour checking.
+ *
+ *  \returns {void}
+ *
+ */
 void Model3D::removePointsByNeighbourCheck()
 {
  for( int i=0;i<surfMesh.numVerts;i++ )
   removePointByNeighbourCheck(i);
 }
 
+/** \brief Checks whether the point on the surface has only 3 surface
+* elements. This is caused by the re-meshing process that sometimes
+* creates these problematic local mesh. Such a point should be
+* removed to avoid mesh problems.
+*
+* \returns {void}
+*/
 void Model3D::removePointByNeighbourCheck(int _node)
 {
  int vertID = surfMesh.vertIdRegion.Get(_node);
- /* 
-  * This if checks whether the point on the surface has only 3 surface
-  * elements. This is caused by the re-meshing process that sometimes
-  * creates these problematic local mesh. Such a point should be
-  * removed to avoid mesh problems.
-  * */
- int elemListSize = neighbourSurfaceElem.at( _node ).size();
 
+ int elemListSize = neighbourSurfaceElem.at( _node ).size();
  if( elemListSize < 4 )
  {
   removeSurfacePoint(_node);
@@ -9093,9 +9122,12 @@ void Model3D::initMeshParameters()
  fill(intet.begin(),intet.end(),0);
 }
 
-/* check and remove vertices that are too close to the surface mesh
- * structure (boundary and interface vertices)
- * In this method, besides the 3 vertices of a triangle surface mesh, 
+/** \brief Checks and removes vertices that are too close to the surface 
+ * mesh structure (boundary and interface vertices).
+ *
+ * \returns {void}
+ *
+ * \details{ In this method, besides the 3 vertices of a triangle surface mesh, 
  * the midEdges and centroid vertices (total 6
  * coordinates) are used to compare the distance to the wall/interface.
  * If it is lower than a predefinided value (if statement in the end of
@@ -9103,7 +9135,7 @@ void Model3D::initMeshParameters()
  * 
  * input: {X,Y,Z} and surfMesh{X,Y,Z}
  * output: mark for deletion vertID3D
- * requirements: neighbourVert
+ * requirements: neighbourVert }
  *
  * */
 void Model3D::remove3dMeshPointsByHeight()
@@ -9653,11 +9685,11 @@ void Model3D::integralParabolic()
  cout << sumUArea/sumArea << endl;
 }
 
-/*
- * Insert point(s) according to the solution of the diffusion equation
+/** \brief Insert points according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
- *
- * */
+ * 
+ * \returns {void}
+ */
 void Model3D::insert3dMeshPointsByVolume()
 {
  int vertID = 0;

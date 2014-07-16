@@ -2166,11 +2166,12 @@ void Simulator3D::stepLagrangianZ()
  convUVW.CopyFrom(2*numNodes,wSol);
 } // fecha metodo stepLagragianZ
 
-/* compute ALE velocity according to mesh parameters c1,c2,c3,d1 and d3
+/** \brief Computes ALE velocity according to 
+ *  mesh parameters \f$ c1, c2, c3, d1, d3 \f$
  * 
  * input:  SolOld velocity
  * output: ALE velocity
- * */
+ */
 void Simulator3D::stepALE()
 {
  // vertice velocity (uVert,vVert)

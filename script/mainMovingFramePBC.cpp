@@ -75,7 +75,7 @@ int main(int argc, char **argv)
  //** Physical Parameters
  /*
  double Re = 14.5767; 
- double Re = 14.5767; 
+ double Sc = 1.0;
  double We = 0.2007;
  double Fr = 13.2160;
  double mu_in = 1.820E-05;
@@ -84,21 +84,11 @@ int main(int argc, char **argv)
  double rho_out = 998.63;
  double sigma = 0.0728;
  */
-
- /* test
- double Re = 100.0; 
- double We = 10.0;
- double Fr = 1.0;
- double mu_in = 0.1;
- double mu_out = 1.0;
- double rho_in = 0.001;
- double rho_out = 1.0;
- double sigma = 1.0;
-*/
  
  // Gustavo thesis: sugar-syrup 1
  //double N = 194.88;
  double Re = 33.0413; 
+ double Sc = 1.0;
  double We = 115.662;
  double Fr = 1.0;
  double mu_in = 1.78E-5;
@@ -112,8 +102,8 @@ int main(int argc, char **argv)
  const char* _frame = "moving";
 
  // fixed
- double c1 = 0.1;      // lagrangian
- double c2 = 0.1;      // smooth vel
+ double c1 = 0.0;      // lagrangian
+ double c2 = 1.0;      // smooth vel
  double c3 = 10.0;      // smooth coord (fujiwara)
  double d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
  double d2 = 0.1;      // surface smooth cord (fujiwara)
@@ -121,47 +111,35 @@ int main(int argc, char **argv)
  // moving
  if ( strcmp( _frame,"moving") == 0 )
  {
-   c1 = 0.0;      // lagrangian
-   c2 = 1.0;      // smooth vel
-   c3 = 10.0;      // smooth coord (fujiwara)
-   d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
-   d2 = 0.1;      // surface smooth cord (fujiwara)
+   c1 = 0.0;      // lagrangian - fluid vel
+   c2 = 1.0;      // smooth vel - neighbours vel
+   c3 = 10.0;      // smooth coord (fujiwara) - elastic vel
+   d1 = 1.0;      // surface tangent velocity u_n=u-u_t - interface
+   d2 = 0.1;      // surface smooth cord (fujiwara) - interface
  }
 
  //*** File
- //string meshFile = "bubble-jet.msh";
- //string meshFile = "3bubbles-V.msh";
- //string meshFile = "2bubbles-2V.msh";
- //string meshFile = "long-bubble2-3V.msh";
- //string meshFile = "rising-bubble-pbc-g4D.msh";
  //string meshFile = "rising-periodic-mesh-pbc.msh";
+ //string meshFile = "rising-bubble-pbc-g4D.msh";
  string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);//<<<
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
- Solver *solverC = new PetscSolver(KSPCG,PCJACOBI);
- //Solver *solverC = new PCGSolver();
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
+ Solver *solverC = new PetscSolver(KSPCG,PCICC);
+ //Solver *solverC = new PetscSolver(KSPCG,PCJACOBI);
+ //Solver *solverC = new PCGSolver();
 
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb1-V/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb2-2V/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/slug-nb3-3V/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/bubble-jet/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
- //const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
- 
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
+ const char *vtkFolder  = "./vtk/";
+ const char *datFolder  = "./dat/";
  
  //*** Peixoto's tree
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -183,13 +161,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
-  //m1.setStretchJetMesh(); // mesh transform
   m1.setMapping();
-  #if NUMGLEU == 5
- 	m1.setMiniElement();
-   #else
- 	m1.setQuadElement();
-  #endif
+#if NUMGLEU == 5
+ m1.setMiniElement();
+#else
+ m1.setQuadElement();
+#endif
   m1.setSurfaceConfig(); // configurations of interfaces
   m1.setInitSurfaceVolume(); // gets volume of the bubbles
   m1.setInitSurfaceArea(); // gets surface area of the bubbles
@@ -206,6 +183,7 @@ int main(int argc, char **argv)
 
  //*** Physics
  s2.setRe(Re);
+ s2.setSc(Sc);
  s2.setWe(We);
  s2.setFr(Fr);
  s2.setMu(mu_in,mu_out);
@@ -232,15 +210,14 @@ int main(int argc, char **argv)
  //*** Starting flow
  s2.setBetaPressureLiquid();
 
+ //*** Initial condition
  s2.init();
  
- /*
-  // Point's distribution
+ // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
  h1.initThreeBubbles();
  //h1.initJet(1.0,4.0); //<<< 
- //h1.initRisingBubble();
  h1.assemble();
  h1.setk(0.05);
  h1.matMountC();
@@ -248,7 +225,6 @@ int main(int argc, char **argv)
  h1.setCRHS();
  h1.unCoupledC();
  h1.setModel3DEdgeSize();
- */
 
  InOut save(m1,s2);
  
@@ -277,7 +253,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 5;
+ int nIter = 10;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -307,6 +283,7 @@ int main(int argc, char **argv)
 
       s2.setDtALETwoPhase();
 
+	  InOut save(m1,s2);
       save.printSimulationReport();
 
 	  // Convection
@@ -320,8 +297,7 @@ int main(int argc, char **argv)
       s2.matMount();
 
 	  // B.C.
-      s2.setUnCoupledPBC(); // <<<
-      //s2.setUnCoupledBC();
+      s2.setUnCoupledPBC();
       
 	  // Physical effects
 	  s2.setGravity("-X");
@@ -329,7 +305,6 @@ int main(int argc, char **argv)
       
 	  // R.H.S.
 	  s2.setRHS_PBC();
-	  //s2.setRHS();
 
 	  // Interface
       //s2.setInterface();
@@ -341,7 +316,6 @@ int main(int argc, char **argv)
 	  // System solving
       //s2.unCoupledPBC(); // <<<
       s2.unCoupledPBCNew(); // <<<
-      //s2.unCoupled();
 
 	  //*** Solution Saving 
       //save.saveMSH(mshFolder,"newMesh",iter);
@@ -362,14 +336,13 @@ int main(int argc, char **argv)
 
       iter++;
      }
-     /* Points distribution - Helmholtz eq. */
 
-     /*
+     //*** Points distribution - Helmholtz eq.
+     
      Helmholtz3D h2(m1,h1);
      h2.setBC();
 	 h2.initThreeBubbles();
      //h2.initJet(1.0,4.0); //<<<
-	 //h2.initRisingBubble();
      h2.assemble();
      h2.setk(0.05);
      h2.matMountC();
@@ -378,11 +351,8 @@ int main(int argc, char **argv)
      h2.unCoupledC();
      h2.saveChordalEdge(datFolder,"edge",iter-1);
      h2.setModel3DEdgeSize();
-	 */
-
+	 
      Model3D mOld = m1; 
-
-	 //m1.setUnstretchJetMesh(); // MESH TRANSFORM
 
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
@@ -416,9 +386,8 @@ int main(int argc, char **argv)
      /* **************************************** */
 
      //m1.mesh2Dto3DOriginal();
-     m1.mesh3DPoints(); //<<<
-	 //m1.setStretchJetMesh(); // MESH TRANSFORM
-     m1.setMapping(); //<<<
+     m1.mesh3DPoints();
+     m1.setMapping();
     #if NUMGLEU == 5
      m1.setMiniElement();
     #else

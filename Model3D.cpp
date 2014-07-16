@@ -4453,10 +4453,12 @@ void Model3D::tetMeshStats()
   averageTetVolume[nb] = sumVolume[nb]/count[nb];
 }
 
-/*
- * Mesh a set of points using TETGEN.
+/** \brief Mesh a set of points using TETGEN.
+ *  
+ *  @param[in] _param Tetgen's meshing flags
  *
- * */
+ *  \returns{void}
+ */
 void Model3D::mesh3DPoints(const char* _param)
 {
  // init tetgen mesh object
@@ -4509,6 +4511,11 @@ void Model3D::mesh3DPoints(const char* _param)
  out.initialize();
 }
 
+/** \brief Tetrahedralizes cloud of points by calling parameterized
+ * meshing function.
+ *
+ *  \returns{ void }
+ */ 
 void Model3D::mesh3DPoints()
 {
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
@@ -5071,8 +5078,6 @@ void Model3D::setGenericBC()
   // periodic boundaries. Any Dirichlet condition is imposed.
   else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
   else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
-  
-  else if( surfMesh.phyBounds.at(*it) == "\"wallUndefined\"" ) {}
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -5383,6 +5388,10 @@ void Model3D::setGenericBC(double _vel)
    vc.Set(*it,aux-_vel);
    wc.Set(*it,0.0);
   }
+
+  // periodic boundaries. Any Dirichlet condition is imposed.
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -9518,10 +9527,11 @@ void Model3D::checkLineOrientation()
  }
 }
 
-/* 
- * Bubble volume correction, print screen and save in file with
- * iteratios
- * */
+/** \brief Bubble volume correction, print screen and save in file with
+ * iterations
+ *
+ * \returns{ void }
+ */
 void Model3D::applyBubbleVolumeCorrection()
 {
  // surfMesh.elemIdRegion == 0 --> wall

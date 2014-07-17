@@ -58,7 +58,7 @@ Periodic3D::~Periodic3D() {}
  *  \return{ void }
  *  
  */
-void Periodic3D::MountPeriodicVectorsNew()
+void Periodic3D::MountPeriodicVectorsNew(string _printIPs)
 {
    nyPointsL = MasterIndicesPtr->size();
    nyPointsR = SlaveIndicesPtr->size();
@@ -115,14 +115,19 @@ void Periodic3D::MountPeriodicVectorsNew()
 
    SlaveIndices = xAux;
    
-   /*Printing pairs */
-   cout << "\t >>>> Periodic Pairing Mounted <<<<"  << endl;
-   for (int i = 0; i < nyPointsL; ++i)
+   // Print   
+   cout << "Periodic pairing mounted."  << endl;
+
+   if ( _printIPs == "print" )
    {
-	  int ibL = MasterIndices.at(i);
-	  int ibR = SlaveIndices.at(i);
-	  
-	  cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+     cout << "\t >>>> Periodic Pairing Mounted <<<<"  << endl;
+	 for (int i = 0; i < nyPointsL; ++i)
+	 {
+		int ibL = MasterIndices.at(i);
+		int ibR = SlaveIndices.at(i);
+		
+		cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+	 }
    }
 
 } /* End of function */

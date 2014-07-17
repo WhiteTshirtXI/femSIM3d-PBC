@@ -2254,9 +2254,102 @@ void Simulator3D::stepALE()
 
  // calcula velocidade do fluido atraves do metodo semi-lagrangeano
  // comment if using mainVortex.cpp
- //stepSL();
- stepSLPBCFix(); // for PBC
+ stepSL();
 } // fecha metodo stepALE
+
+/** \brief Computes ALE velocity according to 
+ *  mesh parameters \f$ c1, c2, c3, d1, d3 \f$
+ *  passing the method StepSLPBCFix() of the PBC correction.
+ * 
+ *  \returns{ void }
+ */
+void Simulator3D::stepALEPBC()
+{
+ // vertice velocity (uVert,vVert)
+ clVector uVert(numVerts);
+ clVector vVert(numVerts);
+ clVector wVert(numVerts);
+ uSolOld.CopyTo(0,uVert);
+ vSolOld.CopyTo(0,vVert);
+ wSolOld.CopyTo(0,wVert);
+
+ setInterfaceVelocity();
+ //setMassTransfer();
+
+ if( c2 > 0 )
+ {
+  // smoothing - velocidade
+  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+  e1.stepSmooth(uALE,vALE,wALE);
+  uSmooth = *e1.getUSmooth();
+  vSmooth = *e1.getVSmooth();
+  wSmooth = *e1.getWSmooth();
+
+  uSmooth=uALE;
+  vSmooth=vALE;
+  wSmooth=wALE;
+  MeshSmooth e3(*m,dt); // criando objeto MeshSmooth
+  for( int i=0;i<20;i++ )
+  {
+   // smoothing - velocidade
+   e3.stepSmoothLonger(uSmooth,vSmooth,wSmooth);
+   uSmooth = *e3.getUSmooth();
+   vSmooth = *e3.getVSmooth();
+   wSmooth = *e3.getWSmooth();
+
+   for( int i=0;i<surfMesh->numVerts;i++ )
+   {
+	uSmooth.Set(i,uALE.Get(i));
+	vSmooth.Set(i,vALE.Get(i));
+	wSmooth.Set(i,wALE.Get(i));
+   }
+  }
+ }
+
+ if( c3 > 0.0 )
+ {
+  // smoothing coords
+  MeshSmooth e2(*m,1.0); // criando objeto MeshSmooth
+  e2.stepSmoothFujiwara();
+  uSmoothCoord = *e2.getUSmooth();
+  vSmoothCoord = *e2.getVSmooth();
+  wSmoothCoord = *e2.getWSmooth();
+ }
+
+ // compute ALE
+ uALE = c1*uVert+c2*uSmooth+c3*uSmoothCoord;
+ vALE = c1*vVert+c2*vSmooth+c3*vSmoothCoord;
+ wALE = c1*wVert+c2*wSmooth+c3*wSmoothCoord;
+ 
+ // impoe velocidade do fluido na interface
+ setInterfaceVelocity();
+ //setMassTransfer();
+
+ clVector zeroAux(numNodes-numVerts);
+ uALE.Append(zeroAux);
+ vALE.Append(zeroAux);
+ wALE.Append(zeroAux);
+#if NUMGLEU == 5
+ uALE = setTetCentroid(*IEN,uALE);
+ vALE = setTetCentroid(*IEN,vALE);
+ wALE = setTetCentroid(*IEN,wALE);
+#else
+ uALE = setTetQuad(*IEN,uALE);
+ vALE = setTetQuad(*IEN,vALE);
+ wALE = setTetQuad(*IEN,wALE);
+#endif
+
+ // impoe velocidade ALE = 0 no contorno
+ setALEBC();
+ //setAnnularALEBC();
+
+ // calcula velocidade do fluido atraves do metodo semi-lagrangeano
+ // comment if using mainVortex.cpp
+ 
+ stepSLPBCFix(); // PBC correction
+
+} // fecha metodo stepALE
+
 
 /* move nodes according to ALE velocity 
  * 
@@ -6265,7 +6358,7 @@ void Simulator3D::unCoupledPBCNew()
 						 *heatFlux;
 
  ///*** setting b2 periodic, because DTilde*uvw already is.
- sumIndexPBCPressNew(MasterIndices,SlaveIndices,b2);
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2);
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
@@ -6368,7 +6461,7 @@ void Simulator3D::unCoupledPBC()
 						 *heatFlux;
 
  ///*** setting b2 periodic, because DTilde*uvw already is.
- sumIndexPBCPress(VecXMin,VecXMax,b2);
+ sumIndexPBCScalar(VecXMin,VecXMax,b2);
 
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
@@ -6521,40 +6614,6 @@ void Simulator3D::sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, 
 } // fecha metodo
 
 
-
-
-void Simulator3D::sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _p)
-{
-   for (int i = 0; i < _indexL->Dim(); i++)
-   {
-      int ibL = _indexL->Get(i);
-      int ibR = _indexR->Get(i);
-
-      double pL = _p.Get(ibL);
-      double pR = _p.Get(ibR);
-      _p.Set(ibR,pL + pR);
-      _p.Set(ibL,0);
-
-    }
-} // fecha metodo
-
-
-void Simulator3D::sumIndexPBCPressNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _p)
-{
-   for (size_t i = 0; i < _indexL->size(); i++)
-   {
-      int ibL = _indexL->at(i);
-      int ibR = _indexR->at(i);
-
-      double pL = _p.Get(ibL);
-      double pR = _p.Get(ibR);
-      _p.Set(ibR,pL + pR);
-      _p.Set(ibL,0);
-
-    }
-} // fecha metodo
-
-
 void Simulator3D::sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _s)
 {
    for (int i = 0; i < _indexL->Dim(); i++)
@@ -6572,18 +6631,17 @@ void Simulator3D::sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVect
 } // fecha metodo
 
 
-void Simulator3D::sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _s)
+void Simulator3D::sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b)
 {
    for (size_t i = 0; i < _indexL->size(); i++)
    {
       int ibL = _indexL->at(i);
       int ibR = _indexR->at(i);
 
-      double qL = _s.Get(ibL);
-      double qR = _s.Get(ibR);
-      _s.Set(ibR,qL + qR);
-      _s.Set(ibL,0);
-
+      double bL = _b.Get(ibL);
+      double bR = _b.Get(ibR);
+      _b.Set(ibR,bL + bR);
+      _b.Set(ibL,0);
     }
 
 } // fecha metodo

@@ -213,6 +213,7 @@ int main(int argc, char **argv)
  //*** Initial condition
  s2.init();
  
+ 
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
@@ -225,6 +226,7 @@ int main(int argc, char **argv)
  h1.setCRHS();
  h1.unCoupledC();
  h1.setModel3DEdgeSize();
+ 
 
  InOut save(m1,s2);
  
@@ -253,7 +255,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 10;
+ int nIter = 5;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -289,7 +291,7 @@ int main(int argc, char **argv)
 
 	  // Convection
       //s2.stepLagrangian();
-      s2.stepALE();
+      s2.stepALEPBC(); //<<<
 
       s2.movePoints();
 
@@ -298,7 +300,8 @@ int main(int argc, char **argv)
       s2.matMount();
 
 	  // B.C.
-      s2.setUnCoupledPBC();
+	  //s2.setUnCoupledBC(); 
+      s2.setUnCoupledPBC(); //<<< check, if worth
       
 	  // Physical effects
 	  s2.setGravity("-X");
@@ -340,6 +343,7 @@ int main(int argc, char **argv)
 
      //*** Points distribution - Helmholtz eq.
      
+     
      Helmholtz3D h2(m1,h1);
      h2.setBC();
      h2.initCylindricalWrap(1.5);
@@ -355,12 +359,13 @@ int main(int argc, char **argv)
 	 
      Model3D mOld = m1; 
 
-     /* *********** MESH TREATMENT ************* */
+	 
+     /// *********** MESH TREATMENT *************
      // set normal and kappa values
      m1.setNormalAndKappa();
      m1.initMeshParameters(); //<<<
 	 
-     /* 3D operations */
+     /// 3D operations 
      
 	 m1.insert3dMeshPointsByDiffusion(3.0);
      m1.remove3dMeshPointsByDiffusion(0.5);
@@ -370,7 +375,7 @@ int main(int argc, char **argv)
      //m1.remove3dMeshPointsByHeight();
      m1.delete3DPoints();
 
-     // surface operations
+     /// surface operations
      m1.smoothPointsByCurvature();
 
      m1.insertPointsByLength("curvature");
@@ -384,7 +389,8 @@ int main(int argc, char **argv)
      m1.flipTriangleEdges();
      m1.removePointsByNeighbourCheck();
      m1.checkAngleBetweenPlanes();
-     /* **************************************** */
+     // **************************************** 
+	 
 
      //m1.mesh2Dto3DOriginal();
      m1.mesh3DPoints();

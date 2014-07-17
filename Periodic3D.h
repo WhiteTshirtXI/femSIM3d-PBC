@@ -60,17 +60,17 @@ public:
                         clVector &_VecXMax, int L, string direction);
     void SetVelocityPBCNew(clVector &_uVelocity, clVector &_vVelocity,
                         clVector &_wVelocity, vector<int>* _master,
-                        vector<int>* _slave, int L, string direction);
+                        vector<int>* _slave, int _L, string _direction);
     void SetPurePressurePBC(clVector &_Pressure, clVector &_VecXMin,
                             clVector &_VecXMax, int L, string direction);
     void SetPurePressurePBCNew(clVector &_Pressure, vector<int>* _master,
-                            vector<int>* _slave, int L, string direction);
+                            vector<int>* _slave, int _L, string _direction);
     void SetJumpPressurePBC(clVector &_Pressure, clVector &_VecXMin,
                             clVector &_VecXMax, int L, double jump);
     void SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin,
                             clVector &_VecXMax, int L, string direction);
     void SetPureScalarPBCNew(clVector &_Scalar, vector<int>* _master,
-                            vector<int>* _slave, int L, string direction);
+                            vector<int>* _slave, int _L, string _direction);
 	void SetIndicesVector(vector<int>* _master, vector<int>* _slave);
 
 	/* POINTER functions */

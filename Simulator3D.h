@@ -90,8 +90,6 @@ class Simulator3D
 	void setRHS_PBC();
 	void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
 	void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
-	void sumIndexPBCPress(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCPressNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
 	void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
 	void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
 	void setCopyDirectionPBC(string _direction);
@@ -110,6 +108,7 @@ class Simulator3D
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
+  void stepALEPBC(); //<<< for PBC SL correction
   void movePoints();
   void movePoints(clVector *_uVel,
                   clVector *_vVel,

@@ -197,16 +197,16 @@ void Periodic3D::SetPureScalarPBC(clVector &_Scalar, clVector &_VecXMin, clVecto
 } /* End of function */
 
 
-void Periodic3D::SetPureScalarPBCNew(clVector &_Scalar, vector<int>* _master, vector<int>* _slave, int L, string direction)
+void Periodic3D::SetPureScalarPBCNew(clVector &_Scalar, vector<int>* _master, vector<int>* _slave, int _L, string _direction)
 {
-    if ( direction == "RL" ) 
+    if ( _direction == "RL" ) 
 	{
 	 	cout << "Copying scalar field from RIGHT to LEFT..." << endl;
     	
 		int right;
 		double sRight;
 		
-		for (right = 0; right < L; right++)
+		for (right = 0; right < _L; right++)
 		{
 		  int index2 = _slave->at(right);
 		  int left = right;
@@ -222,7 +222,7 @@ void Periodic3D::SetPureScalarPBCNew(clVector &_Scalar, vector<int>* _master, ve
 		int left;
     	double sRight;
     
-    	for (left = 0; left < L; left++) 
+    	for (left = 0; left < _L; left++) 
     	{
           int index = _master->at(left); 
           int right = left;
@@ -300,16 +300,16 @@ void Periodic3D::SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
 /* Idem, but with container <vector> */
 void Periodic3D::SetVelocityPBCNew(clVector &_uVelocity, clVector &_vVelocity,
                                 clVector &_wVelocity, vector<int>* _master,
-                                vector<int>* _slave, int L, string direction)
+                                vector<int>* _slave, int _L, string _direction)
 {
-	if ( direction  == "RL" ) /* copy from right to left */
+	if ( _direction  == "RL" ) /* copy from right to left */
 	{
 		cout << "Copying velocity field from RIGHT to LEFT..." << endl;
         
 		int right;
         double uVelRight, vVelRight, wVelRight;
         
-        for (right = 0; right < L; right++) 
+        for (right = 0; right < _L; right++) 
         {
             int index2 = _slave->at(right); 
             int left = right;
@@ -330,7 +330,7 @@ void Periodic3D::SetVelocityPBCNew(clVector &_uVelocity, clVector &_vVelocity,
         int left;
         double uVelLeft, vVelLeft, wVelLeft;
         
-        for (left = 0; left < L; left++) 
+        for (left = 0; left < _L; left++) 
         {
             int index = _master->at(left); 
             int right = left;
@@ -401,17 +401,17 @@ void Periodic3D::SetPurePressurePBC(clVector &_Pressure, clVector &_VecXMin, clV
 
 /* Idem, but with container <vector> */
 void Periodic3D::SetPurePressurePBCNew(clVector &_Pressure, vector<int>* _master, vector<int>* _slave, 
-                                                                                 int L, string direction)
+                                                                                 int _L, string _direction)
 {
 
- 	if ( direction == "RL" )
+ 	if ( _direction == "RL" )
 	{
 	 	cout << "Copying pressure field from RIGHT to LEFT..." << endl;
 	 	
 		int right;
 		double pRight;
 
-		for (right = 0; right < L; right++)
+		for (right = 0; right < _L; right++)
 		{
 		   int index2 = _slave->at(right);
 		   int left = right;
@@ -428,7 +428,7 @@ void Periodic3D::SetPurePressurePBCNew(clVector &_Pressure, vector<int>* _master
 	 	int left;
     	double pRight;
     
-    	for (left = 0; left < L; left++) 
+    	for (left = 0; left < _L; left++) 
     	{
           int index = _master->at(left); 
           int right = left;

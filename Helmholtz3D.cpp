@@ -258,7 +258,21 @@ void Helmholtz3D::initJet(double _dr, double factor)
   }
 }
 
-void Helmholtz3D::initThreeBubbles()
+/** \brief Initializes a node distribution for the Helmholtz equation
+ * considering the adaptive refinement for a cylindrical region 
+ * surrounding disperse elements.
+ *
+ * @param[in] _wrapFactor Factor of wrap radius
+ *
+ * \returns {void}
+ *
+ * \details{ This method was primarily developed to simulate bubble
+ * plumes, in which bubbles uprise in row. For dimensionless purposes, 
+ * the bubble radius is always \f$ r_b = 0.5 \f$. In turn, the wrap
+ * factor refines the volume mesh beyond the interfaces by a maximum
+ * radius of \f$ r_c = w r_b \f$, where \f$ w > 0 \f$ is the wrap factor. }
+ */ 
+void Helmholtz3D::initCylindricalWrap(double _wrapFactor)
 {
  init();
 
@@ -299,7 +313,7 @@ void Helmholtz3D::initThreeBubbles()
   if( heaviside->Get(i) < 0.5 ) // on convex hull
   {
    double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 3.5*radius )
+   if( interfaceDistance->Get(i) < _wrapFactor*radius )
    {
 	double aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);

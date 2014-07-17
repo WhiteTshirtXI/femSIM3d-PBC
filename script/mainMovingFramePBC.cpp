@@ -119,9 +119,9 @@ int main(int argc, char **argv)
  }
 
  //*** File
- //string meshFile = "rising-periodic-mesh-pbc.msh";
+ string meshFile = "rising-periodic-mesh-pbc.msh";
  //string meshFile = "rising-bubble-pbc-g4D.msh";
- string meshFile = "test.msh";
+ //string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
- const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
+ //const char *vtkFolder  = "./vtk/";
+ //const char *datFolder  = "./dat/";
  
  //*** Peixoto's tree
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initThreeBubbles();
+ h1.initCylindricalWrap(1.5);
  //h1.initJet(1.0,4.0); //<<< 
  h1.assemble();
  h1.setk(0.05);
@@ -283,7 +283,8 @@ int main(int argc, char **argv)
 
       s2.setDtALETwoPhase();
 
-	  InOut save(m1,s2);
+	  // Time step update save object 
+	  InOut save(m1,s2); 
       save.printSimulationReport();
 
 	  // Convection
@@ -320,11 +321,11 @@ int main(int argc, char **argv)
 	  //*** Solution Saving 
       //save.saveMSH(mshFolder,"newMesh",iter);
       save.saveVTK(vtkFolder,"sim",iter);
-      //save.saveVTU(vtkFolder,"sim",iter);
+      save.saveVTU(vtkFolder,"sim",iter);
       save.saveVTKSurface(vtkFolder,"sim",iter);
-      //save.saveSol(binFolder,"sim",iter);
-      //save.saveBubbleInfo(datFolder);
-	  //save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter);
+      save.saveSol(binFolder,"sim",iter);
+      save.saveBubbleInfo(datFolder);
+	  save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter);
       s2.saveOldData();
 
       s2.timeStep();
@@ -341,7 +342,7 @@ int main(int argc, char **argv)
      
      Helmholtz3D h2(m1,h1);
      h2.setBC();
-	 h2.initThreeBubbles();
+     h2.initCylindricalWrap(1.5);
      //h2.initJet(1.0,4.0); //<<<
      h2.assemble();
      h2.setk(0.05);
@@ -357,32 +358,32 @@ int main(int argc, char **argv)
      /* *********** MESH TREATMENT ************* */
      // set normal and kappa values
      m1.setNormalAndKappa();
-     //m1.initMeshParameters(); //<<<
+     m1.initMeshParameters(); //<<<
 	 
      /* 3D operations */
      
-	 //m1.insert3dMeshPointsByDiffusion(3.0);
-     //m1.remove3dMeshPointsByDiffusion(0.5);
+	 m1.insert3dMeshPointsByDiffusion(3.0);
+     m1.remove3dMeshPointsByDiffusion(0.5);
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();
      //m1.remove3dMeshPointsByDistance();
      //m1.remove3dMeshPointsByHeight();
-     //m1.delete3DPoints();
+     m1.delete3DPoints();
 
      // surface operations
-     //m1.smoothPointsByCurvature();
+     m1.smoothPointsByCurvature();
 
-     //m1.insertPointsByLength("curvature");
+     m1.insertPointsByLength("curvature");
      //m1.insertPointsByLength("flat");
      //m1.insertPointsByCurvature("flat");
      //m1.removePointsByCurvature();
      //m1.insertPointsByInterfaceDistance("flat");
-     //m1.contractEdgesByLength("curvature");
+     m1.contractEdgesByLength("curvature");
      //m1.contractEdgesByLength("flat");
      //m1.removePointsByLength();
-     //m1.flipTriangleEdges();
-     //m1.removePointsByNeighbourCheck();
-     //m1.checkAngleBetweenPlanes();
+     m1.flipTriangleEdges();
+     m1.removePointsByNeighbourCheck();
+     m1.checkAngleBetweenPlanes();
      /* **************************************** */
 
      //m1.mesh2Dto3DOriginal();

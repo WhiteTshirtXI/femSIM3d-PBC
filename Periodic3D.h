@@ -54,7 +54,7 @@ public:
     int GetNyPointsR();
     
 	/* VOID functions */
-    void MountPeriodicVectorsNew();
+    void MountPeriodicVectorsNew(string _printIPs);
     void SetVelocityPBC(clVector &_uVelocity, clVector &_vVelocity,
                         clVector &_wVelocity, clVector &_VecXMin,
                         clVector &_VecXMax, int L, string direction);

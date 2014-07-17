@@ -119,9 +119,9 @@ int main(int argc, char **argv)
  }
 
  //*** File
- string meshFile = "rising-periodic-mesh-pbc.msh";
+ //string meshFile = "rising-periodic-mesh-pbc.msh";
  //string meshFile = "rising-bubble-pbc-g4D.msh";
- //string meshFile = "test.msh";
+ string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
- //const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
+ const char *vtkFolder  = "./vtk/";
+ const char *datFolder  = "./dat/";
  
  //*** Peixoto's tree
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew();
+ pbc.MountPeriodicVectorsNew("noPrint");
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 		cout << "dx: "<< dx << endl;
 		s2.setUSol(vinst);
 		m1.setGenericBC(vref);
-		pbc.MountPeriodicVectorsNew();
+		pbc.MountPeriodicVectorsNew("noPrint");
 		s2.setURef(vref);
 		s2.setXRef(xref);
 	  }
@@ -400,12 +400,12 @@ int main(int argc, char **argv)
 	if ( strcmp( _frame,"moving") == 0 )
 	{
 	  m1.setGenericBC(vref);
-	  pbc.MountPeriodicVectorsNew();
+	  pbc.MountPeriodicVectorsNew("noPrint");
 	}
 	else
 	{
 	  m1.setGenericBC();
-	  pbc.MountPeriodicVectorsNew();
+	  pbc.MountPeriodicVectorsNew("noPrint");
 	}
 
     Simulator3D s3(m1,s2);

@@ -176,7 +176,8 @@ int main(int argc, char **argv)
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew("noPrint");
+ pbc.MountPeriodicVectorsNew("print");
+ //pbc.MountPeriodicVectors("print");
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
@@ -218,7 +219,6 @@ int main(int argc, char **argv)
  Helmholtz3D h1(m1);
  h1.setBC();
  h1.initCylindricalWrap(1.5);
- //h1.initJet(1.0,4.0); //<<< 
  h1.assemble();
  h1.setk(0.05);
  h1.matMountC();
@@ -279,6 +279,7 @@ int main(int argc, char **argv)
 		s2.setUSol(vinst);
 		m1.setGenericBC(vref);
 		pbc.MountPeriodicVectorsNew("noPrint");
+		//pbc.MountPeriodicVectors("noPrint");
 		s2.setURef(vref);
 		s2.setXRef(xref);
 	  }
@@ -347,9 +348,8 @@ int main(int argc, char **argv)
      Helmholtz3D h2(m1,h1);
      h2.setBC();
      h2.initCylindricalWrap(1.5);
-     //h2.initJet(1.0,4.0); //<<<
      h2.assemble();
-     h2.setk(0.05);
+     h2.setk(0.2);
      h2.matMountC();
      h2.setUnCoupledCBC(); 
      h2.setCRHS();
@@ -367,28 +367,28 @@ int main(int argc, char **argv)
 	 
      /// 3D operations 
      
-	 m1.insert3dMeshPointsByDiffusion(3.0);
-     m1.remove3dMeshPointsByDiffusion(0.5);
+	 m1.insert3dMeshPointsByDiffusion(6.0); //<<<
+     m1.remove3dMeshPointsByDiffusion(0.5); //<<<
      //m1.removePointByVolume();
      //m1.removePointsByInterfaceDistance();
      //m1.remove3dMeshPointsByDistance();
-     //m1.remove3dMeshPointsByHeight();
-     m1.delete3DPoints();
+     m1.remove3dMeshPointsByHeight(); //<<<
+     m1.delete3DPoints(); //<<<
 
      /// surface operations
-     m1.smoothPointsByCurvature();
+     m1.smoothPointsByCurvature(); //<<<
 
-     m1.insertPointsByLength("curvature");
+     m1.insertPointsByLength("curvature"); //<<<
      //m1.insertPointsByLength("flat");
      //m1.insertPointsByCurvature("flat");
      //m1.removePointsByCurvature();
      //m1.insertPointsByInterfaceDistance("flat");
-     m1.contractEdgesByLength("curvature");
+     //m1.contractEdgesByLength("curvature"); //<<<
      //m1.contractEdgesByLength("flat");
      //m1.removePointsByLength();
-     m1.flipTriangleEdges();
-     m1.removePointsByNeighbourCheck();
-     m1.checkAngleBetweenPlanes();
+     m1.flipTriangleEdges(); //<<<
+     m1.removePointsByNeighbourCheck(); //<<<
+     //m1.checkAngleBetweenPlanes(); 
      // **************************************** 
 	 
 
@@ -406,12 +406,14 @@ int main(int argc, char **argv)
 	if ( strcmp( _frame,"moving") == 0 )
 	{
 	  m1.setGenericBC(vref);
-	  pbc.MountPeriodicVectorsNew("noPrint");
+	  pbc.MountPeriodicVectorsNew("print");
+	  //pbc.MountPeriodicVectors("print");
 	}
 	else
 	{
 	  m1.setGenericBC();
 	  pbc.MountPeriodicVectorsNew("noPrint");
+	  //pbc.MountPeriodicVectors("noPrint");
 	}
 
     Simulator3D s3(m1,s2);

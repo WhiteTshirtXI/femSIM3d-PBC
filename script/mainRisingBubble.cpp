@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //double Re = sqrt(194.88); // case 1
+ //double Re = sqrt(42.895); // case 1
  //double Re = 13.8487; // case 2
  double Re = 33.0413; // case 3
  //double Re = sqrt(3892.856); // case 6
@@ -59,9 +59,9 @@ int main(int argc, char **argv)
  double cfl = 0.8;
 
  //string meshFile = "airWaterSugar.msh";
- //string meshFile = "rising-periodic-mesh.msh";
+ string meshFile = "rising-periodic-mesh.msh";
  //string meshFile = "rising-bubble-pbc-g4D.msh";
- string meshFile = "test.msh";
+ //string meshFile = "test.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -71,10 +71,10 @@ int main(int argc, char **argv)
 
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
- const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
+ //const char *vtkFolder  = "./vtk/";
+ //const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
  meshDir += "/" + meshFile;
  const char *mesh = meshDir.c_str();
@@ -253,22 +253,18 @@ int main(int argc, char **argv)
   //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
   return 0;
  }
-
- /*
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
  h1.initRisingBubble();
- //h1.initThreeBubbles();
  h1.assemble();
- h1.setk(0.2);
+ h1.setk(0.05);
  h1.matMountC();
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
  //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
- */
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"geometry");
@@ -276,7 +272,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 10;
+ int nIter = 3000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -288,31 +284,31 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   //s1.stepLagrangian();
+   s1.stepALE();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
    //s1.setGravity("-Z");
-   s1.setGravity("-X");
+   s1.setGravity("-X"); //<<< because the periodic mesh
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
 
-   //save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
-   //save.saveSol(binFolder,"sim",iter);
-   //save.saveBubbleInfo(datFolder);
+   save.saveSol(binFolder,"sim",iter);
+   save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
-   //save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter); ///<<< 
+   save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter); ///<<< 
 
    s1.saveOldData();
 
@@ -325,13 +321,12 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  /*
+
   Helmholtz3D h2(m1,h1);
   h2.setBC();
   h2.initRisingBubble();
-  //h2.initThreeBubbles();
   h2.assemble();
-  h2.setk(0.2);
+  h2.setk(0.05);
   h2.matMountC();
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
@@ -339,35 +334,34 @@ int main(int argc, char **argv)
   h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
-  */
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
   m1.setNormalAndKappa();
-  //m1.initMeshParameters();//<<<
+  m1.initMeshParameters();
 
   // 3D operations
-  //m1.insert3dMeshPointsByDiffusion(6.0); //<<<
-  //m1.remove3dMeshPointsByDiffusion(0.5); //<<<
+  m1.insert3dMeshPointsByDiffusion(6.0);
+  m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.remove3dMeshPointsByHeight(); //<<<
-  //m1.delete3DPoints();//<<<
+  m1.remove3dMeshPointsByHeight();
+  m1.delete3DPoints();
 
   // surface operations
-  //m1.smoothPointsByCurvature();//<<<
+  m1.smoothPointsByCurvature();
 
-  //m1.insertPointsByLength("curvature");//<<<
+  m1.insertPointsByLength("curvature");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  //m1.contractEdgesByLength("curvature"); //<<<
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
-  //m1.flipTriangleEdges(); //<<<
+  m1.flipTriangleEdges();
 
-  //m1.removePointsByNeighbourCheck(); //<<<
+  m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 

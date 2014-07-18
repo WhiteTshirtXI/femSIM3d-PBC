@@ -51,6 +51,88 @@ Periodic3D::Periodic3D(Model3D &_M3D)
 
 Periodic3D::~Periodic3D() {}
 
+
+/** \brief It reads VTK mesh file and saves two vectors
+* containing the pairing indices. Also, it reorders the pairs,
+* otherwise.
+*
+* \attention Mesh extrusion must be over axis X.
+*
+*/
+void Periodic3D::MountPeriodicVectors(string _printIPs)
+{
+   const double XMin = XPtr->Min();
+   const double XMax = XPtr->Max();
+
+   VecXMin = XPtr->FindValue(XMin); // returns vector with indices xMin
+   VecXMax = XPtr->FindValue(XMax); // returns vector with indices xMax
+
+   nyPointsL = VecXMin.Dim();
+   nyPointsR = VecXMax.Dim();
+
+   clVector XAux;
+   XAux.Dim(nyPointsL);
+
+   int ibR = 0;
+   double YRight = 0.0;
+   double ZRight = 0.0;
+   /* Test of dimension */
+   if ( nyPointsL != nyPointsR )
+   {
+	 cout << "Error: vectors for PBC don't match dimensions!" << endl;
+	 cout << nyPointsL << "!=" << nyPointsR << endl;
+	 cerr << "PBC implementation is invalid! Stopping..." << endl;
+	 exit(1);
+   }
+   else /* If test of dimension is OK, mounts. */
+   {
+	 cout << "Mounting vectors of periodic nodes...\n" << endl;
+
+	 for ( int i = 0; i < nyPointsL; i++ )
+	 {
+	   int ibL = VecXMin.Get(i);
+
+	   double YLeft = YPtr->Get(ibL);
+	   double ZLeft = ZPtr->Get(ibL);
+
+	   for ( int j = 0; j < nyPointsR; j++ )
+	   {
+		 ibR = VecXMax.Get(j);
+		 YRight = YPtr->Get(ibR);
+		 ZRight = ZPtr->Get(ibR);
+
+		 double deltaY = fabs( YLeft - YRight );
+		 double deltaZ = fabs( ZLeft - ZRight );
+
+		 // if finds pair, jumps out
+		 if ( ( deltaY < 1E-10 ) &&
+		 ( deltaZ < 1E-10 ) )
+		   break;
+       }
+	   
+	   XAux.Set(i,ibR); // reorders after 'break'
+     }
+   }
+   
+   VecXMax = XAux;
+   
+   // Print   
+   cout << "Periodic pairing mounted."  << endl;
+
+   if ( _printIPs == "print" )
+   {
+     cout << "\t >>>> Periodic Pairing Mounted <<<<" << endl;
+     for (int i = 0; i < nyPointsL; ++i)
+     {
+       int ibL = VecXMin.Get(i);
+       int ibR = VecXMax.Get(i);
+
+       cout << "(" << i << ")\t Index ibL: " << ibL << "\t pairs with \t Index ibR: " << ibR << endl;
+     }
+   }
+
+} /* End of function */
+
 /** \brief It reads VTK mesh file and saves two vectors
  *  containing the pairing indices. Also, it reorders the pairs,
  *  otherwise.
@@ -91,6 +173,7 @@ void Periodic3D::MountPeriodicVectorsNew(string _printIPs)
 
 		   double YLeft = YPtr->Get(ibL);
 		   double ZLeft = ZPtr->Get(ibL);
+
 		   
 		   for ( int j = 0; j < nyPointsR; j++ )
 		   {

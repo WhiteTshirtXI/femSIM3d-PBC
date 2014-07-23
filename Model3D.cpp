@@ -4841,6 +4841,16 @@ void Model3D::setGenericBC()
   *
   */
 
+ // setGenericBC(), instead setGenericBC(vref) is called after the mesh
+ // treatment in the version 'fixed' of mainMovingFrame, requiring
+ // update of BC vectors. 
+ clearBC();
+
+ // cleaning vectors of periodic indices
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+ 
+
  // auxiliary x,y,z pbc coordinates
  vector<double> xpbcMaster(0);
  vector<double> ypbcMaster(0);
@@ -4887,7 +4897,7 @@ void Model3D::setGenericBC()
 			
  for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
  {
-		//cout << "Index: " << *itsetOne << endl;
+		cout << "Index: " << *itsetOne << endl;
 		pbcIndicesLeft.push_back(*itsetOne);
 				 
 		// master coordinates
@@ -4903,7 +4913,7 @@ void Model3D::setGenericBC()
 			
  for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
  {
-		//cout << "Index: " << *itsetTwo << endl;
+		cout << "Index: " << *itsetTwo << endl;
 		pbcIndicesRight.push_back(*itsetTwo);
 
 		// slave coordinates
@@ -5319,6 +5329,117 @@ void Model3D::setOnePointPressureBC()
 void Model3D::setGenericBC(double _vel)
 {    
  clearBC();
+ 
+ // cleaning vectors of periodic indices
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+
+ // auxiliary x,y,z pbc coordinates
+ vector<double> xpbcMaster(0);
+ vector<double> ypbcMaster(0);
+ vector<double> zpbcMaster(0);
+ vector<double> xpbcSlave(0);
+ vector<double> ypbcSlave(0);
+ vector<double> zpbcSlave(0);
+ 
+ for( int i = 0; i < surfMesh.numElems; i++ )
+ {		
+  	int v1 = surfMesh.IEN.Get(i,0);
+  	int v2 = surfMesh.IEN.Get(i,1);
+	int v3 = surfMesh.IEN.Get(i,2);
+  	int id = surfMesh.idRegion.Get(i);
+	
+	// left indices
+  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+  	{
+		pbcIndicesLeft.push_back(v1);
+		pbcIndicesLeft.push_back(v2);
+		pbcIndicesLeft.push_back(v3);
+	}
+
+	// right indices
+  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	{
+		pbcIndicesRight.push_back(v1);
+		pbcIndicesRight.push_back(v2);
+		pbcIndicesRight.push_back(v3);
+	}	
+ }
+
+ // removing duplicatas
+ set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+ set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+ set<int>::iterator itsetOne;
+ set<int>::iterator itsetTwo;
+
+ // resizing to reallocate
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+			
+ for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
+ {
+		//cout << "Index: " << *itsetOne << endl;
+		pbcIndicesLeft.push_back(*itsetOne);
+				 
+		// master coordinates
+		double xL = surfMesh.X.Get(*itsetOne);
+		double yL = surfMesh.Y.Get(*itsetOne);
+		double zL = surfMesh.Z.Get(*itsetOne);
+		xpbcMaster.push_back(xL);
+		ypbcMaster.push_back(yL);
+		zpbcMaster.push_back(zL);
+ }
+			 
+	cout << "Master nodes stored." << endl;
+			
+ for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+ {
+		//cout << "Index: " << *itsetTwo << endl;
+		pbcIndicesRight.push_back(*itsetTwo);
+
+		// slave coordinates
+		double xR = surfMesh.X.Get(*itsetTwo);
+		double yR = surfMesh.Y.Get(*itsetTwo);
+		double zR = surfMesh.Z.Get(*itsetTwo);
+		xpbcSlave.push_back(xR);
+		ypbcSlave.push_back(yR);
+		zpbcSlave.push_back(zR);
+ }
+
+	cout << "Slave nodes stored." << endl;
+
+	int sizeM = pbcIndicesLeft.size();
+	int sizeS = pbcIndicesRight.size();
+			
+	// spatial correspondence checking
+	if ( sizeM != sizeS )
+	{
+		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+		cerr << warn << endl;
+	}
+	// pairing checking
+	else
+	{
+		for (int is = 0; is < sizeM; ++is)
+		{
+			double yM = ypbcMaster.at(is);
+			double zM = zpbcMaster.at(is);
+			double yS = ypbcSlave.at(is);
+			double zS = zpbcSlave.at(is);
+			
+			// simple extrusion assumed
+			if ( ( fabs( yS - yM ) > EPS ) && 
+			     ( fabs( zS - zM ) > EPS ) )
+			{
+				cout << "Entry not periodic: " << is << endl;	
+				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
+				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
+			}
+			
+	 	}
+		
+	 }
+
 
  // calculating channel's diameter.
  double diameterXY = ( dist(X.Min(),X.Max()) + 
@@ -5391,8 +5512,8 @@ void Model3D::setGenericBC(double _vel)
 
   
   // periodic boundaries. Any Dirichlet condition is imposed.
-  //else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  //else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
   
 
   // inflow condition W

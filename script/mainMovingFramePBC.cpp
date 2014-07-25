@@ -119,9 +119,9 @@ int main(int argc, char **argv)
  }
 
  //*** File
- //string meshFile = "rising-periodic-mesh-pbc.msh";
- //string meshFile = "rising-bubble-pbc-g4D.msh";
- string meshFile = "test.msh";
+ //string meshFile = "rising-periodic-g-2rb.msh";
+ string meshFile = "rising-periodic-mesh-pbc.msh";
+ //string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -136,10 +136,12 @@ int main(int argc, char **argv)
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular/";
- const char *vtkFolder  = "./vtk/";
- const char *datFolder  = "./dat/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-movingFrame/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-movingFrame/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-g-4rb/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-g-4rb/";
+ //const char *vtkFolder  = "./vtk/";
+ //const char *datFolder  = "./dat/";
  
  //*** Peixoto's tree
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -181,6 +183,7 @@ int main(int argc, char **argv)
  
  //*** Simulator Constructor
  Simulator3D s2(pbc,m1);
+ //Simulator3D s2(m1);
 
  //*** Physics
  s2.setRe(Re);
@@ -218,7 +221,7 @@ int main(int argc, char **argv)
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initCylindricalWrap(1.5);
+ h1.initCylindricalWrap(2.5);
  h1.assemble();
  h1.setk(0.05);
  h1.matMountC();
@@ -255,7 +258,7 @@ int main(int argc, char **argv)
 	xinit = s2.getCentroidPosXAverage();
  }
 
- int nIter = 5;
+ int nIter = 10000;
  int nReMesh = 1;
 
  for( int i=1;i<=nIter;i++ )
@@ -284,15 +287,16 @@ int main(int argc, char **argv)
 		s2.setXRef(xref);
 	  }
 
+	  // Convection
+      //s2.stepLagrangian();
+      s2.stepALEPBC(); //<<<
+      //s2.stepALE(); //<<<
+
       s2.setDtALETwoPhase();
 
 	  // Time step update save object 
 	  InOut save(m1,s2); 
       save.printSimulationReport();
-
-	  // Convection
-      //s2.stepLagrangian();
-      s2.stepALEPBC(); //<<<
 
       s2.movePoints();
 
@@ -309,6 +313,7 @@ int main(int argc, char **argv)
 	  s2.setBetaFlowLiq("+X");
       
 	  // R.H.S.
+	  //s2.setRHS();
 	  s2.setRHS_PBC();
 
 	  // Interface
@@ -320,6 +325,7 @@ int main(int argc, char **argv)
 
 	  // System solving
       //s2.unCoupledPBC(); // <<<
+      //s2.unCoupled(); // <<<
       s2.unCoupledPBCNew(); // <<<
 
 	  //*** Solution Saving 
@@ -347,7 +353,7 @@ int main(int argc, char **argv)
      
      Helmholtz3D h2(m1,h1);
      h2.setBC();
-     h2.initCylindricalWrap(1.5);
+     h2.initCylindricalWrap(2.5);
      h2.assemble();
      h2.setk(0.2);
      h2.matMountC();
@@ -383,8 +389,7 @@ int main(int argc, char **argv)
      //m1.insertPointsByCurvature("flat");
      //m1.removePointsByCurvature();
      //m1.insertPointsByInterfaceDistance("flat");
-     //m1.contractEdgesByLength("curvature"); //<<<
-     //m1.contractEdgesByLength("flat");
+     m1.contractEdgesByLength("curvature"); //<<<
      //m1.removePointsByLength();
      m1.flipTriangleEdges(); //<<<
      m1.removePointsByNeighbourCheck(); //<<<
@@ -412,7 +417,7 @@ int main(int argc, char **argv)
 	else
 	{
 	  m1.setGenericBC();
-	  pbc.MountPeriodicVectorsNew("noPrint");
+	  pbc.MountPeriodicVectorsNew("print");
 	  //pbc.MountPeriodicVectors("noPrint");
 	}
 

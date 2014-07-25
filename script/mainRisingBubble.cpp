@@ -272,7 +272,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 3000;
+ int nIter = 10000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {

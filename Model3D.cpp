@@ -2566,7 +2566,7 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
 
  if( strcmp( _interpolation,"bi-curvature") == 0 ) 
  {
-  clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
+  clVector coordAdd1 = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                              X.Get(v2),Y.Get(v2),Z.Get(v2),
 								  surfMesh.xNormal.Get(v1)+
 								  surfMesh.xNormal.Get(v3elem1),
@@ -2579,7 +2579,11 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
 								  surfMesh.yNormal.Get(v2)+
 								  surfMesh.yNormal.Get(v3elem2),
 								  surfMesh.zNormal.Get(v2)+
-								  surfMesh.zNormal.Get(v3elem2) );
+								  surfMesh.zNormal.Get(v3elem2),
+								  surfMesh.curvature.Get(v1)+
+								  surfMesh.curvature.Get(v3elem1),
+								  surfMesh.curvature.Get(v2)+
+								  surfMesh.curvature.Get(v3elem2) );
 
   XvAdd = coordAdd1.Get(0);
   YvAdd = coordAdd1.Get(1);
@@ -2587,14 +2591,16 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
  }
  else if( strcmp( _interpolation,"curvature") == 0 ) 
  {
-  clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
+  clVector coordAdd = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                             X.Get(v2),Y.Get(v2),Z.Get(v2),
 								 surfMesh.xNormal.Get(v1),
 								 surfMesh.yNormal.Get(v1),
 								 surfMesh.zNormal.Get(v1),
 								 surfMesh.xNormal.Get(v2),
 								 surfMesh.yNormal.Get(v2),
-								 surfMesh.zNormal.Get(v2) );
+								 surfMesh.zNormal.Get(v2),
+								 surfMesh.curvature.Get(v1), 
+								 surfMesh.curvature.Get(v2) );
 
   XvAdd = coordAdd.Get(0);
   YvAdd = coordAdd.Get(1);
@@ -2651,6 +2657,17 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
  surfMesh.Marker.AddItem(surfMesh.Marker.Get(v1)); 
  surfMesh.vertIdRegion.AddItem(surfMesh.vertIdRegion.Get(v1));
  surfMesh.phyBounds.push_back(surfMesh.phyBounds.at(v1));
+
+ // curvature is approx. the average between vertices
+ double curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
+ double xN = (surfMesh.xNormal.Get(v1)+surfMesh.xNormal.Get(v2))*0.5;
+ double yN = (surfMesh.yNormal.Get(v1)+surfMesh.yNormal.Get(v2))*0.5;
+ double zN = (surfMesh.zNormal.Get(v1)+surfMesh.zNormal.Get(v2))*0.5;
+ curvature.AddItem(vAdd,curv);
+ surfMesh.curvature.AddItem(curv);
+ surfMesh.xNormal.AddItem(xN);
+ surfMesh.yNormal.AddItem(yN);
+ surfMesh.zNormal.AddItem(zN);
 
  // incremeting the number of points
  surfMesh.numVerts++;
@@ -2730,21 +2747,16 @@ void Model3D::insertSurfacePoint(int _edge,const char* _interpolation)
  // update surface, edge matrix, surface neigh elems and points
  restoreMappingArrays();
 
- // curvature is approx. the average between vertices
 //--------------------------------------------------
-//double curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
-//  surfMesh.curvature.AddItem(curv);
-//  curvature.AddItem(vAdd,curv);
+//  // computing curvature
+//  clVector myVec = getNormalAndKappa(vAdd,
+//                     getNeighbourSurfacePoint(vAdd));
+//  curvature.AddItem(vAdd,myVec.Get(0));
+//  surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
+//  surfMesh.xNormal.AddItem(vAdd,myVec.Get(1));
+//  surfMesh.yNormal.AddItem(vAdd,myVec.Get(2));
+//  surfMesh.zNormal.AddItem(vAdd,myVec.Get(3));
 //-------------------------------------------------- 
-
- // computing curvature
- clVector myVec = getNormalAndKappa(vAdd,
-                    getNeighbourSurfacePoint(vAdd));
- curvature.AddItem(vAdd,myVec.Get(0));
- surfMesh.curvature.AddItem(vAdd,myVec.Get(0));
- surfMesh.xNormal.AddItem(vAdd,myVec.Get(1));
- surfMesh.yNormal.AddItem(vAdd,myVec.Get(2));
- surfMesh.zNormal.AddItem(vAdd,myVec.Get(3));
 
 //--------------------------------------------------
 // cout << "curv(v1):      " << surfMesh.curvature.Get(v1) << endl;
@@ -2825,10 +2837,10 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
   int v3elem1 = mapEdgeTri.Get(edge,3);
   int v3elem2 = mapEdgeTri.Get(edge,4);
 
-  double curv1 = fabs(surfMesh.curvature.Get(v1));
-  double curv2 = fabs(surfMesh.curvature.Get(v2));
-  double curv3 = fabs(surfMesh.curvature.Get(v3elem1));
-  double curv4 = fabs(surfMesh.curvature.Get(v3elem2));
+  //double curv1 = fabs(surfMesh.curvature.Get(v1));
+  //double curv2 = fabs(surfMesh.curvature.Get(v2));
+  //double curv3 = fabs(surfMesh.curvature.Get(v3elem1));
+  //double curv4 = fabs(surfMesh.curvature.Get(v3elem2));
   int elem1 = mapEdgeTri.Get(edge,5);
   int elem2 = mapEdgeTri.Get(edge,6);
   double edgeLength = mapEdgeTri.Get(edge,0);
@@ -2856,7 +2868,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
   bool elemIDTest = elemID > 0;
 
   // to avoid contraction at high curvature regions
-  bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
+  //bool curvTest = (curv1 < 40 && curv2 < 40 && curv3 < 40 && curv4 < 40);
 
   // to avoid 3 elem neighbors vertex
   bool neighTest = (neighbourSurfaceElem.at( v3elem1 ).size() > 4 &&  
@@ -2866,7 +2878,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
   if( edgeLength < _param*triEdge[elemID] &&
       //erro < 0.03 &&
 	  elemIDTest && 
-	  curvTest && 
+	  //curvTest && 
 	  neighTest //&& 
 	  //angleTest 
 	)
@@ -2882,21 +2894,26 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
+   double XvAdd = 0.0;
+   double YvAdd = 0.0;
+   double ZvAdd = 0.0;
    if( strcmp( _interpolation,"curvature") == 0 ) 
    {
 	// using curvature
-	clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
-	                               X.Get(v2),Y.Get(v2),Z.Get(v2),
-								   surfMesh.xNormal.Get(v1),
-								   surfMesh.yNormal.Get(v1),
-								   surfMesh.zNormal.Get(v1),
-								   surfMesh.xNormal.Get(v2),
-								   surfMesh.yNormal.Get(v2),
-								   surfMesh.zNormal.Get(v2) );
+	clVector coordAdd = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                                  X.Get(v2),Y.Get(v2),Z.Get(v2),
+								      surfMesh.xNormal.Get(v1),
+								      surfMesh.yNormal.Get(v1),
+								      surfMesh.zNormal.Get(v1),
+								      surfMesh.xNormal.Get(v2),
+								      surfMesh.yNormal.Get(v2),
+								      surfMesh.zNormal.Get(v2),
+								      surfMesh.curvature.Get(v1),
+								      surfMesh.curvature.Get(v2) );
 
-	double XvAdd = coordAdd.Get(0);
-	double YvAdd = coordAdd.Get(1);
-	double ZvAdd = coordAdd.Get(2);
+	XvAdd = coordAdd.Get(0);
+	YvAdd = coordAdd.Get(1);
+	ZvAdd = coordAdd.Get(2);
 	surfMesh.X.Set(v1, XvAdd );
 	surfMesh.Y.Set(v1, YvAdd );
 	surfMesh.Z.Set(v1, ZvAdd );
@@ -2907,31 +2924,35 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
    else if( strcmp( _interpolation,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
-	clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
-	                                X.Get(v2),Y.Get(v2),Z.Get(v2),
-									surfMesh.xNormal.Get(v1),
-									surfMesh.yNormal.Get(v1),
-									surfMesh.zNormal.Get(v1),
-									surfMesh.xNormal.Get(v2),
-									surfMesh.yNormal.Get(v2),
-									surfMesh.zNormal.Get(v2) );
+	clVector coordAdd1 = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	                                   X.Get(v2),Y.Get(v2),Z.Get(v2),
+									   surfMesh.xNormal.Get(v1),
+									   surfMesh.yNormal.Get(v1),
+									   surfMesh.zNormal.Get(v1),
+									   surfMesh.xNormal.Get(v2),
+									   surfMesh.yNormal.Get(v2),
+									   surfMesh.zNormal.Get(v2),
+									   surfMesh.curvature.Get(v1),
+									   surfMesh.curvature.Get(v2) );
 
-	clVector coordAdd2 = fitEllipse( X.Get(v3elem1),
-	                                Y.Get(v3elem1),
-									Z.Get(v3elem1),
-									X.Get(v3elem2),
-									Y.Get(v3elem2),
-									Z.Get(v3elem2),
-									surfMesh.xNormal.Get(v3elem1),
-									surfMesh.yNormal.Get(v3elem1),
-									surfMesh.zNormal.Get(v3elem1),
-									surfMesh.xNormal.Get(v3elem2),
-									surfMesh.yNormal.Get(v3elem2),
-									surfMesh.zNormal.Get(v3elem2) );
+	clVector coordAdd2 = fitCircleNew( X.Get(v3elem1),
+	                                   Y.Get(v3elem1),
+									   Z.Get(v3elem1),
+									   X.Get(v3elem2),
+									   Y.Get(v3elem2),
+									   Z.Get(v3elem2),
+									   surfMesh.xNormal.Get(v3elem1),
+									   surfMesh.yNormal.Get(v3elem1),
+									   surfMesh.zNormal.Get(v3elem1),
+									   surfMesh.xNormal.Get(v3elem2),
+									   surfMesh.yNormal.Get(v3elem2),
+									   surfMesh.zNormal.Get(v3elem2),
+									   surfMesh.curvature.Get(v3elem1),
+									   surfMesh.curvature.Get(v3elem2) );
 
-	double XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
-	double YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
-	double ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+	XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+	YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+	ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
 	surfMesh.X.Set(v1, XvAdd );
 	surfMesh.Y.Set(v1, YvAdd );
 	surfMesh.Z.Set(v1, ZvAdd );
@@ -2941,21 +2962,37 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
    }
    else // flat
    {
-	//--------------------------------------------------
-	// double XvNew = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
-	// double YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
-	// double ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
-	//-------------------------------------------------- 
-	double XvNew = surfMesh.X.Get(v1);
-	double YvNew = surfMesh.Y.Get(v1);
-	double ZvNew = surfMesh.Z.Get(v1);
-	surfMesh.X.Set(v1, XvNew );
-	surfMesh.Y.Set(v1, YvNew );
-	surfMesh.Z.Set(v1, ZvNew );
-	X.Set(v1, XvNew );
-	Y.Set(v1, YvNew );
-	Z.Set(v1, ZvNew );
+	XvAdd = ( surfMesh.X.Get(v1)+ surfMesh.X.Get(v2) )*0.5;
+	YvAdd = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
+	ZvAdd = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
+	surfMesh.X.Set(v1, XvAdd );
+	surfMesh.Y.Set(v1, YvAdd );
+	surfMesh.Z.Set(v1, ZvAdd );
+	X.Set(v1, XvAdd );
+	Y.Set(v1, YvAdd );
+	Z.Set(v1, ZvAdd );
    }
+
+   // curvature is approx. the average between vertices
+   double curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
+   double xN = (surfMesh.xNormal.Get(v1)+surfMesh.xNormal.Get(v2))*0.5;
+   double yN = (surfMesh.yNormal.Get(v1)+surfMesh.yNormal.Get(v2))*0.5;
+   double zN = (surfMesh.zNormal.Get(v1)+surfMesh.zNormal.Get(v2))*0.5;
+   curvature.Set(v1,curv);
+   surfMesh.curvature.Set(v1,curv);
+   surfMesh.xNormal.Set(v1,xN);
+   surfMesh.yNormal.Set(v1,yN);
+   surfMesh.zNormal.Set(v1,zN);
+
+//--------------------------------------------------
+//    // computing curvature
+//    clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
+//    curvature.Set(v1,myVec.Get(0));
+//    surfMesh.curvature.Set(v1,myVec.Get(0));
+//    surfMesh.xNormal.Set(v1,myVec.Get(1));
+//    surfMesh.yNormal.Set(v1,myVec.Get(2));
+//    surfMesh.zNormal.Set(v1,myVec.Get(3));
+//-------------------------------------------------- 
 
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )
@@ -2973,14 +3010,6 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
 
    // update surface, edge matrix, surface neigh elems and points
    restoreMappingArrays();
-
-   // computing curvature
-   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
-   curvature.Set(v1,myVec.Get(0));
-   surfMesh.curvature.Set(v1,myVec.Get(0));
-   surfMesh.xNormal.Set(v1,myVec.Get(1));
-   surfMesh.yNormal.Set(v1,myVec.Get(2));
-   surfMesh.zNormal.Set(v1,myVec.Get(3));
 
    // removing low quality elements
    if( v3elem1 > v2 )
@@ -3075,10 +3104,13 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
+	double XvAdd = 0.0;
+	double YvAdd = 0.0;
+	double ZvAdd = 0.0;
    if( strcmp( _interpolation,"curvature") == 0 ) 
    {
 	// using curvature
-	clVector coordAdd = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	clVector coordAdd = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                               X.Get(v2),Y.Get(v2),Z.Get(v2),
 								   surfMesh.xNormal.Get(v1),
 								   surfMesh.yNormal.Get(v1),
@@ -3087,9 +3119,9 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 								   surfMesh.yNormal.Get(v2),
 								   surfMesh.zNormal.Get(v2) );
 
-	double XvAdd = coordAdd.Get(0);
-	double YvAdd = coordAdd.Get(1);
-	double ZvAdd = coordAdd.Get(2);
+	XvAdd = coordAdd.Get(0);
+	YvAdd = coordAdd.Get(1);
+	ZvAdd = coordAdd.Get(2);
 	surfMesh.X.Set(v1, XvAdd );
 	surfMesh.Y.Set(v1, YvAdd );
 	surfMesh.Z.Set(v1, ZvAdd );
@@ -3100,7 +3132,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
    else if( strcmp( _interpolation,"bi-curvature") == 0 ) 
    {
 	// using bi-curvature
-	clVector coordAdd1 = fitEllipse( X.Get(v1),Y.Get(v1),Z.Get(v1),
+	clVector coordAdd1 = fitCircle( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                                X.Get(v2),Y.Get(v2),Z.Get(v2),
 									surfMesh.xNormal.Get(v1),
 									surfMesh.yNormal.Get(v1),
@@ -3109,7 +3141,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 									surfMesh.yNormal.Get(v2),
 									surfMesh.zNormal.Get(v2) );
 
-	clVector coordAdd2 = fitEllipse( X.Get(v3elem1),
+	clVector coordAdd2 = fitCircle( X.Get(v3elem1),
 	                                Y.Get(v3elem1),
 									Z.Get(v3elem1),
 									X.Get(v3elem2),
@@ -3122,9 +3154,9 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 									surfMesh.yNormal.Get(v3elem2),
 									surfMesh.zNormal.Get(v3elem2) );
 
-	double XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
-	double YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
-	double ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
+	XvAdd = (coordAdd1.Get(0)+coordAdd2.Get(0))*0.5;
+	YvAdd = (coordAdd1.Get(1)+coordAdd2.Get(1))*0.5;
+	ZvAdd = (coordAdd1.Get(2)+coordAdd2.Get(2))*0.5;
 	surfMesh.X.Set(v1, XvAdd );
 	surfMesh.Y.Set(v1, YvAdd );
 	surfMesh.Z.Set(v1, ZvAdd );
@@ -3139,16 +3171,37 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 	// double YvNew = ( surfMesh.Y.Get(v1)+ surfMesh.Y.Get(v2) )*0.5;
 	// double ZvNew = ( surfMesh.Z.Get(v1)+ surfMesh.Z.Get(v2) )*0.5;
 	//-------------------------------------------------- 
-	double XvNew = surfMesh.X.Get(v1);
-	double YvNew = surfMesh.Y.Get(v1);
-	double ZvNew = surfMesh.Z.Get(v1);
-	surfMesh.X.Set(v1, XvNew );
-	surfMesh.Y.Set(v1, YvNew );
-	surfMesh.Z.Set(v1, ZvNew );
-	X.Set(v1, XvNew );
-	Y.Set(v1, YvNew );
-	Z.Set(v1, ZvNew );
+	XvAdd = surfMesh.X.Get(v1);
+	YvAdd = surfMesh.Y.Get(v1);
+	ZvAdd = surfMesh.Z.Get(v1);
+	surfMesh.X.Set(v1, XvAdd);
+	surfMesh.Y.Set(v1, YvAdd);
+	surfMesh.Z.Set(v1, ZvAdd);
+	X.Set(v1, XvAdd);
+	Y.Set(v1, YvAdd);
+	Z.Set(v1, ZvAdd);
    }
+
+   // curvature is approx. the average between vertices
+   double curv = (surfMesh.curvature.Get(v1)+surfMesh.curvature.Get(v2))*0.5;
+   double xN = (surfMesh.xNormal.Get(v1)+surfMesh.xNormal.Get(v2))*0.5;
+   double yN = (surfMesh.yNormal.Get(v1)+surfMesh.yNormal.Get(v2))*0.5;
+   double zN = (surfMesh.zNormal.Get(v1)+surfMesh.zNormal.Get(v2))*0.5;
+   curvature.Set(v1,curv);
+   surfMesh.curvature.Set(v1,curv);
+   surfMesh.xNormal.Set(v1,xN);
+   surfMesh.yNormal.Set(v1,yN);
+   surfMesh.zNormal.Set(v1,zN);
+
+//--------------------------------------------------
+//    // computing curvature
+//    clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
+//    curvature.Set(v1,myVec.Get(0));
+//    surfMesh.curvature.Set(v1,myVec.Get(0));
+//    surfMesh.xNormal.Set(v1,myVec.Get(1));
+//    surfMesh.yNormal.Set(v1,myVec.Get(2));
+//    surfMesh.zNormal.Set(v1,myVec.Get(3));
+//-------------------------------------------------- 
 
    // changing surfMesh.IEN from v2 to v1
    for( int i=0;i<surfMesh.IEN.DimI();i++ )
@@ -3167,14 +3220,6 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
    // update surface, edge matrix, surface neigh elems and points
    restoreMappingArrays();
 
-   // computing curvature
-   clVector myVec = getNormalAndKappa(v1,getNeighbourSurfacePoint(v1));
-   curvature.Set(v1,myVec.Get(0));
-   surfMesh.curvature.Set(v1,myVec.Get(0));
-   surfMesh.xNormal.Set(v1,myVec.Get(1));
-   surfMesh.yNormal.Set(v1,myVec.Get(2));
-   surfMesh.zNormal.Set(v1,myVec.Get(3));
-
    // removing low quality elements
    if( v3elem1 > v2 )
 	v3elem1 = v3elem1-1;
@@ -3185,7 +3230,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
    removePointByNeighbourCheck(v3elem2);
 
    cout << "------------- " << color(none,blue,black) 
-	    << "contracting edge at (" << resetColor()
+	    << "contracting edge 2 at (" << resetColor()
 		<< surfMesh.elemIdRegion.Get(elem1)
 		<< color(none,blue,black) 
 		<< "): " << resetColor() 
@@ -3492,14 +3537,14 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
 	  //ipd[vertID] < 200 &&
 	  maxVert > surfMesh.numVerts )
   {
- // ------
- //cout << v1 << " (" << edgeSize.Get(v1) << ") " 
- //	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
- //cout << x1 << " " << y1 << " " << z1 << endl;
- //cout << x2 << " " << y2 << " " << z2 << endl;
- //cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
- //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
- // -------  
+//--------------------------------------------------
+//    cout << v1 << " (" << edgeSize.Get(v1) << ") " 
+// 	    << v2 << " (" << edgeSize.Get(v2) << ") " << endl;
+//    cout << x1 << " " << y1 << " " << z1 << endl;
+//    cout << x2 << " " << y2 << " " << z2 << endl;
+//    cout << X.Get(v2) << " " << Y.Get(v2) << " " << Z.Get(v2) << endl;
+//    cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
+//-------------------------------------------------- 
    int vAdd = numVerts; // aditional vertice
 
    cout << "- " << color(none,blue,black) 
@@ -3523,8 +3568,8 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
 }
 
 void Model3D::insert3dMeshPointsByDiffusion()
-{
-	insert3dMeshPointsByDiffusion(3.0);
+{ 
+ insert3dMeshPointsByDiffusion(3.0);
 }
 
 /** \brief Removes point(s) according to the solution of the diffusion equation
@@ -3563,7 +3608,6 @@ void Model3D::remove3dMeshPointsByDiffusion(double _param)
   //cout << e << " " << length << " " << edgeSize.Get(v1) << endl;
   // edgeSize is the result of \nabla^2 edge = f
   if( length < _param*size && 
-  //if( length < 0.7*size && 
 	  minVert > surfMesh.numVerts )
   {
    cout << "  removed vert: " << minVert << endl;
@@ -8991,7 +9035,10 @@ void Model3D::removePointByNeighbourCheck(int _node)
  int vertID = surfMesh.vertIdRegion.Get(_node);
 
  int elemListSize = neighbourSurfaceElem.at( _node ).size();
- if( elemListSize < 4 )
+ bool vertIDTest = vertID > 0; // no boundary verts
+ bool elemListSizeTest = elemListSize < 4;
+
+ if( elemListSizeTest && vertIDTest )
  {
   removeSurfacePoint(_node);
 
@@ -9010,6 +9057,7 @@ void Model3D::removePointByNeighbourCheck(int _node)
    * are equal. Usually these points demage the mesh
    * quality and breaks the simulation flow. 
    * */
+  // elemID out of boundary
   if( elemListSize == 3 )
   {
    cout << "------------- " << color(none,red,black) 
@@ -9315,7 +9363,7 @@ void Model3D::remove3dMeshPointsByHeight()
   for(list<int>::iterator vert=plist.begin(); vert != plist.end();++vert )
   {
    // *vert cannot be a surface mesh vertex
-   if( *vert > surfMesh.numVerts )
+   if( *vert > surfMesh.numVerts && *vert < numVerts )
    {
 	int vertID = surfMesh.vertIdRegion.Get(v1);
 	int vertID3d = vertIdRegion.Get(*vert);
@@ -9349,8 +9397,8 @@ void Model3D::remove3dMeshPointsByHeight()
 	//                   (surfMesh.phyBounds.at(v3) == "\"wallOutflow\"" );
 	//-------------------------------------------------- 
 
-	if( minHeight < 0.7*triEdge[vertID] //&& 
-	//if( minHeight < 0.4*edgeSize.Get(v1)  && 
+	//if( minHeight < 0.7*triEdge[vertID] //&& 
+	if( minHeight < 0.4*triEdge[vertID]  //&& 
 	    //pressureTest 
 	  )
 	  // vertID > 0)

@@ -5063,8 +5063,8 @@ void Model3D::setGenericBC()
 
    // Parabolic profile
    double Umax = 1.0;
-   double aux = 1.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                         (diameterYZ/2.0)) );
+   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                        (diameterYZ/2.0)) );
 
    //aux=1.0;
    uc.Set(*it,aux);
@@ -5082,8 +5082,8 @@ void Model3D::setGenericBC()
    double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   double Vmax = 2.0;
-   double aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
+   double Vmax = 1.0;
+   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
    uc.Set(*it,0.0);
@@ -5105,8 +5105,8 @@ void Model3D::setGenericBC()
    double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   double Wmax = 2.0;
-   double aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
+   double Wmax = 1.0;
+   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 
    uc.Set(*it,0.0);
@@ -5488,11 +5488,11 @@ void Model3D::setGenericBC(double _vel)
 
    // Parabolic profile
    double Umax = 1.0;
-   double aux = Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                    (diameterYZ/2.0)) );
    //aux=1.0;
 
-   uc.Set(*it,aux-1.0-_vel);
+   uc.Set(*it,aux-_vel);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
@@ -5507,8 +5507,8 @@ void Model3D::setGenericBC(double _vel)
    double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
 
    // Parabolic profile
-   double Vmax = 2.0;
-   double aux = Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
+   double Vmax = 1.0;
+   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
 	                                    (diameterXZ/2.0)) );
 
    uc.Set(*it,0.0);
@@ -5532,8 +5532,8 @@ void Model3D::setGenericBC(double _vel)
    double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
 
    // Parabolic profile
-   double Wmax = 2.0;
-   double aux = Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
+   double Wmax = 1.0;
+   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
 	                                    (diameterXY/2.0)) );
 
    uc.Set(*it,0.0);
@@ -5590,6 +5590,16 @@ void Model3D::setGenericBC(double _vel)
    vc.Set(*it,0.0);
    wc.Set(*it,0.0-_vel);
   }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallMovingYZ\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
   else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
   {
    idbcu.AddItem(*it);
@@ -5639,7 +5649,7 @@ void Model3D::setGenericBC(double _vel)
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,0.0-1.0-_vel);
+	uc.Set(*it,0.0-_vel);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
    }

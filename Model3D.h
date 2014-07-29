@@ -112,7 +112,7 @@ class Model3D
   void setMapEdgeTri();
   void setSurfaceConfig();
   void saveVTK( const char* _dir,const char* _filename, int _iter );
-  void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
+  void saveVTKSurface( const char* _dir,const char* _filename, int _vertID, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
 
   // Volume calculation

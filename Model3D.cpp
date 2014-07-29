@@ -1556,7 +1556,7 @@ void Model3D::insertPointsByLength(const char* _interpolation,
   {
    insertSurfacePoint(edge,_interpolation);
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    isp[vertID]++;
    opersurf[vertID]++;
   }
@@ -1657,7 +1657,7 @@ void Model3D::removePointsByCurvature()
    // updating curvature value
    setNormalAndKappa();
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    rspc[vertID]++;
    opersurf[vertID]++;
   }
@@ -1747,7 +1747,7 @@ void Model3D::insertPointsByCurvature(const char* _interpolation)
    cout << "----------- Inserting by curvature..." << endl;
    insertSurfacePoint(i,_interpolation);
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    ispc[vertID]++;
    opersurf[vertID]++;
   }
@@ -2475,7 +2475,7 @@ void Model3D::flipTriangleEdges()
    // update surface, edge matrix, surface neigh elems and points
    restoreMappingArrays();
 
-   saveVTKSurface("./vtk/","surface",opersurf[elemID]);
+   saveVTKSurface("./vtk/","surface",elemID,opersurf[elemID]);
    flip[elemID]++;
    opersurf[elemID]++;
 
@@ -3028,7 +3028,7 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
 		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
-   saveVTKSurface("./vtk/","surface",opersurf[elemID]);
+   saveVTKSurface("./vtk/","surface",elemID,opersurf[elemID]);
    csp[elemID]++;
    opersurf[elemID]++;
 
@@ -3237,7 +3237,7 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 		<< v2 << color(none,blue,black) 
 		<< " --> " << resetColor()
 		<< v1 << endl;
-   saveVTKSurface("./vtk/","surface",opersurf[elemID]);
+   saveVTKSurface("./vtk/","surface",elemID,opersurf[elemID]);
    csp[elemID]++;
    opersurf[elemID]++;
 
@@ -3346,7 +3346,7 @@ void Model3D::removePointsByLength(double _param)
 
     removeSurfacePoint(v1);
 
-    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+    saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
     rsp[vertID]++;
     opersurf[vertID]++;
    }
@@ -3362,7 +3362,7 @@ void Model3D::removePointsByLength(double _param)
 
     removeSurfacePoint(v2);
 
-    saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+    saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
     rsp[vertID]++;
     opersurf[vertID]++;
    }
@@ -6805,7 +6805,7 @@ void Model3D::setQuadElement()
 void Model3D::setNeighbour()
 {
  neighbourElem.resize (0);
- neighbourElem.resize (numVerts);
+ neighbourElem.resize (numNodes);
 
  for( int i=0;i<numElems;i++ )
   for( int j= 0;j<NUMGLEU;j++ )
@@ -7553,14 +7553,18 @@ void Model3D::operator=(Model3D &_mRight)
 
 void Model3D::saveVTKSurface( const char* _dir,
                               const char* _filename, 
+							  int _vertID,
 							  int _iter )
 {
- stringstream ss;  //convertendo int --> string
- string str;
- ss << _iter;
- ss >> str;
+ stringstream ss1,ss2;  //convertendo int --> string
+ string str1,str2;
+ ss1 << _vertID;
+ ss1 >> str1;
+ ss2 << _iter;
+ ss2 >> str2;
 
- string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
+ string file = (string) _dir + (string) _filename + "TRI" + 
+			   str1 + "-" + str2 + ".vtk";
  const char* filename = file.c_str();
 
  ofstream vtkFile( filename );
@@ -9005,7 +9009,7 @@ void Model3D::checkAngleBetweenPlanes()
    if( surfMesh.curvature.Get(v3elem2) > 0 )
 	smoothPoint(v3elem2);
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    spp[vertID]++;
    opersurf[vertID]++;
   }
@@ -9047,7 +9051,7 @@ void Model3D::removePointByNeighbourCheck(int _node)
    cout << "------------- " << color(none,red,black) 
 	<< "removing fake triangle: " << resetColor() 
 	<< _node << endl;
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    rspn[vertID]++;
    opersurf[vertID]++;
   }
@@ -9064,7 +9068,7 @@ void Model3D::removePointByNeighbourCheck(int _node)
 	<< "removing low-quality point cluster: " << resetColor() 
 	<< _node << endl;
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    rspn[vertID]++;
    opersurf[vertID]++;
   }
@@ -9115,7 +9119,7 @@ void Model3D::smoothPointsByCurvature()
 
    smoothPoint(surfaceNode);
 
-   saveVTKSurface("./vtk/","surface",opersurf[vertID]);
+   saveVTKSurface("./vtk/","surface",vertID,opersurf[vertID]);
    spc[vertID]++;
    opersurf[vertID]++;
   }

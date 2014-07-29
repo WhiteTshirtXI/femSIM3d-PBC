@@ -6380,7 +6380,7 @@ void Model3D::checkTetrahedronOrientation()
  * */
 void Model3D::setMapping()
 {
- setNeighbour();
+ //setNeighbour();
  int numFaces = 4; // teraedro tem 6 arestas
  clVector faceaux(3);
  IFACE3D *faces = NULL;
@@ -6677,8 +6677,8 @@ void Model3D::setMapping()
 void Model3D::setQuadElement()
 {
  // atualizado vetores com numero total de nos
- numElems = numElems;
- numVerts = numVerts;
+ //numElems = numElems;
+ //numVerts = numVerts;
  numNodes = numVerts+mapEdge.DimI(); // atualizando numNodes
 
  clearBC();
@@ -6795,7 +6795,7 @@ void Model3D::setNeighbour()
 void Model3D::setVertNeighbour()
 {
  // cria lista de vizinhos para toda a malha
- int v1,v2,v3,v4;
+ int v;
  list<int> plist;
  list<int>::iterator mele;
  neighbourVert.resize (0);
@@ -6807,39 +6807,16 @@ void Model3D::setVertNeighbour()
   plist = neighbourElem.at(ii);
   for( mele=plist.begin(); mele != plist.end();++mele )
   {
-   v1 = (int) IEN.Get(*mele,0);
-   v2 = (int) IEN.Get(*mele,1);
-   v3 = (int) IEN.Get(*mele,2);
-   v4 = (int) IEN.Get(*mele,3);
-  // cout << v1 << " " << v2 << " " << v3 << " " << v4 << endl;
-   if( v1==ii )
+   for( int j=0;j<NUMGLEP;j++ )
    {
-	neighbourVert.at( ii ).push_back(v2);
-	neighbourVert.at( ii ).push_back(v3);
-	neighbourVert.at( ii ).push_back(v4);
+	v = (int) IEN.Get(*mele,j);
+	neighbourVert.at( ii ).push_back(v);
    }
-   if( v2==ii )
-   {
-	neighbourVert.at( ii ).push_back(v1);
-	neighbourVert.at( ii ).push_back(v3);
-	neighbourVert.at( ii ).push_back(v4);
-   }
-   if( v3==ii )
-   {
-	neighbourVert.at( ii ).push_back(v1);
-	neighbourVert.at( ii ).push_back(v2);
-	neighbourVert.at( ii ).push_back(v4);
-   }
-   if( v4==ii )
-   {
-	neighbourVert.at( ii ).push_back(v1);
-	neighbourVert.at( ii ).push_back(v2);
-	neighbourVert.at( ii ).push_back(v3);
-   }
+   neighbourVert.at( ii ).remove(ii);
   }
-  //cout << "---------" << ii << "------------" << endl;
   neighbourVert.at( ii ).sort();
   neighbourVert.at( ii ).unique();
+  //cout << "---------" << ii << "------------" << endl;
 //--------------------------------------------------
 //   std::ostream_iterator< int > output( cout, " " );
 //   std::copy( neighbourVert.at(ii).begin(), 
@@ -7088,7 +7065,9 @@ void Model3D::setInOutElem()
 // aplica configuracoes referentes a superficie da modelagem 2 fases.
 void Model3D::setSurfaceConfig()
 {
- setVertNeighbour(); // neighbourVert (3D mesh)
+ setNeighbour(); // neighbourElem
+ setVertNeighbour(); // neighbourVert
+
  setInOutVert(); // inVert e boundaryVert
  setInOutElem(); // inElem e outElem
 

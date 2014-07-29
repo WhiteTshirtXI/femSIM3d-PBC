@@ -206,7 +206,6 @@ class Model3D
   void set2BubblesBC();
   void set2AxiBubblesBC();
   void setStepBC();
-  void setStepPBC(); // <<<
   void setOnePointPressureBC(); // <<<
   void setWallNormalVWBC(); // << slip condition, except PBC walls
   void setWallSlipEdgesBC();

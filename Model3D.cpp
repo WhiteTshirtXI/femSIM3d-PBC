@@ -756,44 +756,6 @@ void Model3D::setStepBC()
  }
 }
 
-void Model3D::setStepPBC()
-{
-#if NUMGLEU == 5
- double numBCPoints = numVerts;
-#else
- double numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-  if( (X.Get(i)==X.Min()) || (Y.Get(i)==Y.Min()) || (Y.Get(i)==Y.Max()) || (Z.Get(i)==Z.Min()) || (Z.Get(i)==Z.Max())  )
-  {
-   idbcu.AddItem(i);
-   idbcv.AddItem(i);
-   idbcw.AddItem(i);
-
-   uc.Set(i,0.0);
-   vc.Set(i,0.0);
-   wc.Set(i,0.0);
-  }
-  
-   if( (X.Get(i)==X.Min()) && (Y.Get(i)>Y.Min()) && (Y.Get(i)<Y.Max()) )
-   {
-	idbcu.AddItem(i);
-	uc.Set(i,1.0);
-   }
-
- }
- for( int i=0;i<numVerts;i++ )
- {
-  if( X.Get(i)==X.Min() && Y.Get(i)>Y.Min() && Y.Get(i)<Y.Max() )
-  {
-   idbcp.AddItem(i);
-   pc.Set(i,0.0);
-  }
- }
-}
-
 void Model3D::setWallStepBC()
 {
  for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)

@@ -6380,7 +6380,7 @@ void Model3D::checkTetrahedronOrientation()
  * */
 void Model3D::setMapping()
 {
- //setNeighbour();
+ setNeighbour(); // must be called, in comparison to standard.
  int numFaces = 4; // teraedro tem 6 arestas
  clVector faceaux(3);
  IFACE3D *faces = NULL;

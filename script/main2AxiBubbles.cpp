@@ -261,14 +261,13 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-
+   //s1.stepLagrangian();
+   s1.stepALE();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -328,11 +327,11 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("flat");
+  m1.insertPointsByLength("curvature");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("flat");
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 
@@ -348,7 +347,6 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.setSurfaceConfig();
-  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

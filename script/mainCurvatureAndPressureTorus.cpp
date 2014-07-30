@@ -22,24 +22,24 @@ int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
- double Re = 100;
- double Sc = 1;
- double We = 1;
- double Fr = 1;
- double c1 = 0.0;  // lagrangian
- double c2 = 0.0;  // smooth vel
- double c3 = 0.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.0;  // surface smooth cord (fujiwara)
- double alpha = 1;
+ real Re = 100;
+ real Sc = 1;
+ real We = 1;
+ real Fr = 1;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 0.0;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.0;  // surface smooth cord (fujiwara)
+ real alpha = 1;
 
- double mu_in = 1;
- double mu_out = 0.001;
+ real mu_in = 1;
+ real mu_out = 0.001;
 
- double rho_in = 1; 
- double rho_out = 0.01;
+ real rho_in = 1; 
+ real rho_out = 0.01;
 
- double cfl = 0.8;
+ real cfl = 0.8;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);

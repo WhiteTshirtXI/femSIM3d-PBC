@@ -35,12 +35,12 @@ class SemiLagrangean
   void setCentroid();
   void setQuad();
   void setBC();
-
+  clMatrix* getInterpLin();
+ 
   // PBC
   void computePBCFix(double dt);
   void getDepartElemPBCFix(double dt);
-  void getDepartElemQuadPBCFix(double dt);clMatrix* getInterpLin();
-  
+  void getDepartElemQuadPBCFix(double dt);
   clVector* getUSL();
   clVector* getVSL();
   clVector* getWSL();

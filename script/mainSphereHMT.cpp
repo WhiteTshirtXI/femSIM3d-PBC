@@ -25,30 +25,30 @@ int main(int argc, char **argv)
 
  int iter = 0;
  
- double mu_in = 1;
- double mu_out = 1;
+ real mu_in = 1;
+ real mu_out = 1;
 
- double rho_in = 0.5;
- double rho_out = 1.0;
+ real rho_in = 0.5;
+ real rho_out = 1.0;
 
- double cp_in = 1;
- double cp_out = 1;
+ real cp_in = 1;
+ real cp_out = 1;
 
- double kt_in = 1;
- double kt_out = 1;
+ real kt_in = 1;
+ real kt_out = 1;
 
- double Re = 1;
- double Sc = 1 ;
- double We = 1;
- double Fr = 1.0;
- double c1 = 0.0;  // lagrangian
- double c2 = 0.0;  // smooth vel
- double c3 = 3.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.1;  // surface smooth cord (fujiwara)
- double alpha = 1;
+ real Re = 1;
+ real Sc = 1 ;
+ real We = 1;
+ real Fr = 1.0;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 3.0;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;  // surface smooth cord (fujiwara)
+ real alpha = 1;
 
- double cfl = 0.8;
+ real cfl = 0.8;
 
  string meshFile = "sphere.msh";
 
@@ -75,12 +75,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -130,8 +130,8 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- double vinst=0;
- double vref=0;
+ real vinst=0;
+ real vref=0;
  int nIter = 3000;
  int nReMesh = 1;
 
@@ -242,12 +242,12 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setGenericBC(vref);
 

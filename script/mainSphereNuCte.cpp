@@ -23,10 +23,10 @@ int main(int argc, char **argv)
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
  int iter = 1;
- double Re = 1;
- double cfl = 10;
- double mu_l = 1.0;
- double rho_l = 1.0;
+ real Re = 1;
+ real cfl = 10;
+ real mu_l = 1.0;
+ real rho_l = 1.0;
  //Solver *solverP = new PetscSolver(KSPPREONLY,PCNONE);
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
@@ -42,15 +42,16 @@ int main(int argc, char **argv)
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- m1.setMeshDisk(6,20,10);
+ m1.setMeshDisk(6,10,10);
  m1.setAdimenDisk();
+ m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
- m1.setMapping();
 
+ m1.setNeighbour();
  m1.setTriEdge();
  m1.setMapEdgeTri();
  m1.setInitSurfaceArea();
@@ -59,6 +60,7 @@ int main(int argc, char **argv)
  m1.setSurfaceVolume();
  m1.tetMeshStats();
 
+ Model3D mOld = m1;
  // F, G and H
  m1.setInfiniteSphereBC(0.0,0.0,0.0);
  //m1.setCDiskBC();
@@ -136,7 +138,7 @@ int main(int argc, char **argv)
    //s1.setCRHS();
    s1.unCoupled();
    //s1.unCoupledC();
-   save.saveVonKarman(simFolder,"vk");
+   save.saveVonKarman(mOld,simFolder,"vk");
 //--------------------------------------------------
 //    save.saveDiskRadiusError(simFolder,
 // 	                        "vkError",

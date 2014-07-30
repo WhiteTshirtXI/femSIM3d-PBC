@@ -22,9 +22,9 @@ int main(int argc, char **argv)
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
  int iter = 1;
- double Re = 1;
- double cfl = 10;
- double rho_l = 1.0;
+ real Re = 1;
+ real cfl = 10;
+ real rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPCG,PCSOR);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
 
@@ -48,6 +48,7 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
 
+ m1.setNeighbour();
  m1.setTriEdge();
  m1.setMapEdgeTri();
  m1.setInitSurfaceArea();

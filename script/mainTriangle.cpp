@@ -22,22 +22,25 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 1;
- real Re = 10000;
- real Sc = 2000;
- real Fr = 10;
- //real alpha = 1;
- real cfl = 0.1;
- real mu_l = 1.0;
- real rho_l = 1.0;
- //Solver *solverP = new PCGSolver();
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+
+ // R1234ze at saturation temperature (31.5 celcius)
+ real D       = 100E-06; // m
+ real G       = 695; // kg/m^2.s
+ real mu_l    = 187.4E-06; // Pa.s
+ real rho_l   = 1137.6; // kg/m^3
+ real v       = G/rho_l; // m/s
+ real sigma   = 7.7E-03; // N/m
+ real g       = 9.81; // m/s^2
+ real Re = rho_l*v*D/mu_l;
+ real Fr = v/(sqrt(g*D));
+
+ real cfl = 0.3;
+
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
- //Solver *solverP = new PetscSolver(KSPLSQR,PCILU);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "retangle.msh";
+ string meshFile = "triangle.msh";
 
  //const char *txtFolder  = "./txt/";
  const char *binFolder  = "./bin/";
@@ -53,7 +56,8 @@ int main(int argc, char **argv)
  m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.mesh2Dto3D();
+ m1.mesh2Dto3D("QYYApa0.0001q1.41q10");
+ //m1.mesh2Dto3D();
  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -63,13 +67,12 @@ int main(int argc, char **argv)
  m1.setNeighbour();
  m1.setVertNeighbour();
  m1.setInOutVert();
- m1.setStepBC();
- m1.setCStepBC();
+ m1.setGenericBC();
+ //m1.setCStepBC();
 
  Simulator3D s1(m1);
 
  s1.setRe(Re);
- s1.setSc(Sc);
  s1.setFr(Fr);
  s1.setCfl(cfl);
  s1.setDtEulerian();
@@ -80,11 +83,11 @@ int main(int argc, char **argv)
  s1.setSolverConcentration(solverC);
 
  s1.init();
- s1.assembleSlip();
+ s1.assemble();
  s1.matMount();
- s1.matMountC();
+ //s1.matMountC();
  s1.setUnCoupledBC(); 
- s1.setUnCoupledCBC(); 
+ //s1.setUnCoupledCBC(); 
 
  if( (*(argv+1)) == NULL )
  {
@@ -106,10 +109,12 @@ int main(int argc, char **argv)
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo("./","info",mesh);
 
- int nIter = 100;
+ int nIter = 1000;
  int nRe = 5;
  for( int i=0;i<nIter;i++ )
  {
+  save.printSimulationReport();
+  //save.printMeshReport();
   for( int j=0;j<nRe;j++ )
   {
    cout << "____________________________________ Iteration: " 
@@ -117,13 +122,16 @@ int main(int argc, char **argv)
 
    s1.stepSL();
    s1.setRHS();
-   s1.setCRHS();
+   //s1.setCRHS();
+   s1.setGravity("-Z");
    s1.unCoupled();
-   s1.unCoupledC();
+   //s1.unCoupledC();
 
    save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTU(vtkFolder,"sim",iter);
+   //save.saveVTU(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
+   save.crossSectionSol("uSol","YZ",5.0/7.0,vtkFolder,"secU",iter );
+   save.crossSectionSol("uSol","YZ",6.0/7.0,vtkFolder,"secU6-7",iter );
 
    s1.saveOldData();
 

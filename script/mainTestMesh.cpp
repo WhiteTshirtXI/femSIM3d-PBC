@@ -46,7 +46,6 @@ int main(int argc, char **argv)
  double cfl = 0.8;
 
  string meshFile = "rising-periodic-mesh-pbc.msh";
- //string meshFile = "gustavoMesh.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -162,7 +161,6 @@ int main(int argc, char **argv)
  // VEJA QUE INITTHREEBUBBLES EM HELMHOLTZ3D TE DARA UMA DISTRIBUICAO DE
  // EDGESIZE BASEADA EM UMA FUNCAO DISTANCIA DA INTERFACE
  //
- //h1.initMicro();
  h1.initThreeBubbles();
  h1.assemble();
  h1.setk(0.05);
@@ -198,7 +196,6 @@ int main(int argc, char **argv)
  // VEJA QUE INITTHREEBUBBLES EM HELMHOLTZ3D TE DARA UMA DISTRIBUICAO DE
  // EDGESIZE BASEADA EM UMA FUNCAO DISTANCIA DA INTERFACE
  //
-  //h2.initMicro();
   h2.initThreeBubbles();
   h2.assemble();
   h2.setk(0.05);
@@ -228,13 +225,13 @@ int main(int argc, char **argv)
   //
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(5.0);
-  //m1.remove3dMeshPointsByDiffusion(0.5); //<<<
+  m1.insert3dMeshPointsByDiffusion(3.0);
+  m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  //m1.remove3dMeshPointsByHeight(); //<<<
-  //m1.delete3DPoints(); //<<<
+  m1.remove3dMeshPointsByHeight();
+  m1.delete3DPoints();
 
   // surface operations
   m1.smoothPointsByCurvature();
@@ -243,11 +240,11 @@ int main(int argc, char **argv)
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  //m1.contractEdgesByLength("curvature"); //<<<
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 
-  //m1.removePointsByNeighbourCheck(); //<<<
+  m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
@@ -260,7 +257,6 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.setSurfaceConfig();
-  m1.setInterfaceBC();
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

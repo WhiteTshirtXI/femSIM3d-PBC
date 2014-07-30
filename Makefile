@@ -6,7 +6,7 @@
 
 # Compilers
 #CXX = g++ 
-CXX = clang++
+CXX = clang
 
 # Flags
 CXXFLAGS = -g -fPIC
@@ -45,9 +45,10 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 	       curvatureAndPressureCylinder curvatureAndPressureTorus\
 		   hyperboloid curvatureAndPressureHyperboloid \
 		   sessileDrop oscillatingDrop fallingDrop risingBubble \
-		   2Bubbles micro zalesak vortex curvatureTest shear movingFrame \
-		   
-two-phasePBC: channelPBC movingFramePBC
+		   2Bubbles micro zalesak vortex curvatureTest shear \
+		   risingBubbleTaylor microInterp
+
+two-phasePBC: channelPBC movingFramePBC 
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -59,7 +60,6 @@ step: ${FEM3D_DIR}/script/mainStep.o $(obj)
 
 stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-
 #                                                                            #
 # -------------------------------------------------------------------------- #
 
@@ -74,8 +74,6 @@ taylorVortexPBC: ${FEM3D_DIR}/script/mainTaylorVortexPBC.o $(obj)
 
 movingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-	#
-
 
 # ------------------<< rotating disk (single-phase) >>---------------------- #
 #                                                                            #
@@ -171,10 +169,16 @@ fallingDrop: ${FEM3D_DIR}/script/mainFallingDrop.o $(obj)
 risingBubble: ${FEM3D_DIR}/script/mainRisingBubble.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
+risingBubbleTaylor: ${FEM3D_DIR}/script/mainRisingBubbleTaylor.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 movingFrame: ${FEM3D_DIR}/script/mainMovingFrame.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-testMesh: ${FEM3D_DIR}/script/mainTestMesh.o $(obj)
+movingSin: ${FEM3D_DIR}/script/mainMovingSin.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+test: ${FEM3D_DIR}/script/mainTest.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 restart: ${FEM3D_DIR}/script/mainRestart.o $(obj)
@@ -198,6 +202,9 @@ helmholtz: ${FEM3D_DIR}/script/mainHelmholtz.o $(obj)
 # -----------------------<< microchannels (two-phase) >>-------------------- #
 #                                                                            #
 micro: ${FEM3D_DIR}/script/mainMicro.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+microInterp: ${FEM3D_DIR}/script/mainMicroInterp.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #
 # -------------------------------------------------------------------------- #
@@ -238,29 +245,20 @@ include ${PETSC_DIR}/conf/rules
 erase:
 	@rm -f core
 	@find . -name "*~" -exec rm {} \;
-	@rm -f ./vtk/*.vtk ./vtk/*.vtu
-	@rm -f ./msh/*.msh
-	@rm -f ./sim/vk*
-	@rm -f ./sim/sim*.dat
-	@rm -f ./bin/*.bin
-	@rm -f ./dat/*.dat
-	@rm -f ./dat/vk*
-	@rm -f ./dat/edge.*
+	@find ./sim -type f -name "?*.*" | xargs rm -f
+	@find ./vtk -type f -name "?*.*" | xargs rm -f
+	@find ./dat -type f -name "?*.*" | xargs rm -f
+	@find ./bin -type f -name "?*.*" | xargs rm -f
+	@find ./msh -type f -name "?*.*" | xargs rm -f
 
-deepclean: 
+deepclean: erase
+	@rm -f step poiseuille risingBubble staticDroplet oscillatingDrop 
+	@rm -f fallingDrop sessileDrop 2Bubbles micro staticDropletHMT
+	@rm -f curvatureAndPressure risingBubbleHT movingFrame helmholtz
+	@rm -f zalesak vortex stepALE coalescence risingBubbleTaylor
+	@rm -f movingSin
 	@find . -type f -perm -o+rx -exec rm {} \;
 	@rm -f libtest*
-	@rm -f core
-	@find ${FEMLIB_DIR} -name "*.o" -exec rm {} \;
-	@find . -name "*.o" -exec rm {} \;
-	@find . -name "*~" -exec rm {} \;
-	@rm -f ./vtk/*.vtk
-	@rm -f ./msh/*.msh
-	@rm -f ./sim/vk*.dat
-	@rm -f ./sim/sim*.dat
-	@rm -f ./bin/*.bin
-	@rm -f ./*.dat
-	@rm -f ./dat/*.dat
-	@rm -f ./sim/vk*
-	@rm -f ./dat/edge.*
+	@find ${FEMLIB_DIR} -name "?*.o" -exec rm {} \;
+	@find . -name "?*.o" -exec rm {} \;
 

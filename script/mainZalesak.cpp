@@ -21,14 +21,27 @@
 
 int main(int argc, char **argv)
 {
+ /* This test case applies a prescribed 2D vortex field in a unit cube to
+  * test the re-meshing techinique of the surface mesh. 
+  *
+  * OBS.: - comment stepSL() on Simulator3D::stepALE
+  *       - switch to tetrahedralize( (char*) "QYYAp",&in,&out ) on
+  *       Model3D::mesh3DPoints
+  *
+  * Since the field is prescribed, there is no need of calculating the
+  * convection in a Euleurian way (stepSL) and the insertion of nodes on
+  * the 3D mesh.
+  *
+  * */
+
  PetscInitializeNoArguments();
  
  int iter = 1;
- double d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.1;  // surface smooth cord (fujiwara)
+ real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;  // surface smooth cord (fujiwara)
 
- double dt = 0.01;
- double time = 0.0;
+ real dt = 0.01;
+ real time = 0.0;
 
  string meshFile = "sphere.msh";
 

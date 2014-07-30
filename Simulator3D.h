@@ -41,7 +41,7 @@ class Simulator3D
  public:
   Simulator3D(); // construtor padrao
   Simulator3D( Model3D &_m ); // construtor 
-  Simulator3D( Periodic3D &_pbc, Model3D &_m );
+  Simulator3D( Periodic3D &_pbc, Model3D &_m ); // PBC 
   Simulator3D( const Simulator3D &_sRight ); // construtor 
   Simulator3D( Model3D &_m, Simulator3D &_s );  // copia
   virtual ~Simulator3D(); // destrutor padrao
@@ -69,35 +69,36 @@ class Simulator3D
   void matMount();
   void matMountC();
 
-  // PBC
-  	void assemblePBC();
-	void assemblePBCNew(); // idem assemblePBC with vector structure
-	void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
-  	void assembleCPBC();
-    void setUnCoupledPBC();
-    void unCoupledPBC(); // modified solution velocity+pressure
-    void unCoupledPBCNew(); 
-	void unCoupledCPBC(); // modified solution scalar
-	void getPeriodic3DToAttrib(Periodic3D &_pbc);
-	void setPressureJump(double _pJump);
-	void setBetaPressureLiquid();
-	void setBetaFlowLiq(const char* _direction);
-	void inputVelocityPBC();
-	void initTaylorVortex();
-	void initTaylorGreenVortex();
-	void initTanHJetProfile(); // hyperbolic tangent jet profile
-	void inputPurePressurePBC();
-	void setRHS_PBC();
-	void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
-	void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
-	void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
-	void setCopyDirectionPBC(string _direction);
-	void stepSLPBCFix();
-
-	double getPeriodicFaceVelXAverage();
-	double getPeriodicFaceVelYAverage();
-	double getPeriodicFaceVelZAverage();
+  // PBC ******* 
+  void assemblePBC();
+  void assemblePBCNew(); // idem assemblePBC with vector structure
+  void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
+  void assembleCPBC();
+  void setUnCoupledPBC();
+  void unCoupledPBC(); // modified solution velocity+pressure
+  void unCoupledPBCNew(); 
+  void unCoupledCPBC(); // modified solution scalar
+  void getPeriodic3DToAttrib(Periodic3D &_pbc);
+  void setPressureJump(double _pJump);
+  void setBetaPressureLiquid();
+  void setBetaFlowLiq(const char* _direction);
+  void inputVelocityPBC();
+  void initTaylorVortex();
+  void initTaylorGreenVortex();
+  void initTanHJetProfile(); // hyperbolic tangent jet profile
+  void inputPurePressurePBC();
+  void setRHS_PBC();
+  void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
+  void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
+  void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
+  void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
+  void setCopyDirectionPBC(string _direction);
+  void stepSLPBCFix();
+  
+  double getPeriodicFaceVelXAverage();
+  double getPeriodicFaceVelYAverage();
+  double getPeriodicFaceVelZAverage();
+  //******* 
 
   void step();
   void stepSL();
@@ -108,7 +109,7 @@ class Simulator3D
   void stepLagrangian();
   void stepLagrangianZ();
   void stepALE();
-  void stepALEPBC(); //<<< for PBC SL correction
+  void stepALEPBC(); // for PBC SL correction
   void movePoints();
   void movePoints(clVector *_uVel,
                   clVector *_vVel,
@@ -151,7 +152,7 @@ class Simulator3D
   void setSigma(double _sigma);
   double getSigma();
   void setDtLagrangian();
-  void setDtLagrangianExtream();
+  double setDtHeight(clVector &_uVel,clVector &_vVel,clVector &_wVel);
   void setDtLagrangianNorberto();
   void setDtSemiLagrangian();
   void setDtGravity();
@@ -265,7 +266,7 @@ class Simulator3D
   clVector* getCAnt();
   clVector* getFint();
   clVector* getGravity();
-  clVector* getBetaFlowLiq();
+  clVector* getBetaFlowLiq(); // PBC
   double getGrav();
   clDMatrix* getKappa();
   clMatrix* getK();
@@ -322,18 +323,6 @@ class Simulator3D
 
  private:
   Model3D *m;
-
-  // PBC
-  Periodic3D *pbc;
-  int nyPointsL;
-  double pJump;
-  int IBR;
-  string direction;
-  clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
-  clVector VecXMinGlob, VecXMaxGlob;
-  vector<int> *MasterIndices;
-  vector<int> *SlaveIndices;
-  
   int numVerts,numElems,numNodes;
   int numVertsOld,numElemsOld,numNodesOld;
   vector<double> triEdge;
@@ -365,11 +354,6 @@ class Simulator3D
   vector<double> centroidPosX,centroidPosY,centroidPosZ;
   vector<double> centroidPosXOld,centroidPosYOld,centroidPosZOld;
 
-  // PBC
-  double betaPressLiq_0, betaPressGas_0;
-  double betaPressLiq, betaPressGas;
-  double betaPressLiqAdimen, betaPressGasAdimen;
-
   // moving referential
   double uRef,vRef,wRef;
   double xRef,yRef,zRef;
@@ -399,6 +383,20 @@ class Simulator3D
   clVector fintOld,gravityOld,betaFlowLiqOld,Fold,muOld,rhoOld,hSmoothOld,cpOld,ktOld;
 
   Solver *solverV,*solverP,*solverC;
+
+  // PBC
+  Periodic3D *pbc;
+  int nyPointsL;
+  int IBR;
+  double pJump;
+  double betaPressLiq_0, betaPressGas_0;
+  double betaPressLiq, betaPressGas;
+  double betaPressLiqAdimen, betaPressGasAdimen;
+  string direction;
+  clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
+  clVector VecXMinGlob, VecXMaxGlob;
+  vector<int> *MasterIndices;
+  vector<int> *SlaveIndices;
 };
 
 #endif

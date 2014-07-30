@@ -2,11 +2,11 @@
 // this is file Simulator3D.cpp, created at 23-Ago-2007                //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
-// =================================================================== // 
+// =================================================================== //
+
 #include "Simulator3D.h"
 
 Simulator3D::Simulator3D(){}
-
 Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )  
 {
  getModel3DAttrib(_m);
@@ -394,7 +394,7 @@ Simulator3D::Simulator3D( Model3D &_m, Simulator3D &_sRight)
  kappaOld   = *_sRight.getKappa();
  fintOld    = *_sRight.getFint();
  gravityOld = *_sRight.getGravity();
- betaFlowLiqOld = *_sRight.getBetaFlowLiq();
+ betaFlowLiqOld = *_sRight.getBetaFlowLiq(); // PBC
  muOld      = *_sRight.getMu();
  rhoOld     = *_sRight.getRho();
  cpOld     = *_sRight.getCp();
@@ -427,12 +427,11 @@ void Simulator3D::init()
  wSolOld.CopyFrom( 0,*wc );
  pSolOld.CopyFrom( 0,*pc );
  cSolOld.CopyFrom( 0,*cc );
-
- uSol.CopyFrom( 0,*uc );
- vSol.CopyFrom( 0,*vc );
- wSol.CopyFrom( 0,*wc );
- pSol.CopyFrom( 0,*pc );
- cSol.CopyFrom( 0,*cc );
+ uSol = uSolOld;
+ vSol = vSolOld;
+ wSol = wSolOld;
+ pSol = pSolOld;
+ cSol = cSolOld;
 }
 
 void Simulator3D::initDiskBaseState( const char* _dir,const char* _filename )
@@ -558,11 +557,11 @@ void Simulator3D::initChannel()
 
   // Parabolic profile
   double Umax = 1.0;
-  double aux = 2*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+  double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
 	                                     (diameterYZ/2.0)) );
-  aux = 1.0;
-  uSol.Set(i,aux-1);
-  uSolOld.Set(i,aux-1);
+  //aux = 1.0;
+  uSol.Set(i,aux);
+  uSolOld.Set(i,aux);
  }
 }
 
@@ -661,11 +660,8 @@ void Simulator3D::assemble()
  clMatrix Kxx( numNodes,numNodes );
  clMatrix Kxy( numNodes,numNodes );
  clMatrix Kxz( numNodes,numNodes );
- clMatrix Kyx( numNodes,numNodes );
  clMatrix Kyy( numNodes,numNodes );
  clMatrix Kyz( numNodes,numNodes );
- clMatrix Kzx( numNodes,numNodes );
- clMatrix Kzy( numNodes,numNodes );
  clMatrix Kzz( numNodes,numNodes );
  clMatrix Mx_rho( numNodes,numNodes );
  clMatrix Mx( numNodes,numNodes );
@@ -1345,6 +1341,9 @@ void Simulator3D::assembleSlip()
 
  FEMLinElement3D linElem(*X,*Y,*Z);
 
+ setMu( mu_in );
+ setRho( rho_in );
+
  for( int mele=0;mele<numElems;mele++ )
  {
   for( int n=0;n<NUMGLEU;n++ )
@@ -1803,6 +1802,7 @@ void Simulator3D::stepSL()
  
 } // fecha metodo stepSL 
 
+// PBC
 void Simulator3D::stepSLPBCFix()
 {
    clVector velU = uSolOld-uALE;
@@ -1822,6 +1822,8 @@ void Simulator3D::stepSLPBCFix()
    convC = *slp.getCSL();
  
 } // fecha metodo stepSLPBCFix 
+
+
 
 void Simulator3D::stepNoConvection()
 {
@@ -2166,12 +2168,11 @@ void Simulator3D::stepLagrangianZ()
  convUVW.CopyFrom(2*numNodes,wSol);
 } // fecha metodo stepLagragianZ
 
-/** \brief Computes ALE velocity according to 
- *  mesh parameters \f$ c1, c2, c3, d1, d3 \f$
+/* compute ALE velocity according to mesh parameters c1,c2,c3,d1 and d3
  * 
  * input:  SolOld velocity
  * output: ALE velocity
- */
+ * */
 void Simulator3D::stepALE()
 {
  // vertice velocity (uVert,vVert)
@@ -2187,12 +2188,14 @@ void Simulator3D::stepALE()
 
  if( c2 > 0 )
  {
-  // smoothing - velocidade
-  MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
-  e1.stepSmooth(uALE,vALE,wALE);
-  uSmooth = *e1.getUSmooth();
-  vSmooth = *e1.getVSmooth();
-  wSmooth = *e1.getWSmooth();
+//--------------------------------------------------
+//   // smoothing - velocidade
+//   MeshSmooth e1(*m,dt); // criando objeto MeshSmooth
+//   e1.stepSmooth(uALE,vALE,wALE);
+//   uSmooth = *e1.getUSmooth();
+//   vSmooth = *e1.getVSmooth();
+//   wSmooth = *e1.getWSmooth();
+//-------------------------------------------------- 
 
   uSmooth=uALE;
   vSmooth=vALE;
@@ -2404,18 +2407,18 @@ void Simulator3D::setInterfaceVelocity()
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  double prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
-              (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
-			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
+  double prod = (uSolOld.Get(surfaceNode)+uRef)*xNormalUnit+ 
+              (vSolOld.Get(surfaceNode)+vRef)*yNormalUnit + 
+			  (wSolOld.Get(surfaceNode)+wRef)*zNormalUnit;
   double uSolNormal = xNormalUnit*prod;
   double vSolNormal = yNormalUnit*prod;
   double wSolNormal = zNormalUnit*prod;
 
-  // 1.3 is a pragmatic number which fits the velocity for the bhaga5
+  // 1.5 is a pragmatic number which fits the velocity for the bhaga5
   // and the moving frame technique. Still don't know why!
-  double uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
-  double vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
-  double wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
+  double uSolTangent = uSolOld.Get(surfaceNode) + uRef - uSolNormal;
+  double vSolTangent = vSolOld.Get(surfaceNode) + vRef - vSolNormal;
+  double wSolTangent = wSolOld.Get(surfaceNode) + wRef - wSolNormal;
 
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
@@ -2543,7 +2546,6 @@ void Simulator3D::setGravity(const char* _direction)
  //va = va + gravity;
 }
 
-
 /* Sets dimensionless pressure gradient for PBC applications, which
  * acts on the flow in the streamwise direction only. Its construction
  * is similar to the vector "gravity", except for the value set as
@@ -2619,9 +2621,7 @@ void Simulator3D::setBetaFlowLiq(const char* _direction)
  betaFlowLiq.Append(px);
  betaFlowLiq.Append(py);
  betaFlowLiq.Append(pz);
-
 }
-
 
 void Simulator3D::setGravityBoussinesq(const char* _direction)
 {
@@ -2909,9 +2909,6 @@ void Simulator3D::unCoupledCPBC()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
-
-
-
 void Simulator3D::saveOldData()
 {
  uSolOld     = uSol;
@@ -2924,7 +2921,7 @@ void Simulator3D::saveOldData()
  wALEOld     = wALE;
  fintOld     = fint;
  gravityOld  = gravity;
- betaFlowLiqOld  = betaFlowLiq;
+ betaFlowLiqOld  = betaFlowLiq; // PBC
  kappaOld    = kappa;
  muOld       = mu;
  rhoOld      = rho;
@@ -3201,6 +3198,7 @@ void Simulator3D::setUnCoupledCBC()
 
 } // fecha metodo setUnCoupledCBC 
 
+
 /* cfl based on the booklet:
  * Direct Numerical Simulation of Gas-Liquid Multiphase Flows
  * G. Tryggvason, R. Scardovelli and S. Zaleski
@@ -3260,115 +3258,96 @@ void Simulator3D::setDtSurfaceTension()
 }
 
 /*
+ * This method computes the Lagrangian (or ALE) time step dt based on
+ * the vertex velocities and the height of the tetrahedron, which is the
+ * shortest lenght that the vertex is allowed to move.
+ *
  *
  *                                 v1              
- *                                  o              ---
- *                                 / \                |
- *                                /   \               | y1
- *                               /     \              |
- *                   -------    /   x   \     --------
- *               y2 |          /         \            |
- *                  |         /           \           | y3
- *                   -----   o ----------- o       ---
+ *                                  o _      v4    ---
+ *                                 / \  ^ -o          \
+ *                                /   \ -  |           \ h
+ *                               /    -\   |            \
+ *                              /   -   \  |           --- 
+ *                             /  -      \ |       
+ *                            / -         \|        
+ *                           o ----------- o       
  *                          v2             v3
  *                
- *                           |      |
- *                            ------
- *                              x2
- *                                  |      |
- *                                   ------
- *                                     x3
- *                
- *                
- *                   o vertices
- *                   x centroid
+ * In 3D, the height from the vertex v1 to the triangle base v2,v3,v4
+ * is: h = 3*V_t/A_b, where V_t is the tetrahedron volume and A_b is the
+ * area of the triangular face opposite to the vertex. Once calculated h
+ * for each vertex, find the min height among the 4 vertices and compute
+ * dt.
  *                
  * */
-void Simulator3D::setDtLagrangianExtream()
+double Simulator3D::setDtHeight(clVector &_uVel,
+                              clVector &_vVel,
+							  clVector &_wVel)
 {
- int idMinVolume = *min_element(m->getIdMinVolume().begin(),m->getIdMinVolume().end());
- double minEdge = m->getMinEdge();
+ double computedDt = 0.1;
+ for( int i=0;i<numElems;i++ )
+ {
+  // v1
+  int v1 = IEN->Get(i,0);
+  double p1x=X->Get(v1);
+  double p1y=Y->Get(v1);
+  double p1z=Z->Get(v1);
 
- //cout << idMinVolume << " " << minEdge << endl;
+  // v2
+  int v2 = IEN->Get(i,1);
+  double p2x=X->Get(v2);
+  double p2y=Y->Get(v2);
+  double p2z=Z->Get(v2);
 
- int v1 = IEN->Get(idMinVolume,0);
- int v2 = IEN->Get(idMinVolume,1);
- int v3 = IEN->Get(idMinVolume,2);
- int v4 = IEN->Get(idMinVolume,3);
+  // v3
+  int v3 = IEN->Get(i,2);
+  double p3x=X->Get(v3);
+  double p3y=Y->Get(v3);
+  double p3z=Z->Get(v3);
 
- /* X-component */
- double p1x = X->Get(v1);
- double p2x = X->Get(v2);
- double p3x = X->Get(v3);
- double p4x = X->Get(v4);
+  // v4
+  int v4 = IEN->Get(i,3);
+  double p4x=X->Get(v4);
+  double p4y=Y->Get(v4);
+  double p4z=Z->Get(v4);
 
- double xCentroid = ( p1x+p2x+p3x+p4x )*0.25;
+  // vertex velocity
+  double vel1 = vectorLength(_uVel.Get(v1),_vVel.Get(v1),_wVel.Get(v1));
+  double vel2 = vectorLength(_uVel.Get(v2),_vVel.Get(v2),_wVel.Get(v2));
+  double vel3 = vectorLength(_uVel.Get(v3),_vVel.Get(v3),_wVel.Get(v3));
+  double vel4 = vectorLength(_uVel.Get(v4),_vVel.Get(v4),_wVel.Get(v4));
 
- double d1x = dist(p1x,xCentroid);
- double d2x = dist(p2x,xCentroid);
- double d3x = dist(p3x,xCentroid);
- double d4x = dist(p4x,xCentroid);
- 
- double minXdist = min(d1x,d2x);
- minXdist = min(minXdist,d3x);
- minXdist = min(minXdist,d4x);
+  // tet volume
+  double volume = fabs(m->getVolume(i));
 
- double xVelMax = max( 1.0,uALE.Abs().Max() );
- double minDtx = minXdist/xVelMax;
+  // area of the vertex opposite face
+  double baseArea1 = fabs(getArea(p2x,p2y,p2z,p3x,p3y,p3z,p4x,p4y,p4z));
+  double baseArea2 = fabs(getArea(p1x,p1y,p1z,p3x,p3y,p3z,p4x,p4y,p4z));
+  double baseArea3 = fabs(getArea(p1x,p1y,p1z,p2x,p2y,p2z,p4x,p4y,p4z));
+  double baseArea4 = fabs(getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z));
 
- /* Y-component */
- double p1y = Y->Get(v1);
- double p2y = Y->Get(v2);
- double p3y = Y->Get(v3);
- double p4y = Y->Get(v4);
+  // height associated to the vertex
+  double height1 = 3*volume/baseArea1;
+  double height2 = 3*volume/baseArea2;
+  double height3 = 3*volume/baseArea3;
+  double height4 = 3*volume/baseArea4;
 
- double yCentroid = ( p1y+p2y+p3y+p4y )*0.25;
+  // dt's
+  double dt1 = height1/vel1;
+  double dt2 = height2/vel2;
+  double dt3 = height3/vel3;
+  double dt4 = height4/vel4;
 
- double d1y = dist(p1y,yCentroid);
- double d2y = dist(p2y,yCentroid);
- double d3y = dist(p3y,yCentroid);
- double d4y = dist(p4y,yCentroid);
+  double minDt = min(dt1,dt2);
+  minDt = min(minDt,dt3);
+  minDt = min(minDt,dt3);
+  minDt = min(minDt,dt4);
 
- double minYdist = min(d1y,d2y);
- minYdist = min(minYdist,d3y);
- minYdist = min(minYdist,d4y);
-
- double yVelMax = max( 1.0,vALE.Abs().Max() );
- double minDty = minYdist/yVelMax;
-
- /* Z-component */
- double p1z = Z->Get(v1);
- double p2z = Z->Get(v2);
- double p3z = Z->Get(v3);
- double p4z = Z->Get(v4);
-
- double zCentroid = ( p1z+p2z+p3z+p4z )*0.25;
-
- double d1z = dist(p1z,zCentroid);
- double d2z = dist(p2z,zCentroid);
- double d3z = dist(p3z,zCentroid);
- double d4z = dist(p4z,zCentroid);
-
- double minZdist = min(d1z,d2z);
- minZdist = min(minZdist,d3z);
- minZdist = min(minZdist,d4z);
-
- double zVelMax = max( 1.0,wALE.Abs().Max() );
- double minDtz = minZdist/zVelMax;
-
- double minDt1 = min(minDtx,minDty);
- minDt1 = min(minDt1,minDtz);
-
- double velMax = max(xVelMax,yVelMax);
- velMax = max(velMax,zVelMax);
- double minDt2 = 0.5*minEdge/velMax;
-
- dtLagrangian = min(minDt1,minDt2);
-
- //cout << "minDt: " <<  minDt1 << " " << minDt2 << endl;
- //cout << minXdist << " " << minYdist << " " << minZdist << endl;
- //cout << xVelMax << " " << yVelMax << " " << zVelMax << endl;
- //cout << minDtx << " " << minDty << " " << minDtz << endl;
+  if( minDt < computedDt && minDt > 0 )
+   computedDt = minDt;
+ }
+ return computedDt;
 }
 
 /*     
@@ -3553,16 +3532,29 @@ void Simulator3D::setDtEulerian()
 /*
  * Set Dt of the current simulation.
  * Explicity terms:
+ *  - moving mesh;
  *  - Semi-Lagrangian;
- *  - Surface Tension;
  *  - Gravity.
+ *  - Surface Tension;
  *  */
 void Simulator3D::setDtALETwoPhase()
 {
- // setting required dt
- setDtLagrangianNorberto();
+ // set dt ALE
+ dtLagrangian = setDtHeight(uALE,vALE,wALE);
+
+ // set dt gravity
  setDtGravity();
+
+ // set dt SemiLagrangian
  dtSemiLagrangian = dtLagrangian;
+//--------------------------------------------------
+//  clVector velU = uSolOld-uALE;
+//  clVector velV = vSolOld-vALE;
+//  clVector velW = wSolOld-wALE;
+//  dtSemiLagrangian = setDtHeight(velU,velV,velW);
+//-------------------------------------------------- 
+
+ // set dt surface tension
  setDtSurfaceTension();
 
  double dtALETwoPhase = min(getDtLagrangian(),getDtSurfaceTension());
@@ -4285,7 +4277,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappa   = _sRight.kappa;
  fint    = _sRight.fint;
  gravity = _sRight.gravity;
- betaFlowLiq = _sRight.betaFlowLiq;
+ betaFlowLiq = _sRight.betaFlowLiq; // PBC
  Fold    = _sRight.Fold;
  mu      = _sRight.mu;
  rho     = _sRight.rho;
@@ -4311,7 +4303,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  kappaOld   = _sRight.kappaOld;
  fintOld    = _sRight.fintOld;
  gravityOld = _sRight.gravityOld;
- betaFlowLiqOld = _sRight.betaFlowLiqOld;
+ betaFlowLiqOld = _sRight.betaFlowLiqOld; // PBC
  muOld      = _sRight.muOld;
  rhoOld     = _sRight.rhoOld;
  cpOld      = _sRight.cpOld;
@@ -4415,7 +4407,7 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  fileP >> auxstr;
  fileP >> auxstr;
  fileP >> auxstr;
- fileP >> iter;
+ fileP >> iter;iter++;
 
  while( ( !fileP.eof())&&(strcmp(auxstr,"NODES") != 0) )
   fileP >> auxstr;
@@ -4544,9 +4536,9 @@ int Simulator3D::loadSolution( const char* _dir,const char* _filename, int _iter
  vALEOld = vALE;
  wALEOld = wALE;
 
- cout << "Solution No. " << iter << " read" << endl;
+ cout << "Solution No. " << _iter << " read" << endl;
 
- return iter+1;
+ return iter;
 } // fecha metodo loadSol 
 
 // interpolacao linear dos vetores velocidade e pressao calculados na
@@ -4617,13 +4609,13 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  gravityOld.CopyTo(_mOld.getNumNodes()*1,yGravityOld);
  gravityOld.CopyTo(_mOld.getNumNodes()*2,zGravityOld);
  
- clVector xBetaFlowLiqOld(_mOld.getNumVerts());
- clVector yBetaFlowLiqOld(_mOld.getNumVerts());
- clVector zBetaFlowLiqOld(_mOld.getNumVerts());
- betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*0,xBetaFlowLiqOld);
- betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*1,yBetaFlowLiqOld);
- betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*2,zBetaFlowLiqOld);
- 
+ clVector xBetaFlowLiqOld(_mOld.getNumVerts()); // PBC
+ clVector yBetaFlowLiqOld(_mOld.getNumVerts()); // PBC
+ clVector zBetaFlowLiqOld(_mOld.getNumVerts()); // PBC
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*0,xBetaFlowLiqOld); // PBC
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*1,yBetaFlowLiqOld); // PBC
+ betaFlowLiqOld.CopyTo(_mOld.getNumNodes()*2,zBetaFlowLiqOld); // PBC
+
  // setting dimension of numVertsOld for all vectors.
  int numVertsOld =  _mOld.getNumVerts();
  clVector uSolOldVert(numVertsOld);
@@ -4656,7 +4648,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALEOld.CopyTo(0,wALEOldVert);
  fintOld.CopyTo(0,fintOldVert);
  gravityOld.CopyTo(0,gravityOldVert);
- betaFlowLiqOld.CopyTo(0,betaFlowLiqOldVert);
+ betaFlowLiqOld.CopyTo(0,betaFlowLiqOldVert); // PBC
  muOld.CopyTo(0,muOldVert);
  rhoOld.CopyTo(0,rhoOldVert);
  cpOld.CopyTo(0,cpOldVert);
@@ -4678,7 +4670,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  edgeSize = interpLin*(edgeSizeOld);
 
  // For velocities, kappa, fint and gravity it is mandatory to
- // reallocate these vectors using numNodes. For this we should first
+ // doublelocate these vectors using numNodes. For this we should first
  // append zeros (numNodes-numVerts) and then setCentroi or setQuad.
  clVector zeros(numNodes-numVerts);
  uSol = interpLin*(uSolOld);uSol.Append(zeros);
@@ -4773,7 +4765,7 @@ void Simulator3D::applyLinearInterpolation(Model3D &_mOld)
  wALEOld     = wALE;
  fintOld     = fint;
  gravityOld  = gravity;
- betaFlowLiqOld  = betaFlowLiq;
+ betaFlowLiqOld  = betaFlowLiq; // PBC
  kappaOld    = kappa;
  muOld       = mu;
  rhoOld      = rho;
@@ -4974,7 +4966,7 @@ void Simulator3D::allocateMemoryToAttrib()
  kappaOld.Dim( numNodes );
  fintOld.Dim( numNodes );
  gravityOld.Dim( numVerts );
- betaFlowLiqOld.Dim( numVerts );
+ betaFlowLiqOld.Dim( numVerts ); // PBC
  muOld.Dim( numVerts );
  rhoOld.Dim( numVerts );
  cpOld.Dim( numVerts );
@@ -4985,7 +4977,7 @@ void Simulator3D::allocateMemoryToAttrib()
  // interface vectors (two-phase)
  fint.Dim ( 3*numNodes );
  gravity.Dim( 3*numNodes );
- betaFlowLiq.Dim( 3*numNodes );
+ betaFlowLiq.Dim( 3*numNodes ); // PBC
  mu.Dim( numVerts );
  rho.Dim( numVerts );
  cp.Dim( numVerts );
@@ -5125,174 +5117,6 @@ double Simulator3D::getCentroidVelZAverage()
   sum+=centroidVelZ[nb];
  return sum/v;
 }
-
-double Simulator3D::getPeriodicFaceVelXAverage()
-{
-  vector<double> areaFace(0);
-  vector<double> vMedFace(0);
-
-  for (int e = 0; e < surfMesh->numElems; ++e)
-  {
-    int v1 = surfMesh->IEN.Get(e,0);
-    double p1x = surfMesh->X.Get(v1);
-    double p1y = surfMesh->Y.Get(v1);
-    double p1z = surfMesh->Z.Get(v1);
-
-	int v2 = surfMesh->IEN.Get(e,1);
-    double p2x = surfMesh->X.Get(v2);
-    double p2y = surfMesh->Y.Get(v2);
-    double p2z = surfMesh->Z.Get(v2);
-    
-	int v3 = surfMesh->IEN.Get(e,2);
-    double p3x = surfMesh->X.Get(v3);
-    double p3y = surfMesh->Y.Get(v3);
-    double p3z = surfMesh->Z.Get(v3);
-	
-	int id = surfMesh->elemIdRegion.Get(e);
-
-	// left and right are identical. It suffices one loop.
-	// id = 0 => wall
-	if ( ( p1x == surfMesh->X.Min() ) &&
-	     ( p2x == surfMesh->X.Min() ) &&
-	     ( p3x == surfMesh->X.Min() ) &&
-		 ( id  == 0 ) )
-	{
-
-	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
-	  areaFace.push_back(areaE);
-
-	  double vMedE = 1.0/3.0*( uSol.Get(v1) + uSol.Get(v2) + uSol.Get(v3) ); 
-	  double vE = vMedE*areaE;
-	  vMedFace.push_back(vE);
-
-	}
-  }
-
-  double area = 0.0;
-  double vM = 0.0;
-  for ( size_t i = 0; i < areaFace.size(); ++i)
-  {
-    area += areaFace[i];
-	vM += vMedFace[i];
-  }
-
-  double vMed = vM/area;
-  
-  return vMed;
-}
-
-
-double Simulator3D::getPeriodicFaceVelYAverage()
-{
-  vector<double> areaFace(0);
-  vector<double> vMedFace(0);
-
-  for (int e = 0; e < surfMesh->numElems; ++e)
-  {
-    int v1 = surfMesh->IEN.Get(e,0);
-    double p1x = surfMesh->X.Get(v1);
-    double p1y = surfMesh->Y.Get(v1);
-    double p1z = surfMesh->Z.Get(v1);
-
-	int v2 = surfMesh->IEN.Get(e,1);
-    double p2x = surfMesh->X.Get(v2);
-    double p2y = surfMesh->Y.Get(v2);
-    double p2z = surfMesh->Z.Get(v2);
-    
-	int v3 = surfMesh->IEN.Get(e,2);
-    double p3x = surfMesh->X.Get(v3);
-    double p3y = surfMesh->Y.Get(v3);
-    double p3z = surfMesh->Z.Get(v3);
-	
-	int id = surfMesh->elemIdRegion.Get(e);
-
-	// left and right are identical. It suffices one loop.
-	// id = 0 => wall
-	if ( ( p1x == surfMesh->X.Min() ) &&
-	     ( p2x == surfMesh->X.Min() ) &&
-	     ( p3x == surfMesh->X.Min() ) &&
-		 ( id  == 0 ) )
-	{
-
-	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
-	  areaFace.push_back(areaE);
-
-	  double vMedE = 1.0/3.0*( vSol.Get(v1) + vSol.Get(v2) + vSol.Get(v3) ); 
-	  double vE = vMedE*areaE;
-	  vMedFace.push_back(vE);
-
-	}
-  }
-
-  double area = 0.0;
-  double vM = 0.0;
-  for ( size_t i = 0; i < areaFace.size(); ++i)
-  {
-    area += areaFace[i];
-	vM += vMedFace[i];
-  }
-
-  double vMed = vM/area;
-  
-  return vMed;
-}
-
-
-double Simulator3D::getPeriodicFaceVelZAverage()
-{
-  vector<double> areaFace(0);
-  vector<double> vMedFace(0);
-
-  for (int e = 0; e < surfMesh->numElems; ++e)
-  {
-    int v1 = surfMesh->IEN.Get(e,0);
-    double p1x = surfMesh->X.Get(v1);
-    double p1y = surfMesh->Y.Get(v1);
-    double p1z = surfMesh->Z.Get(v1);
-
-	int v2 = surfMesh->IEN.Get(e,1);
-    double p2x = surfMesh->X.Get(v2);
-    double p2y = surfMesh->Y.Get(v2);
-    double p2z = surfMesh->Z.Get(v2);
-    
-	int v3 = surfMesh->IEN.Get(e,2);
-    double p3x = surfMesh->X.Get(v3);
-    double p3y = surfMesh->Y.Get(v3);
-    double p3z = surfMesh->Z.Get(v3);
-	
-	int id = surfMesh->elemIdRegion.Get(e);
-
-	// left and right are identical. It suffices one loop.
-	// id = 0 => wall
-	if ( ( p1x == surfMesh->X.Min() ) &&
-	     ( p2x == surfMesh->X.Min() ) &&
-	     ( p3x == surfMesh->X.Min() ) &&
-		 ( id  == 0 ) )
-	{
-
-	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
-	  areaFace.push_back(areaE);
-
-	  double vMedE = 1.0/3.0*( wSol.Get(v1) + wSol.Get(v2) + wSol.Get(v3) ); 
-	  double vE = vMedE*areaE;
-	  vMedFace.push_back(vE);
-
-	}
-  }
-
-  double area = 0.0;
-  double vM = 0.0;
-  for ( size_t i = 0; i < areaFace.size(); ++i)
-  {
-    area += areaFace[i];
-	vM += vMedFace[i];
-  }
-
-  double vMed = vM/area;
-  
-  return vMed;
-}
-
 
 double Simulator3D::getCentroidPosXAverage()
 {
@@ -5572,18 +5396,18 @@ void Simulator3D::setMassTransfer()
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
   // | Unit.RetaUnit | . RetaUnit
   // resultado = vetor normal a reta situado na superficie
-  double prod = (uSolOld.Get(surfaceNode)+1.3*uRef)*xNormalUnit+ 
-              (vSolOld.Get(surfaceNode)+1.3*vRef)*yNormalUnit + 
-			  (wSolOld.Get(surfaceNode)+1.3*wRef)*zNormalUnit;
+  double prod = (uSolOld.Get(surfaceNode)+uRef)*xNormalUnit+ 
+              (vSolOld.Get(surfaceNode)+vRef)*yNormalUnit + 
+			  (wSolOld.Get(surfaceNode)+wRef)*zNormalUnit;
   double uSolNormal = xNormalUnit*prod;
   double vSolNormal = yNormalUnit*prod;
   double wSolNormal = zNormalUnit*prod;
 
-  // 1.3 is a pragmatic number which fits the velocity for the bhaga5
+  // 1.5 is a pragmatic number which fits the velocity for the bhaga5
   // and the moving frame technique. Still don't know why!
-  double uSolTangent = uSolOld.Get(surfaceNode) + 1.3*uRef - uSolNormal;
-  double vSolTangent = vSolOld.Get(surfaceNode) + 1.3*vRef - vSolNormal;
-  double wSolTangent = wSolOld.Get(surfaceNode) + 1.3*wRef - wSolNormal;
+  double uSolTangent = uSolOld.Get(surfaceNode) + uRef - uSolNormal;
+  double vSolTangent = vSolOld.Get(surfaceNode) + vRef - vSolNormal;
+  double wSolTangent = wSolOld.Get(surfaceNode) + wRef - wSolNormal;
 
   // tratamento da superficie
   // produto escalar --> projecao do vetor normalUnit no segmento de reta
@@ -5637,7 +5461,6 @@ void Simulator3D::setMassTransfer()
   wALE.Set(surfaceNode,wMassTransfer);
  }
 } // fecha metodo setMassTransfer
-
 
 // PBC
 void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
@@ -6762,4 +6585,173 @@ void Simulator3D::initTaylorGreenVortex()
 	   wSolOld.Set(i, W + w);
 	}
 }
+
+
+double Simulator3D::getPeriodicFaceVelXAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e < surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( uSol.Get(v1) + uSol.Get(v2) + uSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
+
+double Simulator3D::getPeriodicFaceVelYAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e < surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( vSol.Get(v1) + vSol.Get(v2) + vSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
+
+double Simulator3D::getPeriodicFaceVelZAverage()
+{
+  vector<double> areaFace(0);
+  vector<double> vMedFace(0);
+
+  for (int e = 0; e < surfMesh->numElems; ++e)
+  {
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	int id = surfMesh->elemIdRegion.Get(e);
+
+	// left and right are identical. It suffices one loop.
+	// id = 0 => wall
+	if ( ( p1x == surfMesh->X.Min() ) &&
+	     ( p2x == surfMesh->X.Min() ) &&
+	     ( p3x == surfMesh->X.Min() ) &&
+		 ( id  == 0 ) )
+	{
+
+	  double areaE = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	  areaFace.push_back(areaE);
+
+	  double vMedE = 1.0/3.0*( wSol.Get(v1) + wSol.Get(v2) + wSol.Get(v3) ); 
+	  double vE = vMedE*areaE;
+	  vMedFace.push_back(vE);
+
+	}
+  }
+
+  double area = 0.0;
+  double vM = 0.0;
+  for ( size_t i = 0; i < areaFace.size(); ++i)
+  {
+    area += areaFace[i];
+	vM += vMedFace[i];
+  }
+
+  double vMed = vM/area;
+  
+  return vMed;
+}
+
 

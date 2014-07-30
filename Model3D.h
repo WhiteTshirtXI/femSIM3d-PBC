@@ -34,7 +34,6 @@
 #include "structs.h"
 #include "geometry.h"
 #include "tetgen.h"
-#include "MathTools.h"
 
 /**
  * @brief classe responsavel pela preparacao da malha para entrada no
@@ -52,6 +51,7 @@ class Model3D
 
   // reading files
   void readVTK( const char* filename );
+  void readVTKSol( const char* _filename,const char* _var );
   void readVTKHeaviside( const char* filename );
   void readVTKSurface( const char* filename );
   void readMSH( const char* filename );
@@ -112,7 +112,8 @@ class Model3D
   void setMapEdgeTri();
   void setSurfaceConfig();
   void saveVTK( const char* _dir,const char* _filename, int _iter );
-  void saveVTKSurface( const char* _dir,const char* _filename, int _vertID, int _iter );
+  void saveVTKSurface( const char* _dir,const char* _filename,
+	                   int _vertID, int _iter );
   bool testFace(int v1, int v2, int v3, int v4);
 
   // Volume calculation
@@ -131,6 +132,8 @@ class Model3D
   clVector computeConvexRegionCentroid2D(double _zPlane);
 
   // meshing with TETGEN
+  void setMesh();
+  void setMesh(const char* _param);
   void setMeshStep(int nX,int nY,int nZ);
   void setMeshStep(int nX,int nY,int nZ,const char* _param);
   void setMeshDisk(int nLados1Poli,int nCircMax,int nZ);
@@ -206,13 +209,6 @@ class Model3D
   void set2BubblesBC();
   void set2AxiBubblesBC();
   void setStepBC();
-  void setOnePointPressureBC(); // <<<
-  void setWallNormalVWBC(); // << slip condition, except PBC walls
-  void setWallSlipEdgesBC();
-  void setCubeVortexBC(); // <<< TaylorGreen vortex w/ slip walls
-  void setStretchJetMesh(); // geometrical transform
-  void setUnstretchJetMesh(); // geometrical transform
-  void setWallMovingPBC(double _velInf, double _velSup); 
   void setWallStepBC();
   void setCStepBC();
   void setStepReservBC();
@@ -231,6 +227,7 @@ class Model3D
   void setBiggerSphere(double _factor);
 
   // misc
+  void moveSinPoints(double _d);
   void moveXPoints(clVector &_vec,double _dt);
   void moveYPoints(clVector &_vec,double _dt);
   void moveZPoints(clVector &_vec,double _dt);
@@ -249,7 +246,7 @@ class Model3D
   void triMeshStats();
   void tetMeshStats();
   void clearBC();
-  void reAllocStruct();
+  void doublelocStruct();
   void computeSurfaceNormal();
   void computeSurfaceAverageNormal();
   void setKappaSurface();
@@ -289,6 +286,8 @@ class Model3D
   vector<double> getAverageTriLength();
   vector<double> getAverageTriArea();
   vector<double> getAverageTetVolume();
+  void setGenericBCPBC(); // PBC
+  void setGenericBCPBC(double _vel); // PBC
 
   clVector* getUC();
   clVector* getVC();
@@ -335,8 +334,6 @@ class Model3D
   list<int>* getInElem();
   vector<int>* getPbcIndicesLeft(); // PBC
   vector<int>* getPbcIndicesRight(); // PBC
-  vector< vector<int> >* getPbcIndicesMaster(); // PBC
-  vector< vector<int> >* getPbcIndicesSlave(); // PBC
   double getMinEdge();
   void setTriEdge();
   void setTriEdge(vector< double > _triEdge);
@@ -358,6 +355,12 @@ class Model3D
   void setFourElements();
   void integralParabolic();
   clVector* getCloser();
+
+  void setUC(clVector &_vel);
+  void setVC(clVector &_vel);
+  void setWC(clVector &_vel);
+  void extrude2DPoints(int _nvar,double _initial,
+                       double _length,const char* _direction);
 
   void operator=(Model3D &_mRight);
 
@@ -444,14 +447,11 @@ class Model3D
   vector< list<int> > neighbourEdge; // elems que compart. a face do triangulo 
   list<int> boundaryVert,inVert; // lista de elementos do interior 
   list<int> outElem,inElem; // lista de elementos do interior
-
+  
   /* PBC */
   vector<int> pbcIndicesLeft;
   vector<int> pbcIndicesRight;
-  vector< vector<int> > pbcIndicesMaster;
-  vector< vector<int> > pbcIndicesSlave; 
 
 };
-
 
 #endif

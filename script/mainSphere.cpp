@@ -26,24 +26,24 @@ int main(int argc, char **argv)
  // static bubble test (Fabricio's thesis (2005))
  int iter = 1;
 
- double Re = 100;
- double We = 0.2;
- double c1 = 0.0;  // lagrangian
- double c2 = 0.0;  // smooth vel
- double c3 = 0.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.0;  // surface smooth cord (fujiwara)
- double alpha = 1;
+ real Re = 100;
+ real We = 0.2;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 0.0;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.0;  // surface smooth cord (fujiwara)
+ real alpha = 1;
 
- double mu_in = 1.0;
- double mu_out = 0.01;
+ real mu_in = 1.0;
+ real mu_out = 0.01;
 
- double rho_in = 1.0;
- double rho_out = 0.01;
+ real rho_in = 1.0;
+ real rho_out = 0.01;
 
- double cfl = 0.8;
+ real cfl = 0.8;
 
- string meshFile = "0.50.msh";
+ string meshFile = "0.10.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/sphere/curvature/" + meshFile;
+ meshDir += "/gmsh/3d/sphere/static/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;

@@ -25,18 +25,18 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- double Re = 1000;
- double Sc = 200;
- double Fr = 10;
- //double alpha = 1;
- double c1 = 0.3;  // lagrangian
- double c2 = 0.0;  // smooth vel
- double c3 = 2.0;  // smooth coord (fujiwara)
- double cfl = 1.0;
- double mu_l = 1.0;
- double rho_l = 1.0;
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverP = new PetscSolver(KSPBICG,PCJACOBI);
+ real Re = 1000;
+ real Sc = 200;
+ real Fr = 10;
+ //real alpha = 1;
+ real c1 = 0.3;  // lagrangian
+ real c2 = 0.0;  // smooth vel
+ real c3 = 2.0;  // smooth coord (fujiwara)
+ real cfl = 1.0;
+ real mu_l = 1.0;
+ real rho_l = 1.0;
+ Solver *solverP = new PetscSolver(KSPBICG,PCICC);
+ //Solver *solverP = new PetscSolver(KSPCG,PCICC);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
@@ -171,13 +171,13 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   //s1.stepLagrangian();
+   s1.stepALE();
    s1.setDtALESinglePhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.movePoints();
    s1.assembleSlip();
    s1.matMount();

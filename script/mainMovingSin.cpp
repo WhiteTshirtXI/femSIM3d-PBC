@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file mainRisingBubble.cpp, created at 10-Jun-2009           //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -24,41 +24,42 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- /* 
-  * bogdan's thesis 2010 - Film thickness
-  * Air-Ethanol
-  * Circular channels
-  * Tube radius: 0.3 - 1.3mm
-  *
-  * Reference: Han and Shikazono
-  *
-  * */
- int iter = 0;
+ int iter = 1;
  real Re = 100;
  real We = 10;
- //real We = 0.1162;
- real Fr = 10;
- real c1 = 0.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
+ real Fr = 1.0;
  real alpha = 1;
-
- real cfl = 0.8;
-
- real mu_in = 0.01;
- real mu_out = 1.00;
+ real mu_in = 0.1;
+ real mu_out = 1.0;
  real rho_in = 0.001;
  real rho_out = 1.0;
+
+ real cfl = 1.0;
 
  //const char* _frame = "fixed";
  const char* _frame = "moving";
 
- string meshFile = "circular.msh";
+ // fixed
+ real c1 = 0.0;      // lagrangian
+ real c2 = 1.0;      // smooth vel 
+ real c3 = 10.0;     // smooth coord (fujiwara)
+ real d1 = 1.0;      // surface tangent vel = (u-ut)
+ real d2 = 0.1;      // surface smooth coord (fujiwara)
 
+ // moving
+ if( strcmp( _frame,"moving") == 0 )
+ {
+  c1 = 0.0;      // lagrangian
+  c2 = 0.0;      // smooth vel: OBS - different result with c1=0.0
+  c3 = 10.0;      // smooth coord (fujiwara)
+  d1 = 1.0;      // surface tangent velocity u_n=u-u_t 
+  d2 = 0.1;      // surface smooth cord (fujiwara)
+ }
+
+ string meshFile = "sin.msh";
+ 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
@@ -68,22 +69,22 @@ int main(int argc, char **argv)
  string meshDir = (string) getenv("DATA_DIR");
 
  if( strcmp( _frame,"moving") == 0 )
-  meshDir += "/gmsh/3d/micro/movingFrame/" + meshFile;
+  meshDir += "/gmsh/3d/rising/movingFrame/" + meshFile;
  else
-  meshDir += "/gmsh/3d/micro/" + meshFile;
+  meshDir += "/gmsh/3d/rising/" + meshFile;
 
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
  Simulator3D s1;
 
+ const char *mesh1 = mesh;
+
  if( *(argv+1) == NULL )     
  {
   cout << endl;
   cout << "--------------> STARTING FROM 0" << endl;
   cout << endl;
-
-  const char *mesh1 = mesh;
 
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
@@ -114,7 +115,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.initChannel(); // moving frame
+  s1.init();
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -134,8 +135,6 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
-
-  s1(m1);
 
   // load 3D mesh
   file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
@@ -161,103 +160,12 @@ int main(int argc, char **argv)
   s1.setSolverConcentration(solverC);
 
   iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
-
-  s1.setC1(c1);
-  s1.setC2(c2);
-  s1.setC3(c3);
-  s1.setD1(d1);
-  s1.setD2(d2);
-  s1.setAlpha(alpha);
-  s1.setCfl(cfl);
  }
- else if( strcmp( *(argv+1),"remesh") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING & STARTING..." << endl;
-  cout << endl;
 
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setMapping();
-
-  // load surface mesh and create new mesh
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3DOriginal();
-  m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setGenericBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
- }
- else if( strcmp( *(argv+1),"restop") == 0 )  
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
-  cout << endl;
-
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setMapping();
-
-  // load surface mesh and create new one
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3DOriginal();
-  m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-
-  s1(m1);
-  //file = (string) "sim-" + *(argv+2);
-  //const char *sol = file.c_str();
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
-  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
-  return 0;
- }
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initMicro();
+ h1.initRisingBubble();
  h1.assemble();
  h1.setk(0.2);
  h1.matMountC();
@@ -274,34 +182,45 @@ int main(int argc, char **argv)
 
  real vinst=0;
  real vref=0;
+ real xref=0;
+ real xinit=0;
+ real dx=0;
  if( strcmp( _frame,"moving") == 0 )
  {
   // moving
   vref = s1.getURef();
+  xref = s1.getXRef();
   s1.setCentroidVelPos();
+  xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 3000;
+ int nIter = 30000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
   {
-
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
-	    << iter << endl << endl;
+	    << iter << endl;
    cout << resetColor();
 
+   // moving
    if( strcmp( _frame,"moving") == 0 )
    {
 	// moving frame
-	vinst = s1.getCentroidVelXAverage();
-	vref += vinst;
-	cout << vref << " " << vinst << endl;
-	s1.setUSol(vinst);
-	m1.setGenericBC(vref);
-	s1.setURef(vref);
+
+	dx = s1.getCentroidPosXAverage() - xinit;
+	vinst = s1.getCentroidVelXAverage() + dx/s1.getDt();
+    vref += vinst;
+	xref += vref*s1.getDt();
+	cout << "vref: " << vref << " xref: " << xref << endl;
+	cout << "dx: " << dx << endl;
+    s1.setUSol(vinst);
+    m1.setGenericBC(vref);
+	m1.moveSinPoints(xref);
+    s1.setURef(vref);
+	s1.setXRef(xref);
    }
 
    //s1.stepLagrangian();
@@ -316,7 +235,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity("-Z");
+   s1.setGravity("-X");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -330,18 +249,18 @@ int main(int argc, char **argv)
 
    s1.saveOldData();
 
-   s1.timeStep();
-
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
-	    << iter << endl << endl;;
+	    << iter << endl;
    cout << resetColor();
+
+   s1.timeStep();
 
    iter++;
   }
   Helmholtz3D h2(m1,h1);
   h2.setBC();
-  h2.initMicro();
+  h2.initRisingBubble();
   h2.assemble();
   h2.matMountC();
   h2.setUnCoupledCBC(); 
@@ -377,7 +296,8 @@ int main(int argc, char **argv)
   m1.flipTriangleEdges();
 
   m1.removePointsByNeighbourCheck();
-  m1.checkAngleBetweenPlanes();
+  //m1.checkAngleBetweenPlanes();
+
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();

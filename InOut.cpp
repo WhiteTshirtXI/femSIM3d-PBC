@@ -813,13 +813,13 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename)
 	             << "p"  << setw(19)
 	             << "mu"  << endl;
 
-   for( int j=0;j<numVerts;j++ )
+   for( int vert=0;vert<numVerts;vert++ )
    {
-	if( X->Get(j) == X->Get(i) && Y->Get(j) == Y->Get(i) )
+	// if they have same x-y coordinate and different height
+	if( X->Get(vert) == X->Get(i) && Y->Get(vert) == Y->Get(i) )
 	{
-	 double radius = sqrt( X->Get(i)*X->Get(i) +
-	                     Y->Get(i)*Y->Get(i) );
-	 int vert = j;
+	 double radius = sqrt( X->Get(vert)*X->Get(vert) +
+	                     Y->Get(vert)*Y->Get(vert) );
 
 	 //      X*u      Y*v
 	 // F = ------ + ------
@@ -871,6 +871,122 @@ void InOut::saveVonKarman(const char* _dir,const char* _filename)
   }
  }
  cout << "von Karman num. " << iter << " saved in ASCII" << endl;
+}
+
+void InOut::saveVonKarman(Model3D &_m,const char* _dir,
+                          const char* _filename)
+{
+ clVector *nX = _m.getX();
+ clVector *nY = _m.getY();
+ clVector *nZ = _m.getZ();
+
+ int count = 0;
+ int iter = s->getIter();
+ for( int i=0;i<numVerts;i++ )
+ {
+  if( nZ->Get(i) == nZ->Min() && nY->Get(i) == 0 )
+  {
+   stringstream ss1,ss2;  //convertendo int --> string
+   string str1,str2;
+   ss1 << iter;
+   ss1 >> str1;
+   ss2 << count;
+   ss2 >> str2;
+
+   string file = _dir;
+   string aux = _filename;
+   file += aux + str2 + "." + str1;
+   const char* filename = file.c_str();
+
+   ofstream vonKarmanFile;
+   vonKarmanFile.open( filename );
+
+   vonKarmanFile << setprecision(10) << scientific; 
+   vonKarmanFile << "#radius" << setw(19) 
+	             << "F"  << setw(18)
+	             << "G"  << setw(18)
+	             << "H"  << setw(18)
+	             << "c"  << setw(18)
+	             << "p"  << setw(19)
+	             << "mu"  << endl;
+
+   // angle (rad) theta, from Z axis to the X axis
+   double theta = atan(X->Get(i)/(Z->Get(i)+1E-10));
+
+   // angle (rad) theta, from X axis to the Y axis
+   double phi = atan(Y->Get(i)/(X->Get(i)+1E-10));
+
+   double R0 = sqrt( X->Get(i)*X->Get(i) +
+	               Y->Get(i)*Y->Get(i) +
+				   Z->Get(i)*Z->Get(i) );
+
+   for( int vert=0;vert<numVerts;vert++ )
+   {
+	// if they have same x-y coordinate and different height
+	if( nX->Get(vert) == nX->Get(i) && nY->Get(vert) == nY->Get(i) )
+	{
+	 double radius = sqrt( X->Get(vert)*X->Get(vert) +
+	                     Y->Get(vert)*Y->Get(vert) +
+	                     Z->Get(vert)*Z->Get(vert) );
+
+	 // transform Cartesian to spherical coordinate system
+	 double Vr = uSol->Get(vert)*sin(theta)*cos(phi)+
+	           vSol->Get(vert)*sin(phi)*sin(theta)+
+			   wSol->Get(vert)*cos(theta);
+     double Vtheta = uSol->Get(vert)*cos(phi)*cos(theta)+
+	               vSol->Get(vert)*cos(theta)*sin(phi)-
+				   wSol->Get(vert)*sin(theta);
+     double Vphi = -(1.0)*uSol->Get(vert)*sin(phi)+
+	                    vSol->Get(vert)*cos(phi);
+
+	 double omega = 1.0; // same as Model3D::setInfiniteSphereBC()
+	 double muValue = mu->Get(vert);
+     double eta = sqrt(omega/muValue)*(radius-R0);
+
+     double F = Vtheta/(R0*omega);
+     double G = Vphi/(R0*omega);
+     double H = Vr/sqrt(muValue*omega);
+	 double c = cSol->Get(vert);
+	 double p = pSol->Get(vert);
+
+     vonKarmanFile << setw(16) << eta
+	               << setw(18) << F
+				   << setw(18) << G
+				   << setw(18) << H
+				   << setw(18) << c  
+				   << setw(18) << p 
+				   << setw(18) << muValue << endl;
+	}
+   }
+
+   vonKarmanFile << endl;
+   vonKarmanFile << fixed; 
+   vonKarmanFile << "Theta (rad) = " << theta << endl;
+   vonKarmanFile << "Phi (rad) = " << phi << endl;
+   vonKarmanFile << setprecision(2) << fixed;  
+   vonKarmanFile << "Theta (grad) = " 
+	             << theta*90.0/(3.14159265359/2.0) << endl;
+   vonKarmanFile << "Phi (grad) = " 
+	             << phi*90.0/(3.14159265359/2.0) << endl;
+
+   vonKarmanFile.close();
+
+   /* ----------- copying to file vk?.last ----------- */
+   ifstream inFile( filename,ios::binary ); 
+
+   string fileCopy = (string) _dir + (string) _filename + str2 + "." + "last";
+   const char* filenameCopy = fileCopy.c_str();
+   ofstream outFile( filenameCopy,ios::binary ); 
+
+   outFile << inFile.rdbuf();
+   inFile.close();
+   outFile.close();
+   /* ------------------------------------------------ */
+
+   count++;
+  }
+ }
+ cout << "von Karman sphere num. " << iter << " saved in ASCII" << endl;
 }
 
 /* save relative error file by comparing the numerical solution of each
@@ -1499,6 +1615,10 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
 
  time_t currentTime;
 
+ char hostname[1024];
+ hostname[1023] = '\0';
+ gethostname(hostname, 1023);
+
  time( &currentTime );
  file << endl;
  file << endl;
@@ -1528,6 +1648,8 @@ void InOut::saveInfo(const char* _dir,const char* _filename,const char* _mesh)
  file << "gas density:      " << rho_out << endl;
  file << "CFL number:       " << cfl << endl;
  file << "dt:               " << dt << endl;
+ file << "                  " << endl;
+ file << "hostname:         " << hostname << endl;
  file << "----------------------------------------------------" << endl; 
  file << endl;
  file << endl;
@@ -3082,17 +3204,8 @@ void InOut::vtkScalar(ofstream& _file,string _name,clVector &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
- {
-   if ( fabs(_scalar.Get(i) ) < 1E-20 )
-   {
-	double zero = 0.0;
-	_file << zero << endl;
-   }
-   else
-   {
-	_file << _scalar.Get(i) << endl;
-   }
- }
+  _file << _scalar.Get(i) << endl;
+
  _file << endl;
 }
 
@@ -3103,17 +3216,8 @@ void InOut::vtkScalar(ofstream& _file,string _name,clDMatrix &_scalar)
 
  _file << setprecision(10) << scientific;
  for( int i=0;i<numVerts;i++ )
- {
-   if ( fabs(_scalar.Get(i) ) < 1E-20 )
-   {
-	double zero = 0.0;
-	_file << zero << endl;
-   }
-   else
-   {
-	_file << _scalar.Get(i) << endl;
-   }
- }
+  _file << _scalar.Get(i) << endl;
+
  _file << endl;
 }
 
@@ -3586,18 +3690,41 @@ void InOut::printSimulationReport()
       << endl;
  cout << "   |                                                                       |" 
       << endl;
- cout << color(none,magenta,black)
-      << "          linear system dimension " << resetColor()
-	  << " UVW:                  " 
+ cout << "          linear system dimensions: " << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "UVW" << resetColor()
+	  << ":                                      " 
 	  << 3*numNodes << " x " << 3*numNodes << endl;
- cout << color(none,magenta,black)
-      << "          linear system dimension " << resetColor()
-	  << " P:                    " 
+ cout << "              |" << color(none,magenta,black) 
+      << "P" << resetColor()
+	  << ":                                        " 
 	  << numVerts << " x " << numVerts << endl;
- cout << color(none,magenta,black)
-      << "          linear system dimension " << resetColor()
-	  << " C/T:                  " 
+ cout << "              |" << color(none,magenta,black) 
+      << "C/T" << resetColor()
+	  << ":                                      " 
 	  << numVerts << " x " << numVerts << endl;
+ cout << endl;
+ cout << "          number of boundary indexes:" << endl;
+ cout << "                   velocity  |" << color(none,magenta,black) 
+      << "u" << resetColor()
+	  << ":                         " 
+	  << idbcu->Dim() << endl;
+ cout << "                             |" << color(none,magenta,black) 
+      << "v" << resetColor()
+	  << ":                         " 
+	  << idbcv->Dim() << endl;
+ cout << "                             |" << color(none,magenta,black) 
+      << "w" << resetColor()
+	  << ":                         " 
+	  << idbcw->Dim() << endl;
+ cout << "                   pressure  |" << color(none,magenta,black) 
+      << "p" << resetColor()
+	  << ":                         " 
+	  << idbcp->Dim() << endl;
+ cout << "              concentration  |" << color(none,magenta,black) 
+      << "c" << resetColor()
+	  << ":                         " 
+	  << idbcc->Dim() << endl;
  cout << endl;
  cout << color(none,magenta,black)
       << "          Reynolds/Archimedes" << resetColor()
@@ -3615,21 +3742,30 @@ void InOut::printSimulationReport()
  cout << color(none,magenta,black)
       << "          alpha (time method)" << resetColor()
 	  << " number:                    " << alpha << endl;
- cout << "          parameter " << color(none,magenta,black)
-      << "c1 (Lagrangian velocity)" 
-	  << resetColor() << ":            " << c1 << endl;
- cout << "          parameter " << color(none,magenta,black)
-      << "c2 (smooth by velocity)" 
-	  << resetColor() << ":             " << c2 << endl;
- cout << "          parameter " << color(none,magenta,black)
-      << "c3 (smooth by coordinates)" 
-	  << resetColor() << ":          " << c3 << endl;
- cout << "          parameter " << color(none,magenta,black)
-      << "d1 (remove tangent velocity)" 
-	  << resetColor() << ":        " << d1 << endl;
- cout << "          parameter " << color(none,magenta,black)
-      << "d2 (smooth surface by coordinates)" 
-	  << resetColor() << ":  " << d2 << endl;
+
+ cout << endl;
+ cout << "          parameters:"  << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "c1 (Lagrangian velocity)" << resetColor()
+	  << ":                 " 
+	  << c1 << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "c2 (smooth by velocity)" << resetColor()
+	  << ":                  " 
+	  << c2 << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "c3 (smooth by coordinates)" << resetColor()
+	  << ":               " 
+	  << c3 << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "d1 (remove tangent velocity)" << resetColor()
+	  << ":             " 
+	  << d1 << endl;
+ cout << "              |" << color(none,magenta,black) 
+      << "d2 (smooth surface by coordinates)" << resetColor()
+	  << ":       " 
+	  << d2 << endl;
+ cout << endl;
  cout << color(none,magenta,black)
       << "          liquid viscosity" << resetColor() 
 	  << ":                              " 
@@ -3677,7 +3813,7 @@ void InOut::printSimulationReport()
  cout << color(none,magenta,black)
       << "          iteration" << resetColor() 
 	  << ":                                     " 
-	  << iter << endl;
+	  << s->getIter() << endl;
  cout << color(none,magenta,black)
       << "          CFL" << resetColor()
 	  << " number:                                    " 
@@ -4641,7 +4777,7 @@ void InOut::saveKappaErrorTorus(const char* _dir)
 	theta += 3.1415;
   else
    if( surfMesh->Z.Get(node) >= 0 )
-	theta = theta;
+	theta = 1*theta;
    else
 	theta = 2*3.1415-theta;
 
@@ -4819,7 +4955,6 @@ void InOut::savePressureError(const char* _dir)
 
 void InOut::saveVolumeError(const char* _dir)
 {
- 
  int v = surfMesh->elemIdRegion.Max();
  for(int nb=0;nb<=v;nb++ )
  {
@@ -4845,9 +4980,9 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "vel centroid X" 
                    << setw(18) << "vel centroid Y" 
                    << setw(18) << "vel centroid Z" 
-                   << setw(18) << "vel average centroid X" 
-                   << setw(18) << "vel average centroid Y" 
-                   << setw(18) << "vel average centroid Z" 
+                   << setw(18) << "vel refenrece X" 
+                   << setw(18) << "vel refenrece Y" 
+                   << setw(18) << "vel refenrece Z" 
                    << setw(18) << "vel average periodic X" 
                    << setw(18) << "vel average periodic Y" 
                    << setw(18) << "vel average periodic Z" 
@@ -5405,6 +5540,278 @@ void InOut::savePoint( const char* _dir,int _point )
  filePoint.close();
 }
 
+/* create a 2D triangular mesh and interpolats the solution _var of a
+ * plane _plane on it, and save as 2D vtk
+ *
+ * input: _var = solution
+ *        _plane = plane (XY,XZ or YZ)
+ *        _fraction = position of the plane
+ *        _dir = directory to save file
+ *        _filename = name of the saved file
+ *        _iter = iteration number
+ *
+ * output: 2D triangular vtk file
+ * */
+void InOut::crossSectionSol( const char* _var,
+                             const char* _plane,
+                             double _fraction,
+                             const char* _dir,
+                             const char* _filename, 
+							 int _iter )
+{
+ // file output
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ double _pos = X->Min()+_fraction*(X->Max()-X->Min());
+
+ // xVert da malha nova
+ int np1 = 100;
+ int np2 = 100;
+ int elem1 = np1-1; 
+ int elem2 = np2-1; 
+ int nTotal = np1*np2;
+ clVector xVert(nTotal);
+ clVector yVert(nTotal);
+ clVector zVert(nTotal);
+
+ if( (strcmp(_plane,"XY") == 0) ||
+     (strcmp(_plane,"YX") == 0)  )
+ {
+  _pos = Z->Min()+_fraction*(Z->Max()-Z->Min());
+  // structured mesh points generator
+  double xi = X->Min();
+  double xf = X->Max();
+  double yi = Y->Min();
+  double yf = Y->Max();
+  double zi = _pos;
+  double dx = (xf-xi)/(elem1);
+  double dy = (yf-yi)/(elem2);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	double x = xi + i * dx ;
+	xVert.Set(count,x);
+	double y = yi + j * dy;
+	yVert.Set(count,y);
+	count++;
+   }
+  }
+  zVert.SetAll(zi);
+ }
+ else if( (strcmp(_plane,"XZ") == 0) ||  
+          (strcmp(_plane,"ZX") == 0) )
+ {
+  _pos = Y->Min()+_fraction*(Y->Max()-Y->Min());
+  // structured mesh points generator
+  double xi = X->Min();
+  double xf = X->Max();
+  double yi = _pos;
+  double zi = Z->Min();
+  double zf = Z->Max();
+  double dx = (xf-xi)/(elem1);
+  double dz = (zf-zi)/(elem2);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	double x = xi + i * dx ;
+	xVert.Set(count,x);
+	double z = zi + j * dz;
+	zVert.Set(count,z);
+	count++;
+   }
+  }
+  yVert.SetAll(yi);
+ }
+ else // plane YZ
+ {
+  _pos = X->Min()+_fraction*(X->Max()-X->Min());
+  // structured mesh points generator
+  double xi = _pos;
+  double yi = Y->Min();
+  double yf = Y->Max();
+  double zi = Z->Min();
+  double zf = Z->Max();
+  double dy = (yf-yi)/(elem1);
+  double dz = (zf-zi)/(elem2);
+  int count = 0;
+  for( int i=0;i<np1;i++ )
+  {
+   for( int j=0;j<np2;j++ )
+   {
+	double y = yi + i * dy;
+	yVert.Set(count,y);
+	double z = zi + j * dz;
+	zVert.Set(count,z);
+	count++;
+   }
+  }
+  xVert.SetAll(xi);
+ }
+
+ // mount triangular matrix IEN
+ int count = 0;
+ clMatrix localIEN(2*elem1*elem2,3);
+ for( int j=0;j<elem2;j++ )
+ {
+  for( int i=0;i<elem1;i++ )
+  {
+   localIEN.Set(j*elem1+i,0,count);    // 0
+   localIEN.Set(j*elem1+i+(elem1*elem2),0,count);    // 0
+   localIEN.Set(j*elem1+i+(elem1*elem2),2,count+np1); // 6
+   count++;
+   localIEN.Set(j*elem1+i,1,count);    // 1
+   localIEN.Set(j*elem1+i,2,count+np1); // 7
+   localIEN.Set(j*elem1+i+(elem1*elem2),1,count+np1); // 7
+  }
+  count++;
+ }
+
+//--------------------------------------------------
+//  // mount quadrilateral matrix IEN
+//  localIEN(elem1*elem2,4);
+//  for( int j=0;j<elem2;j++ )
+//  {
+//   for( int i=0;i<elem1;i++ )
+//   {
+//    localIEN.Set(j*elem1+i,0,count);    // 0
+//    localIEN.Set(j*elem1+i,3,count+np1); // 6
+//    count++;
+//    localIEN.Set(j*elem1+i,1,count);    // 1
+//    localIEN.Set(j*elem1+i,2,count+np1); // 7
+//   }
+//   count++;
+//  }
+//-------------------------------------------------- 
+
+ // linear interpolation on nTotal using the 2D generated grid.
+ clMatrix interpLin = meshInterp(*m,xVert,yVert,zVert,"boundary");
+
+ clVector cLin(nTotal);
+ clVector varVert(numVerts);
+ string _field;
+ if( strcmp( _var,"uSol") == 0 )
+ {
+  uSol->CopyTo(0,varVert);
+  _field = "uSol";
+ }
+ else if( strcmp( _var,"vSol") == 0 )
+ {
+  vSol->CopyTo(0,varVert);
+  _field = "vSol";
+ }
+ else if( strcmp( _var,"wSol") == 0 )
+ {
+  wSol->CopyTo(0,varVert);
+  _field = "wSol";
+ }
+ else if( strcmp( _var,"uALE") == 0 )
+ {
+  uALE->CopyTo(0,varVert);
+  _field = "uALE";
+ }
+ else if( strcmp( _var,"vALE") == 0 )
+ {
+  vALE->CopyTo(0,varVert);
+  _field = "vALE";
+ }
+ else if( strcmp( _var,"wALE") == 0 )
+ {
+  wALE->CopyTo(0,varVert);
+  _field = "wALE";
+ }
+ else if( strcmp( _var,"heaviside") == 0 )
+ {
+  heaviside->CopyTo(0,varVert);
+  _field = "wALE";
+ }
+ else if( strcmp( _var,"concentration") == 0 )
+ {
+  cSol->CopyTo(0,varVert);
+  _field = "concentration";
+ }
+ else if( strcmp( _var,"density") == 0 )
+ {
+  rho->CopyTo(0,varVert);
+  _field = "density";
+ }
+ else if( strcmp( _var,"viscosity") == 0 )
+ {
+  mu->CopyTo(0,varVert);
+  _field = "viscosity";
+ }
+ else
+ {
+  pSol->CopyTo(0,varVert);
+  _field = "pressure";
+ }
+ 
+ cLin = interpLin*(varVert);
+
+ // saving VTK
+ // vtkHeader 
+ vtkFile << "# vtk DataFile Version 1.0" << endl;
+ vtkFile << "2D Simulation C++" << endl;
+ vtkFile << "ASCII" << endl;
+ vtkFile << "DATASET UNSTRUCTURED_GRID" << endl;
+ vtkFile << endl;
+
+ // vtkCoords
+ vtkFile << "POINTS " << nTotal << " double" << endl;
+ //vtkFile << "POINTS " << numNodes << " double" << endl;
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<nTotal;i++ )
+  vtkFile << xVert.Get(i) << " " << yVert.Get(i) << " " << zVert.Get(i) << endl;
+ vtkFile << endl;
+
+ //vtkCellArray
+ vtkFile << "CELLS " << localIEN.DimI() << " " << 4*localIEN.DimI() << endl;
+ vtkFile << setprecision(0) << fixed;
+ for( int i=0;i<localIEN.DimI() ;i++ )
+ {
+  vtkFile << "3 " << localIEN.Get(i,0) << " "  
+                  << localIEN.Get(i,1) << " " 
+                  << localIEN.Get(i,2) << endl;
+ }
+ vtkFile << endl;
+
+ //vtkCellType
+ vtkFile <<  "CELL_TYPES " << localIEN.DimI() << endl;
+ vtkFile << setprecision(0) << fixed;
+ for( int i=0;i<localIEN.DimI();i++ )
+  vtkFile << "5 ";
+ vtkFile << endl;
+ vtkFile << endl;
+
+ //vtkScalarHeader
+ vtkFile << "POINT_DATA " << nTotal << endl;
+
+ //vtkScalar
+ vtkFile << "SCALARS " << _field << " double" << endl;
+ vtkFile << "LOOKUP_TABLE default"  << endl;
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<nTotal;i++ )
+  vtkFile << cLin.Get(i)+s->getURef()  << endl;
+ vtkFile << endl;
+
+ cout << "solution " << _var 
+      << " No. " << _iter 
+      << " of plane " << _plane
+      << " at position " << _fraction
+      << " saved in vtk" << endl;
+} // fecha metodo crossSectionSol
 
 void InOut::saveBubbleShapeFactors(const char* _dir,const char* _filename, int _iter)
 {

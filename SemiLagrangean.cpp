@@ -319,12 +319,6 @@ void SemiLagrangean::setCentroid()
 
 void SemiLagrangean::getDepartElem(double dt)
 {
- double xP,yP,zP;
-
- clVector xParticle = *X - velU*dt; 
- clVector yParticle = *Y - velV*dt;
- clVector zParticle = *Z - velW*dt;
-
  list<int> plist;
  list<int>::iterator mele;
 
@@ -333,13 +327,31 @@ void SemiLagrangean::getDepartElem(double dt)
   plist = neighbourElem->at(ii);
   mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
 
-  xP = xParticle.Get(ii);
-  yP = yParticle.Get(ii);
-  zP = zParticle.Get(ii);
+  double xP = X->Get(ii)-velU.Get(ii)*dt;
+  double yP = Y->Get(ii)-velV.Get(ii)*dt;
+  double zP = Z->Get(ii)-velW.Get(ii)*dt;
 
   jumpToElem(*mele,ii,xP,yP,zP);
  } 
 } // fim do metodo compute -> getDepartElem
+
+void SemiLagrangean::getDepartElemQuad(double dt)
+{
+ list<int> plist;
+ list<int>::iterator mele;
+
+ for (int ii = 0; ii < numNodes; ii++)
+ {
+  plist = neighbourElem->at(ii);
+  mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
+
+  double xP = X->Get(ii)-velU.Get(ii)*dt;
+  double yP = Y->Get(ii)-velV.Get(ii)*dt;
+  double zP = Z->Get(ii)-velW.Get(ii)*dt;
+
+  jumpToElemQuad(*mele,ii,xP,yP,zP);
+ } 
+} // fim do metodo compute -> getDepartElemQuad
 
 void SemiLagrangean::getDepartElemPBCFix(double dt)
 {
@@ -369,32 +381,6 @@ void SemiLagrangean::getDepartElemPBCFix(double dt)
  } 
 } // fim do metodo compute -> getDepartElemPBCFix
 
-
-void SemiLagrangean::getDepartElemQuad(double dt)
-{
- double xP,yP,zP;
-
- clVector xParticle = *X - velU*dt; 
- clVector yParticle = *Y - velV*dt;
- clVector zParticle = *Z - velW*dt;
-
- list<int> plist;
- list<int>::iterator mele;
-
- for (int ii = 0; ii < numNodes; ii++)
- {
-  plist = neighbourElem->at(ii);
-  mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
-
-  xP = xParticle.Get(ii);
-  yP = yParticle.Get(ii);
-  zP = zParticle.Get(ii);
-
-  jumpToElemQuad(*mele,ii,xP,yP,zP);
- } 
-} // fim do metodo compute -> getDepartElemQuad
-
-
 void SemiLagrangean::getDepartElemQuadPBCFix(double dt)
 {
  double xP,yP,zP;
@@ -423,23 +409,10 @@ void SemiLagrangean::getDepartElemQuadPBCFix(double dt)
  } 
 } // fim do metodo compute -> getDepartElemQuadPBCFix
 
+
 // rotina usada em simulacao FREE SURFACE
 void SemiLagrangean::getDepartElem2(double dt)
 {
- double xP,yP,zP;
-
- //clVector xParticle = *X; 
- //clVector yParticle = *Y - vSol*dt;
- //clVector zParticle = *Z - wSol*dt;
-
- //clVector xParticle = *X - uSol*dt; 
- //clVector yParticle = *Y;
- //clVector zParticle = *Z - wSol*dt;
-
- clVector xParticle = *X - uSol*dt; 
- clVector yParticle = *Y - vSol*dt;
- clVector zParticle = *Z;
-
  list<int> plist;
  list<int>::iterator mele;
 
@@ -448,9 +421,9 @@ void SemiLagrangean::getDepartElem2(double dt)
   plist = neighbourElem->at(ii);
   mele=plist.begin(); // pega o primeiro elemento da lista, seja la qual for
 
-  xP = xParticle.Get(ii);
-  yP = yParticle.Get(ii);
-  zP = zParticle.Get(ii);
+  double xP = X->Get(ii)-velU.Get(ii)*dt;
+  double yP = Y->Get(ii)-velV.Get(ii)*dt;
+  double zP = Z->Get(ii);
 
   //cout << "vertice de origem = " << ii << endl;
   jumpToElem(*mele,ii,xP,yP,zP);

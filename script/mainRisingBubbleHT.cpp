@@ -26,26 +26,26 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //double Re = 6.53; // case 1
- double Re = 13.8487; // case 2
- //double Re = 32.78; // case 3
- double Sc = 1000;
- double We = 115.66;
- double Fr = 1.0;
- double c1 = 0.0;  // lagrangian
- double c2 = 1.0;  // smooth vel
- double c3 = 10.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.1;  // surface smooth cord (fujiwara)
- double alpha = 1.0;
+ //real Re = 6.53; // case 1
+ real Re = 13.8487; // case 2
+ //real Re = 32.78; // case 3
+ real Sc = 1000;
+ real We = 115.66;
+ real Fr = 1.0;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
+ real c3 = 10.0;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.1;  // surface smooth cord (fujiwara)
+ real alpha = 1.0;
 
- double mu_in = 0.0000178;
- double mu_out = 1.28;
+ real mu_in = 0.0000178;
+ real mu_out = 1.28;
 
- double rho_in = 1.225;
- double rho_out = 1350;
+ real rho_in = 1.225;
+ real rho_out = 1350;
 
- double cfl = 0.8;
+ real cfl = 0.8;
 
  string meshFile = "airWaterSugar.msh";
  //string meshFile = "test.msh";
@@ -79,12 +79,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3D();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -134,13 +134,13 @@ int main(int argc, char **argv)
   const char *vtkFile = file.c_str();
 
   m1.readVTK(vtkFile);
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
   m1.readVTKHeaviside(vtkFile);
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -175,12 +175,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -215,12 +215,12 @@ int main(int argc, char **argv)
   m1.setInterfaceBC();
   m1.setTriEdge();
   m1.mesh2Dto3DOriginal();
+  m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -269,13 +269,13 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   //s1.stepLagrangian();
+   s1.stepALE();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -339,11 +339,11 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("flat");
+  m1.insertPointsByLength("curvature");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("flat");
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 
@@ -353,12 +353,12 @@ int main(int argc, char **argv)
 
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
+  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
 #endif
-  m1.setMapping();
   m1.setSurfaceConfig();
   m1.setInterfaceBC();
   m1.setGenericBC();

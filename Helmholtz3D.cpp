@@ -99,6 +99,64 @@ void Helmholtz3D::initImposedField()
  }
 }
 
+void Helmholtz3D::initThreeBubbles()
+{
+ init();
+
+ /* loop at surfMesh: for each vertex, an average value is set based on
+  * the umbrella operator (neighbors) for distance. Thus, each vertex
+  * will have an associated distanced based on such an average distance.
+  * */
+ convC.Dim(numVerts);
+ for( int i=0;i<surfMesh->numVerts;i++ )
+ {
+  double P0x = surfMesh->X.Get(i);
+  double P0y = surfMesh->Y.Get(i);
+  double P0z = surfMesh->Z.Get(i);
+
+  double sumEdgeLength = 0;
+  int listSize = neighbourPoint->at(i).size();
+  list<int> plist = neighbourPoint->at(i);
+  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
+  {
+   double P1x = surfMesh->X.Get(*vert);
+   double P1y = surfMesh->Y.Get(*vert);
+   double P1z = surfMesh->Z.Get(*vert);
+
+   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
+   sumEdgeLength += edgeLength;
+  }
+  convC.Set(i,sumEdgeLength/listSize);
+ }
+
+ clVector* vertIdRegion = m->getVertIdRegion();
+ double minEdge = *min_element(triEdge.begin(),triEdge.end());
+ for( int i=surfMesh->numVerts;i<numVerts;i++ )
+ {
+  double radius = 0.5; // sphere radius
+  // outside mesh
+  if( heaviside->Get(i) < 0.5 ) 
+  {
+   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
+   if( interfaceDistance->Get(i) < 3.5*radius )
+   {
+	double aux = triEdge[vertIdRegion->Get(i)]/factor;
+	convC.Set(i,aux);
+   }
+   else
+   {
+	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	convC.Set(i,aux);
+   }
+  }
+  else                         // inside mesh
+  {
+   double aux = triEdge[vertIdRegion->Get(i)];
+   convC.Set(i,aux);
+  }
+ }
+}
+
 void Helmholtz3D::initRisingBubble()
 {
  init();
@@ -138,7 +196,7 @@ void Helmholtz3D::initRisingBubble()
   if( heaviside->Get(i) < 0.5 ) 
   {
    double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < 2.0*radius )
+   if( interfaceDistance->Get(i) < 2.5*radius )
    {
 	double aux = triEdge[vertIdRegion->Get(i)]/factor;
 	convC.Set(i,aux);
@@ -208,7 +266,7 @@ void Helmholtz3D::initSessile()
    }
    else
    {
-	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
+	double aux = triEdge[vertIdRegion->Get(i)];
 	convC.Set(i,aux);
    }
   }
@@ -219,119 +277,6 @@ void Helmholtz3D::initSessile()
   }
  }
 }
-
-/**
- *
- **/ 
-void Helmholtz3D::initJet(double _dr, double factor)
-{
-  init();
-  convC.Dim(numVerts);
-
-  double gap = 0.5;
-  double rb = 0.5; // bubble radius
-  double wrap_radius = rb + _dr;
-  double yAxis = Y->Min();
-  double zAxis = Z->Min();
-
-  double xLimU = X->Max() - gap/2.0; // upper limit of wrap
-  double xLimB = X->Min() + gap/2.0; // lower limit of wrap
-
-  double triEdgeMin = *(min_element(triEdge.begin(),triEdge.end()));
-  
-  for (int i = 0; i < numVerts; ++i)
-  {
-    if (heaviside->Get(i) == 1.0)
-	{
-      double x = X->Get(i);
-      double y = Y->Get(i);
-      double z = Z->Get(i);
-
-	  double dist = distance(yAxis,zAxis,y,z); // distance to axis
-
-	  if ( ( dist < wrap_radius ) && ( x > xLimB ) && ( x < xLimU ) )
-	  {
-        double edge = triEdgeMin/factor;
-		convC.Set(i,edge);
-	  }
-	}
-  }
-}
-
-/** \brief Initializes a node distribution for the Helmholtz equation
- * considering the adaptive refinement for a cylindrical region 
- * surrounding disperse elements.
- *
- * @param[in] _wrapFactor Factor of wrap radius
- *
- * \returns {void}
- *
- * \details{ This method was primarily developed to simulate bubble
- * plumes, in which bubbles uprise in row. For dimensionless purposes, 
- * the bubble radius is always \f$ r_b = 0.5 \f$. In turn, the wrap
- * factor refines the volume mesh beyond the interfaces by a maximum
- * radius of \f$ r_c = w r_b \f$, where \f$ w > 0 \f$ is the wrap factor. }
- */ 
-void Helmholtz3D::initCylindricalWrap(double _wrapFactor)
-{
- init();
-
- /* loop at surfMesh: for each vertex, an average value is set based on
-  * the umbrella operator (neighbors) for distance. Thus, each vertex
-  * will have an associated distanced based on such an average distance.
-  * */
- convC.Dim(numVerts);
- for( int i=0;i<surfMesh->numVerts;i++ )
- {
-  // coordinates of the ''hook'' node
-  double P0x = surfMesh->X.Get(i);
-  double P0y = surfMesh->Y.Get(i);
-  double P0z = surfMesh->Z.Get(i);
-
-  double sumEdgeLength = 0;
-  int listSize = neighbourPoint->at(i).size(); // number of neighbours
-  list<int> plist = neighbourPoint->at(i); // list of neighbours
-  for(list<int>::iterator vert=plist.begin();vert!=plist.end();++vert )
-  {
-   // coordinates of each umbrella's nodes
-   double P1x = surfMesh->X.Get(*vert);
-   double P1y = surfMesh->Y.Get(*vert);
-   double P1z = surfMesh->Z.Get(*vert);
-
-   double edgeLength = distance(P0x,P0y,P0z,P1x,P1y,P1z);
-   sumEdgeLength += edgeLength;
-  }
-  convC.Set(i,sumEdgeLength/listSize); // setting with average edge length of umbrella
- }
-
- clVector* vertIdRegion = m->getVertIdRegion();
- double minEdge = *min_element(triEdge.begin(),triEdge.end()); // smallest triangle size (given by average of its three edges) at each region
- for( int i=surfMesh->numVerts;i<numVerts;i++ )
- {
-  double radius = 0.5; // sphere radius
-  // outside mesh
-  if( heaviside->Get(i) < 0.5 ) // on convex hull
-  {
-   double factor = triEdge[vertIdRegion->Get(i)]/minEdge;
-   if( interfaceDistance->Get(i) < _wrapFactor*radius )
-   {
-	double aux = triEdge[vertIdRegion->Get(i)]/factor;
-	convC.Set(i,aux);
-   }
-   else
-   {
-	double aux = triEdge[vertIdRegion->Get(i)]/(factor*0.2);
-	convC.Set(i,aux);
-   }
-  }
-  else                         // inside mesh
-  {
-   double aux = triEdge[vertIdRegion->Get(i)];
-   convC.Set(i,aux);
-  }
- }
-}
-
 
 void Helmholtz3D::initMicro()
 {
@@ -355,18 +300,20 @@ void Helmholtz3D::initMicro()
  double tol = diameter/2.0-thickness;
  for( int i=surfMesh->numVerts;i<numVerts;i++ )
  {
-  // meiuca
+  // middle and out of liquid/gas film
+  // triEdgeMin*5 is the refinement level at circular.geo, where far
+  // from the bubble the edge length is 5x bigger.
   if( //(X->Get(i) > xMid-epslocal && X->Get(i) < yMid+epslocal) &&
 	  (Y->Get(i) > yMid-tol && Y->Get(i) < yMid+tol ) &&
 	  (Z->Get(i) > zMid-tol && Z->Get(i) < zMid+tol ) &&
       ( interfaceDistance->Get(i) > 0.2*diameter ) )
-	convC.Set(i,triEdgeMin*10);
+   convC.Set(i,triEdgeMin*5);
   else
   {
    // add boundary condition value to convC. Note that the boundary
    // conditions is bases on the initial mesh, thus if the mesh is
    // refined, convC will be refined.
-   convC.Set(i,cc.Get(closerWall.Get(i))*0.7);
+   convC.Set(i,cc.Get(closerWall.Get(i)));
    //convC.Set(i,triEdgeMin*0.7);
   }
  }

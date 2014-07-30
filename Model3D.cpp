@@ -262,6 +262,135 @@ void Model3D::readVTKHeaviside( const char* filename )
  vtkFile.close();
 } // fim do metodo vtkRead
 
+void Model3D::readVTKSol( const char* _filename,const char* _var )
+{
+ char auxstr[255];
+ double coords[3],fl;
+ int i,j,k,idnv;
+
+ ifstream vtkFile( _filename,ios::in );
+
+ if( !vtkFile )
+ {
+  cerr << "Esta faltando o arquivo de Solucao!" << endl;
+  exit(1);
+ }
+
+ while( ( !vtkFile.eof())&&(strcmp(auxstr,"POINTS") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> numVerts;
+ vtkFile >> auxstr;
+  
+ X.Dim(numVerts);
+ Y.Dim(numVerts);
+ Z.Dim(numVerts);
+ cc.Dim(numVerts);
+  
+ for (i=0; i < numVerts; i++)
+ {
+  for(j = 0; j < 3; j++)
+   vtkFile >> coords[j];
+  
+  X.Set(i,coords[0]);
+  Y.Set(i,coords[1]);
+  Z.Set(i,coords[2]);
+ }
+
+ while( (! vtkFile.eof())&&(strcmp(auxstr,"CELLS") != 0) )
+  vtkFile >> auxstr;
+
+ vtkFile >> numElems;
+ vtkFile >> auxstr;
+
+ IEN.Dim(numElems,3);
+
+ for( i=0; i < numElems; i++ )
+ {
+  vtkFile >> idnv;
+  for( j=0; j < 3 ; j++ )
+  {
+   vtkFile >> k;
+   IEN.Set(i,j,k);
+  }
+ }
+
+ while( (! vtkFile.eof())&&(strcmp(auxstr,_var) != 0) )
+  vtkFile >> auxstr;
+
+ if( !vtkFile.eof() )
+ {
+  vtkFile >> auxstr;
+  vtkFile >> auxstr;
+  vtkFile >> auxstr;
+
+  for( int i=0; i < numVerts; i++ )
+  {
+   vtkFile >> fl;
+   cc.Set(i,fl);
+  }
+ }
+ vtkFile.close();
+} // fim do metodo vtkRead
+
+void Model3D::extrude2DPoints(int _nvar,double _initial,
+                              double _length,
+                              const char* _direction)
+{
+ double dvar = _length/(_nvar-1);
+ clVector xOld = X;
+ clVector yOld = Y;
+ clVector zOld = Z;
+ clVector cOld = cc;
+ // clear X,Y,Z
+ X.Dim(0);Y.Dim(0);Z.Dim(0);
+
+ if( strcmp( _direction,"x") == 0 || 
+     strcmp( _direction,"X") == 0 )
+ {
+  xOld.SetAll(_initial);
+
+  for( int i=0;i<_nvar;i++ )
+  {
+   clVector xNew = xOld;
+   xNew+(i*dvar);
+   X.Append(xNew);
+   Y.Append(yOld);
+   Z.Append(zOld);
+   cc.Append(cOld);
+  }
+ }
+ else if( strcmp( _direction,"y") == 0 || 
+          strcmp( _direction,"Y") == 0 )
+ {
+  yOld.SetAll(_initial);
+
+  for( int i=0;i<_nvar;i++ )
+  {
+   X.Append(xOld);
+   clVector yNew = yOld;
+   yNew+(i*dvar);
+   Y.Append(yNew);
+   Z.Append(zOld);
+   cc.Append(cOld);
+  }
+ }
+ else
+ {
+  zOld.SetAll(_initial);
+
+  for( int i=0;i<_nvar;i++ )
+  {
+   X.Append(xOld);
+   Y.Append(yOld);
+   clVector zNew = zOld;
+   zNew+(i*dvar);
+   Z.Append(zNew);
+   cc.Append(cOld);
+  }
+ }
+}
+
 void Model3D::readVTKSurface( const char* filename )
 {
  char auxstr[255];
@@ -545,7 +674,7 @@ void Model3D::readBC( const char* filename )
 
  ifstream bcFile( filename,ios::in );
 
- if( bcFile == NULL )
+ if( !bcFile )
  {
   cerr << "Esta faltando o arquivo de condicao de contorno!" << endl;
   exit(1);
@@ -604,7 +733,7 @@ void Model3D::setMeshStep(int nX,int nY,int nZ,const char* _param)
 
  in.mesh_dim = 3;
  in.numberofpoints = nX*nY*nZ;
- in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointlist = new double[in.numberofpoints * 3];
 
  double dx = nX/(nX-1.0);
  double dy = nY/(nY-1.0);
@@ -625,16 +754,39 @@ void Model3D::setMeshStep(int nX,int nY,int nZ,const char* _param)
    {
 	aux = i*dx;
 	X.Set(count,aux);
-	in.pointlist[3*count+0] = aux;
 	aux = j*dy;
 	Y.Set(count,aux);
-	in.pointlist[3*count+1] = aux;
 	aux = k*dz;
 	Z.Set(count,aux);
-	in.pointlist[3*count+2] = aux;
 	count++;
    }
   }
+ }
+ setMesh(_param);
+}
+
+void Model3D::setMeshStep(int nX,int nY,int nZ)
+{
+ setMeshStep(nX,nY,nZ,"Q");
+}
+
+
+void Model3D::setMesh(const char* _param)
+{
+ // clean and init tetgen mesh object
+ in.initialize();
+ out.initialize();
+
+ numVerts = X.Dim();
+ in.mesh_dim = 3;
+ in.numberofpoints = numVerts;
+ in.pointlist = new double[in.numberofpoints * 3];
+
+ for( int i=0;i<numVerts;i++ )
+ {
+  in.pointlist[3*i+0] = X.Get(i);
+  in.pointlist[3*i+1] = Y.Get(i);
+  in.pointlist[3*i+2] = Z.Get(i);
  }
 
  /*
@@ -709,9 +861,9 @@ void Model3D::setMeshStep(int nX,int nY,int nZ,const char* _param)
  out.initialize();
 }
 
-void Model3D::setMeshStep(int nX,int nY,int nZ)
+void Model3D::setMesh()
 {
- setMeshStep(nX,nY,nZ,"Q");
+ setMesh("Q");
 }
 
 void Model3D::setStepBC()
@@ -931,152 +1083,6 @@ void Model3D::setCouetteBC()
  }
 }
 
-void Model3D::setWallNormalVWBC()
-{
-	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
-	{
-		if (surfMesh.phyBounds.at(*it) == "\"wallNormalV\"")
-		{
-			idbcv.AddItem(*it);
-			vc.Set(*it,0.0);
-		}
-		if (surfMesh.phyBounds.at(*it) == "\"wallNormalW\"")
-		{
-			idbcw.AddItem(*it);
-			wc.Set(*it,0.0);
-		}
-
-	}
-
-}
-
-
-void Model3D::setStretchJetMesh()
-{
-	for ( int i = 0; i < numVerts; ++i )
-	{
-		double y = Y.Get(i);
-		double z = Z.Get(i);
-		double r = sqrt(y*y + z*z);
-
-		double factor = ( 3.0 + r )/4.0;
-		y *= factor;
-		z *= factor;
-		Y.Set(i,y);
-		Z.Set(i,z);
-	}
-}
-
-void Model3D::setUnstretchJetMesh()
-{
-	for ( int i = 0; i < numVerts; ++i )
-	{
-		double y = Y.Get(i);
-		double z = Z.Get(i);
-		double r = sqrt(y*y + z*z);
-
-		double factor = 1.0/r*( 0.5*( sqrt( 9.0 + 16.0*r ) - 3.0 ) );
-		y *= factor;
-		z *= factor;
-		Y.Set(i,y);
-		Z.Set(i,z);
-	}
-}
-
-void Model3D::setWallMovingPBC(double _velInf, double _velSup)
-{
-	for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
-	{
-		if (surfMesh.phyBounds.at(*it) == "\"wallMovingInf\"")
-		{
-			idbcu.AddItem(*it);
-			idbcv.AddItem(*it);
-			idbcw.AddItem(*it);
-
-			uc.Set(*it,_velInf);
-			vc.Set(*it,0.0);
-			wc.Set(*it,0.0);
-		}
-		if (surfMesh.phyBounds.at(*it) == "\"wallMovingSup\"")
-		{
-			idbcu.AddItem(*it);
-			idbcv.AddItem(*it);
-			idbcw.AddItem(*it);
-
-			uc.Set(*it,_velSup);
-			vc.Set(*it,0.0);
-			wc.Set(*it,0.0);
-		}
-
-	}
-
-}
-
-void Model3D::setCubeVortexBC()
-{
-#if NUMGLEU == 5
- double numBCPoints = numVerts;
-#else
- double numBCPoints = numNodes;
-#endif
-
- for( int i=0;i<numBCPoints;i++ )
- {
-	
-  if( (X.Get(i)==X.Max()) || (X.Get(i)==X.Min()) )
-  {
-   	//idbcu.AddItem(i);
-  	//uc.Set(i,0.0);
-  }
- 
-  if( (Y.Get(i)==Y.Max()) || (Y.Get(i)==Y.Min()) )
-  {
-   	idbcv.AddItem(i);
-  	vc.Set(i,0.0);
-  }
-
-  if( (Z.Get(i)==Z.Max()) || (Z.Get(i)==Z.Min()) )
-  {
-   	idbcw.AddItem(i);
-  	wc.Set(i,0.0);
-  }
-
- }
-}
-
-void Model3D::setWallSlipEdgesBC()
-{
-  for ( int i = 0; i < numVerts; ++i )
-  {
-	double x = X.Get(i);
-	double y = Y.Get(i);
-	double z = Z.Get(i);
-
-	double xm = X.Min();
-	double ym = Y.Min();
-	double zm = Z.Min();
-
-	double xM = X.Max();
-	double yM = Y.Max();
-	double zM = Z.Max();
-  
-	if ( ( (x == xm) || (x == xM) ) && ( (z == zm) || (z == zM) ) && ( (y > ym) || (y < yM) ) )
-	{
-		idbcu.AddItem(i);
-		idbcw.AddItem(i);
-		uc.Set(i,0.0);
-		wc.Set(i,0.0);
-	}
-	if ( ( (x == xm) || (x == xM) ) && ( (y == ym) || (y == yM) ) && ( (z > zm) || (z < zM) ) )
-	{
-		idbcu.AddItem(i);
-		idbcv.AddItem(i);
-		uc.Set(i,0.0);
-		vc.Set(i,0.0);
-	}
-
-  }
-}
 void Model3D::setAdimenStep()
 {
  double aux;
@@ -1093,8 +1099,8 @@ void Model3D::setAdimenStep()
  }
 }
 
-void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ,const
-  char* _param)
+void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ,
+                          const char* _param)
 {
  double aux;
 
@@ -1158,95 +1164,7 @@ void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ,const
    points3d++;
   }
  }
-
- // clean and init tetgen mesh object
- in.initialize();
- out.initialize();
-
- in.mesh_dim = 3;
- in.numberofpoints = numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
-
- for( int i=0;i<numVerts;i++ )
- {
-  in.pointlist[3*i+0] = X.Get(i);
-  in.pointlist[3*i+1] = Y.Get(i);
-  in.pointlist[3*i+2] = Z.Get(i);
- }
-
- /*
-  * Q: Quiet: No terminal output except errors.
-  * */
- cout << endl;
- cout << "            " 
-      << "|-----------------------------------------------------|" << endl;
- cout << color(blink,blue,black) 
-      << "                | meshing 3D points... ";
- tetrahedralize( (char*) _param,&in,&out );
- cout << "finished | " << resetColor() << endl;
- cout << "            " 
-      << "|-----------------------------------------------------|" << endl;
- cout << endl;
-
- //out.save_elements("out");
- //out.save_nodes("out");
- numElems = out.numberoftetrahedra;
- IEN.Dim(numElems,4);
-
- // varre lista de elementos e passa para estrutura IEN
- for( int i=0;i<out.numberoftetrahedra;i++ )
- {
-  for( int j=0;j<4;j++ )
-  {
-   int vertice = out.tetrahedronlist[i*4+j];
-   IEN.Set(i,j,vertice);
-  }
- }
-
- // boundary surface configuration
- surfMesh.numVerts = out.numberofpoints;
- surfMesh.numElems = out.numberoftrifaces;
- surfMesh.IEN.Dim(surfMesh.numElems,3);
- surfMesh.X.Dim(surfMesh.numVerts);
- surfMesh.Y.Dim(surfMesh.numVerts);
- surfMesh.Z.Dim(surfMesh.numVerts);
- for(int i=0; i<out.numberoftrifaces; i++ )
- {
-  int v1 = out.trifacelist[3*i+0];
-  int v2 = out.trifacelist[3*i+1];
-  int v3 = out.trifacelist[3*i+2];
-  surfMesh.IEN.Set(i,0,v1);
-  surfMesh.IEN.Set(i,1,v3);
-  surfMesh.IEN.Set(i,2,v2);
-  surfMesh.X.Set(v1,out.pointlist[3*v1+0]);
-  surfMesh.Y.Set(v1,out.pointlist[3*v1+1]);
-  surfMesh.Z.Set(v1,out.pointlist[3*v1+2]);
-  surfMesh.X.Set(v2,out.pointlist[3*v2+0]);
-  surfMesh.Y.Set(v2,out.pointlist[3*v2+1]);
-  surfMesh.Z.Set(v2,out.pointlist[3*v2+2]);
-  surfMesh.X.Set(v3,out.pointlist[3*v3+0]);
-  surfMesh.Y.Set(v3,out.pointlist[3*v3+1]);
-  surfMesh.Z.Set(v3,out.pointlist[3*v3+2]);
- }
- surfMesh.vertIdRegion.Dim(numVerts,0.0);
- surfMesh.elemIdRegion.Dim(numElems,0.0);
- surfMesh.idRegion.Dim(numElems,0.0);
- surfMesh.Marker.Dim(numVerts,0.0);
- surfMesh.numInterfaces = 0;
- //surfMesh.numBoundaries 3;
-
-
- // elemIdRegion and vertIdRegion for single-phase flow is 0, however it
- // is required to be initialized.
- vertIdRegion.Dim(numVerts,0.0);
- elemIdRegion.Dim(numElems,0.0);
- heaviside.Dim(numVerts,0.0);
- 
- // como nao ha regiao predefinida, este metodo nao funciona aqui!
- //mesh3d = convertTetgenToMesh3d(out);
-
- in.initialize();
- out.initialize();
+ setMesh(_param);
 }
 
 void Model3D::setMeshDisk(int nLados1Poli,int nCircMax,int nZ)
@@ -1299,7 +1217,7 @@ void Model3D::mesh2Dto3D(const char* _param)
 
  in.mesh_dim = 3;
  in.numberofpoints = surfMesh.numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointlist = new double[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
  convertModel3DtoTetgen(in);
@@ -2862,16 +2780,16 @@ void Model3D::contractEdgesByLength(const char* _interpolation,
    if( strcmp( _interpolation,"curvature") == 0 ) 
    {
 	// using curvature
-	clVector coordAdd = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
+    clVector coordAdd = fitCircleNew( X.Get(v1),Y.Get(v1),Z.Get(v1),
 	                                  X.Get(v2),Y.Get(v2),Z.Get(v2),
-								      surfMesh.xNormal.Get(v1),
-								      surfMesh.yNormal.Get(v1),
-								      surfMesh.zNormal.Get(v1),
-								      surfMesh.xNormal.Get(v2),
-								      surfMesh.yNormal.Get(v2),
-								      surfMesh.zNormal.Get(v2),
-								      surfMesh.curvature.Get(v1),
-								      surfMesh.curvature.Get(v2) );
+									  surfMesh.xNormal.Get(v1),
+									  surfMesh.yNormal.Get(v1),
+									  surfMesh.zNormal.Get(v1),
+									  surfMesh.xNormal.Get(v2),
+									  surfMesh.yNormal.Get(v2),
+									  surfMesh.zNormal.Get(v2),
+									  surfMesh.curvature.Get(v1), 
+									  surfMesh.curvature.Get(v2) );
 
 	XvAdd = coordAdd.Get(0);
 	YvAdd = coordAdd.Get(1);
@@ -3066,9 +2984,9 @@ void Model3D::contractEdgesByLength2(const char* _interpolation,
 //    cout << " ----------------- " << endl;
 //-------------------------------------------------- 
 
-	double XvAdd = 0.0;
-	double YvAdd = 0.0;
-	double ZvAdd = 0.0;
+   double XvAdd = 0.0;
+   double YvAdd = 0.0;
+   double ZvAdd = 0.0;
    if( strcmp( _interpolation,"curvature") == 0 ) 
    {
 	// using curvature
@@ -3423,37 +3341,11 @@ void Model3D::remove3dMeshPointsByDistance()
  }
 }
 
-/** \brief Insert point(s) according to the solution of the diffusion equation
+/*
+ * Insert point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
  *
- *  @param[in] _param Relaxation factor
- *  
- *  \returns {void}
- *
- * \details{ The ``relaxation factor (shrinker or stretcher)'' \f$ \lambda \f$ controls
- * a ratio between the edge length \f$ l \f$ for the pair of vertices
- * \f$ \{ v_1,v_2 \} \f$ and the maximum edge length \f$ l_{max} \f$ of the umbrella's
- * partial edge lengths \f$ \{ l_1, l_2 \} \f$ to manage the point
- * insertion.
- * 
- * To put it another way, \f$ l_{max} = \max \{ l_1,l_2 \} \f$, where
- *
- * \f[ l_1 = \bar{l}(v_1) = \frac{\sum_{i=1}^{ne} l_i(v_1) }{ne} \f]
- * \f[ l_2 = \bar{l}(v_2) = \frac{\sum_{i=1}^{ne} l_i(v_2) }{ne} \f]
- * 
- * are the average lengths of the umbrella's edges associated to the
- * vertices \f$ v_1,v_2 \f$. 
- *
- * Thus, the if-condition 
- * 
- * \f[ \frac{l}{l_{max}} > \lambda \f], \ \ \ \lambda \in (0,+\infty) 
- * 
- * determines the insertion of points, given that the Helmholtz equation was
- * previously solved. Note that if \f$ \lambda > 1.0 \f$, the tolerance
- * to have mesh refinement is loosed and a finer volume mesh is
- * obtained. } 
- *
- */
+ * */
 void Model3D::insert3dMeshPointsByDiffusion(double _param)
 {
  /*
@@ -3464,6 +3356,7 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
   * mapEdge.Set(edge,4,faces[i].p1 ); // 1o noh
   * mapEdge.Set(edge,5,faces[i].p2 ); // 2o noh
   * */
+ int vertID = 0;
  for( int e=0;e<mapEdge.DimI();e++ )
  {
   double XvAdd = mapEdge.Get(e,1);
@@ -3473,7 +3366,7 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
   int v1 = mapEdge.Get(e,4);
   int v2 = mapEdge.Get(e,5);
 
-  int vertID = vertIdRegion.Get(v1);
+  vertID = vertIdRegion.Get(v1);
 
   double x1=X.Get(v1);
   double y1=Y.Get(v1);
@@ -3509,10 +3402,12 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
 //-------------------------------------------------- 
    int vAdd = numVerts; // aditional vertice
 
-   cout << "- " << color(none,blue,black) 
-	            << "inserting vertex: "
-				<< resetColor() << vAdd << " " 
-				<< heaviside.Get(maxVert) << endl;
+//--------------------------------------------------
+//    cout << "- " << color(none,blue,black) 
+// 	            << "inserting vertex: "
+// 				<< resetColor() << vAdd << " " 
+// 				<< heaviside.Get(maxVert) << endl;
+//-------------------------------------------------- 
 
    X.AddItem(vAdd,XvAdd);
    Y.AddItem(vAdd,YvAdd);
@@ -3526,23 +3421,19 @@ void Model3D::insert3dMeshPointsByDiffusion(double _param)
    ipd[vertID]++;
   }
  }
- //cout << "  inserted by diffusion: " << ipd[vertID] << endl;
+ cout << "  inserted by diffusion: " << ipd[vertID] << endl;
 }
 
 void Model3D::insert3dMeshPointsByDiffusion()
-{ 
+{
  insert3dMeshPointsByDiffusion(3.0);
 }
 
-/** \brief Removes point(s) according to the solution of the diffusion equation
+/*
+ * Remove point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
  *
- * @param[in] _param Relaxation factor
- *
- * \returns {void}
- *
- * \details{ See Model3D::insert3dMeshPointsByDiffusion(double _param). }
- */
+ * */
 void Model3D::remove3dMeshPointsByDiffusion(double _param)
 {
  int vertID = 0;
@@ -3572,7 +3463,7 @@ void Model3D::remove3dMeshPointsByDiffusion(double _param)
   if( length < _param*size && 
 	  minVert > surfMesh.numVerts )
   {
-   cout << "  removed vert: " << minVert << endl;
+   //cout << "  removed vert: " << minVert << endl;
    mark3DPointForDeletion(minVert);
    rpd[vertID]++;
   }
@@ -3582,7 +3473,7 @@ void Model3D::remove3dMeshPointsByDiffusion(double _param)
 
 void Model3D::remove3dMeshPointsByDiffusion()
 {
-  remove3dMeshPointsByDiffusion(0.7);
+ remove3dMeshPointsByDiffusion(0.7);
 }
 
 /* 
@@ -3608,11 +3499,11 @@ void Model3D::breakup()
  }
 }
 
-/** \brief Insert points where the area of the surface triangle is bigger than a
- *  value given by the "test" variable.
+/*
+ * Insert point where the area of the surface triangle is bigger than a
+ * value given by the "test" variable.
  *
- *  \returns {void}
- */
+ * */
 void Model3D::insertPointsByArea()
 {
  int lastRow;
@@ -3685,9 +3576,10 @@ void Model3D::insertPointsByArea()
  }
 }
 
-/** \brief Strategy to ADD points - to be validated
+/* 
+ * strategy to ADD points - to be validated
  * This method works where two bubbles interact.
- * \returns {void}
+ *
  */
 void Model3D::insertPointsBetweenBubblesByPosition()
 {
@@ -3768,7 +3660,7 @@ void Model3D::mesh2Dto3DOriginal(const char* _param)
  //in.numberofpoints = surfMesh.numVerts + 1600; // num of add points
  in.numberofpoints = surfMesh.numVerts; // num of add points
  numVerts = in.numberofpoints;
- in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointlist = new double[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
  convertModel3DtoTetgen(in);
@@ -3808,7 +3700,7 @@ void Model3D::mesh2Dto3DOriginal(const char* _param)
 
   in.mesh_dim = 3;
   in.numberofpoints = numVerts;
-  in.pointlist = new REAL[in.numberofpoints * 3];
+  in.pointlist = new double[in.numberofpoints * 3];
   in.pointmarkerlist = new int[in.numberofpoints];
 
   convertModel3DtoTetgen(in);
@@ -3891,7 +3783,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
 
  // fluido interior + fluido exterior + superficie
  in.numberofregions = surfMesh.elemIdRegion.Max()+1; 
- in.regionlist = new REAL[in.numberofregions*5];
+ in.regionlist = new double[in.numberofregions*5];
 
  setNeighbourSurfaceElem();
 
@@ -3901,7 +3793,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
  // surfMesh.elemIdRegion == 2 --> bubble 2 , etc
  for( int nb=0;nb<=surfMesh.elemIdRegion.Max();nb++ )
  {
-  int node;
+  int node = 0;
   //double curv = fabs(surfMesh.curvature.Get(node));
   // find the first vertex with region == nb
   //for( int i=0;i<surfMesh.numVerts;i++ )
@@ -3984,7 +3876,7 @@ void Model3D::convertModel3DtoTetgen(tetgenio &_tetmesh)
 //--------------------------------------------------
 //  // hole in 3D mesh
 //  in.numberofholes = 1; 
-//  in.holelist = new REAL[3];
+//  in.holelist = new double[3];
 //  in.holelist[0] = 5.0;
 //  in.holelist[1] = 5.0;
 //  in.holelist[2] = 5.0;
@@ -4222,12 +4114,12 @@ bool Model3D::checkMeshQuality(tetgenio &_tetmesh)
  return flag;
 }
 
-/** \brief Removes points according to the tetrahedron volume. If such a volume
- * is smaller then the variable "tetVol", one of the four nodes is
+/*
+ * Remove point(s) according to the tetrahedron volume. If such a volume
+ * is smaller then the variable "tetVol", one of the four nodes are
  * deleted.
- * 
- * \returns {void}
- */
+ *
+ * */
 void Model3D::remove3dMeshPointsByVolume()
 {
  double vSum;
@@ -4299,21 +4191,21 @@ void Model3D::remove3dMeshPointsByVolume()
  cout << "  removed by volume: " << rpv[elemID] << endl;
 }
 
-/** \brief Marks points of the 3D mesh structure to be deleted by setting the
+/*
+ * Mark point of the 3D mesh structure to be deleted by setting the
  * heaviside vector to -1
  *
- * \returns {void}
- */
+ * */
 void Model3D::mark3DPointForDeletion(int _vert)
 {
  heaviside.Set(_vert,-1);
 }
 
-/** \brief Performs 3D mesh point deletion according to the vector heaviside (set
+/* 
+ * Perform 3D mesh point deletion according to the vector heaviside (set
  * -1)
- * 
- *  \returns {void} 
- */
+ *
+ * */
 void Model3D::delete3DPoints()
 {
  for( int dp=0;dp<heaviside.Dim();dp++ )
@@ -4459,12 +4351,10 @@ void Model3D::tetMeshStats()
   averageTetVolume[nb] = sumVolume[nb]/count[nb];
 }
 
-/** \brief Mesh a set of points using TETGEN.
- *  
- *  @param[in] _param Tetgen's meshing flags
+/*
+ * Mesh a set of points using TETGEN.
  *
- *  \returns{void}
- */
+ * */
 void Model3D::mesh3DPoints(const char* _param)
 {
  // init tetgen mesh object
@@ -4473,7 +4363,7 @@ void Model3D::mesh3DPoints(const char* _param)
 
  in.mesh_dim = 3;
  in.numberofpoints = numVerts;
- in.pointlist = new REAL[in.numberofpoints * 3];
+ in.pointlist = new double[in.numberofpoints * 3];
  in.pointmarkerlist = new int[in.numberofpoints];
 
  convertModel3DtoTetgen(in);
@@ -4517,11 +4407,6 @@ void Model3D::mesh3DPoints(const char* _param)
  out.initialize();
 }
 
-/** \brief Tetrahedralizes cloud of points by calling parameterized
- * meshing function.
- *
- *  \returns{ void }
- */ 
 void Model3D::mesh3DPoints()
 {
  //tetrahedralize( (char*) "QYYRCApq1.414q10a",&in,&out ); // quality
@@ -4677,8 +4562,6 @@ void Model3D::setInfiniteSphereBC(double _F,double _G, double _H)
 
  for( int i=0;i<numBCPoints;i++ )
  {
-  //radius = sqrt( X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) );
-
   if( Z.Get(i) == Z.Min() )
   {
    idbcu.AddItem(i);
@@ -4695,11 +4578,7 @@ void Model3D::setInfiniteSphereBC(double _F,double _G, double _H)
    wc.Set(i,aux);
   }
 
-  if( (Z.Get(i)<Z.Max() && 
-	   Z.Get(i)>Z.Min() && 
-	  (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) > 
-	   (rMax*rMax - 0.001) ) ) ||
-	  (Z.Get(i) == Z.Max()))
+  if( Z.Get(i) == Z.Max() )
   {
    outflow.Set(i,aux);
 
@@ -4709,6 +4588,17 @@ void Model3D::setInfiniteSphereBC(double _F,double _G, double _H)
 	aux = 0.0;
 	pc.Set(i,aux);
    }
+  }
+
+  if( (Z.Get(i)<Z.Max() && 
+	   Z.Get(i)>Z.Min() && 
+	  (X.Get(i)*X.Get(i)+Y.Get(i)*Y.Get(i) > 
+	   (rMax*rMax - 0.001) ) ) )
+  {
+   idbcw.AddItem(i);
+
+   aux = 0.0;
+   wc.Set(i,aux);
   }
  }
 }
@@ -4813,158 +4703,13 @@ void Model3D::setCDiskBC()
  }
 }
 
-
 void Model3D::setGenericBC()
 {    
  /* This IF selects the priority boundary conditions to be set on the
   * phyBounds vector. Note that only these names will be written on top
   * of the others. For instance if a corner point has 2 types of
   * boundary condition, the phyNames below will be written.
-  * 
-  * \remark PBC has priority over all the conditions already declared, 
-  * namely:
-  * 
-  * - slip walls    : 3rd priority
-  * - inflow walls  : 2nd priority
-  * - no-slip walls : 1st priority
-  *
-  * For this reason, any corner point will be set with periodic condition
-  * and the new ordering is:
-  *
-  * - periodic walls : 4th priority
-  * - slip walls     : 3rd priority
-  * - inflow walls   : 2nd priority
-  * - no-slip walls  : 1st priority
-  *
   * */ 
-
-  /* This algorithm sets up physical groups of periodic boundary
-  * conditions for a unique pair of master/slave boundaries defined as
-  * 
-  * "wallLeft"  and   "wallRight" 
-  *
-  * at ".geo" file. 
-  *
-  */
-
- // setGenericBC(), instead setGenericBC(vref) is called after the mesh
- // treatment in the version 'fixed' of mainMovingFrame, requiring
- // update of BC vectors. 
- clearBC();
-
- // cleaning vectors of periodic indices
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
- 
-
- // auxiliary x,y,z pbc coordinates
- vector<double> xpbcMaster(0);
- vector<double> ypbcMaster(0);
- vector<double> zpbcMaster(0);
- vector<double> xpbcSlave(0);
- vector<double> ypbcSlave(0);
- vector<double> zpbcSlave(0);
- 
- for( int i = 0; i < surfMesh.numElems; i++ )
- {		
-  	int v1 = surfMesh.IEN.Get(i,0);
-  	int v2 = surfMesh.IEN.Get(i,1);
-	int v3 = surfMesh.IEN.Get(i,2);
-  	int id = surfMesh.idRegion.Get(i);
-	
-	// left indices
-  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
-  	{
-		pbcIndicesLeft.push_back(v1);
-		pbcIndicesLeft.push_back(v2);
-		pbcIndicesLeft.push_back(v3);
-	}
-
-	// right indices
-  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
-	{
-		pbcIndicesRight.push_back(v1);
-		pbcIndicesRight.push_back(v2);
-		pbcIndicesRight.push_back(v3);
-
-	}
-	
- }
-
- // removing duplicatas
- set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
- set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
- set<int>::iterator itsetOne;
- set<int>::iterator itsetTwo;
-
- // resizing to reallocate
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
-			
- for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
- {
-		cout << "Index: " << *itsetOne << endl;
-		pbcIndicesLeft.push_back(*itsetOne);
-				 
-		// master coordinates
-		double xL = surfMesh.X.Get(*itsetOne);
-		double yL = surfMesh.Y.Get(*itsetOne);
-		double zL = surfMesh.Z.Get(*itsetOne);
-		xpbcMaster.push_back(xL);
-		ypbcMaster.push_back(yL);
-		zpbcMaster.push_back(zL);
- }
-			 
-	cout << "Master nodes stored." << endl;
-			
- for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
- {
-		cout << "Index: " << *itsetTwo << endl;
-		pbcIndicesRight.push_back(*itsetTwo);
-
-		// slave coordinates
-		double xR = surfMesh.X.Get(*itsetTwo);
-		double yR = surfMesh.Y.Get(*itsetTwo);
-		double zR = surfMesh.Z.Get(*itsetTwo);
-		xpbcSlave.push_back(xR);
-		ypbcSlave.push_back(yR);
-		zpbcSlave.push_back(zR);
- }
-
-	cout << "Slave nodes stored." << endl;
-
-	int sizeM = pbcIndicesLeft.size();
-	int sizeS = pbcIndicesRight.size();
-			
-	// spatial correspondence checking
-	if ( sizeM != sizeS )
-	{
-		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
-		cerr << warn << endl;
-	}
-	// pairing checking
-	else
-	{
-		for (int is = 0; is < sizeM; ++is)
-		{
-			double yM = ypbcMaster.at(is);
-			double zM = zpbcMaster.at(is);
-			double yS = ypbcSlave.at(is);
-			double zS = zpbcSlave.at(is);
-			
-			// simple extrusion assumed
-			if ( ( fabs( yS - yM ) > EPS ) && 
-			     ( fabs( zS - zM ) > EPS ) )
-			{
-				cout << "Entry not periodic: " << is << endl;	
-				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
-				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
-			}
-			
-	 	}
-		
-	 }
-
  for( int i=0; i < surfMesh.numElems; i++ )
  {
   int v1 = surfMesh.IEN.Get(i,0);
@@ -5084,16 +4829,12 @@ void Model3D::setGenericBC()
    // Parabolic profile
    double Vmax = 1.0;
    double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
-	                                    (diameterXZ/2.0)) );
+	                                        (diameterXZ/2.0)) );
 
    uc.Set(*it,0.0);
    vc.Set(*it,aux);
    wc.Set(*it,0.0);
   }
-
-  // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -5107,7 +4848,7 @@ void Model3D::setGenericBC()
    // Parabolic profile
    double Wmax = 1.0;
    double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
-	                                    (diameterXY/2.0)) );
+	                                        (diameterXY/2.0)) );
 
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
@@ -5260,7 +5001,7 @@ void Model3D::setGenericBC()
 	idbcv.AddItem(*it);
 	idbcw.AddItem(*it);
 
-	uc.Set(*it,-1.0);
+	uc.Set(*it,0.0);
 	vc.Set(*it,0.0);
 	wc.Set(*it,0.0);
    }
@@ -5293,7 +5034,8 @@ void Model3D::setGenericBC()
    wc.Set(*it,0.0);
   }
   // no slip condition if any other is imposed
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  else
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -5307,145 +5049,9 @@ void Model3D::setGenericBC()
  //integralParabolic();
 }
 
-
-
-void Model3D::setOnePointPressureBC()
-{
-	for (int i = 0; i < numVerts; ++i)
-	{
-	    // Neumman for pressure ("one-point")
-		
-	 	double xp = 3.20;
-	 	double yp = Y.Max();
-	 	double zp = 0.0;
-	    if ( ( fabs( X.Get(i) - xp ) < 1E-1 ) &&
-		     ( fabs( Y.Get(i) - yp ) < 1E-1 ) &&
-		     ( fabs( Z.Get(i) - zp ) < 1E-1 ) )
-		{
-			idbcp.AddItem(i);
-			pc.Set(i,0.0);
-			cout << "Pressure index set: "<< i << endl;
-			break;
-		}
-		   
-	}
-}
-
-
 void Model3D::setGenericBC(double _vel)
 {    
  clearBC();
- 
- // cleaning vectors of periodic indices
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
-
- // auxiliary x,y,z pbc coordinates
- vector<double> xpbcMaster(0);
- vector<double> ypbcMaster(0);
- vector<double> zpbcMaster(0);
- vector<double> xpbcSlave(0);
- vector<double> ypbcSlave(0);
- vector<double> zpbcSlave(0);
- 
- for( int i = 0; i < surfMesh.numElems; i++ )
- {		
-  	int v1 = surfMesh.IEN.Get(i,0);
-  	int v2 = surfMesh.IEN.Get(i,1);
-	int v3 = surfMesh.IEN.Get(i,2);
-  	int id = surfMesh.idRegion.Get(i);
-	
-	// left indices
-  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
-  	{
-		pbcIndicesLeft.push_back(v1);
-		pbcIndicesLeft.push_back(v2);
-		pbcIndicesLeft.push_back(v3);
-	}
-
-	// right indices
-  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
-	{
-		pbcIndicesRight.push_back(v1);
-		pbcIndicesRight.push_back(v2);
-		pbcIndicesRight.push_back(v3);
-	}	
- }
-
- // removing duplicatas
- set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
- set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
- set<int>::iterator itsetOne;
- set<int>::iterator itsetTwo;
-
- // resizing to reallocate
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
-			
- for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
- {
-		//cout << "Index: " << *itsetOne << endl;
-		pbcIndicesLeft.push_back(*itsetOne);
-				 
-		// master coordinates
-		double xL = surfMesh.X.Get(*itsetOne);
-		double yL = surfMesh.Y.Get(*itsetOne);
-		double zL = surfMesh.Z.Get(*itsetOne);
-		xpbcMaster.push_back(xL);
-		ypbcMaster.push_back(yL);
-		zpbcMaster.push_back(zL);
- }
-			 
-	cout << "Master nodes stored." << endl;
-			
- for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
- {
-		//cout << "Index: " << *itsetTwo << endl;
-		pbcIndicesRight.push_back(*itsetTwo);
-
-		// slave coordinates
-		double xR = surfMesh.X.Get(*itsetTwo);
-		double yR = surfMesh.Y.Get(*itsetTwo);
-		double zR = surfMesh.Z.Get(*itsetTwo);
-		xpbcSlave.push_back(xR);
-		ypbcSlave.push_back(yR);
-		zpbcSlave.push_back(zR);
- }
-
-	cout << "Slave nodes stored." << endl;
-
-	int sizeM = pbcIndicesLeft.size();
-	int sizeS = pbcIndicesRight.size();
-			
-	// spatial correspondence checking
-	if ( sizeM != sizeS )
-	{
-		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
-		cerr << warn << endl;
-	}
-	// pairing checking
-	else
-	{
-		for (int is = 0; is < sizeM; ++is)
-		{
-			double yM = ypbcMaster.at(is);
-			double zM = zpbcMaster.at(is);
-			double yS = ypbcSlave.at(is);
-			double zS = zpbcSlave.at(is);
-			
-			// simple extrusion assumed
-			if ( ( fabs( yS - yM ) > EPS ) && 
-			     ( fabs( zS - zM ) > EPS ) )
-			{
-				cout << "Entry not periodic: " << is << endl;	
-				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
-				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
-			}
-			
-	 	}
-		
-	 }
-
 
  // calculating channel's diameter.
  double diameterXY = ( dist(X.Min(),X.Max()) + 
@@ -5489,7 +5095,7 @@ void Model3D::setGenericBC(double _vel)
    // Parabolic profile
    double Umax = 1.0;
    double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                    (diameterYZ/2.0)) );
+	                                        (diameterYZ/2.0)) );
    //aux=1.0;
 
    uc.Set(*it,aux-_vel);
@@ -5509,18 +5115,12 @@ void Model3D::setGenericBC(double _vel)
    // Parabolic profile
    double Vmax = 1.0;
    double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
-	                                    (diameterXZ/2.0)) );
+	                                        (diameterXZ/2.0)) );
 
    uc.Set(*it,0.0);
    vc.Set(*it,aux-_vel);
    wc.Set(*it,0.0);
   }
-
-  
-  // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
-  
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -5534,7 +5134,7 @@ void Model3D::setGenericBC(double _vel)
    // Parabolic profile
    double Wmax = 1.0;
    double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
-	                                    (diameterXY/2.0)) );
+	                                        (diameterXY/2.0)) );
 
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
@@ -5661,7 +5261,8 @@ void Model3D::setGenericBC(double _vel)
    }
   }
 
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  else
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -6225,12 +5826,12 @@ void Model3D::setBiggerSphere(double _factor)
 
 void Model3D::setMiniElement()
 {
- numElems = numElems;
- numVerts = numVerts;
+ //numElems = numElems;
+ //numVerts = numVerts;
  numNodes = numVerts + numElems;
 
  clearBC();
- reAllocStruct();
+ doublelocStruct();
  checkTetrahedronOrientation();
 
  setCentroid();
@@ -6380,7 +5981,6 @@ void Model3D::checkTetrahedronOrientation()
  * */
 void Model3D::setMapping()
 {
- setNeighbour(); // must be called, in comparison to standard.
  int numFaces = 4; // teraedro tem 6 arestas
  clVector faceaux(3);
  IFACE3D *faces = NULL;
@@ -6656,7 +6256,7 @@ void Model3D::setMapping()
  clMatrix resizedMapEdge(edge,6);
  mapEdge.CopyTo(0,0,resizedMapEdge);
  mapEdge = resizedMapEdge;
- neighbourEdge.resize (edge); // trim vector para numero real de itens
+ neighbourEdge.resize (edge); // trim vector para numero double de itens
 
 //--------------------------------------------------
 //  for( int i=0;i<edge;i++ )
@@ -6673,7 +6273,6 @@ void Model3D::setMapping()
  delete[] edges;
 }
 
-
 void Model3D::setQuadElement()
 {
  // atualizado vetores com numero total de nos
@@ -6682,7 +6281,7 @@ void Model3D::setQuadElement()
  numNodes = numVerts+mapEdge.DimI(); // atualizando numNodes
 
  clearBC();
- reAllocStruct();
+ doublelocStruct();
  checkTetrahedronOrientation();
 
 
@@ -6772,6 +6371,43 @@ void Model3D::setQuadElement()
    }
   }
  }
+
+//--------------------------------------------------
+//  // add new vertices to boundaryVert vector
+//  for( int i=0;i<numElems;i++ )
+//  {
+//   int v5  = IEN.Get(i,4);
+//   int v6  = IEN.Get(i,5);
+//   int v7  = IEN.Get(i,6);
+//   int v8  = IEN.Get(i,7);
+//   int v9  = IEN.Get(i,8);
+//   int v10 = IEN.Get(i,9);
+//   if( oFace.Get(i,0) < 0 )
+//   {
+//    boundaryVert.push_back(v8);
+//    boundaryVert.push_back(v9);
+//    boundaryVert.push_back(v10);
+//   }
+//   if( oFace.Get(i,1) < 0 )
+//   {
+//    boundaryVert.push_back(v6);
+//    boundaryVert.push_back(v7);
+//    boundaryVert.push_back(v10);
+//   }
+//   if( oFace.Get(i,2) < 0 )
+//   {
+//    boundaryVert.push_back(v5);
+//    boundaryVert.push_back(v7);
+//    boundaryVert.push_back(v9);
+//   }
+//   if( oFace.Get(i,3) < 0 )
+//   {
+//    boundaryVert.push_back(v5);
+//    boundaryVert.push_back(v6);
+//    boundaryVert.push_back(v6);
+//   }
+//  }
+//-------------------------------------------------- 
 }
 
 void Model3D::setNeighbour()
@@ -7218,7 +6854,7 @@ void Model3D::clearBC()
 }
 
 // re-allocation of vectors and IEN matrix
-void Model3D::reAllocStruct()
+void Model3D::doublelocStruct()
 {
  clVector aux;
  aux = X;
@@ -7234,6 +6870,37 @@ void Model3D::reAllocStruct()
  IENaux = IEN;
  IEN.Dim(numElems,NUMGLEU); // 4 nos por elemento + 1 centroide
  IEN.CopyFrom(0,0,IENaux);
+}
+
+void Model3D::moveSinPoints(double _d)
+{
+ double A = 0.05;
+ double D = 0.5;
+ double nCycles = 4.0;
+ double stretch = 10.0;
+
+ for( int i=0;i<surfMesh.numVerts;i++ )
+ {
+  if( surfMesh.phyBounds.at(i) == "\"wallMovingYZ\"" )
+  {
+   // direction: if Y>0 dir = +1, if Y<0 dir = -1
+   //double rold = ( D + A*sin( (2*3.14159265359*nCycles/stretch)*
+//	          (surfMesh.X.Get(i))) ); 
+
+   double rnew = ( D + A*sin( (2*3.14159265359*nCycles/stretch)*
+	     (surfMesh.X.Get(i))+_d) ); 
+   //double factor = rnew/rold;
+   double radius = sqrt( Y.Get(i)*Y.Get(i)+Z.Get(i)*Z.Get(i) );
+   double dirY = Y.Get(i)/radius;
+   double dirZ = Z.Get(i)/radius;
+
+   Y.Set(i,dirY*rnew);
+   Z.Set(i,dirZ*rnew);
+   surfMesh.Y.Set(i,dirY*rnew);
+   surfMesh.Z.Set(i,dirZ*rnew);
+
+  }
+ }
 }
 
 void Model3D::moveXPoints(clVector &_vec,double _dt)
@@ -7307,8 +6974,11 @@ double Model3D::getMinZ(){ return Z.Min(); }
 clVector* Model3D::getZ(){ return &Z; }
 void Model3D::setZ(clVector _Z){ Z = _Z; }
 clVector* Model3D::getUC(){ return &uc; }
+void Model3D::setUC(clVector &_vel){ uc = _vel; }
 clVector* Model3D::getVC(){ return &vc; }
+void Model3D::setVC(clVector &_vel){ vc = _vel; }
 clVector* Model3D::getWC(){ return &wc; }
+void Model3D::setWC(clVector &_vel){ wc = _vel; }
 clVector* Model3D::getPC(){ return &pc; }
 clVector* Model3D::getCC(){ return &cc; }
 clVector* Model3D::getHeaviside(){ return &heaviside; }
@@ -7339,8 +7009,6 @@ vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
 vector< list<int> >* Model3D::getNeighbourPoint(){return &neighbourPoint;}
 vector<int>* Model3D::getPbcIndicesLeft(){return &pbcIndicesLeft;} // PBC
 vector<int>* Model3D::getPbcIndicesRight(){return &pbcIndicesRight;} // PBC
-vector< vector<int> >* Model3D::getPbcIndicesMaster(){return &pbcIndicesMaster;} // PBC
-vector< vector<int> >* Model3D::getPbcIndicesSlave(){return &pbcIndicesSlave;} // PBC
 vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
 list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
@@ -7498,8 +7166,6 @@ void Model3D::operator=(Model3D &_mRight)
   inElem = _mRight.inElem;
   pbcIndicesLeft = _mRight.pbcIndicesLeft; // PBC
   pbcIndicesRight = _mRight.pbcIndicesRight; // PBC
-  pbcIndicesMaster = _mRight.pbcIndicesMaster; // PBC
-  pbcIndicesSlave = _mRight.pbcIndicesSlave; // PBC
 }
 
 void Model3D::saveVTKSurface( const char* _dir,
@@ -8967,32 +8633,31 @@ void Model3D::checkAngleBetweenPlanes()
  }
 }
 
-/** \brief Removes points over the interface by neighbour checking.
- *
- *  \returns {void}
- *
- */
+/* 
+ * This if checks whether the point on the surface has only 3 surface
+ * elements. This is caused by the re-meshing process that sometimes
+ * creates these problematic local mesh. Such a point should be
+ * removed to avoid mesh problems.
+ * */
 void Model3D::removePointsByNeighbourCheck()
 {
  for( int i=0;i<surfMesh.numVerts;i++ )
   removePointByNeighbourCheck(i);
 }
 
-/** \brief Checks whether the point on the surface has only 3 surface
-* elements. This is caused by the re-meshing process that sometimes
-* creates these problematic local mesh. Such a point should be
-* removed to avoid mesh problems.
-*
-* \returns {void}
-*/
 void Model3D::removePointByNeighbourCheck(int _node)
 {
  int vertID = surfMesh.vertIdRegion.Get(_node);
-
+ /* 
+  * This if checks whether the point on the surface has only 3 surface
+  * elements. This is caused by the re-meshing process that sometimes
+  * creates these problematic local mesh. Such a point should be
+  * removed to avoid mesh problems.
+  * */
  int elemListSize = neighbourSurfaceElem.at( _node ).size();
- bool vertIDTest = vertID > 0; // no boundary verts
- bool elemListSizeTest = elemListSize < 4;
 
+ bool vertIDTest = vertID > 0; // no boundary verts
+ bool elemListSizeTest = elemListSize < 4; 
  if( elemListSizeTest && vertIDTest )
  {
   removeSurfacePoint(_node);
@@ -9012,7 +8677,8 @@ void Model3D::removePointByNeighbourCheck(int _node)
    * are equal. Usually these points demage the mesh
    * quality and breaks the simulation flow. 
    * */
-  // elemID out of boundary
+  // elemID out of boudary
+
   if( elemListSize == 3 )
   {
    cout << "------------- " << color(none,red,black) 
@@ -9257,12 +8923,9 @@ void Model3D::initMeshParameters()
  fill(intet.begin(),intet.end(),0);
 }
 
-/** \brief Checks and removes vertices that are too close to the surface 
- * mesh structure (boundary and interface vertices).
- *
- * \returns {void}
- *
- * \details{ In this method, besides the 3 vertices of a triangle surface mesh, 
+/* check and remove vertices that are too close to the surface mesh
+ * structure (boundary and interface vertices)
+ * In this method, besides the 3 vertices of a triangle surface mesh, 
  * the midEdges and centroid vertices (total 6
  * coordinates) are used to compare the distance to the wall/interface.
  * If it is lower than a predefinided value (if statement in the end of
@@ -9270,7 +8933,7 @@ void Model3D::initMeshParameters()
  * 
  * input: {X,Y,Z} and surfMesh{X,Y,Z}
  * output: mark for deletion vertID3D
- * requirements: neighbourVert }
+ * requirements: neighbourVert
  *
  * */
 void Model3D::remove3dMeshPointsByHeight()
@@ -9653,11 +9316,10 @@ void Model3D::checkLineOrientation()
  }
 }
 
-/** \brief Bubble volume correction, print screen and save in file with
- * iterations
- *
- * \returns{ void }
- */
+/* 
+ * Bubble volume correction, print screen and save in file with
+ * iteratios
+ * */
 void Model3D::applyBubbleVolumeCorrection()
 {
  // surfMesh.elemIdRegion == 0 --> wall
@@ -9821,11 +9483,11 @@ void Model3D::integralParabolic()
  cout << sumUArea/sumArea << endl;
 }
 
-/** \brief Insert points according to the solution of the diffusion equation
+/*
+ * Insert point(s) according to the solution of the diffusion equation
  * given by the class Helmholtz3D.
- * 
- * \returns {void}
- */
+ *
+ * */
 void Model3D::insert3dMeshPointsByVolume()
 {
  int vertID = 0;
@@ -9857,9 +9519,11 @@ void Model3D::insert3dMeshPointsByVolume()
    double YvAdd = ( Y.Get(v1)+Y.Get(v2)+Y.Get(v3)+Y.Get(v4) )/4.0;
    double ZvAdd = ( Z.Get(v1)+Z.Get(v2)+Z.Get(v3)+Z.Get(v4) )/4.0;
 
-   cout << "- " << color(none,blue,black) 
-	            << "inserting vertex: "
-				<< resetColor() << vAdd << endl;
+//--------------------------------------------------
+//    cout << "- " << color(none,blue,black) 
+// 	            << "inserting vertex: "
+// 				<< resetColor() << vAdd << endl;
+//-------------------------------------------------- 
 
    X.AddItem(vAdd,XvAdd);
    Y.AddItem(vAdd,YvAdd);
@@ -9873,5 +9537,845 @@ void Model3D::insert3dMeshPointsByVolume()
    ipd[vertID]++;
   }
  }
- cout << "  inserted by diffusion: " << ipd[vertID] << endl;
+ cout << "  inserted by volume: " << ipd[vertID] << endl;
 }
+
+/// PBC
+void Model3D::setGenericBCPBC()
+{    
+ /* This IF selects the priority boundary conditions to be set on the
+  * phyBounds vector. Note that only these names will be written on top
+  * of the others. For instance if a corner point has 2 types of
+  * boundary condition, the phyNames below will be written.
+  * 
+  * \remark PBC has priority over all the conditions already declared, 
+  * namely:
+  * 
+  * - slip walls    : 3rd priority
+  * - inflow walls  : 2nd priority
+  * - no-slip walls : 1st priority
+  *
+  * For this reason, any corner point will be set with periodic condition
+  * and the new ordering is:
+  *
+  * - periodic walls : 4th priority
+  * - slip walls     : 3rd priority
+  * - inflow walls   : 2nd priority
+  * - no-slip walls  : 1st priority
+  *
+  * */ 
+
+  /* This algorithm sets up physical groups of periodic boundary
+  * conditions for a unique pair of master/slave boundaries defined as
+  * 
+  * "wallLeft"  and   "wallRight" 
+  *
+  * at ".geo" file. 
+  *
+  */
+
+ // setGenericBC(), instead setGenericBC(vref) is called after the mesh
+ // treatment in the version 'fixed' of mainMovingFrame, requiring
+ // update of BC vectors. 
+ clearBC();
+
+ // cleaning vectors of periodic indices
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+ 
+
+ // auxiliary x,y,z pbc coordinates
+ vector<double> xpbcMaster(0);
+ vector<double> ypbcMaster(0);
+ vector<double> zpbcMaster(0);
+ vector<double> xpbcSlave(0);
+ vector<double> ypbcSlave(0);
+ vector<double> zpbcSlave(0);
+ 
+ for( int i = 0; i < surfMesh.numElems; i++ )
+ {		
+  	int v1 = surfMesh.IEN.Get(i,0);
+  	int v2 = surfMesh.IEN.Get(i,1);
+	int v3 = surfMesh.IEN.Get(i,2);
+  	int id = surfMesh.idRegion.Get(i);
+	
+	// left indices
+  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+  	{
+		pbcIndicesLeft.push_back(v1);
+		pbcIndicesLeft.push_back(v2);
+		pbcIndicesLeft.push_back(v3);
+	}
+
+	// right indices
+  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	{
+		pbcIndicesRight.push_back(v1);
+		pbcIndicesRight.push_back(v2);
+		pbcIndicesRight.push_back(v3);
+
+	}
+	
+ }
+
+ // removing duplicatas
+ set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+ set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+ set<int>::iterator itsetOne;
+ set<int>::iterator itsetTwo;
+
+ // resizing to doublelocate
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+			
+ for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
+ {
+		cout << "Index: " << *itsetOne << endl;
+		pbcIndicesLeft.push_back(*itsetOne);
+				 
+		// master coordinates
+		double xL = surfMesh.X.Get(*itsetOne);
+		double yL = surfMesh.Y.Get(*itsetOne);
+		double zL = surfMesh.Z.Get(*itsetOne);
+		xpbcMaster.push_back(xL);
+		ypbcMaster.push_back(yL);
+		zpbcMaster.push_back(zL);
+ }
+			 
+	cout << "Master nodes stored." << endl;
+			
+ for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+ {
+		cout << "Index: " << *itsetTwo << endl;
+		pbcIndicesRight.push_back(*itsetTwo);
+
+		// slave coordinates
+		double xR = surfMesh.X.Get(*itsetTwo);
+		double yR = surfMesh.Y.Get(*itsetTwo);
+		double zR = surfMesh.Z.Get(*itsetTwo);
+		xpbcSlave.push_back(xR);
+		ypbcSlave.push_back(yR);
+		zpbcSlave.push_back(zR);
+ }
+
+	cout << "Slave nodes stored." << endl;
+
+	int sizeM = pbcIndicesLeft.size();
+	int sizeS = pbcIndicesRight.size();
+			
+	// spatial correspondence checking
+	if ( sizeM != sizeS )
+	{
+		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+		cerr << warn << endl;
+	}
+	// pairing checking
+	else
+	{
+		for (int is = 0; is < sizeM; ++is)
+		{
+			double yM = ypbcMaster.at(is);
+			double zM = zpbcMaster.at(is);
+			double yS = ypbcSlave.at(is);
+			double zS = zpbcSlave.at(is);
+			
+			// simple extrusion assumed
+			if ( ( fabs( yS - yM ) > EPS ) && 
+			     ( fabs( zS - zM ) > EPS ) )
+			{
+				cout << "Entry not periodic: " << is << endl;	
+				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
+				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
+			}
+			
+	 	}
+		
+	 }
+
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  // 3nd. priority
+  if( surfMesh.phyNames.at(id).compare(5,7,"NormalU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"NormalV") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,7,"NormalW") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
+ }
+ 
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+
+  // 2nd. priority
+  if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,16,"InflowVParabolic") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,16,"InflowWParabolic") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
+ }
+
+ for( int i=0; i < surfMesh.numElems; i++ )
+ {
+  int v1 = surfMesh.IEN.Get(i,0);
+  int v2 = surfMesh.IEN.Get(i,1);
+  int v3 = surfMesh.IEN.Get(i,2);
+  int id = surfMesh.idRegion.Get(i);
+  
+  // 1st. priority
+  if( surfMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,19,"NoSlipConcentration") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,14,"NoSlipPressure") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 ||
+      surfMesh.phyNames.at(id).compare(5,17,"Inflow2AxiBubbles") == 0 )
+  {
+   string aux = surfMesh.phyNames.at(id);
+   surfMesh.phyBounds.at(v1) = aux;
+   surfMesh.phyBounds.at(v2) = aux;
+   surfMesh.phyBounds.at(v3) = aux;
+  }
+ }
+
+ // calculating channel's diameter.
+ double diameterXY = ( dist(X.Min(),X.Max()) + 
+                     dist(Y.Min(),Y.Max()) ) / 2.0;
+ double diameterXZ = ( dist(X.Min(),X.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+ double diameterYZ = ( dist(Y.Min(),Y.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+//--------------------------------------------------
+//  double diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
+//-------------------------------------------------- 
+
+ int count = 0;
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  // outflow condition
+  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
+  {
+   idbcp.AddItem(*it);
+
+   pc.Set(*it,0.0);
+  }
+
+  // inflow condition U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   double Umax = 1.0;
+   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                        (diameterYZ/2.0)) );
+
+   //aux=1.0;
+   uc.Set(*it,aux);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  // inflow condition V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   double Vmax = 1.0;
+   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
+	                                    (diameterXZ/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,aux);
+   wc.Set(*it,0.0);
+  }
+
+  // periodic boundaries. Any Dirichlet condition is imposed.
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+
+  // inflow condition W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
+
+   // Parabolic profile
+   double Wmax = 1.0;
+   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
+	                                    (diameterXY/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,aux);
+  }
+
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  
+  // inflow condition V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,1.0);
+   wc.Set(*it,0.0);
+  }
+
+  // inflow condition W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,1.0);
+  }
+
+  // 2 bubbles inflow condition
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2Bubbles\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
+   aux = Z.Get(*it);
+   wc.Set(*it,aux);
+  }
+
+  // 2 Axi bubbles inflow condition
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2AxiBubbles\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double aux = X.Get(*it);
+   uc.Set(*it,aux);
+   aux = (-1.0)*Y.Get(*it);
+   vc.Set(*it,aux);
+   aux = 0.0;
+   wc.Set(*it,aux);
+  }
+
+  // moving boundary condition as inflow set to Zero
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" || 
+           surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" ||
+		   surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  // moving boundary U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,-1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  // moving boundary V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,-1.0);
+   wc.Set(*it,0.0);
+  }
+
+  // moving boundary W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,-1.0);
+  }
+  
+  // NoSlip with Concentration b.c.
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipConcentration\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+   idbcc.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+   cc.Set(*it,1.0);
+  }
+
+  // moving boundary U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
+  {
+   if( X.Get(*it) == X.Max() && 
+	   Z.Get(*it) == Z.Min() && 
+	   count < 1 )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,-1.0);
+	vc.Set(*it,0.0);
+	wc.Set(*it,0.0);
+   }
+   if( Z.Get(*it) == Z.Min() )
+   {
+	idbcc.AddItem(*it);
+
+	cc.Set(*it,1.0);
+   }
+  }
+
+  // symmetry boundary U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalU\"" )
+  {
+   idbcu.AddItem(*it);
+   uc.Set(*it,0.0);
+  }
+
+  // symmetry boundary V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
+  {
+   idbcv.AddItem(*it);
+   vc.Set(*it,0.0);
+  }
+
+  // symmetry boundary W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
+  {
+   idbcw.AddItem(*it);
+   wc.Set(*it,0.0);
+  }
+  // no slip condition if any other is imposed
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+ }
+ //integralParabolic();
+}
+
+/// PBC
+void Model3D::setGenericBCPBC(double _vel)
+{    
+ clearBC();
+ 
+ // cleaning vectors of periodic indices
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+
+ // auxiliary x,y,z pbc coordinates
+ vector<double> xpbcMaster(0);
+ vector<double> ypbcMaster(0);
+ vector<double> zpbcMaster(0);
+ vector<double> xpbcSlave(0);
+ vector<double> ypbcSlave(0);
+ vector<double> zpbcSlave(0);
+ 
+ for( int i = 0; i < surfMesh.numElems; i++ )
+ {		
+  	int v1 = surfMesh.IEN.Get(i,0);
+  	int v2 = surfMesh.IEN.Get(i,1);
+	int v3 = surfMesh.IEN.Get(i,2);
+  	int id = surfMesh.idRegion.Get(i);
+	
+	// left indices
+  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+  	{
+		pbcIndicesLeft.push_back(v1);
+		pbcIndicesLeft.push_back(v2);
+		pbcIndicesLeft.push_back(v3);
+	}
+
+	// right indices
+  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	{
+		pbcIndicesRight.push_back(v1);
+		pbcIndicesRight.push_back(v2);
+		pbcIndicesRight.push_back(v3);
+	}	
+ }
+
+ // removing duplicatas
+ set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+ set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+ set<int>::iterator itsetOne;
+ set<int>::iterator itsetTwo;
+
+ // resizing to doublelocate
+ pbcIndicesLeft.resize(0);
+ pbcIndicesRight.resize(0);
+			
+ for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
+ {
+		//cout << "Index: " << *itsetOne << endl;
+		pbcIndicesLeft.push_back(*itsetOne);
+				 
+		// master coordinates
+		double xL = surfMesh.X.Get(*itsetOne);
+		double yL = surfMesh.Y.Get(*itsetOne);
+		double zL = surfMesh.Z.Get(*itsetOne);
+		xpbcMaster.push_back(xL);
+		ypbcMaster.push_back(yL);
+		zpbcMaster.push_back(zL);
+ }
+			 
+	cout << "Master nodes stored." << endl;
+			
+ for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+ {
+		//cout << "Index: " << *itsetTwo << endl;
+		pbcIndicesRight.push_back(*itsetTwo);
+
+		// slave coordinates
+		double xR = surfMesh.X.Get(*itsetTwo);
+		double yR = surfMesh.Y.Get(*itsetTwo);
+		double zR = surfMesh.Z.Get(*itsetTwo);
+		xpbcSlave.push_back(xR);
+		ypbcSlave.push_back(yR);
+		zpbcSlave.push_back(zR);
+ }
+
+	cout << "Slave nodes stored." << endl;
+
+	int sizeM = pbcIndicesLeft.size();
+	int sizeS = pbcIndicesRight.size();
+			
+	// spatial correspondence checking
+	if ( sizeM != sizeS )
+	{
+		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+		cerr << warn << endl;
+	}
+	// pairing checking
+	else
+	{
+		for (int is = 0; is < sizeM; ++is)
+		{
+			double yM = ypbcMaster.at(is);
+			double zM = zpbcMaster.at(is);
+			double yS = ypbcSlave.at(is);
+			double zS = zpbcSlave.at(is);
+			
+			// simple extrusion assumed
+			if ( ( fabs( yS - yM ) > EPS ) && 
+			     ( fabs( zS - zM ) > EPS ) )
+			{
+				cout << "Entry not periodic: " << is << endl;	
+				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
+				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
+			}
+			
+	 	}
+		
+	 }
+
+
+ // calculating channel's diameter.
+ double diameterXY = ( dist(X.Min(),X.Max()) + 
+                     dist(Y.Min(),Y.Max()) ) / 2.0;
+ double diameterXZ = ( dist(X.Min(),X.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+ double diameterYZ = ( dist(Y.Min(),Y.Max()) + 
+                     dist(Z.Min(),Z.Max()) ) / 2.0;
+//--------------------------------------------------
+//  double diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
+//-------------------------------------------------- 
+
+ int count = 0;
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  // outflow condition
+  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
+  {
+   idbcp.AddItem(*it);
+  
+   pc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,1.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   double Umax = 1.0;
+   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
+	                                    (diameterYZ/2.0)) );
+   //aux=1.0;
+
+   uc.Set(*it,aux-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  // inflow condition V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
+
+   // Parabolic profile
+   double Vmax = 1.0;
+   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
+	                                    (diameterXZ/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,aux-_vel);
+   wc.Set(*it,0.0);
+  }
+
+  
+  // periodic boundaries. Any Dirichlet condition is imposed.
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+  
+
+  // inflow condition W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
+
+   // Parabolic profile
+   double Wmax = 1.0;
+   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
+	                                    (diameterXY/2.0)) );
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,aux-_vel);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,1.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,1.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0-_vel);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0-_vel);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallMovingYZ\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,-1.0-_vel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,-1.0-_vel);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,-1.0-_vel);
+  }
+
+  // moving boundary U with 1 node pressure
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
+  {
+   if( X.Get(*it) == X.Max() && 
+	   Z.Get(*it) == Z.Min() &&
+	   count < 1 )
+   {
+	idbcp.AddItem(*it);
+
+	pc.Set(*it,0.0);
+	count++;
+   }
+   else
+   {
+	idbcu.AddItem(*it);
+	idbcv.AddItem(*it);
+	idbcw.AddItem(*it);
+
+	uc.Set(*it,0.0-_vel);
+	vc.Set(*it,0.0);
+	wc.Set(*it,0.0);
+   }
+   if( Z.Get(*it) == Z.Min() )
+   {
+	idbcc.AddItem(*it);
+
+	cc.Set(*it,1.0);
+   }
+  }
+
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+  
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+ }
+}
+
+
+

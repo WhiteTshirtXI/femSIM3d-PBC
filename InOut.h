@@ -25,6 +25,7 @@
 #include <fstream>
 #include <cmath>
 #include "colors.h" 
+#include <unistd.h>
 #include "interpolations.h" 
 #include "searchInterp3D.h" 
 
@@ -147,6 +148,8 @@ class InOut
   void matrixPrint( clDMatrix &_m,const char* _filename );
 
   void saveVonKarman(const char* _dir,const char* _filename);
+  void saveVonKarman(Model3D &_m,const char* _dir,
+	                 const char* _filename);
   void saveDiskError(const char* _dir,
                      const char* _filename,
 					 const char* _fileAnalytic);
@@ -226,6 +229,9 @@ class InOut
   void savePoint( const char* _dir,int _point );
   void saveBubbleShapeFactors(const char* _dir,const char* _filename, int _iter); ///<<< 
 
+  void crossSectionSol( const char* _var,const char* _plane,
+	                    double _fraction,const char* _dir,
+						const char* _filename,int _iter );
 private:
   Model3D *m;
   int numVerts,numNodes,numElems;

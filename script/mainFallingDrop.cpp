@@ -24,24 +24,24 @@ int main(int argc, char **argv)
 
 
  int iter = 1;
- double Re = 1000;
- double Sc = 1;
- double We = 10;
- double Fr = 1.0;
- double c1 = 0.0;  // lagrangian
- double c2 = 1.0;  // smooth vel
- double c3 = 10.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.3;  // surface smooth cord (fujiwara)
- double alpha = 1;
+ real Re = 1000;
+ real Sc = 1;
+ real We = 10;
+ real Fr = 1.0;
+ real c1 = 0.0;  // lagrangian
+ real c2 = 1.0;  // smooth vel
+ real c3 = 10.0;  // smooth coord (fujiwara)
+ real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.3;  // surface smooth cord (fujiwara)
+ real alpha = 1;
 
- double mu_in = 1.0;
- double mu_out = 0.01;
+ real mu_in = 1.0;
+ real mu_out = 0.01;
 
- double rho_in = 1.0;
- double rho_out = 0.001;
+ real rho_in = 1.0;
+ real rho_out = 0.001;
 
- double cfl = 0.8;
+ real cfl = 0.8;
 
  string meshFile = "fallingDrop1.msh";
 
@@ -270,13 +270,13 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
+   //s1.stepLagrangian();
+   s1.stepALE();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -337,11 +337,11 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("flat");
-  //m1.insertPointsByCurvature("flat");
+  m1.insertPointsByLength("curvature");
+  //m1.insertPointsByCurvature("curvature");
   //m1.removePointsByCurvature();
-  //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("flat");
+  //m1.insertPointsByInterfaceDistance("curvature");
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 

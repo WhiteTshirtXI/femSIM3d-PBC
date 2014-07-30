@@ -1,5 +1,5 @@
 // =================================================================== //
-// this is file main.cpp, created at 10-Jun-2007                       //
+// this is file mainRisingBubble.cpp, created at 10-Jun-2009           //
 // maintained by Gustavo Rabello dos Anjos                             //
 // e-mail: gustavo.rabello@gmail.com                                   //
 // =================================================================== //
@@ -24,41 +24,30 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- /* 
-  * bogdan's thesis 2010 - Film thickness
-  * Air-Ethanol
-  * Circular channels
-  * Tube radius: 0.3 - 1.3mm
-  *
-  * Reference: Han and Shikazono
-  *
-  * */
- int iter = 0;
- real Re = 100;
- real We = 10;
- //real We = 0.1162;
- real Fr = 10;
- real c1 = 0.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
+ int iter = 1;
+ real mu_in   = 0.01;
+ real mu_out  = 1.0;
+ real rho_in  = 0.001;
+ real rho_out = 1.0;
+ real Mo      = 1E-4;
+ real Eo      = 40;
+
+ real Re = sqrt( sqrt(Eo*Eo*Eo/Mo) );
+ real We = Eo;
+ real Fr = 1;
+ real c1 = 0.0;
+ real c2 = 0.0;
+ real c3 = 10.0;
+ real d1 = 1.0;
+ real d2 = 0.1;
  real alpha = 1;
 
  real cfl = 0.8;
 
- real mu_in = 0.01;
- real mu_out = 1.00;
- real rho_in = 0.001;
- real rho_out = 1.0;
-
- //const char* _frame = "fixed";
- const char* _frame = "moving";
-
  string meshFile = "circular.msh";
-
+ 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
@@ -66,12 +55,7 @@ int main(int argc, char **argv)
  const char *mshFolder  = "./msh/";
  const char *datFolder  = "./dat/";
  string meshDir = (string) getenv("DATA_DIR");
-
- if( strcmp( _frame,"moving") == 0 )
-  meshDir += "/gmsh/3d/micro/movingFrame/" + meshFile;
- else
-  meshDir += "/gmsh/3d/micro/" + meshFile;
-
+ meshDir += "/gmsh/3d/rising/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -114,7 +98,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.initChannel(); // moving frame
+  s1.init();
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -135,7 +119,7 @@ int main(int argc, char **argv)
   m1.setTriEdge();
   m1.mesh2Dto3D();
 
-  s1(m1);
+  //s1(m1);
 
   // load 3D mesh
   file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
@@ -264,6 +248,7 @@ int main(int argc, char **argv)
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
+ //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -272,14 +257,14 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- real vinst=0;
- real vref=0;
- if( strcmp( _frame,"moving") == 0 )
- {
-  // moving
-  vref = s1.getURef();
-  s1.setCentroidVelPos();
- }
+ // fixed 
+ //real vinst=0;
+ //real vref=0;
+
+ // moving
+ real vinst = 0;
+ real vref = s1.getURef();
+ s1.setCentroidVelPos();
 
  int nIter = 3000;
  int nReMesh = 1;
@@ -293,16 +278,13 @@ int main(int argc, char **argv)
 	    << iter << endl << endl;
    cout << resetColor();
 
-   if( strcmp( _frame,"moving") == 0 )
-   {
-	// moving frame
-	vinst = s1.getCentroidVelXAverage();
-	vref += vinst;
-	cout << vref << " " << vinst << endl;
-	s1.setUSol(vinst);
-	m1.setGenericBC(vref);
-	s1.setURef(vref);
-   }
+   // moving
+   vinst = s1.getCentroidVelXAverage();
+   vref += vinst;
+   cout << vref << " " << vinst << endl;
+   s1.setUSol(vinst);
+   m1.setGenericBC(vref);
+   s1.setURef(vref);
 
    //s1.stepLagrangian();
    s1.stepALE();
@@ -316,7 +298,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity("-Z");
+   s1.setGravity("-X");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -381,7 +363,7 @@ int main(int argc, char **argv)
   /* **************************************** */
 
   //m1.mesh2Dto3DOriginal();
-  m1.mesh3DPoints();
+  m1.mesh3DPoints("QYYApa");
   m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();
@@ -390,10 +372,10 @@ int main(int argc, char **argv)
 #endif
   m1.setSurfaceConfig();
 
-  if( strcmp( _frame,"moving") == 0 )
-   m1.setGenericBC(vref);
-  else
-  m1.setGenericBC();
+  // fixed
+  //m1.setGenericBC();
+  // moving
+  m1.setGenericBC(vref);
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

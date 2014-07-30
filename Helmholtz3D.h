@@ -35,11 +35,10 @@ class Helmholtz3D
   void getModel3DAttrib(Model3D &_m);
   void allocateMemoryToAttrib();
   void init();
-  void initJet(double _dr, double _cl); // jet 
-  void initCylindricalWrap(double _wrapFactor);
   void initMicro();
   void initSquareChannel();
   void initBackwardStep();
+  void initThreeBubbles();
   void initRisingBubble();
   void initSessile();
   void init2Bubbles();
@@ -68,7 +67,6 @@ class Helmholtz3D
  private:
   Model3D *m;
   int numVerts,numElems,numNodes;
-  int numVertsOld,numElemsOld,numNodesOld;
   double k;
   vector<double> triEdge;
   clVector *X,*Y,*Z;
@@ -77,7 +75,7 @@ class Helmholtz3D
   clVector *edgeSize;
   clVector cc,idbcc;
   SurfaceMesh *surfMesh;
-  Mesh3D *mesh3d;
+  //Mesh3D *mesh3d;
 
   list<int> *boundaryVert;
   vector< list<int> > *neighbourPoint;

@@ -99,7 +99,7 @@ int main(int argc, char **argv)
  double sigma = 0.078;
 
  //** Moving Frame Settings
- const char* _frame = "moving";
+ const char* _frame = "fixed";
 
  // fixed
  double c1 = 0.0;      // lagrangian
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
  //*** File
  //string meshFile = "rising-periodic-g-2rb.msh";
- string meshFile = "rising-periodic-mesh-pbc.msh";
+ string meshFile = "rising-periodic-mesh-pbc-noTransfinite.msh";
  //string meshFile = "test.msh";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
@@ -136,8 +136,8 @@ int main(int argc, char **argv)
  //** Data Saving Directories
  const char *binFolder  = "./bin/";
  const char *mshFolder  = "./msh/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-movingFrame/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-movingFrame/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-g-4rb/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-g-4rb/";
  //const char *vtkFolder  = "./vtk/";
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	
  //*** Periodic Constructor
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew("print");
+ pbc.MountPeriodicVectorsNew("Noprint");
  //pbc.MountPeriodicVectors("print");
  
  //*** Simulator Constructor
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initCylindricalWrap(2.5);
+ h1.initThreeBubbles();
  h1.assemble();
  h1.setk(0.05);
  h1.matMountC();
@@ -353,7 +353,7 @@ int main(int argc, char **argv)
      
      Helmholtz3D h2(m1,h1);
      h2.setBC();
-     h2.initCylindricalWrap(2.5);
+     h2.initThreeBubbles();
      h2.assemble();
      h2.setk(0.2);
      h2.matMountC();

@@ -87,11 +87,12 @@ int main(int argc, char **argv)
  Solver *solverC = new PCGSolver();
 
  //** Data Saving Directories
- const char *binFolder  = "./bin/";
- const char *datFolder  = "./dat/";
- const char *solFolder  = "./sol/";
+ //const char *binFolder  = "./bin/";
+ //const char *datFolder  = "./dat/";
+ //const char *solFolder  = "./sol/";
  //const char *txtFolder  = "./txt/";
  const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
+ const char *datFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/dat";
 
  //** Model Constructor
  Model3D m1;
@@ -165,7 +166,7 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectors(m1);
+ pbc.MountPeriodicVectorsNew("noPrint");
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -196,8 +197,8 @@ int main(int argc, char **argv)
  sp.setBetaPressureLiquid();
 
  //**** Mounting
- //sp.assemble(); 
- sp.assembleSlip(); 
+ sp.assemble(); 
+ //sp.assembleSlip(); 
  sp.matMount();
  //sp.matMountC();
 
@@ -243,7 +244,6 @@ int main(int argc, char **argv)
    sp.stepSLPBCFix(); // semi-lagrangian repair
    //sp.stepNoConvection();
    //sp.stepSL();
-   //sp.stepSLHighOrderOne(); // to be implemented to 3D
 
    //sp.setUnCoupledBC();
    sp.setUnCoupledPBC(); 
@@ -262,14 +262,14 @@ int main(int argc, char **argv)
    
    //**** Matricial System Solution
    //sp.unCoupled();
-   sp.unCoupledPBC();
+   sp.unCoupledPBCNew();
    //sp.unCoupledCPBC();
    
    //**** Solution Saving
    save.saveVTK(vtkFolder,"sim",iter);
    //save.saveVTU(vtkFolder,"sim",iter);
-   save.saveSol(binFolder,"sim",iter);
-   save.saveSolTXT(solFolder,"solution",iter);
+   //save.saveSol(binFolder,"sim",iter);
+   //save.saveSolTXT(solFolder,"solution",iter);
    save.saveMeshInfo(datFolder);
 
    //**** Updating Quantities

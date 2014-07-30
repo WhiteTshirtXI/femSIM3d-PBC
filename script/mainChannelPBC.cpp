@@ -89,7 +89,8 @@ int main(int argc, char **argv)
  //const char *datFolder  = "./dat/";
  //const char *datFolder  = "./sol/";
  //const char *txtFolder  = "./txt/";
- const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille-pbc/";
+ const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille/";
+ const char *datFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille/dat/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/midwall-pbc/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
  //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-green-vortex/";
@@ -108,10 +109,7 @@ int main(int argc, char **argv)
  	//string meshFile = "cuboid-3d.msh";
  	//string meshFile = "thesis-jet.msh";
  	//string meshFile = "cuboid-3d-w0.1.msh";
- 	//string meshFile = "cylinder-3d.msh";
- 	//string meshFile = "cylinder-3d-L0.5D-w0.01.msh";
- 	//string meshFile = "cylinder-3d-L0.5D-w0.5.msh";
- 	string meshFile = "cylinder-3d-L0.5D-w0.5-transfinite.msh";
+ 	string meshFile = "poiseuille-3d-transfinite.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
  	meshDir += "/" + meshFile;
@@ -123,7 +121,6 @@ int main(int argc, char **argv)
  	m1.setInterfaceBC();
  	m1.setTriEdge();
  	m1.mesh2Dto3D();
-	m1.setJetMesh(); // mesh geometrical transform
  	m1.setMapping();
  
 	#if NUMGLEU == 5
@@ -134,9 +131,9 @@ int main(int argc, char **argv)
  	
  	m1.setVertNeighbour();
  	m1.setInOutVert(); // set of boundaryVert
-	//m1.setGenericBC(); // only useful for PBC with phys. groups defined
-	m1.setWallNormalVWBC();
-	m1.setWallMovingPBC(0.0,0.0);
+	m1.setGenericBC(); 
+	//m1.setWallNormalVWBC();
+	//m1.setWallMovingPBC(0.0,0.0);
  	//m1.setOnePointPressureBC();
  }
  else if ( selectionExtension == "vtk" )
@@ -158,8 +155,7 @@ int main(int argc, char **argv)
 	#endif
 	m1.setMapping();
 	m1.setInOutVert();
-	m1.setCubeVortexBC();
-	m1.setOnePointPressureBC();
+	//m1.setCubeVortexBC();
  }
  else
  {
@@ -169,8 +165,8 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- //pbc.MountPeriodicVectorsNew(m1);
- pbc.MountPeriodicVectors(m1);
+ //pbc.MountPeriodicVectorsNew("noPrint");
+ //pbc.MountPeriodicVectors("print");
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -193,8 +189,8 @@ int main(int argc, char **argv)
  sp.setSolverConcentration(solverC);
 
  //*** Initial Conditions
- //sp.init(); // default
- sp.initTanHJetProfile();
+ sp.init(); // default
+ //sp.initTanHJetProfile();
  //sp.initTaylorVortex(); // Taylor vortex
  //sp.initTaylorGreenVortex();
 
@@ -231,13 +227,14 @@ int main(int argc, char **argv)
  
  //*** Mesh Information
  save.saveVTK(vtkFolder,"geometry");
- save.saveInfo("./","info",mesh);
+ save.saveInfo(datFolder,"info",mesh);
+ save.saveMeshInfo(datFolder);
 
  //*** Output (Initial Condition)
  save.saveVTK(vtkFolder,"initial",0);
 
  //*** Iterative Process (Temporal Loop)
- int nIter = 100;
+ int nIter = 30000;
  int nRe = 1;
  for( int i=0;i<nIter;i++ )
  {
@@ -247,13 +244,13 @@ int main(int argc, char **argv)
 	    << iter << endl;
 
    //**** Advective Term
-   sp.stepSLPBCFix();
+   //sp.stepSLPBCFix();
    //sp.stepNoConvection();
-   //sp.stepSL();
+   sp.stepSL();
    
    //**** B.C. update
-   sp.setUnCoupledPBC(); 
-   //sp.setUnCoupledBC(); 
+   //sp.setUnCoupledPBC(); 
+   sp.setUnCoupledBC(); 
 
    //**** Physical Effects
    //sp.setGravity("+X");
@@ -267,8 +264,8 @@ int main(int argc, char **argv)
    
    //**** Matricial System Solution
    //sp.unCoupledPBCVector();
-   sp.unCoupledPBC();
-   //sp.unCoupled();
+   //sp.unCoupledPBC();
+   sp.unCoupled();
    
    //**** Solution Saving
    save.saveVTK(vtkFolder,"sim",iter);

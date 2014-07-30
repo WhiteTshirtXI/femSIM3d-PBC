@@ -37,12 +37,12 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- double d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
- double d2 = 0.0;   // surface smooth cord (fujiwara)
+ real d1 = 0.0;   // surface tangent velocity u_n=u-u_t 
+ real d2 = 0.0;   // surface smooth cord (fujiwara)
 
- double dt = 0.02;
- double T = 3.0;
- double time = 0;
+ real dt = 0.02;
+ real T = 3.0;
+ real time = 0;
 
  string meshFile = "sphere.msh";
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
    // time step: n+1/4
    Simulator3D s20(m1,s1);
-   double stepTime = dt/4.0;
+   real stepTime = dt/4.0;
    s20.stepImposedPeriodicField("3d",T,time+stepTime,stepTime); // SolOld(n) --> Sol(n+1/2)
    s20.saveOldData();        // Sol(n+1/2) --> SolOld(n+1/2)
 
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
    s1.movePoints();
    m1.setNormalAndKappa();
 
-   double field = cos(3.14159265358*time/T);
+   real field = cos(3.14159265358*time/T);
    cout << endl;
    cout << "                             | T:        " << T << endl;
    cout << "                             | dt:       " << dt << endl;

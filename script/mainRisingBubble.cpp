@@ -26,42 +26,88 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //double Re = sqrt(42.895); // case 1
- //double Re = 13.8487; // case 2
- double Re = 33.0413; // case 3
- //double Re = sqrt(3892.856); // case 6
- //double Re = sqrt(18124.092); // case 7
- //double Re = sqrt(41505.729); // case 8 (extream)
- //double Re = 79.88; // case 3
+
+ double Re = 100; 
  double Sc = 1;
  double We = 115.662;
  double Fr = 1.0;
- double sigma = 0.078;
- double c1 = 0.0;  // lagrangian
- double c2 = 1.0;  // smooth vel
- double c3 = 10.0;  // smooth coord (fujiwara)
- double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- double d2 = 0.1;  // surface smooth cord (fujiwara)
  double alpha = 1.0;
 
- double mu_in = 0.0000178;
-
- //double mu_out = 2.73;
- //double mu_out = 1.28; 
- double mu_out = 0.5396; // case 3
- //double mu_out = 0.2857; // case 6
- //double mu_out = 0.1324; // case 7
- //double mu_out = 0.0875134907735; // extream
 
  double rho_in = 1.225;
  double rho_out =1350; 
 
+ double mu_out = 1;
+ double mu_in = 0.0000178;
+
+ const char* _case = "3";
+
+ // case 1
+ if( strcmp( _case,"1") == 0 )
+ {
+  Re = sqrt(42.895); 
+  mu_out = 2.73;
+ }
+
+ else if( strcmp( _case,"2") == 0 )
+ {
+  Re = 13.8487; // case 2
+  mu_out = 1.28; 
+ }
+
+ else if( strcmp( _case,"3") == 0 )
+ {
+  Re = 33.0413; // case 3
+  mu_out = 0.5396; // case 3
+ }
+
+ else if( strcmp( _case,"6") == 0 )
+ {
+  Re = sqrt(3892.856); // case 6
+  mu_out = 0.2857; // case 6
+ }
+
+ else if( strcmp( _case,"7") == 0 )
+ {
+  Re = sqrt(18124.092); // case 7
+  mu_out = 0.1324; // case 7
+ }
+
+ else if( strcmp( _case,"8") == 0 )
+ {
+  Re = sqrt(41505.729); // case 8 (extream)
+  mu_out = 0.0875134907735; // extream
+ }
+ else
+ {
+  cerr << "test case " << _case << " not available!" << endl;
+  exit(1);
+ }
+
+
  double cfl = 0.8;
 
- //string meshFile = "airWaterSugar.msh";
- string meshFile = "rising-periodic-mesh.msh";
- //string meshFile = "rising-bubble-pbc-g4D.msh";
- //string meshFile = "test.msh";
+ //const char* _frame = "fixed";
+ const char* _frame = "moving";
+
+ // fixed
+ double c1 = 0.0;      // lagrangian
+ double c2 = 1.0;      // smooth vel 
+ double c3 = 10.0;     // smooth coord (fujiwara)
+ double d1 = 1.0;      // surface tangent vel = (u-ut)
+ double d2 = 0.1;      // surface smooth coord (fujiwara)
+
+ // moving
+ if( strcmp( _frame,"moving") == 0 )
+ {
+  c1 = 0.0;      // lagrangian
+  c2 = 1.0;      // smooth vel: OBS - different result with c1=0.0
+  c3 = 10.0;      // smooth coord (fujiwara)
+  d1 = 0.0;      // surface tangent velocity u_n=u-u_t 
+  d2 = 0.1;      // surface smooth cord (fujiwara)
+ }
+
+ string meshFile = "airWaterSugar.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -70,13 +116,16 @@ int main(int argc, char **argv)
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
+ const char *vtkFolder  = "./vtk/";
  const char *mshFolder  = "./msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
- //const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("MESH3D_DIR");
- meshDir += "/" + meshFile;
+ const char *datFolder  = "./dat/";
+ string meshDir = (string) getenv("DATA_DIR");
+
+ if( strcmp( _frame,"moving") == 0 )
+  meshDir += "/gmsh/3d/rising/movingFrame/" + meshFile;
+ else
+  meshDir += "/gmsh/3d/rising/" + meshFile;
+
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -119,7 +168,6 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
-  s1.setSigma(sigma);
   s1.setCfl(cfl);
   s1.init();
   s1.setDtALETwoPhase();
@@ -169,101 +217,17 @@ int main(int argc, char **argv)
 
   iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
  }
- else if( strcmp( *(argv+1),"remesh") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING & STARTING..." << endl;
-  cout << endl;
 
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setMapping();
-
-  // load surface mesh and create new mesh
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3DOriginal();
-  m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setGenericBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
- }
- else if( strcmp( *(argv+1),"restop") == 0 )  
- {
-  cout << endl;
-  cout << "--------------> RE-MESHING (NO ITERATION)..." << endl;
-  cout << endl;
-
-  // load old mesh
-  Model3D mOld;
-  string file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-  mOld.readVTK(vtkFile);
-  mOld.readVTKHeaviside(vtkFile);
-  mOld.setMapping();
-
-  // load surface mesh and create new one
-  file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3DOriginal();
-  m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-
-  s1(m1);
-  //file = (string) "sim-" + *(argv+2);
-  //const char *sol = file.c_str();
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
-  s1.applyLinearInterpolation(mOld);
-
-  InOut saveEnd(m1,s1); // cria objeto de gravacao
-  saveEnd.saveVTK(vtkFolder,"sim",atoi(*(argv+2)));
-  saveEnd.saveMSH(mshFolder,"newMesh",atoi(*(argv+2)));
-  saveEnd.saveSol(binFolder,"sim",atoi(*(argv+2)));
-  //saveEnd.saveVTKSurface(vtkFolder,"sim",atoi(*(argv+2)));
-  return 0;
- }
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
  h1.initRisingBubble();
  h1.assemble();
- h1.setk(0.05);
+ h1.setk(0.2);
  h1.matMountC();
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -272,7 +236,21 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 10000;
+ double vinst=0;
+ double vref=0;
+ double zref=0;
+ double zinit=0;
+ double dz=0;
+ if( strcmp( _frame,"moving") == 0 )
+ {
+  // moving
+  vref = s1.getWRef();
+  zref = s1.getZRef();
+  s1.setCentroidVelPos();
+  zinit = s1.getCentroidPosZAverage();
+ }
+
+ int nIter = 3000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -283,6 +261,24 @@ int main(int argc, char **argv)
    cout << "____________________________________ Iteration: " 
 	    << iter << endl << endl;
    cout << resetColor();
+
+   // moving
+   if( strcmp( _frame,"moving") == 0 )
+   {
+	// moving frame
+
+	dz = s1.getCentroidPosZAverage() - zinit;
+	vinst = s1.getCentroidVelZAverage() + dz/s1.getDt();
+    vref += vinst;
+	zref += vref*s1.getDt();
+	cout << "vref: " << vref << " zref: " << zref << endl;
+	cout << "dz: " << dz << endl;
+    s1.setWSol(vinst);
+    m1.setGenericBC(vref);
+	m1.moveSinPoints(zref);
+    s1.setWRef(vref);
+	s1.setZRef(zref);
+   }
 
    //s1.stepLagrangian();
    s1.stepALE();
@@ -296,8 +292,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity("-Z");
-   s1.setGravity("-X"); //<<< because the periodic mesh
+   s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -308,25 +303,23 @@ int main(int argc, char **argv)
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
-   save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter); ///<<< 
 
    s1.saveOldData();
-
-   s1.timeStep();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << iter << endl << endl;;
    cout << resetColor();
 
+   s1.timeStep();
+
    iter++;
   }
-
   Helmholtz3D h2(m1,h1);
   h2.setBC();
   h2.initRisingBubble();
   h2.assemble();
-  h2.setk(0.05);
+  //h2.setk(0.05);
   h2.matMountC();
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
@@ -334,6 +327,7 @@ int main(int argc, char **argv)
   h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
+
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */
@@ -342,7 +336,7 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(6.0);
+  m1.insert3dMeshPointsByDiffusion(4.0);
   m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -374,7 +368,10 @@ int main(int argc, char **argv)
  m1.setQuadElement();
 #endif
   m1.setSurfaceConfig();
-  m1.setInterfaceBC();
+
+  if( strcmp( _frame,"moving") == 0 )
+   m1.setGenericBC(vref);
+  else
   m1.setGenericBC();
 
   Simulator3D s2(m1,s1);

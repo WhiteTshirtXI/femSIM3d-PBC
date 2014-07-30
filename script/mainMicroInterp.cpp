@@ -34,10 +34,21 @@ int main(int argc, char **argv)
   *
   * */
  int iter = 0;
- real Re = 100;
- real We = 10;
- //real We = 0.1162;
- real Fr = 10;
+
+ // R1234ze at saturation temperature (31.5 celcius)
+ real D       = 100E-06; // m
+ real G       = 695; // kg/m^2.s
+ real mu_in   = 12.8E-06; // Pa.s
+ real mu_out  = 187.4E-06; // Pa.s
+ real rho_in  = 31.6; // kg/m^3
+ real rho_out = 1137.6; // kg/m^3
+ real v       = G/rho_out; // m/s
+ real sigma   = 7.7E-03; // N/m
+ real g       = 9.81; // m/s^2
+ real Re = rho_out*v*D/mu_out;
+ real We = rho_out*v*v*D/sigma;
+ real Fr = v/(sqrt(g*D));
+
  real c1 = 0.0;  // lagrangian
  real c2 = 0.0;  // smooth vel
  real c3 = 10.0;  // smooth coord (fujiwara)
@@ -47,15 +58,10 @@ int main(int argc, char **argv)
 
  real cfl = 0.8;
 
- real mu_in = 0.01;
- real mu_out = 1.00;
- real rho_in = 0.001;
- real rho_out = 1.0;
-
  //const char* _frame = "fixed";
  const char* _frame = "moving";
 
- string meshFile = "circular.msh";
+ string meshFile = "triangle.msh";
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
@@ -74,7 +80,8 @@ int main(int argc, char **argv)
 
  const char *mesh = meshDir.c_str();
 
- Model3D m1;
+ clVector uSol,cLin;
+ Model3D m1,m2;
  Simulator3D s1;
 
  if( *(argv+1) == NULL )     
@@ -100,6 +107,33 @@ int main(int argc, char **argv)
   m1.setInitSurfaceArea();
   m1.setGenericBC();
 
+  /* *************** BEGIN of INTERPOLATION ***************** */
+  /* read 2D plane solution  from fileDir
+   * extrude 2D points to 3D space
+   * mesh 3D points
+   * interpolate CC to velocity field in m1
+   * */
+  string fileDir = (string) getenv("HOME");
+  fileDir += "/projects/cpp/testTriangleSingle/vtk/secU-715.vtk";
+  const char *file = fileDir.c_str();
+  m2.readVTKSol(file,"uSol");
+  real length = m1.getX()->Max()-m1.getX()->Min();
+  real initial = m1.getX()->Min();
+  m2.extrude2DPoints(10,initial,length,"X");
+  uSol = *m2.getCC();
+  m2.setMesh();
+  m2.setMapping();
+  m2.setMiniElement();
+  m2.setNeighbour();
+  // interp CC to velocity field in m1
+  clVector xVert = *m1.getX();
+  clVector yVert = *m1.getY();
+  clVector zVert = *m1.getZ();
+  clMatrix interpLin = meshInterp(m2,xVert,yVert,zVert);
+  cLin = interpLin*(uSol);
+  m1.setUC(cLin);
+  /* **************** END of INTERPOLATION ****************** */
+
   s1(m1);
 
   s1.setRe(Re);
@@ -114,7 +148,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.initChannel(); // moving frame
+  s1.init(); // moving frame
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -301,6 +335,10 @@ int main(int argc, char **argv)
 	cout << vref << " " << vinst << endl;
 	s1.setUSol(vinst);
 	m1.setGenericBC(vref);
+    /* *************** BEGIN of INTERPOLATION ***************** */
+    clVector cNew = cLin;cNew-vref;
+    m1.setUC(cNew);
+    /* **************** END of INTERPOLATION ****************** */
 	s1.setURef(vref);
    }
 
@@ -316,7 +354,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   //s1.setGravity("-Z");
+   s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -325,8 +363,10 @@ int main(int argc, char **argv)
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
-   save.saveBubbleInfo(datFolder);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
+   save.saveVolumeError(datFolder);         // bubble volume
+   save.saveVolumeCorrection(datFolder);    // volume correction
+   save.saveTimeError(datFolder);           // time step
+   save.saveFilmThickness(datFolder); 
 
    s1.saveOldData();
 
@@ -394,6 +434,21 @@ int main(int argc, char **argv)
    m1.setGenericBC(vref);
   else
   m1.setGenericBC();
+
+ /* *************** BEGIN of INTERPOLATION ***************** */
+  // interp CC to velocity field in m1
+  clVector xVert = *m1.getX();
+  clVector yVert = *m1.getY();
+  clVector zVert = *m1.getZ();
+  clMatrix interpLin = meshInterp(m2,xVert,yVert,zVert);
+  cLin = interpLin*(uSol);
+  clVector cNew = cLin;
+  if( strcmp( _frame,"moving") == 0 )
+   cNew-vref;
+  else
+   cNew;
+  m1.setUC(cNew);
+  /* **************** END of INTERPOLATION ****************** */
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

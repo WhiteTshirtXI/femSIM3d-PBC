@@ -9630,7 +9630,7 @@ void Model3D::setGenericBCPBC()
 			
  for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
  {
-		cout << "Index: " << *itsetOne << endl;
+		//cout << "Index: " << *itsetOne << endl;
 		pbcIndicesLeft.push_back(*itsetOne);
 				 
 		// master coordinates
@@ -9646,7 +9646,7 @@ void Model3D::setGenericBCPBC()
 			
  for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
  {
-		cout << "Index: " << *itsetTwo << endl;
+		//cout << "Index: " << *itsetTwo << endl;
 		pbcIndicesRight.push_back(*itsetTwo);
 
 		// slave coordinates

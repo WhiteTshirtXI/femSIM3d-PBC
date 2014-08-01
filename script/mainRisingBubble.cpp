@@ -87,8 +87,8 @@ int main(int argc, char **argv)
 
  double cfl = 0.8;
 
- //const char* _frame = "fixed";
- const char* _frame = "moving";
+ const char* _frame = "fixed";
+ //const char* _frame = "moving";
 
  // fixed
  double c1 = 0.0;      // lagrangian
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
- string meshFile = "airWaterSugar.msh";
+ string meshFile = "rising-periodic-mesh-noTransfinite.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -116,16 +116,18 @@ int main(int argc, char **argv)
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "./bin/";
- const char *vtkFolder  = "./vtk/";
+ //const char *vtkFolder  = "./vtk/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/";
  const char *mshFolder  = "./msh/";
- const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("DATA_DIR");
-
+ //const char *datFolder  = "./dat/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/dat/";
+ string meshDir = (string) getenv("MESH3D_DIR");
+ 
  if( strcmp( _frame,"moving") == 0 )
-  meshDir += "/gmsh/3d/rising/movingFrame/" + meshFile;
+  meshDir += "/rising/movingFrame/" + meshFile;
  else
-  meshDir += "/gmsh/3d/rising/" + meshFile;
-
+  meshDir += "/rising/" + meshFile;
+ 
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -275,7 +277,6 @@ int main(int argc, char **argv)
 	cout << "dz: " << dz << endl;
     s1.setWSol(vinst);
     m1.setGenericBC(vref);
-	m1.moveSinPoints(zref);
     s1.setWRef(vref);
 	s1.setZRef(zref);
    }
@@ -292,7 +293,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("-Z");
+   s1.setGravity("-X");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
@@ -319,7 +320,7 @@ int main(int argc, char **argv)
   h2.setBC();
   h2.initRisingBubble();
   h2.assemble();
-  //h2.setk(0.05);
+  h2.setk(0.2);
   h2.matMountC();
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
@@ -336,7 +337,7 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(4.0);
+  m1.insert3dMeshPointsByDiffusion(6.0);
   m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
@@ -347,11 +348,11 @@ int main(int argc, char **argv)
   // surface operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("curvature");
+  m1.insertPointsByLength("flat");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("curvature");
+  m1.contractEdgesByLength("flat");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
 

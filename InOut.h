@@ -278,6 +278,7 @@ private:
   clDMatrix *kappa;
   clVector *mu,*rho;
   clVector *hSmooth,*gravity;
+  clVector *betaFlowLiq; //<<< PBC
   int iter;
   double c1,c2,c3,d1,d2;
 };

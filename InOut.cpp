@@ -214,6 +214,7 @@ InOut::InOut( Model3D &_m, Simulator3D &_s )
  rho = s->getRho();
  //hSmooth = s->getHSmooth();
  gravity = s->getGravity();
+ betaFlowLiq = s->getBetaFlowLiq(); //<<<
  uSolOld = s->getUSolOld();
  vSolOld = s->getVSolOld();
  wSolOld = s->getWSolOld();
@@ -514,6 +515,9 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
 
+ if( betaFlowLiq->Dim() > 0 )
+  vtkVector(vtkFile,"beta_grad",*betaFlowLiq);
+
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
 
@@ -672,6 +676,9 @@ void InOut::saveVTK( const char* _coord1, const char* _coord2,
 
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
+
+ if( betaFlowLiq->Dim() > 0 )
+  vtkVector(vtkFile,"beta_grad",*betaFlowLiq);
 
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
@@ -2077,6 +2084,9 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  if( gravity->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
+
+ if( betaFlowLiq->Dim() > 0 )
+  vtkVector(vtkFile,"beta_grad",*betaFlowLiq);
 
  if( fint->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"surface_force",*fint);

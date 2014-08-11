@@ -107,7 +107,11 @@ int main(int argc, char **argv)
   d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
- string meshFile = "rising-periodic-mesh-pbc-noTransfinite.msh";
+ string meshFile = "airWaterSugarPBC-wallOutflow.msh";
+ //string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
+ //string meshFile = "airWaterSugarPBC-wallLeftRight-GCPO.msh";
+ //string meshFile = "airWaterSugarPBC-wallNoSlip.msh";
+ //string meshFile = "airWaterSugarPBC-wallNoSlip-GCPO.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -115,12 +119,18 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
+ const char *mshFolder  = "./msh/";
  const char *binFolder  = "./bin/";
  //const char *vtkFolder  = "./vtk/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/";
- const char *mshFolder  = "./msh/";
  //const char *datFolder  = "./dat/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
 
  if( strcmp( _frame,"moving") == 0 )
@@ -152,6 +162,7 @@ int main(int argc, char **argv)
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
   m1.setGenericBCPBC();
+  //m1.setGenericBC();
 
   
   Periodic3D pbc(m1);
@@ -195,6 +206,8 @@ int main(int argc, char **argv)
  save.saveVTKSurface(vtkFolder,"geometry");
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
+ save.saveVTK(vtkFolder,"initial",0);
+ save.saveVTKSurface(vtkFolder,"initial",0);
 
  double vinst=0;
  double vref=0;
@@ -210,7 +223,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 3000;
+ int nIter = 10000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -241,8 +254,8 @@ int main(int argc, char **argv)
    }
 
    //s1.stepLagrangian();
-   //s1.stepALE();
-   s1.stepALEPBC();
+   s1.stepALE();
+   //s1.stepALEPBC();//<<
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
@@ -250,16 +263,18 @@ int main(int argc, char **argv)
 
    s1.movePoints();
    s1.assemble();
+   //s1.assembleBetaFlow(); // <<<
    s1.matMount();
-   s1.setUnCoupledPBC();
+   s1.setUnCoupledBC();
+   //s1.setUnCoupledPBC();//<
    s1.setGravity("-X");
    s1.setBetaFlowLiq("+X");
-   //s1.setRHS();
    s1.setRHS_PBC();
    s1.setCopyDirectionPBC("RL");
    //s1.setInterface();
    s1.setInterfaceGeo();
-   s1.unCoupledPBCNew();
+   s1.unCoupled();
+   //s1.unCoupledPBCNew();
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
@@ -341,7 +356,8 @@ int main(int argc, char **argv)
   else
   {
    m1.setGenericBCPBC();
-   pbc.MountPeriodicVectorsNew("noPrint");
+   //m1.setGenericBC();
+   pbc.MountPeriodicVectorsNew("print");
   }
 
   Simulator3D s2(m1,s1);

@@ -7009,6 +7009,8 @@ vector< list<int> >* Model3D::getNeighbourFace(){return &neighbourFace;}
 vector< list<int> >* Model3D::getNeighbourPoint(){return &neighbourPoint;}
 vector<int>* Model3D::getPbcIndicesLeft(){return &pbcIndicesLeft;} // PBC
 vector<int>* Model3D::getPbcIndicesRight(){return &pbcIndicesRight;} // PBC
+vector<int>* Model3D::getElemIdMaster(){return &elemIdMaster;} // PBC
+vector<int>* Model3D::getElemIdSlave(){return &elemIdSlave;} // PBC
 vector< list<int> >* Model3D::getFaceIEN(){return &faceIEN;}
 list<int>* Model3D::getInVert(){return &inVert;}
 list<int>* Model3D::getBoundaryVert(){return &boundaryVert;}
@@ -7166,6 +7168,8 @@ void Model3D::operator=(Model3D &_mRight)
   inElem = _mRight.inElem;
   pbcIndicesLeft = _mRight.pbcIndicesLeft; // PBC
   pbcIndicesRight = _mRight.pbcIndicesRight; // PBC
+  elemIdMaster = _mRight.elemIdMaster; // PBC
+  elemIdSlave = _mRight.elemIdSlave; // PBC
 }
 
 void Model3D::saveVTKSurface( const char* _dir,
@@ -9582,6 +9586,8 @@ void Model3D::setGenericBCPBC()
  // cleaning vectors of periodic indices
  pbcIndicesLeft.resize(0);
  pbcIndicesRight.resize(0);
+ elemIdMaster.resize(0);
+ elemIdSlave.resize(0);
  
 
  // auxiliary x,y,z pbc coordinates
@@ -10042,6 +10048,8 @@ void Model3D::setGenericBCPBC(double _vel)
  // cleaning vectors of periodic indices
  pbcIndicesLeft.resize(0);
  pbcIndicesRight.resize(0);
+ elemIdMaster.resize(0);
+ elemIdSlave.resize(0);
 
  // auxiliary x,y,z pbc coordinates
  vector<double> xpbcMaster(0);
@@ -10377,5 +10385,48 @@ void Model3D::setGenericBCPBC(double _vel)
  }
 }
 
+void Model3D::setPeriodicElemsId()
+{
+	vector<int>::iterator itL1;
+	vector<int>::iterator itL2;
+	vector<int>::iterator itL3;		
+	vector<int>::iterator itL;
+	itL = pbcIndicesLeft.end();
 
+	vector<int>::iterator itR1;
+	vector<int>::iterator itR2;
+	vector<int>::iterator itR3;		
+	vector<int>::iterator itR;
+	itR = pbcIndicesRight.end();
+
+	for ( int e = 0; e < surfMesh.numElems; ++e )
+	{
+		int v1 = surfMesh.IEN.Get(e,0);
+		int v2 = surfMesh.IEN.Get(e,1);
+		int v3 = surfMesh.IEN.Get(e,2);
+
+		int id = surfMesh.elemIdRegion.Get(e);
+
+
+		itL1 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v1);
+		itL2 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v2);
+		itL3 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v3);
+		
+		if ( ( id == 0 ) && ( itL1 != itL ) && ( itL2 != itL ) && ( itL3 != itL ) )
+		{
+		 cout << "element master = " << e << endl;
+			elemIdMaster.push_back(e);
+		}
+
+		itR1 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v1);
+		itR2 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v2);
+		itR3 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v3);
+
+		if ( ( id == 0 ) && ( itR1 != itR ) && ( itR2 != itR ) && ( itR3 != itR ) )
+		{
+		 cout << "element slave = " << e << endl;
+			elemIdMaster.push_back(e);
+		}
+	}
+}
 

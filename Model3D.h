@@ -334,6 +334,9 @@ class Model3D
   list<int>* getInElem();
   vector<int>* getPbcIndicesLeft(); // PBC
   vector<int>* getPbcIndicesRight(); // PBC
+  vector<int>* getElemIdMaster(); // PBC
+  vector<int>* getElemIdSlave(); // PBC
+  void setPeriodicElemsId(); // PBC
   double getMinEdge();
   void setTriEdge();
   void setTriEdge(vector< double > _triEdge);
@@ -451,6 +454,8 @@ class Model3D
   /* PBC */
   vector<int> pbcIndicesLeft;
   vector<int> pbcIndicesRight;
+  vector<int> elemIdMaster; // vector with indices of master elements 
+  vector<int> elemIdSlave; // vector with indices of slave elements
 
 };
 

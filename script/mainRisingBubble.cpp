@@ -117,10 +117,10 @@ int main(int argc, char **argv)
 
  const char *binFolder  = "./bin/";
  //const char *vtkFolder  = "./vtk/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
  const char *mshFolder  = "./msh/";
  //const char *datFolder  = "./dat/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/dat/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
  
  if( strcmp( _frame,"moving") == 0 )
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
   zinit = s1.getCentroidPosZAverage();
  }
 
- int nIter = 3000;
+ int nIter = 10000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("-X");
+   s1.setGravity("-Z");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();

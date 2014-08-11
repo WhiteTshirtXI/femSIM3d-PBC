@@ -58,7 +58,6 @@ class Simulator3D
   void init2AxiBubbles();
   void init2Bubbles();
   void assemble();
-  void assembleBetaFlow(); //
   void assembleHeatTransfer();
   void assembleK();
   void assembleM();
@@ -71,7 +70,9 @@ class Simulator3D
   void matMountC();
 
   // PBC ******* 
+  void matMountPBC(); // MrhoBetaFlow
   void assemblePBC();
+  void assembleBetaFlow(); // MrhoBetaFlow
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
   void assembleCPBC();
@@ -99,6 +100,8 @@ class Simulator3D
   double getPeriodicFaceVelXAverage();
   double getPeriodicFaceVelYAverage();
   double getPeriodicFaceVelZAverage();
+  double getPeriodicFaceAveragePressure(); //
+  double getPeriodicFaceTimeAveragePressure(); //
   //******* 
 
   void step();
@@ -360,12 +363,14 @@ class Simulator3D
   double xRef,yRef,zRef;
 
   clMatrix K,Kc,Mrho,M,Mc,G,Gc,D,A;
+  clMatrix MrhoBetaFlow, MrhoBetaFlowLumped; // << PBC
   clMatrix mat,matc;
   clMatrix gx,gy,gz;
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
   clMatrix interpLin;
   clDMatrix MrhoLumped,McLumped;
   clDMatrix invA,invC,invMrhoLumped,invMcLumped;
+  clDMatrix invMrhoBetaFlowLumped; // << PBC
   clDMatrix MLumped,invMLumped;
   clDMatrix kappa;
   clVector va,vcc,b;

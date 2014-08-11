@@ -198,6 +198,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  K = _sRight.K;
  Kc = _sRight.Kc;
  Mrho = _sRight.Mrho;
+ MrhoBetaFlow = _sRight.MrhoBetaFlow; // PBC
  M = _sRight.M;
  Mc = _sRight.Mc;
  G = _sRight.G;
@@ -206,6 +207,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  mat = _sRight.mat;
  matc = _sRight.matc;
  MrhoLumped = _sRight.MrhoLumped;
+ MrhoBetaFlowLumped = _sRight.MrhoBetaFlowLumped; // PBC
  MLumped = _sRight.MLumped;
  McLumped = _sRight.McLumped;
  gx = _sRight.gx;
@@ -222,6 +224,7 @@ Simulator3D::Simulator3D( const Simulator3D &_sRight )
  invA = _sRight.invA;
  invC = _sRight.invC;
  invMrhoLumped = _sRight.invMrhoLumped;
+ invMrhoBetaFlowLumped = _sRight.invMrhoBetaFlowLumped; // PBC
  invMLumped = _sRight.invMLumped;
  invMcLumped = _sRight.invMcLumped;
 
@@ -795,17 +798,7 @@ void Simulator3D::assembleBetaFlow()
  int i,j,ii,jj;
  int v[NUMGLEU];
  double aux;
- clMatrix Kxx( numNodes,numNodes );
- clMatrix Kxy( numNodes,numNodes );
- clMatrix Kxz( numNodes,numNodes );
- clMatrix Kyy( numNodes,numNodes );
- clMatrix Kyz( numNodes,numNodes );
- clMatrix Kzz( numNodes,numNodes );
- clMatrix Mx_rho( numNodes,numNodes );
- clMatrix Mx( numNodes,numNodes );
- clMatrix Gx( numNodes,numVerts );
- clMatrix Gy( numNodes,numVerts );
- clMatrix Gz( numNodes,numVerts );
+ clMatrix Mx_rhoBetaFlow( numNodes,numNodes );
 
 #if NUMGLEU == 5
  FEMMiniElement3D miniElem(*X,*Y,*Z);
@@ -813,31 +806,25 @@ void Simulator3D::assembleBetaFlow()
  FEMQuadElement3D miniElem(*X,*Y,*Z);
 #endif
 
- //setMu( mu_in );
- //setRho( rho_in );
- setMu( mu_in,mu_out );
  setRho( rho_in,rho_out );
-
+ 
  for( int mele=0;mele<numElems;mele++ )
  {
   for( int n=0;n<NUMGLEU;n++ )
    v[n] = (int) IEN->Get(mele,n);
 
-  double muValue=0;
   double rhoValue=0;
   if( elemIdRegion->Get(mele) == 0.0 ) // out
   {
-   muValue = mu_outAdimen;
    rhoValue = rho_outAdimen;
   }
   else
   {
-   muValue = -mu_inAdimen + mu_outAdimen;
-   rhoValue = rho_inAdimen;
+   rhoValue = rho_outAdimen;
   }
 
   miniElem.getM(*v);  // para problemas SEM deslizamento
-
+  
   for( i=0;i<NUMGLEU;i++ )
   {
    ii=v[i];
@@ -846,87 +833,18 @@ void Simulator3D::assembleBetaFlow()
 	jj=v[j];
 
 	// bloco 11
-	aux = Kxx.Get(ii,jj) + muValue*( 2*miniElem.kxx[i][j] + 
-	                                   miniElem.kyy[i][j] + 
-									   miniElem.kzz[i][j] ); 
-	Kxx.Set(ii,jj,aux);
-
-	aux = Mx_rho.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
-	Mx_rho.Set(ii,jj,aux); // matriz de massa
-
-	aux = Mx.Get(ii,jj) + miniElem.massele[i][j];
-	Mx.Set(ii,jj,aux); // matriz de massa sem rho
-
-	// bloco 12
-	aux = Kxy.Get(ii,jj) + muValue*( miniElem.kxy[i][j] ); 
-	Kxy.Set(ii,jj,aux);
-
-	// bloco 13
-	aux = Kxz.Get(ii,jj) + muValue*( miniElem.kxz[i][j] ); 
-	Kxz.Set(ii,jj,aux);
-
-	// bloco 22
-	aux = Kyy.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
-	                               2*miniElem.kyy[i][j] + 
-							         miniElem.kzz[i][j] ); 
-	Kyy.Set(ii,jj,aux);
-
-	// bloco 23
-	aux = Kyz.Get(ii,jj) + muValue*( miniElem.kyz[i][j] ); 
-	Kyz.Set(ii,jj,aux);
-
-	// bloco 33
-	aux = Kzz.Get(ii,jj) + muValue*( miniElem.kxx[i][j] + 
-	                                 miniElem.kyy[i][j] + 
-								   2*miniElem.kzz[i][j] ); 
-	Kzz.Set(ii,jj,aux);
-   }
-   for( j=0;j<NUMGLEP;j++ )
-   {
-	jj=v[j];
-	
-	// bloco 1
-	aux = Gx.Get(ii,jj) + miniElem.gxele[i][j];
-	Gx.Set(ii,jj,aux);
-	// bloco 2
-	aux = Gy.Get(ii,jj) + miniElem.gyele[i][j];
-	Gy.Set(ii,jj,aux);
-	// bloco 3
-	aux = Gz.Get(ii,jj) + miniElem.gzele[i][j];
-	Gz.Set(ii,jj,aux);
-   }
+	aux = Mx_rhoBetaFlow.Get(ii,jj) + rhoValue*miniElem.massele[i][j];
+	Mx_rhoBetaFlow.Set(ii,jj,aux); // matriz de massa
   }
  }
+}
  
  /* GALERKIN */
- // gx = Gx;
- // gy = Gy;
- // gz = Gz;
- Mrho.CopyFrom(          0,          0,  Mx_rho );
- Mrho.CopyFrom(   numNodes,   numNodes,  Mx_rho );
- Mrho.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rho );
+ MrhoBetaFlow.CopyFrom(          0,          0,  Mx_rhoBetaFlow );
+ MrhoBetaFlow.CopyFrom(   numNodes,   numNodes,  Mx_rhoBetaFlow );
+ MrhoBetaFlow.CopyFrom( 2*numNodes, 2*numNodes,  Mx_rhoBetaFlow );
 
- M.CopyFrom(          0,          0,     Mx );
- M.CopyFrom(   numNodes,   numNodes,     Mx );
- M.CopyFrom( 2*numNodes, 2*numNodes,     Mx );
-
- K.CopyFrom(          0,          0,     Kxx );
- K.CopyFrom(          0,   numNodes,     Kxy );
- K.CopyFrom(          0, 2*numNodes,     Kxz );
- K.CopyFrom(   numNodes,          0,     Kxy.Transpose() );
- K.CopyFrom(   numNodes,   numNodes,     Kyy );
- K.CopyFrom(   numNodes, 2*numNodes,     Kyz );
- K.CopyFrom( 2*numNodes,          0,     Kxz.Transpose() );
- K.CopyFrom( 2*numNodes,   numNodes,     Kyz.Transpose() );
- K.CopyFrom( 2*numNodes, 2*numNodes,     Kzz );
-
- G.CopyFrom(          0,          0,     Gx );
- G.CopyFrom(   numNodes,          0,     Gy );
- G.CopyFrom( 2*numNodes,          0,     Gz );
- D.CopyFrom(          0,          0,     Gx.Transpose() );
- D.CopyFrom(          0,   numNodes,     Gy.Transpose() );
- D.CopyFrom(          0, 2*numNodes,     Gz.Transpose() );
-} // fecha metodo ASSEMBLE
+} // fecha metodo assembleBetaFlow
 
 
 void Simulator3D::assembleHeatTransfer()
@@ -2862,6 +2780,15 @@ void Simulator3D::matMount()
  }
 }
 
+void Simulator3D::matMountPBC()
+{
+  for( int i = 0; i < 3*numNodes; i++ )
+  {
+  double sumMrhoBetaFlow = MrhoBetaFlow.SumLine(i);
+  invMrhoBetaFlowLumped.Set( i,1.0/sumMrhoBetaFlow );
+  }
+}
+
 void Simulator3D::matMountC()
 {
  // set para Matriz Lumped da concentracao
@@ -2933,6 +2860,7 @@ void Simulator3D::unCoupled()
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + 
         dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+        //dt*invMLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
 		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
 
  }
@@ -4341,6 +4269,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  K = _sRight.K;
  Kc = _sRight.Kc;
  Mrho = _sRight.Mrho;
+ MrhoBetaFlow = _sRight.MrhoBetaFlow; // <<<
  M = _sRight.M;
  Mc = _sRight.Mc;
  G = _sRight.G;
@@ -4349,6 +4278,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  mat = _sRight.mat;
  matc = _sRight.matc;
  MrhoLumped = _sRight.MrhoLumped;
+ MrhoBetaFlowLumped = _sRight.MrhoBetaFlowLumped; // <<<
  MLumped = _sRight.MLumped;
  McLumped = _sRight.McLumped;
  gx = _sRight.gx;
@@ -4365,6 +4295,7 @@ void Simulator3D::operator=(Simulator3D &_sRight)
  invA = _sRight.invA;
  invC = _sRight.invC;
  invMrhoLumped = _sRight.invMrhoLumped;
+ invMrhoBetaFlowLumped = _sRight.invMrhoBetaFlowLumped; // <<<
  invMLumped = _sRight.invMLumped;
  invMcLumped = _sRight.invMcLumped;
 
@@ -5013,9 +4944,11 @@ void Simulator3D::allocateMemoryToAttrib()
  K.Dim( 3*numNodes,3*numNodes );
  Kc.Dim( numVerts,numVerts );
  Mrho.Dim( 3*numNodes,3*numNodes );
+ MrhoBetaFlow.Dim( 3*numNodes,3*numNodes ); // <<<
  M.Dim( 3*numNodes,3*numNodes );
  Mc.Dim( numVerts,numVerts );
  MrhoLumped.Dim( 3*numNodes );
+ MrhoBetaFlowLumped.Dim( 3*numNodes ); // <<<
  MLumped.Dim( 3*numNodes );
  McLumped.Dim( numVerts );
  G.Dim( 3*numNodes,numVerts );
@@ -5049,6 +4982,7 @@ void Simulator3D::allocateMemoryToAttrib()
  matc.Dim( numVerts,numVerts );
  invA.Dim( 3*numNodes );
  invMrhoLumped.Dim( 3*numNodes );
+ invMrhoBetaFlowLumped.Dim( 3*numNodes ); // <<<
  invMLumped.Dim( 3*numNodes );
  invC.Dim( numVerts );
  invMcLumped.Dim( numVerts );
@@ -5900,6 +5834,99 @@ void Simulator3D::assemblePBCTwoPhaseNew()
 	  ibL = MasterIndices->at(i);
 	  invMrhoLumped.Set(ibL,0.0);
 	}
+    
+	// MrhoBetaFlow
+	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+	{
+	  // left and right nodes
+	  ibL = MasterIndices->at(i);
+	  ibR = SlaveIndices->at(i);
+	  
+	  for( j = 0; j < 3*numNodes; j++ ) // loop rows
+	  {
+		// x-direction
+		double MrhoBetaFlowRow = MrhoBetaFlow.Get(ibR,j);
+		MrhoBetaFlowRow += MrhoBetaFlow.Get(ibL,j);
+		MrhoBetaFlow.Set(ibR,j,MrhoBetaFlowRow);
+	  
+		// y-direction
+		MrhoBetaFlowRow = MrhoBetaFlow.Get(ibR + numNodes,j);
+		MrhoBetaFlowRow += MrhoBetaFlow.Get(ibL + numNodes,j);
+		MrhoBetaFlow.Set(ibR + numNodes,j,MrhoBetaFlowRow);
+		
+		// z-direction
+		MrhoBetaFlowRow = MrhoBetaFlow.Get(ibR + 2*numNodes,j);
+		MrhoBetaFlowRow += MrhoBetaFlow.Get(ibL + 2*numNodes,j);
+		MrhoBetaFlow.Set(ibR + 2*numNodes,j,MrhoBetaFlowRow);
+	  }
+	
+	  for( j = 0; j < 3*numNodes; j++ ) // loop columns
+	  {
+		// x-direction
+		double MrhoBetaFlowColumn = MrhoBetaFlow.Get(j,ibR);
+		MrhoBetaFlowColumn += MrhoBetaFlow.Get(j,ibL);
+		MrhoBetaFlow.Set(j,ibR,MrhoBetaFlowColumn);
+		
+		// y-direction
+		MrhoBetaFlowColumn = MrhoBetaFlow.Get(j,ibR + numNodes);
+		MrhoBetaFlowColumn += MrhoBetaFlow.Get(j,ibL + numNodes);
+		MrhoBetaFlow.Set(j,ibR + numNodes,MrhoBetaFlowColumn);
+
+		// z-direction
+		MrhoBetaFlowColumn = MrhoBetaFlow.Get(j,ibR + 2*numNodes);
+		MrhoBetaFlowColumn += MrhoBetaFlow.Get(j,ibL + 2*numNodes);
+		MrhoBetaFlow.Set(j,ibR + 2*numNodes,MrhoBetaFlowColumn);
+	  }
+	}
+  
+	for ( i = 0; i < nyPointsL; i++  )	 
+	{
+	  // eliminating rows and columns
+	  ibL = MasterIndices->at(i);
+	  MrhoBetaFlow.SetRowZero(ibL);
+	  MrhoBetaFlow.SetColumnZero(ibL);
+	  MrhoBetaFlow.SetRowZero(ibL + numNodes);
+	  MrhoBetaFlow.SetRowZero(ibL + 2*numNodes);
+	  MrhoBetaFlow.SetColumnZero(ibL + numNodes);
+	  MrhoBetaFlow.SetColumnZero(ibL + 2*numNodes);
+	  
+	  // changed diagonal's values
+	  MrhoBetaFlow.Set(ibL,ibL,1.0);
+	  MrhoBetaFlow.Set(ibL + numNodes,ibL + numNodes,1.0);
+	  MrhoBetaFlow.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+	}
+
+	// invMrhoBetaFlowLumped
+	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+	{
+	  // left and right nodes
+	  ibL = MasterIndices->at(i);
+	  ibR = SlaveIndices->at(i);
+	  
+	  // x-direction
+	  double invMrhoBetaFlowLumpedRow = invMrhoBetaFlowLumped.Get(ibR);
+	  invMrhoBetaFlowLumpedRow += invMrhoBetaFlowLumped.Get(ibL);
+	  invMrhoBetaFlowLumped.Set(ibR,invMrhoBetaFlowLumpedRow);
+	
+	  // y-direction
+	  invMrhoBetaFlowLumpedRow = invMrhoBetaFlowLumped.Get(ibR + numNodes);
+	  invMrhoBetaFlowLumpedRow += invMrhoBetaFlowLumped.Get(ibL + numNodes);
+	  invMrhoBetaFlowLumped.Set(ibR + numNodes,invMrhoBetaFlowLumpedRow);
+
+	  // z-direction
+	  invMrhoBetaFlowLumpedRow = invMrhoBetaFlowLumped.Get(ibR + 2*numNodes);
+	  invMrhoBetaFlowLumpedRow += invMrhoBetaFlowLumped.Get(ibL + 2*numNodes);
+	  invMrhoBetaFlowLumped.Set(ibR + 2*numNodes,invMrhoBetaFlowLumpedRow);
+	}
+
+	// eliminating
+	for ( i = 0; i < nyPointsL; i++ )
+	{
+	  // left and right nodes
+	  ibL = MasterIndices->at(i);
+	  invMrhoBetaFlowLumped.Set(ibL,0.0);
+	}
+
 
 	// invMLumped
 	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
@@ -6471,8 +6498,8 @@ void Simulator3D::unCoupledPBC()
 void Simulator3D::setBetaPressureLiquid()
 {
      //betaPressLiq = 32.0/Re; // Poiseuille flow
-	 betaPressLiq = 1.0;
-	
+	 betaPressLiq = fabs(rho_inAdimen - rho_outAdimen);
+ 	
 }
 
 
@@ -6519,8 +6546,8 @@ void Simulator3D::inputPurePressurePBC()
  * independently of the density. */
 void Simulator3D::setRHS_PBC()
 {
-	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW 
-	 	 + M*betaFlowLiq;
+	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + M*betaFlowLiq;
+	//va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 
 } // fecha metodo
 
@@ -6892,5 +6919,6 @@ double Simulator3D::getPeriodicFaceVelZAverage()
   
   return vMed;
 }
+
 
 

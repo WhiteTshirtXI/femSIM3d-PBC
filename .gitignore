@@ -3,6 +3,7 @@
 *.o
 *.dat
 *.swp
+*.swo
 .DS*
 *.vtk
 *.vtu

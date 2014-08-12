@@ -7099,5 +7099,5 @@ void Simulator3D::setBetaPressureLiquidTimeAverage(const char* _direction, const
 
 }
 
-double* Simulator3D::getBetaPressLiq(){return &betaPressLiq;}
+double Simulator3D::getBetaPressLiq(){return betaPressLiq;}
 

@@ -276,6 +276,7 @@ int main(int argc, char **argv)
    s1.unCoupled();
    //s1.unCoupledPBCNew();
    s1.setBetaPressureLiquidTimeAverage("X","average"); // <<< 
+   save.saveBetaPressLiq(datFolder); // <<<
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);

@@ -103,7 +103,7 @@ class Simulator3D
   double getPeriodicFaceVelZAverage();
   vector<double> getPeriodicFaceTimeAveragePressure(const char* _type); 
   void setBetaPressureLiquidTimeAverage(const char* _direction,const char* _type);
-  double* getBetaPressLiq();
+  double getBetaPressLiq();
   //******* 
 
   void step();

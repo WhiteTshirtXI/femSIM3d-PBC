@@ -4990,9 +4990,9 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "vel centroid X" 
                    << setw(18) << "vel centroid Y" 
                    << setw(18) << "vel centroid Z" 
-                   << setw(18) << "vel refenrece X" 
-                   << setw(18) << "vel refenrece Y" 
-                   << setw(18) << "vel refenrece Z" 
+                   << setw(18) << "vel reference X" 
+                   << setw(18) << "vel reference Y" 
+                   << setw(18) << "vel reference Z" 
                    << setw(18) << "vel average periodic X" 
                    << setw(18) << "vel average periodic Y" 
                    << setw(18) << "vel average periodic Z" 
@@ -5893,4 +5893,33 @@ void InOut::saveBubbleShapeFactors(const char* _dir,const char* _filename, int _
 
    file.close();
  }
+}
+
+void InOut::saveBetaPressLiq( const char* _dir)
+{
+ string fileAux = (string) _dir + "betaPressureLiq.dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on betaPressureLiq.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file betaPressureLiq.dat" << endl;
+  file << "#time" << setw(29) << "beta_grad" 
+					   << setw(6) << "iter" 
+					   << endl;
+ }
+ 
+ file << setprecision(10) << scientific; 
+ file << setw(10) << s->getTime() << " " 
+           << setw(17) << s->getBetaPressLiq() << " " 
+		   << setw(5) << setprecision(0) << fixed << iter 
+		   << endl;
+
+ file.close();
 }

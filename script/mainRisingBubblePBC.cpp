@@ -107,8 +107,8 @@ int main(int argc, char **argv)
   d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
- string meshFile = "airWaterSugarPBC-wallOutflow.msh";
- //string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
+ //string meshFile = "airWaterSugarPBC-wallOutflow.msh";
+ string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
  //string meshFile = "airWaterSugarPBC-wallLeftRight-GCPO.msh";
  //string meshFile = "airWaterSugarPBC-wallNoSlip.msh";
  //string meshFile = "airWaterSugarPBC-wallNoSlip-GCPO.msh";
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
   
   Periodic3D pbc(m1);
-  pbc.MountPeriodicVectorsNew("print");
+  pbc.MountPeriodicVectorsNew("noPrint");
   Simulator3D s1(pbc,m1);
   //Simulator3D s1(m1);
 
@@ -268,13 +268,14 @@ int main(int argc, char **argv)
    s1.setUnCoupledBC();
    //s1.setUnCoupledPBC();//<
    s1.setGravity("-X");
-   s1.setBetaFlowLiq("+X");
+   //s1.setBetaFlowLiq("+X");
    s1.setRHS_PBC();
    s1.setCopyDirectionPBC("RL");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
    //s1.unCoupledPBCNew();
+   s1.setBetaPressureLiquidTimeAverage("X","average"); // <<< 
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
@@ -357,7 +358,7 @@ int main(int argc, char **argv)
   {
    m1.setGenericBCPBC();
    //m1.setGenericBC();
-   pbc.MountPeriodicVectorsNew("print");
+   pbc.MountPeriodicVectorsNew("noPrint");
   }
 
   Simulator3D s2(m1,s1);

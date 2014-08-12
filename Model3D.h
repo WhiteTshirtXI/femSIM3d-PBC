@@ -34,6 +34,7 @@
 #include "structs.h"
 #include "geometry.h"
 #include "tetgen.h"
+#include "MathTools.h"
 
 /**
  * @brief classe responsavel pela preparacao da malha para entrada no

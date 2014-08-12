@@ -9678,6 +9678,9 @@ void Model3D::setGenericBCPBC()
 	// pairing checking
 	else
 	{
+	    // setting of periodic elements
+        setPeriodicElemsId(); // <<<<
+	
 		for (int is = 0; is < sizeM; ++is)
 		{
 			double yM = ypbcMaster.at(is);
@@ -9825,8 +9828,24 @@ void Model3D::setGenericBCPBC()
   }
 
   // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) 
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) 
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
 
   // inflow condition W
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
@@ -10137,6 +10156,9 @@ void Model3D::setGenericBCPBC(double _vel)
 	// pairing checking
 	else
 	{
+	    // setting of periodic elements
+        setPeriodicElemsId(); // <<<<
+
 		for (int is = 0; is < sizeM; ++is)
 		{
 			double yM = ypbcMaster.at(is);
@@ -10385,6 +10407,12 @@ void Model3D::setGenericBCPBC(double _vel)
  }
 }
 
+/* \brief Sets indices of periodic elements.
+ *
+ * \returns {void}
+ *
+ * ]remark{It should be called after reading periodic B.C. nodes.}
+ */
 void Model3D::setPeriodicElemsId()
 {
 	vector<int>::iterator itL1;
@@ -10397,7 +10425,7 @@ void Model3D::setPeriodicElemsId()
 	vector<int>::iterator itR2;
 	vector<int>::iterator itR3;		
 	vector<int>::iterator itR;
-	itR = pbcIndicesRight.end();
+	itR = pbcIndicesRight.end(); // last element
 
 	for ( int e = 0; e < surfMesh.numElems; ++e )
 	{
@@ -10407,26 +10435,39 @@ void Model3D::setPeriodicElemsId()
 
 		int id = surfMesh.elemIdRegion.Get(e);
 
-
+		/* Strategy: if v1,v2,v3 are all periodic nodes, recover
+		 * the element indice. Function 'find' tries to locate 
+		 * the node, else returns the last element of the vector. 
+		 * In this case, the 'if' below locates the wall elements
+		 * with and prevents that ALL the iterators dereference to 
+		 * the last node, thus recovering the element.
+		 */
 		itL1 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v1);
 		itL2 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v2);
 		itL3 = find(pbcIndicesLeft.begin(), pbcIndicesLeft.end(), v3);
 		
-		if ( ( id == 0 ) && ( itL1 != itL ) && ( itL2 != itL ) && ( itL3 != itL ) )
+		if ( ( id == 0 ) && ( *itL1 != *itL ) && ( *itL2 != *itL ) && ( *itL3 != *itL ) )
 		{
-		 cout << "element master = " << e << endl;
-			elemIdMaster.push_back(e);
+		  //cout << "element master = " << e << endl;
+		  //cout << "[ " << v1 << " " << v2 << " " << v3 << " ]" << endl;
+		  elemIdMaster.push_back(e);
 		}
 
 		itR1 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v1);
 		itR2 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v2);
 		itR3 = find(pbcIndicesRight.begin(), pbcIndicesRight.end(), v3);
 
-		if ( ( id == 0 ) && ( itR1 != itR ) && ( itR2 != itR ) && ( itR3 != itR ) )
+		if ( ( id == 0 ) && ( *itR1 != *itR ) && ( *itR2 != *itR ) && ( *itR3 != *itR ) )
 		{
-		 cout << "element slave = " << e << endl;
-			elemIdMaster.push_back(e);
+		  //cout << "element slave = " << e << endl;
+		  //cout << "[ " << v1 << " " << v2 << " " << v3 << " ]" << endl;
+		  elemIdSlave.push_back(e);
 		}
 	}
+
+	// checking
+	if ( elemIdMaster.size() != elemIdSlave.size() )
+	  cout << "Warning: Master and slave elements differing in cardinality: \n";
+	  cout << elemIdMaster.size() << " != " << elemIdSlave.size() << endl;
 }
 

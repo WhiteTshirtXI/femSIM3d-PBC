@@ -97,11 +97,13 @@ class Simulator3D
   void setCopyDirectionPBC(string _direction);
   void stepSLPBCFix();
   
+  // gets & sets
   double getPeriodicFaceVelXAverage();
   double getPeriodicFaceVelYAverage();
   double getPeriodicFaceVelZAverage();
-  double getPeriodicFaceAveragePressure(); //
-  double getPeriodicFaceTimeAveragePressure(); //
+  vector<double> getPeriodicFaceTimeAveragePressure(const char* _type); 
+  void setBetaPressureLiquidTimeAverage(const char* _direction,const char* _type);
+  double* getBetaPressLiq();
   //******* 
 
   void step();
@@ -398,11 +400,16 @@ class Simulator3D
   double betaPressLiq_0, betaPressGas_0;
   double betaPressLiq, betaPressGas;
   double betaPressLiqAdimen, betaPressGasAdimen;
+  double betaPressTimeAverage;
+  double pMaster, pSlave;
   string direction;
   clVector *VecXMin, *VecXMax,*VecXMid, *VecXMidVerts;
   clVector VecXMinGlob, VecXMaxGlob;
   vector<int> *MasterIndices;
   vector<int> *SlaveIndices;
+  vector<int> *MasterElements;
+  vector<int> *SlaveElements;
+  vector<double> PeriodicFacePressures;
 };
 
 #endif

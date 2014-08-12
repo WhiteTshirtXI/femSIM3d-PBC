@@ -53,7 +53,12 @@ Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )
  yRef = 0.0;
  zRef = 0.0;
 
- betaPressLiq = 0.0;
+ // PBC
+ betaPressLiq = 0.0; 
+ betaPressTimeAverage = 0.0; 
+ PeriodicFacePressures.resize(0); 
+ pMaster = 0.0;
+ pSlave = 0.0;
 
  allocateMemoryToAttrib();
 
@@ -4935,6 +4940,8 @@ void Simulator3D::getModel3DAttrib(Model3D &_m)
  elemIdRegion = m->getElemIdRegion();
  boundaryVert = m->getBoundaryVert();
  triEdge = m->getTriEdge();
+ MasterElements = m->getElemIdMaster(); // PBC
+ SlaveElements = m->getElemIdSlave(); // PBC
 }
 
 
@@ -6498,7 +6505,9 @@ void Simulator3D::unCoupledPBC()
 void Simulator3D::setBetaPressureLiquid()
 {
      //betaPressLiq = 32.0/Re; // Poiseuille flow
-	 betaPressLiq = fabs(rho_inAdimen - rho_outAdimen);
+	 //betaPressLiq = fabs(rho_inAdimen - rho_outAdimen); // test rising. Not OK.
+	 //betaPressLiq = rho_outAdimen; // better; = 1.0
+	 betaPressLiq = 0.0;
  	
 }
 
@@ -6921,4 +6930,174 @@ double Simulator3D::getPeriodicFaceVelZAverage()
 }
 
 
+/* \brief Gets pressure distribution over the periodic faces at each
+ * time step.
+ * 
+ * @param[in] _type computed pressure
+ *
+ * \return{vector<double>}
+ *
+ * \details{Master and slave pressures. Average or total.}
+ *
+ */ 
+vector<double> Simulator3D::getPeriodicFaceTimeAveragePressure(const char *_type)
+{
+  vector<double> areaElemsMasterFace(0);
+  vector<double> areaElemsSlaveFace(0);
+  vector<double> pElemsMasterFace(0);
+  vector<double> pElemsSlaveFace(0);
+
+  // master face
+  for (size_t i = 0; i < m->getElemIdMaster()->size(); ++i)
+  {
+    int e = m->getElemIdMaster()->at(i);
+
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	double areaElem = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	areaElemsMasterFace.push_back(areaElem);
+
+	double pcElem = 1.0/3.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) ); 
+	double pElem = pcElem*areaElem;
+	pElemsMasterFace.push_back(pElem);
+  }
+
+  double areaMaster = 0.0;
+  double pMaster = 0.0;
+  // total pressure over master face
+  for ( size_t i = 0; i < areaElemsMasterFace.size(); ++i)
+  {
+    areaMaster += areaElemsMasterFace[i];
+	pMaster += pElemsMasterFace[i];
+  }
+
+  // slave face
+  for (size_t i = 0; i < m->getElemIdSlave()->size(); ++i)
+  {
+    int e = m->getElemIdSlave()->at(i);
+
+    int v1 = surfMesh->IEN.Get(e,0);
+    double p1x = surfMesh->X.Get(v1);
+    double p1y = surfMesh->Y.Get(v1);
+    double p1z = surfMesh->Z.Get(v1);
+
+	int v2 = surfMesh->IEN.Get(e,1);
+    double p2x = surfMesh->X.Get(v2);
+    double p2y = surfMesh->Y.Get(v2);
+    double p2z = surfMesh->Z.Get(v2);
+    
+	int v3 = surfMesh->IEN.Get(e,2);
+    double p3x = surfMesh->X.Get(v3);
+    double p3y = surfMesh->Y.Get(v3);
+    double p3z = surfMesh->Z.Get(v3);
+	
+	double areaElem = getArea(p1x,p1y,p1z,p2x,p2y,p2z,p3x,p3y,p3z);
+	areaElemsSlaveFace.push_back(areaElem);
+
+	double pcElem = 1.0/3.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) ); 
+	double pElem = pcElem*areaElem;
+	pElemsSlaveFace.push_back(pElem);
+  }
+
+  double areaSlave = 0.0;
+  double pSlave = 0.0;
+
+  // total pressure over slave face
+  for ( size_t i = 0; i < areaElemsSlaveFace.size(); ++i)
+  {
+    areaSlave += areaElemsSlaveFace[i];
+	pSlave += pElemsSlaveFace[i];
+  } 
+  
+  PeriodicFacePressures.resize(2);
+  
+  //choice of pressure calculation
+  if ( strcmp( _type,"total" ) == 0 )
+  { 
+    PeriodicFacePressures.at(0) = pMaster;
+    PeriodicFacePressures.at(1) = pSlave;
+
+	cout << "time = " << time << endl;
+	cout << "Total pMaster = " << pMaster << endl;
+	cout << "Total pSlave = " << pSlave << endl;
+  }
+  else if ( strcmp( _type,"average" ) == 0 )
+  {
+    PeriodicFacePressures.at(0) = pMaster/areaMaster;
+    PeriodicFacePressures.at(1) = pSlave/areaSlave;
+
+	cout << "time = " << time << endl;
+	cout << "Average pMaster = " << pMaster/areaMaster << endl;
+	cout << "Average pSlave = " << pSlave/areaSlave << endl;
+  }
+  
+  return PeriodicFacePressures;
+
+}
+
+void Simulator3D::setBetaPressureLiquidTimeAverage(const char* _direction, const char* _type)
+{ 
+  vector<double> press(2);	 
+  press = getPeriodicFaceTimeAveragePressure(_type);
+  pMaster = press.at(0);
+  pSlave = press.at(1);
+  
+  // accumulating face pressures on time
+  //pMaster += press.at(0);
+  //pSlave += press.at(1);
+  //cout << "time = " << time << endl;
+  //cout << "Updated pMaster = " << pMaster << endl;
+  //cout << "Updated pSlave = " << pSlave  << endl;
+
+  double L = 0.0;
+  
+  if( strcmp( _direction,"x") == 0 || 
+	( strcmp( _direction,"X") == 0 ) )
+  {
+    L = fabs( surfMesh->X.Max() - surfMesh->X.Min() ); // periodicity on x
+  }
+  else if( strcmp( _direction,"y") == 0 || 
+	     ( strcmp( _direction,"Y") == 0 ) )
+  {
+    L = fabs( surfMesh->Y.Max() - surfMesh->Y.Min() ); // periodicity on y
+  }
+  else if( strcmp( _direction,"z") == 0 || 
+	     ( strcmp( _direction,"Z") == 0 ) )
+  {
+    L = fabs( surfMesh->Z.Max() - surfMesh->Z.Min() ); // periodicity on z
+  }
+
+  // pressure gradient: \f$ \frac{ \Delta p }{L} \f$
+  double betaT = fabs( (pSlave - pMaster)/L ); 
+  
+  // average on time
+  if ( time != 0.0 )
+  {
+    //betaPressLiq = (1.0/time)*betaT;
+    betaPressLiq = betaT;
+    cout << color(none,yellow,black) << "betaPressLiq = " << betaPressLiq << resetColor() << endl;
+  }
+  else
+  {
+    //betaPressLiq = 0.0;
+    betaPressLiq = betaT;
+    cout << color(none,yellow,black) << "betaPressLiq = " << betaPressLiq << resetColor() << endl;
+  }
+
+}
+
+double* Simulator3D::getBetaPressLiq(){return &betaPressLiq;}
 

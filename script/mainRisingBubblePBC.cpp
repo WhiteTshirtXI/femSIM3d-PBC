@@ -108,8 +108,8 @@ int main(int argc, char **argv)
  }
 
  //string meshFile = "airWaterSugarPBC-wallOutflow.msh";
- string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
- //string meshFile = "airWaterSugarPBC-wallLeftRight-GCPO.msh";
+ //string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
+ string meshFile = "airWaterSugarPBC-wallLeftRight-GCPO.msh";
  //string meshFile = "airWaterSugarPBC-wallNoSlip.msh";
  //string meshFile = "airWaterSugarPBC-wallNoSlip-GCPO.msh";
  
@@ -123,10 +123,10 @@ int main(int argc, char **argv)
  const char *binFolder  = "./bin/";
  //const char *vtkFolder  = "./vtk/";
  //const char *datFolder  = "./dat/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta-uncoupled/dat/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/dat/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular-axis-x/";
@@ -268,15 +268,15 @@ int main(int argc, char **argv)
    s1.setUnCoupledBC();
    //s1.setUnCoupledPBC();//<
    s1.setGravity("-X");
-   //s1.setBetaFlowLiq("+X");
+   s1.setBetaFlowLiq("+X");
    s1.setRHS_PBC();
    s1.setCopyDirectionPBC("RL");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();
    //s1.unCoupledPBCNew();
-   s1.setBetaPressureLiquidTimeAverage("X","average"); // <<< 
-   save.saveBetaPressLiq(datFolder); // <<<
+   //s1.setBetaPressureLiquidTimeAverage("X","average"); // <<< 
+   //save.saveBetaPressLiq(datFolder); // <<<
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);

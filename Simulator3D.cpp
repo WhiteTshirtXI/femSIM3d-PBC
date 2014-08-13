@@ -6507,7 +6507,7 @@ void Simulator3D::setBetaPressureLiquid()
      //betaPressLiq = 32.0/Re; // Poiseuille flow
 	 //betaPressLiq = fabs(rho_inAdimen - rho_outAdimen); // test rising. Not OK.
 	 //betaPressLiq = rho_outAdimen; // better; = 1.0
-	 betaPressLiq = 0.0;
+	 betaPressLiq = 0.99;
  	
 }
 

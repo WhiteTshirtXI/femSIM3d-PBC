@@ -9830,21 +9830,25 @@ void Model3D::setGenericBCPBC()
   // periodic boundaries. Any Dirichlet condition is imposed.
   else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) 
   {
+   /*
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
+   */
   }
   else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) 
   {
+   /*
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
    idbcw.AddItem(*it);
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
+   */
   }
 
   // inflow condition W

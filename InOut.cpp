@@ -4965,7 +4965,6 @@ void InOut::savePressureError(const char* _dir)
 
 void InOut::saveVolumeError(const char* _dir)
 {
- int v = surfMesh->elemIdRegion.Max();
  for(int nb=0;nb<=surfMesh->elemIdRegion.Max();nb++ )
  {
   stringstream ss;  //convertendo int --> string
@@ -4993,12 +4992,9 @@ void InOut::saveVolumeError(const char* _dir)
                    << setw(18) << "vel reference X" 
                    << setw(18) << "vel reference Y" 
                    << setw(18) << "vel reference Z" 
-                   << setw(18) << "vel average periodic X" 
-                   << setw(18) << "vel average periodic Y" 
-                   << setw(18) << "vel average periodic Z" 
-                   << setw(18) << "vel periodic X" 
-                   << setw(18) << "vel periodic Y" 
-                   << setw(18) << "vel periodic Z" 
+                   << setw(18) << "average flow rate periodic X" 
+                   << setw(18) << "average flow rate periodic Y" 
+                   << setw(18) << "average flow rate periodic Z" 
                    << setw(18) << "centroid X" 
                    << setw(18) << "centroid Y" 
                    << setw(18) << "centroid Z" 
@@ -5018,9 +5014,6 @@ void InOut::saveVolumeError(const char* _dir)
        << setw(17) << s->getURef() << " " 
        << setw(17) << s->getVRef() << " " 
        << setw(17) << s->getWRef() << " " 
-       << setw(17) << (1.0/v)*(s->getCentroidVelX()[nb]) << " " 
-       << setw(17) << (1.0/v)*(s->getCentroidVelY()[nb]) << " " 
-       << setw(17) << (1.0/v)*(s->getCentroidVelZ()[nb]) << " " 
        << setw(17) << s->getPeriodicFaceVelXAverage() << " " 
        << setw(17) << s->getPeriodicFaceVelYAverage() << " " 
        << setw(17) << s->getPeriodicFaceVelZAverage() << " " 

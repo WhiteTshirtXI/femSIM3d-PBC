@@ -515,8 +515,89 @@ void InOut::saveVTK( const char* _dir,const char* _filename, int _iter )
  if( gravity->Dim() > 0 )
   vtkVector(vtkFile,"gravity",*gravity);
 
+ if( fint->Dim() > 0 )
+  vtkVector(vtkFile,"surface_force",*fint);
+
+ if( heatFlux->Dim() > 0 )
+  vtkScalar(vtkFile,"heatFlux",*heatFlux);
+
+ if( edgeSize->Dim() > 0 )
+  vtkScalar(vtkFile,"edgeSize",*edgeSize);
+
+ vtkScalar(vtkFile,"viscosity",*mu);
+ vtkScalar(vtkFile,"density",*rho);
+
+ vtkFile.close();
+
+ copyLastFile(_dir,filename,_filename);
+
+ cout << "solution No. " << _iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVtk
+
+void InOut::saveVTKPBC( const char* _dir,const char* _filename, int _iter, double _betaGrad )
+{
+ IEN = m->getIEN();
+ numElems = m->getNumElems();
+
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeader(vtkFile,_iter);
+ vtkCoords(vtkFile);
+ vtkCellArray(vtkFile);
+ vtkCellType(vtkFile);
+
+ vtkScalarCellHeader(vtkFile);
+ if( elemIdRegion->Dim() > 0 )
+  vtkScalarCell(vtkFile,"elemId",*elemIdRegion);
+
+ vtkScalarHeader(vtkFile);
+ vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+
+ // version 3.98 of Paraview has Crinkle Slice feature
+ setCutPlane(vtkFile); // set cut plane functions
+
+ if( uALE->Dim() > 0 )
+  vtkVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cSol->Dim() > 0 )
+  vtkScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkScalar(vtkFile,"heaviside",*heaviside);
+
+ if( kappa->Dim() > 0 )
+  vtkScalar(vtkFile,"kappa",*kappa);
+
+ if( interfaceDistance->Dim() > 0 )
+  vtkScalar(vtkFile,"distance",*interfaceDistance);
+
+ if( vertIdRegion->Dim() > 0 )
+  vtkScalar(vtkFile,"vertId",*vertIdRegion);
+
+ if( gravity->Dim() > 0 )
+  vtkVector(vtkFile,"gravity",*gravity);
+
  if( betaFlowLiq->Dim() > 0 )
   vtkVector(vtkFile,"beta_grad",*betaFlowLiq);
+ 
+ clVector p(numVerts);
+ for ( int i = 0; i < numVerts; ++i )
+   p.Set( i, (-_betaGrad)*s->getBetaFlowLiq()->Get(i)*X->Get(i) + pSol->Get(i) );
+
+ vtkScalar(vtkFile,"pressure",p);
+
+ vtkScalar(vtkFile,"periodic_pressure",*pSol);
 
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);

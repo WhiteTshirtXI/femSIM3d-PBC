@@ -825,7 +825,7 @@ void Simulator3D::assembleBetaFlow()
   }
   else
   {
-   rhoValue = rho_outAdimen;
+   rhoValue = 0.0;
   }
 
   miniElem.getM(*v);  // para problemas SEM deslizamento
@@ -2865,7 +2865,7 @@ void Simulator3D::unCoupled()
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + 
         dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
-        //dt*invMLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
+        dt*invMrhoLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
 		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
 
  }
@@ -6504,13 +6504,14 @@ void Simulator3D::unCoupledPBC()
  */
 void Simulator3D::setBetaPressureLiquid()
 {
-     //betaPressLiq = 32.0/Re; // Poiseuille flow
-	 //betaPressLiq = fabs(rho_inAdimen - rho_outAdimen); // test rising. Not OK.
-	 //betaPressLiq = rho_outAdimen; // better; = 1.0
-	 betaPressLiq = 0.99;
- 	
+  //betaPressLiq = 32.0/Re; // Poiseuille flow
+  betaPressLiq = 0.9625;
 }
 
+void Simulator3D::setBetaPressureLiquid(double _val)
+{
+  betaPressLiq = _val;
+}
 
 void Simulator3D::inputVelocityPBC()
 {
@@ -6555,8 +6556,7 @@ void Simulator3D::inputPurePressurePBC()
  * independently of the density. */
 void Simulator3D::setRHS_PBC()
 {
-	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + M*betaFlowLiq;
-	//va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
+	va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 
 } // fecha metodo
 

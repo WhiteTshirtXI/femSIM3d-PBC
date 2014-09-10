@@ -1,0 +1,66 @@
+void Model2D::setGenericBC()
+{    
+ /* This IF selects the priority boundary conditions to be set on the
+  * phyBounds vector. Note that only these names will be written on top
+  * of the others. For instance if a corner point has 2 types of
+  * boundary condition, the phyNames below will be written.
+  * */ 
+ for( int i=0; i < lineMesh.numElems; i++ )
+ {
+  int v1 = lineMesh.IEN.Get(i,0);
+  int v2 = lineMesh.IEN.Get(i,1);
+  int id = lineMesh.idRegion.Get(i);
+
+  // 3nd. priority
+  if( lineMesh.phyNames.at(id).compare(5,7,"NormalU") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,7,"NormalV") == 0 )
+  {
+   string aux = lineMesh.phyNames.at(id);
+   lineMesh.phyBounds.at(v1) = aux;
+   lineMesh.phyBounds.at(v2) = aux;
+  }
+ }
+ 
+ for( int i=0; i < lineMesh.numElems; i++ )
+ {
+  int v1 = lineMesh.IEN.Get(i,0);
+  int v2 = lineMesh.IEN.Get(i,1);
+  int id = lineMesh.idRegion.Get(i);
+
+  // 2nd. priority
+  if( lineMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,16,"InflowVParabolic") == 0 )
+  {
+   string aux = lineMesh.phyNames.at(id);
+   lineMesh.phyBounds.at(v1) = aux;
+   lineMesh.phyBounds.at(v2) = aux;
+  }
+ }
+
+ for( int i=0; i < lineMesh.numElems; i++ )
+ {
+  int v1 = lineMesh.IEN.Get(i,0);
+  int v2 = lineMesh.IEN.Get(i,1);
+  int id = lineMesh.idRegion.Get(i);
+  
+  // 1st. priority
+  if( lineMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,6,"NoSlipConcentration") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,14,"NoSlipPressure") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
+      //lineMesh.phyNames.at(id).compare(5,7,"MovingY") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,7,"InflowZeroU") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,7,"InflowZeroV") == 0 || 
+      lineMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 )
+  {
+   string aux = lineMesh.phyNames.at(id);
+   lineMesh.phyBounds.at(v1) = aux;
+   lineMesh.phyBounds.at(v2) = aux;
+  }
+ }
+
+ setGenericBC(0.0);
+}

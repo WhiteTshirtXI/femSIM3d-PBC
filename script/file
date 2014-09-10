@@ -1,0 +1,60 @@
+/** 
+ * \file    mainBetaFlowPBC.cpp
+ * \author  Gustavo Peixoto de Oliveira 
+ * \email   tavolesliv@gmail.com
+ * \date    Created on August 19th, 2014
+ *
+ * \brief   Benchmark test for validation of single-phase flows impelled
+ *          by the pressure gradient. (Starting flow.) 
+ *
+ * \details This benchmark test doesn't include the interface force and 
+ *          sets the same properties for both fluids, thus reducing the 
+ *          two-phase dynamics to single-phase.
+ *
+ *          \f$ \beta = \frac{ \Delta p }{ L } \f$  
+ *
+ * \remark  Test scope: single-phase::beta::PBC::fixed
+ *               
+ * DIAGRAM
+ * =======
+ * 
+ *
+ *                  top
+ *           ---  ---  ---  ---      _
+ *          |                  |     |
+ *          |        g         |  
+ *          |        |         |
+ *          |        ¿         |
+ *          |                  |
+ *          |                  | 
+ *          |                  |
+ *          |                  |        
+ *          |                  |     L 
+ *          |                  |
+ *          |                  |
+ *          |                  |
+ *          |                  |
+ *          |                  |
+ *          |             ^    |
+ *          |             |    |
+ *          |            beta  |     |
+ *           ---  ---  ---  ---      _
+ *                 bottom
+ *   
+ *          |-       D        -|
+ *
+ *
+ * + Variables:
+ *   - \f$ beta \f$: pressure gradient
+ *   - g:            gravity
+ *   - L:            length
+ *   - D:            diameter
+ *
+ * + Boundary conditions:
+ *   - according to the problem
+ * 
+ * + Physical forces:
+ *   - gravity: 1.0, dimensionless
+ *   - beta: average pressure drop/length
+ *
+ */

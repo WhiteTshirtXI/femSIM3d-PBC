@@ -1,0 +1,56 @@
+/** \brief Calculates total or average integral pressure 
+ *  
+ *  @param[in] _type total,average
+ *  
+ *  \return{ double } 
+ **/
+double Simulator2D::getMeanPressureDomain(string _type)
+{
+  vector<double> areaElems(0);
+  vector<double> pElems(0);
+  double p = 0.0;
+
+  for ( int e = 0; e < numElems; ++e )
+  {
+    int v1 = IEN->Get(e,0);
+	double p1x = X->Get(v1);
+	double p1y = Y->Get(v1);
+
+    int v2 = IEN->Get(e,1);
+	double p2x = X->Get(v2);
+	double p2y = Y->Get(v2);
+    
+	int v3 = IEN->Get(e,2);
+	double p3x = X->Get(v3);
+	double p3y = Y->Get(v3);
+
+	double areaElem = getArea(p1x,p1y,p2x,p2y,p3x,p3y);
+	areaElems.push_back(areaElem);
+
+	double pcElem = 1.0/3.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) );
+	double pElem = pcElem*areaElem;
+	pElems.push_back(pElem);
+  }
+  
+  double totArea = 0.0;
+  double totP = 0.0;
+  for ( size_t i = 0; i < areaElems.size(); ++i )
+  {
+    totArea += areaElems[i];
+	totP += pElems[i];
+  }
+  
+  if ( _type == "total" )
+  {
+    p = totP;
+    cout << color(none,yellow,black) << ">> Total periodic pressure = " << p << endl << resetColor();
+  }
+  else if ( _type == "average" )
+  {
+    p = totP/totArea;
+    cout << color(none,yellow,black) << ">> Average periodic pressure = " << p << endl << resetColor();
+  }
+
+  return p; 
+
+} /* End of method */  

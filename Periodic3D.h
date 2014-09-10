@@ -77,9 +77,13 @@ public:
 	/* POINTER functions */
 	clVector* GetVecXMin();
     clVector* GetVecXMax();
+
 	vector<int>* GetMasterIndices();
 	vector<int>* GetSlaveIndices();
+	vector<int>* GetInterfaceIndices();
 
+	list<int>* GetIL();
+	list<int>* GetIR();
     
 private:
     
@@ -101,6 +105,10 @@ private:
 	/* VECTOR OBJECTS */
 	vector<int> MasterIndices;
 	vector<int> SlaveIndices;
+	vector<int> InterfaceIndices;
+
+	list<int> IL;
+	list<int> IR;
 	
 };
 

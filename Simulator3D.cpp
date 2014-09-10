@@ -2797,6 +2797,87 @@ void Simulator3D::unCoupled()
   cout << setw(70) << "BUBBLE SIMULATION" << endl;
   uvw = uTilde + 
         dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
+
+ }
+ else // DROPLET
+ {
+  cout << setw(70) << "DROPLET SIMULATION" << endl;
+  uvw = uTilde + 
+        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
+ }
+ 
+ //uvw = uTilde;
+
+
+ /* 
+  * Mass Transfer
+  * */
+ //clVector massTransfer = dt*invMcLumped*( heatFlux );
+ //clVector massTransfer = ( invMcLumped*heatFlux );
+ clVector massTransfer = invC*
+                         (1.0/rho_inAdimen - 1.0/rho_outAdimen)
+						 *heatFlux;
+
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+ //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
+
+
+ // resolve sistema E pTilde = b2
+ cout << " --------> solving pressure --------- " << endl;
+ solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
+ cout << " ------------------------------------ " << endl;
+ 
+ //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
+ uvw = uvw - (invA * GTilde * pTilde);
+
+ uvw.CopyTo(         0,uSol);
+ uvw.CopyTo(  numNodes,vSol);
+ uvw.CopyTo(numNodes*2,wSol);
+
+ pSol = pTilde;       // sem correcao na pressao
+ //pSol = pSol + pTilde;  // com correcao na pressao
+
+ // compute bubble's centroid velocity
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
+ //setCentroidVelPosInterface();
+ // NOT WORKING!
+ //setCentroidVelPosInterface();
+//--------------------------------------------------
+//  for ( int i=0;i<numVerts;i++ )
+//  {
+//   int node = i;
+//   uSol.Set(node,uSol.Get(node) - getCentroidVelXMax());
+//  }
+//-------------------------------------------------- 
+} // fecha metodo unCoupled 
+
+
+void Simulator3D::unCoupledBetaPBC()
+{
+ clVector uvw(3*numNodes);
+ clVector vaIp(3*numNodes);
+ clVector b1Tilde;
+ clVector b2Tilde;
+
+ // applying boundary conditions to b1Tilde
+ vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
+
+ b1Tilde = b1 + vaIp;
+
+ // resolve sitema ATilde uTilde = b
+ cout << " --------> solving velocity --------- " << endl;
+ solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
+ cout << " ------------------------------------ " << endl;
+
+ // uvw = uTilde + surface tension + gravity
+ if( rho_in <= rho_out ) // BUBBLE
+ {
+  cout << setw(70) << "BUBBLE SIMULATION" << endl;
+  uvw = uTilde + 
+        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
         dt*invMrhoLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
 		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
 
@@ -2806,6 +2887,7 @@ void Simulator3D::unCoupled()
   cout << setw(70) << "DROPLET SIMULATION" << endl;
   uvw = uTilde + 
         invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+        invA*( ( M*betaFlowLiq ).MultVec(ip) ) + 
 		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
  }
  
@@ -3095,87 +3177,6 @@ void Simulator3D::setUnCoupledBC()
  ETilde = E - ((DTilde * invA) * GTilde); 
  //ETilde = E - dt*((DTilde * invMrhoLumped) * GTilde); 
 } // fecha metodo setUnCoupledBC 
-
-
-/* Idem explicacao para setUnCoupledBC(), exceto por chamada final
- * que impoe ETilde = E. */
-void Simulator3D::setUnCoupledPBC()
-{
- int nbc,i,j;
- // ----------- nova versao ------------ //
- clVector UVWC = *uc;
- UVWC.Append(*vc);
- UVWC.Append(*wc);
- // ------------------------------------ //
- 
- ATilde = mat;
- DTilde = D;
- GTilde = G;
-
- b1.Dim(3*numNodes,0);  // zerando os vetores b1 e b2
- b2.Dim(numVerts,0);
- ip.Dim(3*numNodes,1); // inicializando vetor ip com 1
-
- nbc = idbcu->Dim();
- for( i=0;i<nbc;i++ )
- {
-  j=(int) idbcu->Get(i);
-  b1.CopyMult(j,ATilde,UVWC);
-  b2.CopyMult(j,DTilde,GTilde,UVWC);
-  ATilde.Set(j,j,1);
-  b1.Set(j,uc->Get(j));
-  ip.Set(j,0);
- }
- cout << endl;
- cout << " boundary condition ";
- cout << color(none,red,black) << "U ";
- cout << resetColor() << "--> SET " << endl;
-
- nbc = idbcv->Dim();
- for( i=0;i<nbc;i++ )
- {
-  j=(int) idbcv->Get(i);
-  b1.CopyMult(j+numNodes,ATilde,UVWC);
-  b2.CopyMult(j+numNodes,DTilde,GTilde,UVWC);
-  ATilde.Set(j+numNodes,j+numNodes,1);
-  b1.Set(j+numNodes,vc->Get(j));
-  ip.Set(j+numNodes,0);
- }
- cout << " boundary condition ";
- cout << color(none,red,black) << "V ";
- cout << resetColor() << "--> SET " << endl;
-
- nbc = idbcw->Dim();
- for( i=0;i<nbc;i++ )
- {
-  j=(int) idbcw->Get(i);
-  b1.CopyMult(j+numNodes*2,ATilde,UVWC);
-  b2.CopyMult(j+numNodes*2,DTilde,GTilde,UVWC);
-  ATilde.Set(j+numNodes*2,j+numNodes*2,1);
-  b1.Set(j+numNodes*2,wc->Get(j));
-  ip.Set(j+numNodes*2,0);
- }
- cout << " boundary condition ";
- cout << color(none,red,black) << "W ";
- cout << resetColor() << "--> SET " << endl;
-
- E.Dim(numVerts,numVerts);
- nbc = idbcp->Dim();
- for( i=0;i<nbc;i++ )
- {
-  j=(int) idbcp->Get(i);
-  b1.CopyMult(j,GTilde,DTilde,*pc);
-  E.Set(j,j,-1);
-  b2.Set(j,-pc->Get(j));  // sem correcao na pressao
-  //b2.Set(j,-pc->Get(j)*0);  // com correcao na pressao
- }
- cout << " boundary condition ";
- cout << color(none,red,black) << "P ";
- cout << resetColor() << "--> SET " << endl;
- cout << endl;
-
- ETilde = E; 
-} // fecha metodo setUnCoupledPBC 
 
 
 void Simulator3D::setUnCoupledCBC()

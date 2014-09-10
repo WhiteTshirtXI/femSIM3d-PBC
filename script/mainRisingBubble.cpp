@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
- string meshFile = "rising-periodic-mesh-noTransfinite.msh";
+ string meshFile = "airWaterSugarPBC-wallNoSlip.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
@@ -115,12 +115,10 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "./bin/";
- //const char *vtkFolder  = "./vtk/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
- const char *mshFolder  = "./msh/";
- //const char *datFolder  = "./dat/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/bin/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/msh/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
  
  if( strcmp( _frame,"moving") == 0 )
@@ -240,16 +238,16 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
- double zref=0;
- double zinit=0;
- double dz=0;
+ double xref=0;
+ double xinit=0;
+ double dx=0;
  if( strcmp( _frame,"moving") == 0 )
  {
   // moving
-  vref = s1.getWRef();
-  zref = s1.getZRef();
+  vref = s1.getURef();
+  xref = s1.getXRef();
   s1.setCentroidVelPos();
-  zinit = s1.getCentroidPosZAverage();
+  xinit = s1.getCentroidPosXAverage();
  }
 
  int nIter = 10000;
@@ -269,16 +267,16 @@ int main(int argc, char **argv)
    {
 	// moving frame
 
-	dz = s1.getCentroidPosZAverage() - zinit;
-	vinst = s1.getCentroidVelZAverage() + dz/s1.getDt();
+	dx = s1.getCentroidPosXAverage() - xinit;
+	vinst = s1.getCentroidVelXAverage() + dx/s1.getDt();
     vref += vinst;
-	zref += vref*s1.getDt();
-	cout << "vref: " << vref << " zref: " << zref << endl;
-	cout << "dz: " << dz << endl;
-    s1.setWSol(vinst);
+	xref += vref*s1.getDt();
+	cout << "vref: " << vref << " xref: " << xref << endl;
+	cout << "dx: " << dx << endl;
+    s1.setUSol(vinst);
     m1.setGenericBC(vref);
-    s1.setWRef(vref);
-	s1.setZRef(zref);
+    s1.setURef(vref);
+	s1.setXRef(xref);
    }
 
    //s1.stepLagrangian();
@@ -293,7 +291,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    s1.setRHS();
-   s1.setGravity("-Z");
+   s1.setGravity("-X");
    //s1.setInterface();
    s1.setInterfaceGeo();
    s1.unCoupled();

@@ -64,23 +64,21 @@ int main(int argc, char **argv)
  double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  double d2 = 0.1;  // surface smooth cord (fujiwara)
 
- const char* _frame = "fixed";
- //const char* _frame = "moving";
+ //const char* _frame = "fixed";
+ const char* _frame = "moving";
 
- //string meshFile = "sin.msh";
  //string meshFile = "circular.msh";
- string meshFile = "rising-periodic-mesh-pbc-noTransfinite.msh";
+ string meshFile = "rising-x-moving.msh";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "./bin/";
- const char *mshFolder  = "./msh/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-pbc-circular-fixedFrame/";
- //const char *datFolder  = "./dat/";
- //const char *vtkFolder  = "./vtk/";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/bin/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/msh/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/";
+ 
  string meshDir = (string) getenv("MESH3D_DIR");
 
  if( strcmp( _frame,"moving") == 0 )

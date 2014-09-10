@@ -70,9 +70,7 @@ class Simulator3D
   void matMountC();
 
   // PBC ******* 
-  void matMountPBC(); // MrhoBetaFlow
   void assemblePBC();
-  void assembleBetaFlow(); // MrhoBetaFlow
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
   void assembleCPBC();
@@ -90,13 +88,14 @@ class Simulator3D
   void initTaylorGreenVortex();
   void initTanHJetProfile(); // hyperbolic tangent jet profile
   void inputPurePressurePBC();
-  void setRHS_PBC();
   void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
   void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
   void sumIndexPBCScalar(clVector* _indexL, clVector* _indexR, clVector& _b);
   void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
   void setCopyDirectionPBC(string _direction);
   void stepSLPBCFix();
+  void setFintPBC();
+  void setDirichletPressurePointPBC();
   
   // gets & sets
   double getPeriodicFaceVelXAverage();
@@ -105,6 +104,7 @@ class Simulator3D
   vector<double> getPeriodicFaceTimeAveragePressure(const char* _type); 
   void setBetaPressureLiquidTimeAverage(const char* _direction,const char* _type);
   double getBetaPressLiq();
+  double getMeanPressureDomain(string _type);
   //******* 
 
   void step();
@@ -366,14 +366,12 @@ class Simulator3D
   double xRef,yRef,zRef;
 
   clMatrix K,Kc,Mrho,M,Mc,G,Gc,D,A;
-  clMatrix MrhoBetaFlow, MrhoBetaFlowLumped; // << PBC
   clMatrix mat,matc;
   clMatrix gx,gy,gz;
   clMatrix ATilde,AcTilde,GTilde,DTilde,ETilde,E;
   clMatrix interpLin;
   clDMatrix MrhoLumped,McLumped;
   clDMatrix invA,invC,invMrhoLumped,invMcLumped;
-  clDMatrix invMrhoBetaFlowLumped; // << PBC
   clDMatrix MLumped,invMLumped;
   clDMatrix kappa;
   clVector va,vcc,b;

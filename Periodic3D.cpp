@@ -32,6 +32,9 @@ Periodic3D::Periodic3D()
 
 	MasterIndices.resize(0);
 	SlaveIndices.resize(0);
+	InterfaceIndices.resize(0);
+	IL.resize(0);
+	IR.resize(0);
 
 }
 
@@ -560,4 +563,8 @@ clVector* Periodic3D::GetVecXMax() { return &VecXMax; };
 
 vector<int>* Periodic3D::GetMasterIndices() { return &MasterIndices; };
 vector<int>* Periodic3D::GetSlaveIndices() { return &SlaveIndices; };
+vector<int>* Periodic3D::GetInterfaceIndices() { return &InterfaceIndices; };
+
+list<int>* Periodic3D::GetIL() { return &IL; };
+list<int>* Periodic3D::GetIR() { return &IR; };
 

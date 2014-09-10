@@ -149,7 +149,7 @@ int main(int argc, char **argv)
  double d2 = 0.1;      // surface smooth coord (fujiwara)
  
  string physGroup = "\"wallNoSlip\"";
- double betaGrad = 32.0/Re;
+ double betaGrad = 32.0;
  
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
@@ -253,12 +253,12 @@ int main(int argc, char **argv)
 	    << iter << endl;
    cout << resetColor();
 
-   s1.stepALEPBC();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
+   s1.stepALEPBC();
    //s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -271,7 +271,7 @@ int main(int argc, char **argv)
 
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTK(vtkFolder,"sim",iter);
+   //save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);

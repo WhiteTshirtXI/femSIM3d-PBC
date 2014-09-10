@@ -5036,9 +5036,11 @@ void Model3D::setGenericBC()
   
   // periodic 
   else if ( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" )
-  {}
+  {
+  }
   else if ( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
-  {}
+  {
+  }
 
   // no slip condition 
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
@@ -9728,7 +9730,9 @@ void Model3D::setPeriodicElemsId()
 
 	// checking
 	if ( elemIdMaster.size() != elemIdSlave.size() )
+	{
 	  cout << "Warning: Master and slave elements differing in cardinality: \n";
 	  cout << elemIdMaster.size() << " != " << elemIdSlave.size() << endl;
+	}
 }
 

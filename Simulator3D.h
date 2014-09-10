@@ -83,6 +83,7 @@ class Simulator3D
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);
   void setBetaPressureLiquid();
+  void setBetaPressureLiquid(double _val);
   void setBetaFlowLiq(const char* _direction);
   void inputVelocityPBC();
   void initTaylorVortex();

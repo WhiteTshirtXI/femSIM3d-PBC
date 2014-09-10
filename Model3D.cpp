@@ -5033,9 +5033,15 @@ void Model3D::setGenericBC()
    idbcw.AddItem(*it);
    wc.Set(*it,0.0);
   }
-  // no slip condition if any other is imposed
-  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
-  else
+  
+  // periodic 
+  else if ( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" )
+  {}
+  else if ( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
+  {}
+
+  // no slip condition 
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -5044,9 +5050,9 @@ void Model3D::setGenericBC()
    uc.Set(*it,0.0);
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
-  }
+  } 
+  else {}
  }
- //integralParabolic();
 }
 
 void Model3D::setGenericBC(double _vel)
@@ -5261,8 +5267,15 @@ void Model3D::setGenericBC(double _vel)
    }
   }
 
-  //if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
-  else
+  // periodic
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" )
+  {}
+
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
+  {}
+
+  // no-slip
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
    idbcu.AddItem(*it);
    idbcv.AddItem(*it);
@@ -5272,6 +5285,7 @@ void Model3D::setGenericBC(double _vel)
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
+  else {}
  }
 }
 
@@ -9545,877 +9559,120 @@ void Model3D::insert3dMeshPointsByVolume()
 }
 
 /// PBC
-void Model3D::setGenericBCPBC()
+void Model3D::setGenericBCPBCNew(string _group)
 {    
- /* This IF selects the priority boundary conditions to be set on the
-  * phyBounds vector. Note that only these names will be written on top
-  * of the others. For instance if a corner point has 2 types of
-  * boundary condition, the phyNames below will be written.
-  * 
-  * \remark PBC has priority over all the conditions already declared, 
-  * namely:
-  * 
-  * - slip walls    : 3rd priority
-  * - inflow walls  : 2nd priority
-  * - no-slip walls : 1st priority
-  *
-  * For this reason, any corner point will be set with periodic condition
-  * and the new ordering is:
-  *
-  * - periodic walls : 4th priority
-  * - slip walls     : 3rd priority
-  * - inflow walls   : 2nd priority
-  * - no-slip walls  : 1st priority
-  *
-  * */ 
-
-  /* This algorithm sets up physical groups of periodic boundary
-  * conditions for a unique pair of master/slave boundaries defined as
-  * 
-  * "wallLeft"  and   "wallRight" 
-  *
-  * at ".geo" file. 
-  *
-  */
-
- // setGenericBC(), instead setGenericBC(vref) is called after the mesh
- // treatment in the version 'fixed' of mainMovingFrame, requiring
- // update of BC vectors. 
- clearBC();
-
- // cleaning vectors of periodic indices
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
- elemIdMaster.resize(0);
- elemIdSlave.resize(0);
- 
-
- // auxiliary x,y,z pbc coordinates
- vector<double> xpbcMaster(0);
- vector<double> ypbcMaster(0);
- vector<double> zpbcMaster(0);
- vector<double> xpbcSlave(0);
- vector<double> ypbcSlave(0);
- vector<double> zpbcSlave(0);
- 
- for( int i = 0; i < surfMesh.numElems; i++ )
- {		
-  	int v1 = surfMesh.IEN.Get(i,0);
-  	int v2 = surfMesh.IEN.Get(i,1);
-	int v3 = surfMesh.IEN.Get(i,2);
-  	int id = surfMesh.idRegion.Get(i);
-	
-	// left indices
-  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
-  	{
-		pbcIndicesLeft.push_back(v1);
-		pbcIndicesLeft.push_back(v2);
-		pbcIndicesLeft.push_back(v3);
-	}
-
-	// right indices
-  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
-	{
-		pbcIndicesRight.push_back(v1);
-		pbcIndicesRight.push_back(v2);
-		pbcIndicesRight.push_back(v3);
-
-	}
-	
- }
-
- // removing duplicatas
- set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
- set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
- set<int>::iterator itsetOne;
- set<int>::iterator itsetTwo;
-
- // resizing to doublelocate
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
-			
- for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
- {
-		//cout << "Index: " << *itsetOne << endl;
-		pbcIndicesLeft.push_back(*itsetOne);
-				 
-		// master coordinates
-		double xL = surfMesh.X.Get(*itsetOne);
-		double yL = surfMesh.Y.Get(*itsetOne);
-		double zL = surfMesh.Z.Get(*itsetOne);
-		xpbcMaster.push_back(xL);
-		ypbcMaster.push_back(yL);
-		zpbcMaster.push_back(zL);
- }
-			 
-	cout << "Master nodes stored." << endl;
-			
- for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
- {
-		//cout << "Index: " << *itsetTwo << endl;
-		pbcIndicesRight.push_back(*itsetTwo);
-
-		// slave coordinates
-		double xR = surfMesh.X.Get(*itsetTwo);
-		double yR = surfMesh.Y.Get(*itsetTwo);
-		double zR = surfMesh.Z.Get(*itsetTwo);
-		xpbcSlave.push_back(xR);
-		ypbcSlave.push_back(yR);
-		zpbcSlave.push_back(zR);
- }
-
-	cout << "Slave nodes stored." << endl;
-
-	int sizeM = pbcIndicesLeft.size();
-	int sizeS = pbcIndicesRight.size();
-			
-	// spatial correspondence checking
-	if ( sizeM != sizeS )
-	{
-		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
-		cerr << warn << endl;
-	}
-	// pairing checking
-	else
-	{
-	    // setting of periodic elements
-        setPeriodicElemsId(); // <<<<
-	
-		for (int is = 0; is < sizeM; ++is)
-		{
-			double yM = ypbcMaster.at(is);
-			double zM = zpbcMaster.at(is);
-			double yS = ypbcSlave.at(is);
-			double zS = zpbcSlave.at(is);
-			
-			// simple extrusion assumed
-			if ( ( fabs( yS - yM ) > EPS ) && 
-			     ( fabs( zS - zM ) > EPS ) )
-			{
-				cout << "Entry not periodic: " << is << endl;	
-				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
-				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
-			}
-			
-	 	}
-		
+   // cleaning vectors of periodic indices
+   pbcIndicesLeft.resize(0);
+   pbcIndicesRight.resize(0);
+   elemIdMaster.resize(0);
+   elemIdSlave.resize(0);
+   
+   for( int i = 0; i < surfMesh.numElems; i++ )
+   {		
+     int v1 = surfMesh.IEN.Get(i,0);
+	 int v2 = surfMesh.IEN.Get(i,1);
+	 int v3 = surfMesh.IEN.Get(i,2);
+	 int id = surfMesh.idRegion.Get(i);
+	  
+	 // left indices
+	 if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+	 {
+       pbcIndicesLeft.push_back(v1);
+	   pbcIndicesLeft.push_back(v2);
+	   pbcIndicesLeft.push_back(v3);
 	 }
 
- for( int i=0; i < surfMesh.numElems; i++ )
- {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-  int id = surfMesh.idRegion.Get(i);
+	 // right indices
+	 if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	 {
+	   pbcIndicesRight.push_back(v1);
+	   pbcIndicesRight.push_back(v2);
+	   pbcIndicesRight.push_back(v3);
+	 }
+	  
+   }
 
-  // 3nd. priority
-  if( surfMesh.phyNames.at(id).compare(5,7,"NormalU") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,7,"NormalV") == 0 ||
-      surfMesh.phyNames.at(id).compare(5,7,"NormalW") == 0 )
-  {
-   string aux = surfMesh.phyNames.at(id);
-   surfMesh.phyBounds.at(v1) = aux;
-   surfMesh.phyBounds.at(v2) = aux;
-   surfMesh.phyBounds.at(v3) = aux;
-  }
- }
- 
- for( int i=0; i < surfMesh.numElems; i++ )
- {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-  int id = surfMesh.idRegion.Get(i);
+   // removing duplicatas
+   set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+   set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+   set<int>::iterator itsetOne;
+   set<int>::iterator itsetTwo;
 
-  // 2nd. priority
-  if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,16,"InflowVParabolic") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,16,"InflowWParabolic") == 0 )
-  {
-   string aux = surfMesh.phyNames.at(id);
-   surfMesh.phyBounds.at(v1) = aux;
-   surfMesh.phyBounds.at(v2) = aux;
-   surfMesh.phyBounds.at(v3) = aux;
-  }
- }
-
- for( int i=0; i < surfMesh.numElems; i++ )
- {
-  int v1 = surfMesh.IEN.Get(i,0);
-  int v2 = surfMesh.IEN.Get(i,1);
-  int v3 = surfMesh.IEN.Get(i,2);
-  int id = surfMesh.idRegion.Get(i);
-  
-  // 1st. priority
-  if( surfMesh.phyNames.at(id).compare(5,6,"NoSlip") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,19,"NoSlipConcentration") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,14,"NoSlipPressure") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,4,"InvU") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,4,"InvV") == 0 || 
-      surfMesh.phyNames.at(id).compare(5,4,"InvW") == 0 ||
-      surfMesh.phyNames.at(id).compare(5,14,"Inflow2Bubbles") == 0 ||
-      surfMesh.phyNames.at(id).compare(5,17,"Inflow2AxiBubbles") == 0 )
-  {
-   string aux = surfMesh.phyNames.at(id);
-   surfMesh.phyBounds.at(v1) = aux;
-   surfMesh.phyBounds.at(v2) = aux;
-   surfMesh.phyBounds.at(v3) = aux;
-  }
- }
-
- // calculating channel's diameter.
- double diameterXY = ( dist(X.Min(),X.Max()) + 
-                     dist(Y.Min(),Y.Max()) ) / 2.0;
- double diameterXZ = ( dist(X.Min(),X.Max()) + 
-                     dist(Z.Min(),Z.Max()) ) / 2.0;
- double diameterYZ = ( dist(Y.Min(),Y.Max()) + 
-                     dist(Z.Min(),Z.Max()) ) / 2.0;
-//--------------------------------------------------
-//  double diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
-//-------------------------------------------------- 
-
- int count = 0;
- for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
- {
-  // outflow condition
-  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
-  {
-   idbcp.AddItem(*it);
-
-   pc.Set(*it,0.0);
-  }
-
-  // inflow condition U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
-
-   // Parabolic profile
-   double Umax = 1.0;
-   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                        (diameterYZ/2.0)) );
-
-   //aux=1.0;
-   uc.Set(*it,aux);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-
-  // inflow condition V
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
-
-   // Parabolic profile
-   double Vmax = 1.0;
-   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
-	                                    (diameterXZ/2.0)) );
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,aux);
-   wc.Set(*it,0.0);
-  }
-
-  // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) 
-  {
-   /*
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-   */
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) 
-  {
-   /*
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-   */
-  }
-
-  // inflow condition W
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
-
-   // Parabolic profile
-   double Wmax = 1.0;
-   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
-	                                    (diameterXY/2.0)) );
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,aux);
-  }
-
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,1.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-  
-  // inflow condition V
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,1.0);
-   wc.Set(*it,0.0);
-  }
-
-  // inflow condition W
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,1.0);
-  }
-
-  // 2 bubbles inflow condition
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2Bubbles\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double aux = X.Get(*it);
-   uc.Set(*it,aux);
-   aux = (-1.0)*Y.Get(*it);
-   vc.Set(*it,aux);
-   aux = Z.Get(*it);
-   wc.Set(*it,aux);
-  }
-
-  // 2 Axi bubbles inflow condition
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2AxiBubbles\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double aux = X.Get(*it);
-   uc.Set(*it,aux);
-   aux = (-1.0)*Y.Get(*it);
-   vc.Set(*it,aux);
-   aux = 0.0;
-   wc.Set(*it,aux);
-  }
-
-  // moving boundary condition as inflow set to Zero
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" || 
-           surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" ||
-		   surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-
-  // moving boundary U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,-1.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-
-  // moving boundary V
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,-1.0);
-   wc.Set(*it,0.0);
-  }
-
-  // moving boundary W
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,-1.0);
-  }
-  
-  // NoSlip with Concentration b.c.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipConcentration\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-   idbcc.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-   cc.Set(*it,1.0);
-  }
-
-  // moving boundary U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
-  {
-   if( X.Get(*it) == X.Max() && 
-	   Z.Get(*it) == Z.Min() && 
-	   count < 1 )
+   // resizing to reallocate
+   pbcIndicesLeft.resize(0);
+   pbcIndicesRight.resize(0);
+			  
+   for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
    {
-	idbcp.AddItem(*it);
+	 pbcIndicesLeft.push_back(*itsetOne);				 
+   }
+			   
+   cout << "Master nodes stored." << endl;
+			  
+   for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+   {
+	 pbcIndicesRight.push_back(*itsetTwo);
+   }
+   
+   cout << "Slave nodes stored." << endl;
 
-	pc.Set(*it,0.0);
+   int sizeM = pbcIndicesLeft.size();
+   int sizeS = pbcIndicesRight.size();
+			  
+   if ( sizeM != sizeS )
+   {
+	 string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+	 cerr << warn << endl;
    }
    else
    {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
-	uc.Set(*it,-1.0);
-	vc.Set(*it,0.0);
-	wc.Set(*it,0.0);
-   }
-   if( Z.Get(*it) == Z.Min() )
-   {
-	idbcc.AddItem(*it);
-
-	cc.Set(*it,1.0);
-   }
-  }
-
-  // symmetry boundary U
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalU\"" )
-  {
-   idbcu.AddItem(*it);
-   uc.Set(*it,0.0);
-  }
-
-  // symmetry boundary V
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
-  {
-   idbcv.AddItem(*it);
-   vc.Set(*it,0.0);
-  }
-
-  // symmetry boundary W
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
-  {
-   idbcw.AddItem(*it);
-   wc.Set(*it,0.0);
-  }
-  // no slip condition if any other is imposed
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
- }
- //integralParabolic();
-}
-
-/// PBC
-void Model3D::setGenericBCPBC(double _vel)
-{    
- clearBC();
- 
- // cleaning vectors of periodic indices
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
- elemIdMaster.resize(0);
- elemIdSlave.resize(0);
-
- // auxiliary x,y,z pbc coordinates
- vector<double> xpbcMaster(0);
- vector<double> ypbcMaster(0);
- vector<double> zpbcMaster(0);
- vector<double> xpbcSlave(0);
- vector<double> ypbcSlave(0);
- vector<double> zpbcSlave(0);
- 
- for( int i = 0; i < surfMesh.numElems; i++ )
- {		
-  	int v1 = surfMesh.IEN.Get(i,0);
-  	int v2 = surfMesh.IEN.Get(i,1);
-	int v3 = surfMesh.IEN.Get(i,2);
-  	int id = surfMesh.idRegion.Get(i);
+	 // setting of periodic elements
+	 setPeriodicElemsId(); // <<<<
 	
-	// left indices
-  	if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
-  	{
-		pbcIndicesLeft.push_back(v1);
-		pbcIndicesLeft.push_back(v2);
-		pbcIndicesLeft.push_back(v3);
-	}
+	 // treatment of periodic corner points
+	 for ( int i = 0; i < surfMesh.numElems; ++i )
+	 {
+	   int id = surfMesh.idRegion.Get(i);
 
-	// right indices
-  	if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
-	{
-		pbcIndicesRight.push_back(v1);
-		pbcIndicesRight.push_back(v2);
-		pbcIndicesRight.push_back(v3);
-	}	
- }
+	   if ( surfMesh.phyNames.at(id) == _group )
+	   {
+	     int v1 = surfMesh.IEN.Get(i,0);
+		 int v2 = surfMesh.IEN.Get(i,1);
+		 int v3 = surfMesh.IEN.Get(i,2);
 
- // removing duplicatas
- set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
- set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
- set<int>::iterator itsetOne;
- set<int>::iterator itsetTwo;
-
- // resizing to doublelocate
- pbcIndicesLeft.resize(0);
- pbcIndicesRight.resize(0);
-			
- for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
- {
-		//cout << "Index: " << *itsetOne << endl;
-		pbcIndicesLeft.push_back(*itsetOne);
-				 
-		// master coordinates
-		double xL = surfMesh.X.Get(*itsetOne);
-		double yL = surfMesh.Y.Get(*itsetOne);
-		double zL = surfMesh.Z.Get(*itsetOne);
-		xpbcMaster.push_back(xL);
-		ypbcMaster.push_back(yL);
-		zpbcMaster.push_back(zL);
- }
-			 
-	cout << "Master nodes stored." << endl;
-			
- for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
- {
-		//cout << "Index: " << *itsetTwo << endl;
-		pbcIndicesRight.push_back(*itsetTwo);
-
-		// slave coordinates
-		double xR = surfMesh.X.Get(*itsetTwo);
-		double yR = surfMesh.Y.Get(*itsetTwo);
-		double zR = surfMesh.Z.Get(*itsetTwo);
-		xpbcSlave.push_back(xR);
-		ypbcSlave.push_back(yR);
-		zpbcSlave.push_back(zR);
- }
-
-	cout << "Slave nodes stored." << endl;
-
-	int sizeM = pbcIndicesLeft.size();
-	int sizeS = pbcIndicesRight.size();
-			
-	// spatial correspondence checking
-	if ( sizeM != sizeS )
-	{
-		string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
-		cerr << warn << endl;
-	}
-	// pairing checking
-	else
-	{
-	    // setting of periodic elements
-        setPeriodicElemsId(); // <<<<
-
-		for (int is = 0; is < sizeM; ++is)
-		{
-			double yM = ypbcMaster.at(is);
-			double zM = zpbcMaster.at(is);
-			double yS = ypbcSlave.at(is);
-			double zS = zpbcSlave.at(is);
-			
-			// simple extrusion assumed
-			if ( ( fabs( yS - yM ) > EPS ) && 
-			     ( fabs( zS - zM ) > EPS ) )
-			{
-				cout << "Entry not periodic: " << is << endl;	
-				cout << "ibL: "  << pbcIndicesLeft.at(is) << "\t yM = " << yM << "\t zM = " << zM << endl;
-				cout << "ibR: " << pbcIndicesRight.at(is) << "\t yS = " << yS << "\t zS = " << zS << endl;
-			}
-			
-	 	}
-		
+		 // master
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v1) = _group;
+		   if ( v2 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v2) = _group;
+		   if ( v3 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v3) = _group;
+		 }		
+		 
+		 // slave
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v1) = _group;
+		   if ( v2 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v2) = _group;
+		   if ( v3 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v3) = _group;
+		 }	 
+	   }
 	 }
+   } // close else
 
+} // close method
 
- // calculating channel's diameter.
- double diameterXY = ( dist(X.Min(),X.Max()) + 
-                     dist(Y.Min(),Y.Max()) ) / 2.0;
- double diameterXZ = ( dist(X.Min(),X.Max()) + 
-                     dist(Z.Min(),Z.Max()) ) / 2.0;
- double diameterYZ = ( dist(Y.Min(),Y.Max()) + 
-                     dist(Z.Min(),Z.Max()) ) / 2.0;
-//--------------------------------------------------
-//  double diameterYZ = distance(Y.Min(),Z.Min(),Y.Max(),Z.Max());
-//-------------------------------------------------- 
-
- int count = 0;
- for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
- {
-  // outflow condition
-  if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
-  {
-   idbcp.AddItem(*it);
-  
-   pc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowU\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,1.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( Y.Get(*it)*Y.Get(*it) + Z.Get(*it)*Z.Get(*it) );
-
-   // Parabolic profile
-   double Umax = 1.0;
-   double aux = 2.0*Umax*( 1.0-radius*radius/((diameterYZ/2.0)*
-	                                    (diameterYZ/2.0)) );
-   //aux=1.0;
-
-   uc.Set(*it,aux-_vel);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-
-  // inflow condition V
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( X.Get(*it)*X.Get(*it) + Z.Get(*it)*Z.Get(*it) );
-
-   // Parabolic profile
-   double Vmax = 1.0;
-   double aux = 2.0*Vmax*( 1.0-radius*radius/((diameterXZ/2.0)*
-	                                    (diameterXZ/2.0)) );
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,aux-_vel);
-   wc.Set(*it,0.0);
-  }
-
-  
-  // periodic boundaries. Any Dirichlet condition is imposed.
-  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
-  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
-  
-
-  // inflow condition W
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWParabolic\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-
-   double radius = sqrt( X.Get(*it)*X.Get(*it) + Y.Get(*it)*Y.Get(*it) );
-
-   // Parabolic profile
-   double Wmax = 1.0;
-   double aux = 2.0*Wmax*( 1.0-radius*radius/((diameterXY/2.0)*
-	                                    (diameterXY/2.0)) );
-
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,aux-_vel);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowV\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,1.0);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,1.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroU\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0-_vel);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroV\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0-_vel);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowZeroW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0-_vel);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallMovingYZ\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0-_vel);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvU\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,-1.0-_vel);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvV\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,-1.0-_vel);
-   wc.Set(*it,0.0);
-  }
-  else if( surfMesh.phyBounds.at(*it) == "\"wallInvW\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,-1.0-_vel);
-  }
-
-  // moving boundary U with 1 node pressure
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlipPressure\"" )
-  {
-   if( X.Get(*it) == X.Max() && 
-	   Z.Get(*it) == Z.Min() &&
-	   count < 1 )
-   {
-	idbcp.AddItem(*it);
-
-	pc.Set(*it,0.0);
-	count++;
-   }
-   else
-   {
-	idbcu.AddItem(*it);
-	idbcv.AddItem(*it);
-	idbcw.AddItem(*it);
-
-	uc.Set(*it,0.0-_vel);
-	vc.Set(*it,0.0);
-	wc.Set(*it,0.0);
-   }
-   if( Z.Get(*it) == Z.Min() )
-   {
-	idbcc.AddItem(*it);
-
-	cc.Set(*it,1.0);
-   }
-  }
-
-  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
-  {
-   idbcu.AddItem(*it);
-   idbcv.AddItem(*it);
-   idbcw.AddItem(*it);
-  
-   uc.Set(*it,0.0);
-   vc.Set(*it,0.0);
-   wc.Set(*it,0.0);
-  }
- }
-}
 
 /* \brief Sets indices of periodic elements.
  *
  * \returns {void}
  *
- * ]remark{It should be called after reading periodic B.C. nodes.}
+ * \remark{It should be called after reading periodic B.C. nodes.}
  */
 void Model3D::setPeriodicElemsId()
 {

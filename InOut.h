@@ -114,6 +114,7 @@ class InOut
    * @return 
    **/
   void saveVTK( const char* _dir,const char* _filename, int _iter );
+  void saveVTKPBC( const char* _dir,const char* _filename, int _iter, double _betaGrad );
   void saveMSH( const char* _dir,const char* _filename, int _iter );
   void saveVTKSurface( const char* _dir,const char* _filename, int _iter );
   void saveVTK( const char* _coord1, const char* _coord2,

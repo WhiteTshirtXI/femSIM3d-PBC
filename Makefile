@@ -38,7 +38,7 @@ all: single-phase two-phase two-phaseHT
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
               sphereNuCte 
 
-single-phasePBC: channelPBC taylorVortexPBC testMesh
+single-phasePBC: channelPBC taylorVortexPBC testMesh betaFlowPBC
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
@@ -48,7 +48,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   2Bubbles micro zalesak vortex curvatureTest shear \
 		   risingBubbleTaylor microInterp
 
-two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC
+two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC risingBubbleBetaFlow
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -67,6 +67,12 @@ stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
 # ------------------------------<< periodic >>------------------------------ #
 #
 risingBubblePBC: ${FEM3D_DIR}/script/mainRisingBubblePBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+risingBubbleBetaFlow: ${FEM3D_DIR}/script/mainRisingBubbleBetaFlow.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+betaFlowPBC: ${FEM3D_DIR}/script/mainBetaFlowPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 channelPBC: ${FEM3D_DIR}/script/mainChannelPBC.o $(obj)

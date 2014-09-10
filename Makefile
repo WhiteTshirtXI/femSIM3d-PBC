@@ -48,7 +48,8 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   2Bubbles micro zalesak vortex curvatureTest shear \
 		   risingBubbleTaylor microInterp
 
-two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC risingBubbleBetaFlow
+two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC \
+              risingBubbleBetaFlowPBC
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -69,7 +70,7 @@ stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
 risingBubblePBC: ${FEM3D_DIR}/script/mainRisingBubblePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
-risingBubbleBetaFlow: ${FEM3D_DIR}/script/mainRisingBubbleBetaFlow.o $(obj)
+risingBubbleBetaFlowPBC: ${FEM3D_DIR}/script/mainRisingBubbleBetaFlowPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 betaFlowPBC: ${FEM3D_DIR}/script/mainBetaFlowPBC.o $(obj)

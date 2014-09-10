@@ -74,9 +74,9 @@ class Simulator3D
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
   void assembleCPBC();
-  void setUnCoupledPBC();
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 
+  void unCoupledBetaPBC();
   void unCoupledCPBC(); // modified solution scalar
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);

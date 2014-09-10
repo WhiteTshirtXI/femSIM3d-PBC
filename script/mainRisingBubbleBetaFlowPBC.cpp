@@ -1,8 +1,70 @@
-// =================================================================== //
-// this is file mainRisingBubble.cpp, created at 10-Jun-2009           //
-// maintained by Gustavo Rabello dos Anjos                             //
-// e-mail: gustavo.rabello@gmail.com                                   //
-// =================================================================== //
+/** 
+ * \file    mainRisingBubbleBetaFlowPBC.cpp
+ * \author  Gustavo Peixoto de Oliveira 
+ * \email   tavolesliv@gmail.com
+ * \date    Created on August 19th, 2014
+ *
+ * \brief   Benchmark test for validation of the rising bubble flow. 
+ *
+ * \details This benchmark test considers the problem of a rising bubble
+ *          which goes upward through buoyancy, but considering open
+ *          walls on the streamwise direction. When opening the top and
+ *          bottom walls, the flow is pushed down due to the gravity
+ *          force. Then, a body force is placed to act against the
+ *          gravitational field so as to stop the flow. Such force is
+ *          given by the pressure gradient given by 
+ *
+ *          \f$ \beta = \frac{ \Delta p }{ L } \f$  
+ *               
+ * \remark  Test scope: two-phase::beta::gravity::NBC::fixed
+ *
+ * DIAGRAM
+ * =======
+ * 
+ *
+ *                  top
+ *           ---  ---  ---  ---      _
+ *          |                  |     |
+ *          |        g         |  
+ *          |        |         |
+ *          |                  |
+ *          |                  |
+ *          |                  | 
+ *          |                  |
+ *          |        E         |        
+ *          |        ^         |     L 
+ *          |        |         |
+ *          |       ___        |
+ *          |      /   \       |
+ *          |     |  b  |      |
+ *          |      \___/       |
+ *          |             ^    |
+ *          |             |    |
+ *          |            beta  |     |
+ *           ---  ---  ---  ---      _
+ *                 bottom
+ *   
+ *          |-       D        -|
+ *
+ *
+ * + Variables:
+ *   - E:            buoyancy force
+ *   - \f$ beta \f$: pressure gradient
+ *   - g:            gravity
+ *   - L:            length
+ *   - b:            bubble
+ *   - D:            diameter
+ *
+ * + Boundary conditions:
+ *   - top, bottom: \f$ \textbf{n} \cdot \nabla \textbf{v} = 0, p = 0 \f$
+ *   - side:        \f$ \textbf{n} \cdot \nabla \textbf{p} = 0, \textbf{v} = 0 \f$
+ * 
+ * + Physical forces:
+ *   - gravity: 1.0, dimensionless
+ *   - beta: average pressure drop/length
+ *
+ */
+
 
 #include <cmath>
 #include "Model3D.h"
@@ -84,8 +146,13 @@ int main(int argc, char **argv)
   exit(1);
  }
 
-
- double cfl = 0.8;
+ double cfl = 0.2;
+ 
+ //string meshFile = "rising-x.msh";
+ string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
+ 
+ string physGroup = "\"wallNoSlip\"";
+ double betaGrad = 1.0;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -107,34 +174,29 @@ int main(int argc, char **argv)
   d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
- string meshFile = "rising-periodic-mesh-noTransfinite.msh";
- 
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "./bin/";
- //const char *vtkFolder  = "./vtk/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/";
- const char *mshFolder  = "./msh/";
- //const char *datFolder  = "./dat/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-periodic-mesh-circular/dat/";
- string meshDir = (string) getenv("MESH3D_DIR");
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/bin/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/msh/";
  
+ string meshDir = (string) getenv("MESH3D_DIR");
  if( strcmp( _frame,"moving") == 0 )
   meshDir += "/rising/movingFrame/" + meshFile;
  else
   meshDir += "/rising/" + meshFile;
+  //meshDir += "/test/" + meshFile;
  
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
- Simulator3D s1;
 
- if( *(argv+1) == NULL )     
- {
   cout << endl;
   cout << "--------------> STARTING FROM 0" << endl;
   cout << endl;
@@ -154,8 +216,10 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
+  m1.setGenericBCPBCNew(physGroup);
   m1.setGenericBC();
 
+  Simulator3D s1(m1);
   s1(m1);
 
   s1.setRe(Re);
@@ -172,53 +236,12 @@ int main(int argc, char **argv)
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
+  s1.setBetaPressureLiquid(betaGrad);
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
- }
- else if( strcmp( *(argv+1),"restart") == 0 ) 
- {
-  cout << endl;
-  cout << "--------------> RE-STARTING..." << endl;
-  cout << endl;
-
-  // load surface mesh
-  string aux = *(argv+2);
-  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
-  const char *mesh2 = file.c_str();
-  m1.readMSH(mesh2);
-  m1.setInterfaceBC();
-  m1.setTriEdge();
-  m1.mesh2Dto3D();
-
-  s1(m1);
-
-  // load 3D mesh
-  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
-  const char *vtkFile = file.c_str();
-
-  m1.readVTK(vtkFile);
-  m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
-#else
-  m1.setQuadElement();
-#endif
-  m1.readVTKHeaviside(vtkFile);
-  m1.setSurfaceConfig();
-  m1.setInitSurfaceVolume();
-  m1.setInitSurfaceArea();
-  m1.setGenericBC();
-
-  s1(m1);
-
-  s1.setSolverPressure(solverP);
-  s1.setSolverVelocity(solverV);
-  s1.setSolverConcentration(solverC);
-
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
- }
+ 
 
  // Point's distribution
  Helmholtz3D h1(m1);
@@ -240,16 +263,16 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
- double zref=0;
- double zinit=0;
- double dz=0;
+ double xref=0;
+ double xinit=0;
+ double dx=0;
  if( strcmp( _frame,"moving") == 0 )
  {
   // moving
-  vref = s1.getWRef();
-  zref = s1.getZRef();
+  xref = s1.getURef();
+  xref = s1.getXRef();
   s1.setCentroidVelPos();
-  zinit = s1.getCentroidPosZAverage();
+  xinit = s1.getCentroidPosXAverage();
  }
 
  int nIter = 10000;
@@ -268,42 +291,39 @@ int main(int argc, char **argv)
    if( strcmp( _frame,"moving") == 0 )
    {
 	// moving frame
-
-	dz = s1.getCentroidPosZAverage() - zinit;
-	vinst = s1.getCentroidVelZAverage() + dz/s1.getDt();
+	dx = s1.getCentroidPosXAverage() - xinit;
+	vinst = s1.getCentroidVelXAverage() + dx/s1.getDt();
     vref += vinst;
-	zref += vref*s1.getDt();
-	cout << "vref: " << vref << " zref: " << zref << endl;
-	cout << "dz: " << dz << endl;
-    s1.setWSol(vinst);
+	xref += vref*s1.getDt();
+	cout << "vref: " << vref << " xref: " << xref << endl;
+	cout << "dx: " << dx << endl;
+    s1.setUSol(vinst);
     m1.setGenericBC(vref);
-    s1.setWRef(vref);
-	s1.setZRef(zref);
+    s1.setURef(vref);
+	s1.setXRef(xref);
    }
 
-   //s1.stepLagrangian();
-   s1.stepALE();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
+   s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
+   s1.setGravity("-X");
+   s1.setBetaFlowLiq("+X");
    s1.setRHS();
-   s1.setGravity("-Z");
-   //s1.setInterface();
    s1.setInterfaceGeo();
-   s1.unCoupled();
+   s1.unCoupledBetaPBC();
 
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-   //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
 
    s1.saveOldData();
 
@@ -363,17 +383,24 @@ int main(int argc, char **argv)
   //m1.mesh2Dto3DOriginal();
   m1.mesh3DPoints();
   m1.setMapping();
-#if NUMGLEU == 5
- m1.setMiniElement();
-#else
- m1.setQuadElement();
-#endif
-  m1.setSurfaceConfig();
 
+#if NUMGLEU == 5
+  m1.setMiniElement();
+#else
+  m1.setQuadElement();
+#endif
+
+  m1.setSurfaceConfig();
   if( strcmp( _frame,"moving") == 0 )
-   m1.setGenericBC(vref);
+  {
+    m1.setGenericBCPBCNew(physGroup);
+    m1.setGenericBC(vref);
+  }
   else
-  m1.setGenericBC();
+  {
+    m1.setGenericBCPBCNew(physGroup);
+    m1.setGenericBC();
+  }
 
   Simulator3D s2(m1,s1);
   s2.applyLinearInterpolation(mOld);

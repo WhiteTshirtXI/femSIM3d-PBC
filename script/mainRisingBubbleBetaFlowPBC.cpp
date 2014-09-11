@@ -146,7 +146,7 @@ int main(int argc, char **argv)
   exit(1);
  }
 
- double cfl = 0.2;
+ double cfl = 0.1;
  
  //string meshFile = "rising-x.msh";
  string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
    s1.setUnCoupledBC();
    s1.setGravity("-X");
    s1.setBetaFlowLiq("+X");
-   s1.setRHS();
+   s1.setRHS(); //<<
    s1.setInterfaceGeo();
    s1.unCoupledBetaPBC();
 

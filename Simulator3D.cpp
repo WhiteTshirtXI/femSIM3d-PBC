@@ -2464,6 +2464,13 @@ void Simulator3D::setRHS()
  va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 }
 
+void Simulator3D::setRHSBeta()
+{
+ // sem correcao na pressao
+ va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + M*betaFlowLiq;
+}
+
+
 void Simulator3D::setCRHS()
 {
  //vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;

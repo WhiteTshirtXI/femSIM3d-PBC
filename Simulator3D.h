@@ -83,6 +83,7 @@ class Simulator3D
   void setBetaPressureLiquid();
   void setBetaPressureLiquid(double _val);
   void setBetaFlowLiq(const char* _direction);
+  void setRHSBeta();
   void inputVelocityPBC();
   void initTaylorVortex();
   void initTaylorGreenVortex();

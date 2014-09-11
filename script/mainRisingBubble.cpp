@@ -85,7 +85,7 @@ int main(int argc, char **argv)
  }
 
 
- double cfl = 0.8;
+ double cfl = 0.1;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -109,9 +109,8 @@ int main(int argc, char **argv)
 
  string meshFile = "airWaterSugarPBC-wallNoSlip.msh";
  
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
- Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ Solver *solverP = new PetscSolver(KSPCG,PCICC);
+ Solver *solverV = new PetscSolver(KSPCG,PCILU);
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 

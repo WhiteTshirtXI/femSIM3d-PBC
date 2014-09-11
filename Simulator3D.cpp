@@ -5873,6 +5873,8 @@ void Simulator3D::assemblePBCTwoPhaseNew()
 	  // left and right nodes
 	  ibL = MasterIndices->at(i);
 	  invMrhoLumped.Set(ibL,0.0);
+	  invMrhoLumped.Set(ibL+numNodes,0.0);
+	  invMrhoLumped.Set(ibL+2*numNodes,0.0);
 	}
     
 
@@ -5905,6 +5907,8 @@ void Simulator3D::assemblePBCTwoPhaseNew()
 	  // left and right nodes
 	  ibL = MasterIndices->at(i);
 	  invMLumped.Set(ibL,0.0);
+	  invMLumped.Set(ibL+numNodes,0.0);
+	  invMLumped.Set(ibL+2*numNodes,0.0);
 	}  	
   } // end loop RL
 

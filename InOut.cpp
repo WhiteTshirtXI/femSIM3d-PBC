@@ -2084,6 +2084,112 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
 } // fecha metodo saveVTKSurface
 
+void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
+{
+ stringstream ss;  //convertendo int --> string
+ string str;
+ ss << _iter;
+ ss >> str;
+
+ // concatenando nomes para o nome do arquivo final
+ string file = (string) _dir + (string) _filename + "TRI" + "-" + str + ".vtk";
+ const char* filename = file.c_str();
+
+ ofstream vtkFile( filename ); 
+
+ vtkHeader(vtkFile,_iter);
+ vtkSurfaceCoords(vtkFile);
+
+ int numTri = 0;
+ for( int i=0;i<surfMesh->numElems;i++ )
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
+   numTri++;
+
+ vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELLS " << numTri << " " << 4*numTri << endl;
+ for( int i=0;i<surfMesh->numElems;i++ )
+ {
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
+   vtkFile << "3 " << surfMesh->IEN.Get(i,0) << " "  
+                   << surfMesh->IEN.Get(i,1) << " " 
+                   << surfMesh->IEN.Get(i,2) << endl;
+ }
+ vtkFile << endl;
+
+ vtkFile <<  "CELL_TYPES " << numTri << endl;
+ for( int i=0;i<numTri;i++ )
+  vtkFile << "5 ";
+
+ vtkFile << endl;
+ vtkFile << endl;
+
+ vtkFile << setprecision(0) << fixed; 
+ vtkFile << "CELL_DATA " << numTri << endl;
+ vtkFile << "NORMALS " << "cell_normal_test" << " double" << endl;
+ vtkFile << setprecision(10) << scientific;
+ for( int i=0;i<surfMesh->numElems;i++ )
+ {
+  if( surfMesh->elemIdRegion.Get(i) > 0 )
+   vtkFile << m->getNormalElem(i).Get(0) << " " 
+           << m->getNormalElem(i).Get(1) << " " 
+	   	   << m->getNormalElem(i).Get(2) << endl;
+ };
+ vtkFile << endl;
+
+ //vtkSurfaceCellHeader(vtkFile);
+ //vtkSurfaceCellNormalVector(vtkFile,"cell_normal_test");
+
+ vtkSurfaceScalarHeader(vtkFile);
+
+ if( pSol->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"pressure",*pSol);
+
+ if( uSol->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+
+ if( uALE->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
+
+ // este if existe pois nem todos os metodos tem cc
+ if( cc->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"concentration",*cSol);
+
+ if( heaviside->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"heaviside",*heaviside);
+
+ if( edgeSize->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"edgeSize",*edgeSize);
+
+ if( surfMesh->curvature.Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"kappa",surfMesh->curvature);
+
+ if( gravity->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"gravity",*gravity);
+
+ if( fint->Dim() > 0 )
+  vtkSurfaceVector(vtkFile,"surface_force",*fint);
+
+ if( surfMesh->xNormal.Dim() > 0 )
+  vtkSurfaceNormalVector(vtkFile,"normal",surfMesh->xNormal,
+	                                      surfMesh->yNormal,
+						     			  surfMesh->zNormal);
+
+ if( mu->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"viscosity",*mu);
+
+ if( rho->Dim() > 0 )
+  vtkSurfaceScalar(vtkFile,"density",*rho);
+
+ vtkFile.close();
+
+ string aux = (string) _filename + "TRI";
+ const char* filenameAux = aux.c_str();
+ copyLastFile(_dir,filename,filenameAux);
+
+ cout << "surface mesh No. " << _iter << " saved in VTK" << endl;
+
+} // fecha metodo saveVTKSurface
+
 void InOut::saveVTKSurfacePBC( const char* _dir,const char* _filename, int _iter, double _betaGrad )
 {
  stringstream ss;  //convertendo int --> string

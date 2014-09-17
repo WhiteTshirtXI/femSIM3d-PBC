@@ -152,7 +152,7 @@ int main(int argc, char **argv)
  string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
  
  string physGroup = "\"wallNoSlip\"";
- double betaGrad = 0.9625;
+ double betaGrad = 1.0;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
  double c2 = 1.0;      // smooth vel 
  double c3 = 10.0;     // smooth coord (fujiwara)
  double d1 = 1.0;      // surface tangent vel = (u-ut)
- double d2 = 0.1;      // surface smooth coord (fujiwara)
+ double d2 = 0.2;      // surface smooth coord (fujiwara)
 
  // moving
  if( strcmp( _frame,"moving") == 0 )
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 10000;
+ int nIter = 20000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {

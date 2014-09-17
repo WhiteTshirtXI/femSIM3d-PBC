@@ -25,8 +25,8 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  //double bubbleDiam = 3.0E-3; // test 1; Ar = 275.07; Eo = 1.21
- //double bubbleDiam = 5.2E-3; // test 2; Ar = 1432.5; Eo = 3.63; 
- double bubbleDiam = 4.0E-3; // test 3; Ar = 652.03; Eo = 2.15; 
+ //double bubbleDiam = 4.0E-3; // test 2; Ar = 652.03; Eo = 2.15; 
+ double bubbleDiam = 5.2E-3; // test 3; Ar = 1432.5; Eo = 3.63; 
  double mu_in = 18.21E-6;
  double mu_out = 958.08E-6;
  double rho_in = 1.205;

@@ -24,26 +24,23 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- /* 
-  * bogdan's thesis 2010 - Film thickness
-  * Air-Ethanol
-  * Circular channels
-  * Tube radius: 0.3 - 1.3mm
-  *
-  * Reference: Han and Shikazono
-  *
-  * */
- /*
- double Re = 100;
- double We = 10;
- double We = 0.1162;
- double Fr = 1;
- double mu_in = 0.01;
- double mu_out = 1.00;
- double rho_in = 0.001;
- double rho_out = 1.0;
- */
+ //double bubbleDiam = 3.0E-3; // test 1; Ar = 275.07; Eo = 1.21
+ //double bubbleDiam = 5.2E-3; // test 2; Ar = 1432.5; Eo = 3.63; 
+ double bubbleDiam = 4.0E-3; // test 3; Ar = 652.03; Eo = 2.15; 
+ double mu_in = 18.21E-6;
+ double mu_out = 958.08E-6;
+ double rho_in = 1.205;
+ double rho_out = 998.0;
+ double gravity = 9.8;
+ double sigma = 0.0728;
+ double betaGrad = 1.0; // 0.9625
 
+ double Re = CalcArchimedesBuoyancy(gravity,bubbleDiam,rho_out,mu_out);
+ double We = CalcEotvos(gravity,bubbleDiam,rho_out,sigma);
+ double Fr = 1.0;
+ 
+ 
+ /*
  // Rabello's thesis: sugar-syrup 1
  double Re = 33.0413; 
  double Sc = 1.0;
@@ -53,13 +50,14 @@ int main(int argc, char **argv)
  double mu_out = 0.5396;
  double rho_in = 1.225;
  double rho_out = 1350.0;
+ */
 
  int iter = 0;
  double alpha = 1.0;
- double cfl = 0.8;
+ double cfl = 0.5;
 
  double c1 = 0.0;  // lagrangian
- double c2 = 1.0;  // smooth vel
+ double c2 = 0.1;  // smooth vel
  double c3 = 10.0;  // smooth coord (fujiwara)
  double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
  double d2 = 0.1;  // surface smooth cord (fujiwara)
@@ -67,18 +65,51 @@ int main(int argc, char **argv)
  //const char* _frame = "fixed";
  const char* _frame = "moving";
 
- //string meshFile = "circular.msh";
- string meshFile = "rising-x-moving.msh";
+ string physGroup = "\"wallInflowZeroU\"";
  
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
+ /*
+ string meshFile = "rising-moving-x.msh";
  const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/bin/";
  const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/msh/";
  const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/dat/";
  const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/";
+ */
+
+  
+ // cell-2D
+ string meshFile = "unit-cell-s-2D-3d.msh";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/bin/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/";
+ //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/";
+ //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/dat/";
  
+
+ /* 
+ // cell-D
+ string meshFile = "unit-cell-s-D-3d.msh";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/bin/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/msh/";
+ */
+
+ /*
+ // cell-0.5D
+ string meshFile = "unit-cell-s-0.5D-3d.msh";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/bin/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/msh/";
+ */ 
+
  string meshDir = (string) getenv("MESH3D_DIR");
 
  if( strcmp( _frame,"moving") == 0 )
@@ -109,7 +140,8 @@ int main(int argc, char **argv)
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
-  m1.setGenericBCPBC();
+  m1.setGenericBCPBCNew(physGroup);
+  m1.setGenericBC();
 
   Periodic3D pbc(m1);
   pbc.MountPeriodicVectorsNew("print");
@@ -129,7 +161,7 @@ int main(int argc, char **argv)
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
   s1.init();
-  s1.setBetaPressureLiquid();
+  s1.setBetaPressureLiquid(betaGrad);
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -155,20 +187,24 @@ int main(int argc, char **argv)
 
  double vinst=0;
  double vref=0;
+ double xref=0;
+ double xinit=0;
+ double dx=0;
  if( strcmp( _frame,"moving") == 0 )
  {
   // moving
   vref = s1.getURef();
+  xref = s1.getXRef();
   s1.setCentroidVelPos();
+  xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 3000;
+ int nIter = 30000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
   for( int j=0;j<nReMesh;j++ )
   {
-
    cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
 	    << iter << endl << endl;
@@ -178,38 +214,41 @@ int main(int argc, char **argv)
    if( strcmp( _frame,"moving") == 0 )
    {
 	// moving frame
-    vinst = s1.getCentroidVelXAverage();
+	dx = s1.getCentroidPosXAverage() - xinit;
+	vinst = s1.getCentroidVelXAverage() + dx/s1.getDt();
     vref += vinst;
-    cout << vref << " " << vinst << endl;
-    s1.setUSol(vinst);
-    m1.setGenericBCPBC(vref);
-	pbc.MountPeriodicVectorsNew("noprint");
-    s1.setURef(vref);
+	xref += vref*s1.getDt();
+	cout << "vref: " << vref << " xref: " << xref << endl;
+	cout << "dx: " << dx << endl;
+	s1.setUSol(vinst);
+    m1.setGenericBCPBCNew(physGroup);
+	m1.setGenericBC(vref);
+    pbc.MountPeriodicVectorsNew("print");
+	s1.setURef(vref);
+	s1.setXRef(xref);
    }
 
-   //s1.stepLagrangian();
-   s1.stepALEPBC();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
+   s1.stepALEPBC();
    s1.movePoints();
    s1.assemble();
-   //s1.assembleBetaFlow(); //<<<
    s1.matMount();
-   s1.setUnCoupledPBC();
+   s1.setUnCoupledBC();
    s1.setGravity("-X");
    s1.setBetaFlowLiq("+X");
-   s1.setRHS_PBC();
-   //s1.setInterface();
-   s1.setInterfaceGeo();
+   s1.setRHS();
    s1.setCopyDirectionPBC("RL");
+   s1.setInterfaceGeo();
+   //s1.setInterfaceLevelSet();
    s1.unCoupledPBCNew();
 
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
@@ -217,12 +256,12 @@ int main(int argc, char **argv)
 
    s1.saveOldData();
 
-   s1.timeStep();
-
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << iter << endl << endl;;
    cout << resetColor();
+
+   s1.timeStep();
 
    iter++;
   }
@@ -280,13 +319,15 @@ int main(int argc, char **argv)
 
   if( strcmp( _frame,"moving") == 0 )
   {
-   m1.setGenericBCPBC(vref);
-   pbc.MountPeriodicVectorsNew("noPrint");
+    m1.setGenericBCPBCNew(physGroup);
+    m1.setGenericBC(vref);
+    pbc.MountPeriodicVectorsNew("print");
   }
   else
   {
-   m1.setGenericBCPBC();
-   pbc.MountPeriodicVectorsNew("print");
+    m1.setGenericBCPBCNew(physGroup);
+    m1.setGenericBC();
+    pbc.MountPeriodicVectorsNew("noPrint");
   }
 
   Simulator3D s2(m1,s1);

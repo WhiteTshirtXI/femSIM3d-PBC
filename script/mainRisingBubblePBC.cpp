@@ -146,13 +146,13 @@ int main(int argc, char **argv)
   exit(1);
  }
 
- double cfl = 0.8;
+ double cfl = 0.1;
  
  //string meshFile = "rising-x.msh";
  string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
  
  string physGroup = "\"wallNoSlip\"";
- double betaGrad = 1.0;
+ double betaGrad = 0.9625;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
 
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
 

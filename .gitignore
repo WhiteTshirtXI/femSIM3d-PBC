@@ -48,3 +48,5 @@ channelPBC
 taylorVortexPBC
 movingFramePBC
 risingBubblePBC
+betaFlowPBC
+risingBubbleBetaFlowPBC

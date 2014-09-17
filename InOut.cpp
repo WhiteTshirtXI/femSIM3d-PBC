@@ -2084,7 +2084,7 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename )
 
 } // fecha metodo saveVTKSurface
 
-void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
+void InOut::saveVTKSurfacePBC( const char* _dir,const char* _filename, int _iter, double _betaGrad )
 {
  stringstream ss;  //convertendo int --> string
  string str;
@@ -2141,8 +2141,13 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  vtkSurfaceScalarHeader(vtkFile);
 
- if( pSol->Dim() > 0 )
-  vtkSurfaceScalar(vtkFile,"pressure",*pSol);
+ clVector p(numVerts);
+ for ( int i = 0; i < numVerts; ++i )
+   p.Set( i,(-_betaGrad)*s->getBetaFlowLiq()->Get(i)*X->Get(i) + pSol->Get(i) );
+
+ vtkSurfaceScalar(vtkFile,"pressure",p);
+
+ vtkSurfaceScalar(vtkFile,"periodic_pressure",*pSol);
 
  if( uSol->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
@@ -2165,9 +2170,6 @@ void InOut::saveVTKSurface( const char* _dir,const char* _filename, int _iter )
 
  if( gravity->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"gravity",*gravity);
-
- if( betaFlowLiq->Dim() > 0 )
-  vtkVector(vtkFile,"beta_grad",*betaFlowLiq);
 
  if( fint->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"surface_force",*fint);

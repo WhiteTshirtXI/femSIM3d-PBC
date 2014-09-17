@@ -272,7 +272,7 @@ int main(int argc, char **argv)
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveMSH(mshFolder,"newMesh",iter);
    //save.saveVTK(vtkFolder,"sim",iter);
-   save.saveVTKSurface(vtkFolder,"sim",iter);
+   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);

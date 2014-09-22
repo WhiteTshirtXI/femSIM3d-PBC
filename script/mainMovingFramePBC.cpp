@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
  int iter = 0;
  double alpha = 1.0;
- double cfl = 0.5;
+ double cfl = 0.8;
 
  double c1 = 0.0;  // lagrangian
  double c2 = 0.1;  // smooth vel
@@ -88,8 +88,8 @@ int main(int argc, char **argv)
  const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/";
  //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/";
  //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/dat/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/vtk/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/dat/";
  
 
  /* 
@@ -170,7 +170,8 @@ int main(int argc, char **argv)
   // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
- h1.initThreeBubbles();
+ h1.initRisingBubble();
+ //h1.initThreeBubbles();
  h1.assemble();
  h1.setk(0.2);
  h1.matMountC();
@@ -267,7 +268,8 @@ int main(int argc, char **argv)
   }
   Helmholtz3D h2(m1,h1);
   h2.setBC();
-  h2.initThreeBubbles();
+  h2.initRisingBubble();
+  //h2.initThreeBubbles();
   h2.assemble();
   h2.matMountC();
   h2.setUnCoupledCBC(); 
@@ -283,7 +285,7 @@ int main(int argc, char **argv)
   m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(3.5);
+  m1.insert3dMeshPointsByDiffusion(6.0);
   m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();

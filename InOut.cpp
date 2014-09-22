@@ -6005,6 +6005,12 @@ void InOut::crossSectionSol( const char* _var,
       << " saved in vtk" << endl;
 } // fecha metodo crossSectionSol
 
+/** \brief Saves elongation and flatness ratios. 
+ *  
+ *  \remark{This method prints the output print by considering 
+ *          the bubble rising in z-axis.} 
+ *
+ */
 void InOut::saveBubbleShapeFactors(const char* _dir,const char* _filename, int _iter)
 {
  

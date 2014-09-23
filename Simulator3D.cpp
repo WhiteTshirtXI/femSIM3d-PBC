@@ -5886,19 +5886,19 @@ void Simulator3D::assemblePBCTwoPhaseNew()
 	  ibR = SlaveIndices->at(i);
 	  
 	  // x-direction
-	  double invMLumpedRow = invMLumped.Get(ibR);
-	  invMLumpedRow += invMLumped.Get(ibL);
-	  invMLumped.Set(ibR,invMLumpedRow);
+	  double invMLumpedRow = 1.0/invMLumped.Get(ibR);
+	  invMLumpedRow += 1.0/invMLumped.Get(ibL);
+	  invMLumped.Set(ibR,1.0/invMLumpedRow);
 	
 	  // y-direction
-	  invMLumpedRow = invMLumped.Get(ibR + numNodes);
-	  invMLumpedRow += invMLumped.Get(ibL + numNodes);
-	  invMLumped.Set(ibR + numNodes,invMLumpedRow);
+	  invMLumpedRow = 1.0/invMLumped.Get(ibR + numNodes);
+	  invMLumpedRow += 1.0/invMLumped.Get(ibL + numNodes);
+	  invMLumped.Set(ibR + numNodes,1.0/invMLumpedRow);
 
 	  // z-direction
-	  invMLumpedRow = invMLumped.Get(ibR + 2*numNodes);
-	  invMLumpedRow += invMLumped.Get(ibL + 2*numNodes);
-	  invMLumped.Set(ibR + 2*numNodes,invMLumpedRow);
+	  invMLumpedRow = 1.0/invMLumped.Get(ibR + 2*numNodes);
+	  invMLumpedRow += 1.0/invMLumped.Get(ibL + 2*numNodes);
+	  invMLumped.Set(ibR + 2*numNodes,1.0/invMLumpedRow);
 	}
 
 	// eliminating

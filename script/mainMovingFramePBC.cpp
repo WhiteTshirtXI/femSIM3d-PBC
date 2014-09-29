@@ -24,9 +24,9 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- //double bubbleDiam = 3.0E-3; // test 1; Ar = 275.07; Eo = 1.21
- //double bubbleDiam = 4.0E-3; // test 2; Ar = 652.03; Eo = 2.15; 
- double bubbleDiam = 5.2E-3; // test 3; Ar = 1432.5; Eo = 3.63; 
+ //double bubbleDiam = 3.0E-3; // sqrt(Ar) = 535.83  ; Eo = 1.2091 
+ //double bubbleDiam = 4.0E-3; // sqrt(Ar) = 824.96  ; Eo = 2.1495 
+ double bubbleDiam = 5.2E-3; //   sqrt(Ar) = 12228.0 ; Eo = 3.6327
  double mu_in = 18.21E-6;
  double mu_out = 958.08E-6;
  double rho_in = 1.205;
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
  double sigma = 0.0728;
  double betaGrad = 1.0; // 0.9625
 
- double Re = CalcArchimedesBuoyancy(gravity,bubbleDiam,rho_out,mu_out);
+ double Re = sqrt( CalcArchimedesBuoyancy(gravity,bubbleDiam,rho_out,mu_out ) );
  double We = CalcEotvos(gravity,bubbleDiam,rho_out,sigma);
  double Fr = 1.0;
  
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
  int iter = 0;
  double alpha = 1.0;
- double cfl = 0.8;
+ double cfl = 0.5;
 
  double c1 = 0.0;  // lagrangian
  double c2 = 0.1;  // smooth vel
@@ -82,14 +82,26 @@ int main(int argc, char **argv)
   
  // cell-2D
  string meshFile = "unit-cell-s-2D-3d.msh";
+ // 1
+ /*
  const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/bin/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/";
- //const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/";
- //const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/vtk/";
  const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/vtk/";
+ */
+ // 2
+ /*
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/bin/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/msh/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/vtk/";
+ */
+ // 3
+ 
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/bin/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/msh/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/vtk/";
  
 
  /* 
@@ -286,7 +298,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   m1.insert3dMeshPointsByDiffusion(6.0);
-  m1.remove3dMeshPointsByDiffusion(0.5);
+  m1.remove3dMeshPointsByDiffusion(1.0);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

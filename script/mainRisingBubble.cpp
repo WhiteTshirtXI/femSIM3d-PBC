@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 
  const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/bin/";
  const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/vtk/";
  const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
  

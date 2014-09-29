@@ -5492,204 +5492,66 @@ void Simulator3D::getPeriodic3DToAttrib(Periodic3D &_pbc)
 
 } // fecha metodo
 
-
+/* Method should be used after SetCopyDirectionPBC() */
 void Simulator3D::assemblePBCNew()
 {
-   int i,j;
-   int ibL,ibR;
-
-  /* Copying rows and columns from ibL into ibR:
+   clDMatrix invAP;
+   invAP = invA;	
+  /* Copying rows and columns from ibL into ibR: 
    * i) Remove the contributions from left and overloads in right;
-   * ii) Now, the positions that stayed opened receive the same 
+   * ii) Now, the positions that stayed opened receive the same
    * values at right. */
+  	
   if ( direction == "RL" )
-  {
-	// ATilde
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
+  {	
+    // loop PBC indices
+	for ( int i = 0; i < nyPointsL; i++ ) 
 	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
+	  // master, slave indices
+	  int ibL = MasterIndices->at(i);
+	  int ibR = SlaveIndices->at(i);
 
-	  for ( j = 0; j < 3*numNodes; j++ ) // loop rows
-	  {
-		// x-direction
-		double aux = ATilde.Get(ibR,j);
-		aux += ATilde.Get(ibL,j);
-		ATilde.Set(ibR,j,aux);
-		 
-		// y-direction
-		aux  = ATilde.Get(ibR + numNodes,j);
-		aux += ATilde.Get(ibL + numNodes,j);
-		ATilde.Set(ibR + numNodes,j,aux);
-		
-		// z-direction
-		aux  = ATilde.Get(ibR + 2*numNodes,j);
-		aux += ATilde.Get(ibL + 2*numNodes,j);
-		ATilde.Set(ibR + 2*numNodes,j,aux);
-	  }
+	  ATilde.AddRowColSquareSym(ibL,ibR);
+	  ATilde.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
+	  ATilde.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
 
-	  for ( j = 0; j < 3*numNodes; j++ ) // loop columns
-	  {
-		// x-direction
-		double aux = ATilde.Get(j,ibR);
-		aux += ATilde.Get(j,ibL);
-		ATilde.Set(j,ibR,aux);
+	  GTilde.AddRows(ibL,ibR);
+	  GTilde.AddRows(ibL + numNodes,ibR + numNodes);
+	  GTilde.AddRows(ibL + 2*numNodes,ibR + 2*numNodes);
+	  GTilde.AddCols(ibL,ibR);
 
-		// y-direction
-		aux  = ATilde.Get(j,ibR + numNodes);
-		aux += ATilde.Get(j,ibL + numNodes);
-		ATilde.Set(j,ibR + numNodes,aux);
+	  DTilde.AddRows(ibL,ibR);
+	  DTilde.AddCols(ibL,ibR);
+	  DTilde.AddCols(ibL + numNodes,ibR + numNodes);
+	  DTilde.AddCols(ibL + 2*numNodes,ibR + 2*numNodes);
 
-		// z-direction
-		aux  = ATilde.Get(j,ibR + 2*numNodes);
-		aux += ATilde.Get(j,ibL + 2*numNodes);
-		ATilde.Set(j,ibR + 2*numNodes,aux);
-	  }
-	}
-  
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  // eliminating rows and columns
-	  ibL = MasterIndices->at(i);
-	  ATilde.SetRowZero(ibL);
-	  ATilde.SetColumnZero(ibL);
-	  ATilde.SetRowZero(ibL + numNodes);
-	  ATilde.SetColumnZero(ibL + numNodes);
-	  ATilde.SetRowZero(ibL + 2*numNodes);
-	  ATilde.SetColumnZero(ibL + 2*numNodes);
+	  invAP.AddInvs(ibL,ibR);
+	  invAP.AddInvs(ibL + numNodes, ibR + numNodes);
+	  invAP.AddInvs(ibL + 2*numNodes, ibR + 2*numNodes);
 
-	  // changed diagonal's values
-	  ATilde.Set(ibL,ibL,1.0);
-	  ATilde.Set(ibL + numNodes,ibL + numNodes,1.0);
-	  ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
-	}
+	  Mrho.AddRowColSquareSym(ibL,ibR);
+	  Mrho.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
+	  Mrho.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
+	  invMrhoLumped.AddInvs(ibL,ibR);
+	  invMrhoLumped.AddInvs(ibL + numNodes,ibR + numNodes);
+	  invMrhoLumped.AddInvs(ibL + 2*numNodes,ibR + 2*numNodes);
 
-	// DTilde
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	
-	  for ( j = 0; j < 3*numNodes; j++ ) // loop rows
-	  {
-	    double aux = DTilde.Get(ibR,j);
-		aux += DTilde.Get(ibL,j);
-		DTilde.Set(ibR,j,aux);
-	  }
-  
-	  for ( j = 0; j < numVerts; j++ ) // loop columns
-	  {
-		double aux = DTilde.Get(j,ibR);
-		aux += DTilde.Get(j,ibL);
-		DTilde.Set(j,ibR,aux);
+	  M.AddRowColSquareSym(ibL,ibR);
+	  M.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
+	  M.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
+	  invMLumped.AddInvs(ibL,ibR);
+	  invMLumped.AddInvs(ibL + numNodes,ibR + numNodes);
+	  invMLumped.AddInvs(ibL + 2*numNodes,ibR + 2*numNodes);
 
-		aux  = DTilde.Get(j, ibR + numNodes);
-		aux += DTilde.Get(j, ibL + numNodes);
-		DTilde.Set(j, ibR + numNodes,aux);
-
-		aux  = DTilde.Get(j, ibR + 2*numNodes);
-		aux += DTilde.Get(j, ibL + 2*numNodes);
-		DTilde.Set(j, ibR + 2*numNodes,aux);
-	  }
-	}	
-	
-	// eliminating rows and columns
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  ibL = MasterIndices->at(i);
-	  DTilde.SetRowZero(ibL);
-	  DTilde.SetColumnZero(ibL);
-	  DTilde.SetColumnZero(ibL + numNodes);
-	  DTilde.SetColumnZero(ibL + 2*numNodes);
-	}
-
-	// GTilde
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-
-	  for ( j = 0; j < numVerts; j++ ) // loop rows
-	  {
-		double aux = GTilde.Get(ibR,j);
-		aux += GTilde.Get(ibL,j);
-		GTilde.Set(ibR,j,aux);
-	  }
-	
-	  for ( j = 0; j < numNodes; j++ ) // loop columns
-	  {
-		double aux = GTilde.Get(j,ibR);
-		aux += GTilde.Get(j,ibL);
-		GTilde.Set(j,ibR,aux);
-
-		aux  = GTilde.Get(j + numNodes,ibR);
-		aux += GTilde.Get(j + numNodes,ibL);
-		GTilde.Set(j + numNodes,ibR,aux);
-		
-		aux  = GTilde.Get(j + 2*numNodes,ibR);
-		aux += GTilde.Get(j + 2*numNodes,ibL);
-		GTilde.Set(j + 2*numNodes,ibR,aux);
-	  }
-	}
-
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  ibL = MasterIndices->at(i);
-	  GTilde.SetRowZero(ibL);
-	  GTilde.SetRowZero(ibL + numNodes);
-	  GTilde.SetRowZero(ibL + 2*numNodes);
-	  GTilde.SetColumnZero(ibL);
-	  GTilde.SetColumnZero(ibL + numNodes);
-	  GTilde.SetColumnZero(ibL + 2*numNodes);
-	}
-	
-	// invA: in this case, the sum requires the inverse of the inverse  
-	clDMatrix invAP;
-    invAP = invA;	
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	  
-	  // x-direction
-	  double aux = 1.0/invAP.Get(ibR);
-	  aux += 1.0/invAP.Get(ibL);
-	  invAP.Set(ibR,1.0/aux);
-	
-	  // y-direction
-	  aux  = 1.0/invAP.Get(ibR + numNodes);
-	  aux += 1.0/invAP.Get(ibL + numNodes);
-	  invAP.Set(ibR + numNodes,1.0/aux);
-
-	  // z-direction
-	  aux  = 1.0/invAP.Get(ibR + 2*numNodes);
-	  aux += 1.0/invAP.Get(ibL + 2*numNodes);
-	  invAP.Set(ibR + 2*numNodes,1.0/aux);
-	}
-
-	// eliminating
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  invAP.Set(ibL,0.0);
-	  invAP.Set(ibL + numNodes,0.0);
-	  invAP.Set(ibL + 2*numNodes,0.0);
-	}
-	
-	/* Setting with 1.0 to identify the periodic nodes.
-	 * This trick was used to maintain the matrix
-	 * ETilde positive definite, by observation of diagonal
-	 * dominance.
-	 */
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  ibL = MasterIndices->at(i);
+	  /* Setting with 1.0 to identify the periodic nodes.
+	  * This trick was used to maintain the matrix
+	  * ETilde positive definite, by observation of diagonal
+	  * dominance.
+	  */
 	  E.Set(ibL,ibL,1.0);
-	}
- 
+
+	} 
+     
 	/* Enforcing one Dirichlet point in E for convergence.
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
@@ -5702,221 +5564,16 @@ void Simulator3D::assemblePBCNew()
 	 * resolved with E. 
 	 */
     ETilde = E - ((DTilde * invAP) * GTilde);
-
-
+	
   }
   /* Copying rows and columns from ibR to ibL. Idem, with inversed
    * indices. */
   else
   {
-    /* TO BE IMPLEMENTED! */
-  }
+   /* DIRECTION "LR" TO BE IMPLEMENTED!!! */
+  } 
 
 } /* End of method */
-
-
-void Simulator3D::assemblePBCTwoPhaseNew()
-{
-  int i,j;
-  int ibL,ibR;
-  
-  /* Copying rows and columns from ibL into ibR: 
-   * i) Remove the contributions from left and overloads in right;
-   * ii) Now, the positions that stayed opened receive the same
-   * values at right. */
-	
-  if ( direction == "RL" )
-  {	 
-    // Mrho
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	  
-	  for( j = 0; j < 3*numNodes; j++ ) // loop rows
-	  {
-		// x-direction
-		double MrhoRow = Mrho.Get(ibR,j);
-		MrhoRow += Mrho.Get(ibL,j);
-		Mrho.Set(ibR,j,MrhoRow);
-	  
-		// y-direction
-		MrhoRow = Mrho.Get(ibR + numNodes,j);
-		MrhoRow += Mrho.Get(ibL + numNodes,j);
-		Mrho.Set(ibR + numNodes,j,MrhoRow);
-		
-		// z-direction
-		MrhoRow = Mrho.Get(ibR + 2*numNodes,j);
-		MrhoRow += Mrho.Get(ibL + 2*numNodes,j);
-		Mrho.Set(ibR + 2*numNodes,j,MrhoRow);
-	  }
-	
-	  for( j = 0; j < 3*numNodes; j++ ) // loop columns
-	  {
-		// x-direction
-		double MrhoColumn = Mrho.Get(j,ibR);
-		MrhoColumn += Mrho.Get(j,ibL);
-		Mrho.Set(j,ibR,MrhoColumn);
-		
-		// y-direction
-		MrhoColumn = Mrho.Get(j,ibR + numNodes);
-		MrhoColumn += Mrho.Get(j,ibL + numNodes);
-		Mrho.Set(j,ibR + numNodes,MrhoColumn);
-
-		// z-direction
-		MrhoColumn = Mrho.Get(j,ibR + 2*numNodes);
-		MrhoColumn += Mrho.Get(j,ibL + 2*numNodes);
-		Mrho.Set(j,ibR + 2*numNodes,MrhoColumn);
-	  }
-	}
-  
-	for ( i = 0; i < nyPointsL; i++  )	 
-	{
-	  // eliminating rows and columns
-	  ibL = MasterIndices->at(i);
-	  Mrho.SetRowZero(ibL);
-	  Mrho.SetColumnZero(ibL);
-	  Mrho.SetRowZero(ibL + numNodes);
-	  Mrho.SetRowZero(ibL + 2*numNodes);
-	  Mrho.SetColumnZero(ibL + numNodes);
-	  Mrho.SetColumnZero(ibL + 2*numNodes);
-	  
-	  // changed diagonal's values
-	  Mrho.Set(ibL,ibL,1.0);
-	  Mrho.Set(ibL + numNodes,ibL + numNodes,1.0);
-	  Mrho.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
-	}
-    
-	// M
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	  
-	  for( j = 0; j < 3*numNodes; j++ ) // loop rows
-	  {
-		// x-direction
-		double MRow = M.Get(ibR,j);
-		MRow += M.Get(ibL,j);
-		M.Set(ibR,j,MRow);
-	  
-		// y-direction
-		MRow = M.Get(ibR + numNodes,j);
-		MRow += M.Get(ibL + numNodes,j);
-		M.Set(ibR + numNodes,j,MRow);
-
-		// z-direction
-		MRow = M.Get(ibR + 2*numNodes,j);
-		MRow += M.Get(ibL + 2*numNodes,j);
-		M.Set(ibR + 2*numNodes,j,MRow);
-	  }
-	
-	  for( j = 0; j < 3*numNodes; j++ ) // loop columns
-	  {
-		// x-direction
-		double MColumn = M.Get(j,ibR);
-		MColumn += M.Get(j,ibL);
-		M.Set(j,ibR,MColumn);
-		
-		// y-direction
-		MColumn = M.Get(j,ibR + numNodes);
-		MColumn += M.Get(j,ibL + numNodes);
-		M.Set(j,ibR + numNodes,MColumn);
-
-		// y-zirection
-		MColumn = M.Get(j,ibR + 2*numNodes);
-		MColumn += M.Get(j,ibL + 2*numNodes);
-		M.Set(j,ibR + 2*numNodes,MColumn);
-	  }
-	}
-  
-	for ( i = 0; i < nyPointsL; i++  )	 
-	{
-	  // eliminating rows and columns
-	  ibL = MasterIndices->at(i);
-	  M.SetRowZero(ibL);
-	  M.SetColumnZero(ibL);
-	  M.SetRowZero(ibL + numNodes);
-	  M.SetColumnZero(ibL + numNodes);
-	  M.SetRowZero(ibL + 2*numNodes);
-	  M.SetColumnZero(ibL + 2*numNodes);
-	}   
-
-	// invMrhoLumped
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	  
-	  // x-direction
-	  double invMrhoLumpedRow = 1.0/invMrhoLumped.Get(ibR);
-	  invMrhoLumpedRow += 1.0/invMrhoLumped.Get(ibL);
-	  invMrhoLumped.Set(ibR,1.0/invMrhoLumpedRow);
-	
-	  // y-direction
-	  invMrhoLumpedRow = 1.0/invMrhoLumped.Get(ibR + numNodes);
-	  invMrhoLumpedRow += 1.0/invMrhoLumped.Get(ibL + numNodes);
-	  invMrhoLumped.Set(ibR + numNodes,1.0/invMrhoLumpedRow);
-
-	  // z-direction
-	  invMrhoLumpedRow = 1.0/invMrhoLumped.Get(ibR + 2*numNodes);
-	  invMrhoLumpedRow += 1.0/invMrhoLumped.Get(ibL + 2*numNodes);
-	  invMrhoLumped.Set(ibR + 2*numNodes,1.0/invMrhoLumpedRow);
-	}
-
-	// eliminating
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  invMrhoLumped.Set(ibL,0.0);
-	  invMrhoLumped.Set(ibL+numNodes,0.0);
-	  invMrhoLumped.Set(ibL+2*numNodes,0.0);
-	}
-    
-
-	// invMLumped
-	for ( i = 0; i < nyPointsL; i++ ) // loop paired points
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  ibR = SlaveIndices->at(i);
-	  
-	  // x-direction
-	  double invMLumpedRow = 1.0/invMLumped.Get(ibR);
-	  invMLumpedRow += 1.0/invMLumped.Get(ibL);
-	  invMLumped.Set(ibR,1.0/invMLumpedRow);
-	
-	  // y-direction
-	  invMLumpedRow = 1.0/invMLumped.Get(ibR + numNodes);
-	  invMLumpedRow += 1.0/invMLumped.Get(ibL + numNodes);
-	  invMLumped.Set(ibR + numNodes,1.0/invMLumpedRow);
-
-	  // z-direction
-	  invMLumpedRow = 1.0/invMLumped.Get(ibR + 2*numNodes);
-	  invMLumpedRow += 1.0/invMLumped.Get(ibL + 2*numNodes);
-	  invMLumped.Set(ibR + 2*numNodes,1.0/invMLumpedRow);
-	}
-
-	// eliminating
-	for ( i = 0; i < nyPointsL; i++ )
-	{
-	  // left and right nodes
-	  ibL = MasterIndices->at(i);
-	  invMLumped.Set(ibL,0.0);
-	  invMLumped.Set(ibL+numNodes,0.0);
-	  invMLumped.Set(ibL+2*numNodes,0.0);
-	}  	
-  } // end loop RL
-
-  else 
-  {
-    /* TO BE IMPLEMENTED! */
-  }
-}
 
 void Simulator3D::setFintPBC()
 {
@@ -6292,10 +5949,6 @@ void Simulator3D::unCoupledPBCNew()
  cout << " --------> solving velocity --------- " << endl;
  solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
  cout << " ------------------------------------ " << endl;
-
- ///*** modifies global matrices relative to two-phase, as well as
- //     the term of interfacial force
- assemblePBCTwoPhaseNew();
 
  ///*** STEP 1.1: correction of provisional velocity for balance of forces 
  if( rho_in <= rho_out ) // BUBBLE

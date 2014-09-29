@@ -182,7 +182,7 @@ int main(int argc, char **argv)
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
  const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/vtk/";
  const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
  const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/msh/";
  

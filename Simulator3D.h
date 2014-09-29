@@ -72,7 +72,6 @@ class Simulator3D
   // PBC ******* 
   void assemblePBC();
   void assemblePBCNew(); // idem assemblePBC with vector structure
-  void assemblePBCTwoPhaseNew(); // idem assemblePBCNew, but for two-phase entities 
   void assembleCPBC();
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 

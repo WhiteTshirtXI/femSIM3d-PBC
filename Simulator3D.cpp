@@ -3002,6 +3002,41 @@ void Simulator3D::unCoupledCPBC()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
+
+void Simulator3D::unCoupledCPBCNew()
+{
+ clVector vcIp(numVerts);
+ clVector b1cTilde;
+ Periodic3D pbc;
+
+ vcIp = vcc.MultVec(ipc); // operacao vetor * vetor (elemento a elemento)
+ b1cTilde = b1c + vcIp; //<<< Por que duplicado??
+
+ b1cTilde = b1cTilde + 
+        //dt*invMcLumped*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+        invC*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
+
+ //*** modifying r.h.s. for scalar
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b1cTilde);
+
+ //*** Reassemble (scalar field)
+ assembleCPBCNew();
+
+ // solving scalar modified system AcTilde cTilde = b1cTilde
+ cout << endl;
+ cout << " --------> solving scalar ----------- " << endl;
+ solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
+ cout << " ------------------------------------ " << endl;
+ cout << endl;
+
+ //*** copying scalar 
+ pbc.SetPureScalarPBCNew(cTilde,MasterIndices,SlaveIndices,nyPointsL,"RL");
+
+ // comentar em caso de utilizacao de setInterface()
+ // pois cSol nao pode ser atualizado
+ cSol = cTilde;
+}
+
 void Simulator3D::saveOldData()
 {
  uSolOld     = uSol;
@@ -5924,6 +5959,39 @@ void Simulator3D::assembleCPBC()
      }
 
 } // close method assembleCPBC
+
+/* Method should be used after SetCopyDirectionPBC() */
+void Simulator3D::assembleCPBCNew()
+{
+  /* Copying rows and columns from ibL into ibR: 
+   * i) Remove the contributions from left and overloads in right;
+   * ii) Now, the positions that stayed opened receive the same
+   * values at right. */
+  	
+  if ( direction == "RL" )
+  {	
+    // loop PBC indices
+	for ( int i = 0; i < nyPointsL; i++ ) 
+	{
+	  // master, slave indices
+	  int ibL = MasterIndices->at(i);
+	  int ibR = SlaveIndices->at(i);
+
+	  AcTilde.AddRowColSquareSym(ibL,ibR);
+	  AcTilde.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
+	  AcTilde.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
+	  AcTilde.Set(ibL,ibL,1.0);
+	} 
+  }
+  /* Copying rows and columns from ibR to ibL. Idem, with inversed
+   * indices. */
+  else
+  {
+   /* DIRECTION "LR" TO BE IMPLEMENTED!!! */
+  } 
+
+} /* End of method */
+
 
 
 /* unCoupledPBC with <vector> structure */

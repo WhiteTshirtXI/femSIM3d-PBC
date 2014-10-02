@@ -85,7 +85,7 @@ int main(int argc, char **argv)
  }
 
 
- double cfl = 0.1;
+ double cfl = 0.5;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 10000;
+ int nIter = 30000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {

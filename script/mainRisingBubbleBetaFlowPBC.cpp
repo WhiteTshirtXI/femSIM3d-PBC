@@ -146,7 +146,7 @@ int main(int argc, char **argv)
   exit(1);
  }
 
- double cfl = 0.5;
+ double cfl = 0.1;
  
  //string meshFile = "rising-x.msh";
  string meshFile = "airWaterSugarPBC-wallLeftRight.msh";

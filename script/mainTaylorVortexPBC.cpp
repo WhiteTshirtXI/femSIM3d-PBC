@@ -74,25 +74,24 @@ int main(int argc, char **argv)
  double Fr = 10;
  double mu_l = 1.0002E-3;
  double rho_l = 998.63;
+ double betaGrad = 1.0;
+
  // double cp_l = 1.0; // check if necessary for scalar
+ 
+ string physGroup = "\"wallNoSlip\"";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PCGSolver();
- Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- //Solver *solverP = new PetscSolver(KSPPREONLY,PCLU);
- //Solver *solverP = new PetscSolver(KSPLSQR,PCILU);
- Solver *solverV = new PetscSolver(KSPGMRES,PCILU);
- //Solver *solverV = new PCGSolver();
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ Solver *solverP = new PetscSolver(KSPCG,PCILU);
+ Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PCGSolver();
 
  //** Data Saving Directories
- //const char *binFolder  = "./bin/";
- //const char *datFolder  = "./dat/";
- //const char *solFolder  = "./sol/";
- //const char *txtFolder  = "./txt/";
- const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
- const char *datFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/dat";
+ const char *vtkFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
+ const char *datFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
+ const char *binFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
+ const char *mshFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
 
  //** Model Constructor
  Model3D m1;
@@ -109,12 +108,10 @@ int main(int argc, char **argv)
  if ( selectionExtension == "msh")
  {
   	//*** File
- 	//string meshFile = "thesis-jet.msh";
- 	string meshFile = "cuboid-3d.msh";
- 	//string meshFile = "cylinder-3d.msh";
+ 	string meshFile = "cuboid.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
- 	meshDir += "/" + meshFile;
+ 	meshDir += "/cuboid/" + meshFile;
  	const char *aux = meshDir.c_str();
 	mesh = aux;
 
@@ -131,10 +128,11 @@ int main(int argc, char **argv)
  		m1.setQuadElement();
 	#endif
  	
- 	m1.setVertNeighbour();
+ 	m1.setNeighbour();
+	m1.setVertNeighbour();
  	m1.setInOutVert();
+	m1.setGenericBCPBCNew(physGroup);
 	m1.setGenericBC();
- 	//m1.setNeumannPressureBC();
  }
  else if ( selectionExtension == "vtk" )
  {
@@ -155,7 +153,6 @@ int main(int argc, char **argv)
 	#endif
 	m1.setMapping();
 	m1.setInOutVert();
-	m1.setCubeVortexBC();
 	//m1.setNeumannPressureBC(); // change to setOnePointPressureBC()
  }
  else
@@ -166,7 +163,7 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew("noPrint");
+ pbc.MountPeriodicVectorsNew("print");
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -194,7 +191,7 @@ int main(int argc, char **argv)
  sp.initTaylorVortex(); // Taylor vortex
 
  //*** Starting Flow: Pressure Gradient Setting
- sp.setBetaPressureLiquid();
+ sp.setBetaPressureLiquid(betaGrad);
 
  //**** Mounting
  sp.assemble(); 
@@ -225,7 +222,7 @@ int main(int argc, char **argv)
  
  //*** Mesh Information
  save.saveVTK(vtkFolder,"geometry");
- save.saveInfo("./","info",mesh);
+ save.saveInfo(datFolder,"info",mesh);
 
  //*** Output (Initial Condition)
  save.saveVTK(vtkFolder,"initial",0);
@@ -242,34 +239,28 @@ int main(int argc, char **argv)
 
    //**** Advective Term
    sp.stepSLPBCFix(); // semi-lagrangian repair
-   //sp.stepNoConvection();
-   //sp.stepSL();
 
-   //sp.setUnCoupledBC();
-   sp.setUnCoupledPBC(); 
+   sp.setUnCoupledBC(); 
    //sp.setUnCoupledCBC();
 
    //**** Physical Effects
    //sp.setGravity("+X");
-   //sp.setBetaFlowLiq("+X");
+   sp.setBetaFlowLiq("+X");
 
    //**** r.h.s Vector
-   //sp.setRHS();
-   sp.setRHS_PBC();
+   sp.setRHS();
 
    //**** Periodic Copy
    sp.setCopyDirectionPBC("RL");
    
    //**** Matricial System Solution
-   //sp.unCoupled();
    sp.unCoupledPBCNew();
-   //sp.unCoupledCPBC();
+   //sp.unCoupledCPBCNew();
    
    //**** Solution Saving
-   save.saveVTK(vtkFolder,"sim",iter);
-   //save.saveVTU(vtkFolder,"sim",iter);
-   //save.saveSol(binFolder,"sim",iter);
-   //save.saveSolTXT(solFolder,"solution",iter);
+   save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveSol(binFolder,"sim",iter);
    save.saveMeshInfo(datFolder);
 
    //**** Updating Quantities

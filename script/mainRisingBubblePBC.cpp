@@ -181,10 +181,10 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/vtk/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/msh/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/msh/";
  
  string meshDir = (string) getenv("MESH3D_DIR");
  if( strcmp( _frame,"moving") == 0 )
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
    }
 
    //s1.stepLagrangian();
-   s1.stepALE();
+   s1.stepALEPBC();
    s1.setDtALETwoPhase();
 
    InOut save(m1,s1); // cria objeto de gravacao
@@ -324,11 +324,14 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupledPBCNew();
 
+   if ( i%5 == 0 )
+   {
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
+   }
 
    s1.saveOldData();
 
@@ -350,9 +353,12 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
+  if ( i%5 == 0 )
+  {
   h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
+  }
 
   Model3D mOld = m1; 
 

@@ -5556,7 +5556,7 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	setDirichletPressurePointPBC();
+	setDirichletPressurePointPBC("fixed");
 	 
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
@@ -5575,68 +5575,63 @@ void Simulator3D::assemblePBCNew()
 
 } /* End of method */
 
-void Simulator3D::setFintPBC()
+/* \brief Forces pressure Dirichlet condition at 1 non-PBC node */
+void Simulator3D::setDirichletPressurePointPBC(string _method)
 {
-  size_t j = 0;
-  // iterators to interface nodes
-  list<int>::iterator lst;
-  list<int>::iterator lstt;  
-  lst  = pbc->GetIL()->begin(); 
-  lstt  = pbc->GetIR()->begin(); 
-  
-  // fint: copy and elimination
-  while ( j < pbc->GetIL()->size() )
-  {	  
-	// running lists node-to-node (2D is only one point)
-	int iL = *lst;
-	int iR = *lstt;	  
+  // first non-PBC point found randomily
+  if ( _method == "random" )
+  {
+	 vector<int> aux(0);  
+	 for ( list<int>::iterator it  = boundaryVert->begin(); 
+			 it != boundaryVert->end(); ++it )
+	 {
+	   aux.push_back(*it);
+	 }
+
+	 // extracting nonPBC nodes
+	 for ( int i = 0; i < nyPointsL; ++i )
+	 {
+	   int ibL = MasterIndices->at(i);
+	   int ibR = SlaveIndices->at(i);
+
+	   // eliminates PBC master
+	   for ( size_t j = 0; j < aux.size(); ++j)
+	   {
+		if ( aux.at(j) == ibL )
+		   aux.erase(aux.begin()+j);
+	   }
+	   // eliminates PBC slave
+	   for ( size_t j = 0; j < aux.size(); ++j)
+	   {
+		if ( aux.at(j) == ibR )
+		   aux.erase(aux.begin()+j);
+	   }
+	 } 
+	 /* --- SETTING POSITION AT MATRIX E --- */
+	 // set 1st. nonPBC found.
+	 E.Set( aux.at(0), aux.at(0), 1.0 ); // diagonal of E
+	 cout << color(none,yellow,black) 
+		  << " >> Nonperiodic pressure point set: " 
+		  << aux.at(0) << endl << resetColor();
+  }
+  else
+  {	 
+   for ( list<int>::iterator it  = boundaryVert->begin(); 
+			 it != boundaryVert->end(); ++it )
+   {
+	double xm = 0.5*fabs( X->Max() + X->Min() );
+	double ym = Y->Min();
 	
-	double fR = fint.Get(iR);
-	fR += fint.Get(iL);
-	fint.Set(iL,0.0);
-
-	// update
-	lst++;
-	lstt++;
-	j++;
+	if ( fabs( X->Get(*it) - xm ) < 0.01 && Y->Get(*it) == ym )
+	{  
+	    E.Set( *it, *it, 1.0 ); // diagonal of E
+	    cout << color(none,yellow,black) 
+		     << " >> Nonperiodic pressure point set: " 
+		     << *it << endl << resetColor();
+		break;
+	}
+   }
   }
-}
-
-void Simulator3D::setDirichletPressurePointPBC()
-{
-  vector<int> aux(0);  
-  for ( list<int>::iterator it  = boundaryVert->begin(); 
-	      it != boundaryVert->end(); ++it )
-  {
-    aux.push_back(*it);
-  }
-
-  // extracting nonPBC nodes
-  for ( int i = 0; i < nyPointsL; ++i )
-  {
-    int ibL = MasterIndices->at(i);
-	int ibR = SlaveIndices->at(i);
-
-	// eliminates PBC master
-	for ( size_t j = 0; j < aux.size(); ++j)
-	{
-	 if ( aux.at(j) == ibL )
-	    aux.erase(aux.begin()+j);
-    }
-	// eliminates PBC slave
-	for ( size_t j = 0; j < aux.size(); ++j)
-	{
-	 if ( aux.at(j) == ibR )
-	    aux.erase(aux.begin()+j);
-    }
-  }
- 
-  /* --- SETTING POSITION AT MATRIX E --- */
-  // set 1st. nonPBC found.
-  E.Set( aux.at(0), aux.at(0), 1.0 ); // diagonal of E
-  cout << color(none,yellow,black) 
-       << " >> Nonperiodic pressure point set: " 
-	   << aux.at(0) << endl << resetColor();
 }
 
 void Simulator3D::assemblePBC()
@@ -6002,9 +5997,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- clVector p(numVerts);
- p.SetAll( getMeanPressureDomain("average") );
- pSol = pSol - p;
+ //clVector p(numVerts);
+ //p.SetAll( getMeanPressureDomain("average") );
+ //pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )

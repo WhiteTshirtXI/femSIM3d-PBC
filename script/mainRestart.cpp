@@ -26,18 +26,29 @@ int main(int argc, char **argv)
 
  int iter = 1;
 
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPCG,PCICC);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "./bin/";
- const char *vtkFolder  = "./vtk/";
- const char *mshFolder  = "./msh/";
- const char *datFolder  = "./dat/";
+ const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/bin/";
+ const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/vtk/";
+ const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/dat/";
+ const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc/msh/";
+ 
+ string meshDir = (string) getenv("MESH3D_DIR");
+ if( strcmp( _frame,"moving") == 0 )
+  meshDir += "/rising/movingFrame/" + meshFile;
+ else
+  meshDir += "/rising/" + meshFile;
+  //meshDir += "/test/" + meshFile;
+ 
+ const char *mesh = meshDir.c_str();
 
  Model3D m1;
- Simulator3D s1;
 
+  cout << endl;
+  cout << "--------------> RE-STARTING" << endl;
+  cout << endl;
  // load surface mesh
  string aux = *(argv+1);
  string file = (string) "./msh/newMesh-" + *(argv+1) + (string) ".msh";

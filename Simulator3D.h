@@ -94,8 +94,7 @@ class Simulator3D
   void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
   void setCopyDirectionPBC(string _direction);
   void stepSLPBCFix();
-  void setFintPBC();
-  void setDirichletPressurePointPBC();
+  void setDirichletPressurePointPBC(string _method);
   
   // gets & sets
   double getPeriodicFaceVelXAverage();

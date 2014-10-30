@@ -26,66 +26,57 @@ int main(int argc, char **argv)
 
  int iter = 0;
 
- const char* _frame = "fixed";
- //const char* _frame = "moving";
+ //const char* _frame = "fixed";
+ const char* _frame = "moving";
 
  string physGroup = "\"wallInflowZeroU\"";
+ //string physGroup = "\"wallNoSlip\"";
  double betaGrad = 1.0;
  
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPCG,PCICC);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
+ // rising-pbc
+ //string meshFile = "airWaterSugarPBC-wallLeftRight.msh";
  /*
- string meshFile = "rising-moving-x.msh";
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/bin/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/msh/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/dat/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-pbc-moving/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/bin/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/msh/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/dat/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/vtk/";
  */
 
-  
+ // rising-beta
+ /*
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/bin/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/msh/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/dat/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/vtk/";
+ */
+
  // cell-2D
  string meshFile = "unit-cell-s-2D-3d.msh";
  // 1
- /*
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/bin/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/vtk/";
- */
+ /* 
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/cell-1/bin/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/cell-1/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/cell-1/msh/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/cell-1/vtk/";
+ */ 
  // 2
  /*
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/bin/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-2/vtk/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/cell-2/bin/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/cell-2/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/cell-2/msh/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/cell-2/vtk/";
  */
  // 3
- /* 
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/bin/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1-3/vtk/";
- */
-
- /* 
- // cell-D
- string meshFile = "unit-cell-s-D-3d.msh";
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/vtk/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-D-nb1/msh/";
- */
-
  
- // cell-0.5D
- //string meshFile = "unit-cell-s-0.5D-3d.msh";
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/vtk/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-0.5D-nb1/msh/";
-  
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/cell-3/bin/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/cell-3/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/cell-3/msh/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/cell-3/vtk/";
+ 
 
  string meshDir = (string) getenv("MESH3D_DIR");
 
@@ -102,8 +93,12 @@ int main(int argc, char **argv)
   cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
 
- //string mshBase = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/msh/newMesh-";
- string mshBase = "/home/gcpoliveira/post-processing/vtk/3d/cell-2/unit-cell-s-2D-nb1-2/msh/newMesh-";
+  //string mshBase = "/work/gcpoliveira/post-processing/3d/cell-1/msh/newMesh-";
+  //string mshBase = "/work/gcpoliveira/post-processing/3d/cell-2/msh/newMesh-";
+  string mshBase = "/work/gcpoliveira/post-processing/3d/cell-3/msh/newMesh-";
+
+  //string mshBase = "/work/gcpoliveira/post-processing/3d/rising-pbc/msh/newMesh-";
+  //string mshBase = "/work/gcpoliveira/post-processing/3d/rising-beta/msh/newMesh-";
 
   // load surface mesh
   string aux = *(argv+1);
@@ -114,8 +109,13 @@ int main(int argc, char **argv)
   m1.setTriEdge();
   m1.mesh2Dto3D();
 
- //string vtkBase = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/vtk/sim-";
- string vtkBase = "/home/gcpoliveira/post-processing/vtk/3d/cell-2/unit-cell-s-2D-nb1-2/vtk/sim-";
+  //string vtkBase = "/work/gcpoliveira/post-processing/3d/cell-1/vtk/sim-";
+  //string vtkBase = "/work/gcpoliveira/post-processing/3d/cell-2/vtk/sim-";
+  string vtkBase = "/work/gcpoliveira/post-processing/3d/cell-3/vtk/sim-";
+ 
+  //string vtkBase = "/work/gcpoliveira/post-processing/3d/rising-pbc/vtk/sim-";
+  //string vtkBase = "/work/gcpoliveira/post-processing/3d/rising-beta/vtk/sim-";
+  
   // load 3D mesh
   file = vtkBase + *(argv+1) + (string) ".vtk";
   const char *vtkFile = file.c_str();
@@ -144,8 +144,13 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
-  //const char *dirBase = "/home/gcpoliveira/post-processing/vtk/3d/unit-cell-s-2D-nb1/";
-  const char *dirBase = "/home/gcpoliveira/post-processing/vtk/3d/cell-2/unit-cell-s-2D-nb1-2/";
+  //const char *dirBase = "/work/gcpoliveira/post-processing/3d/cell-1/";
+  //const char *dirBase = "/work/gcpoliveira/post-processing/3d/cell-2/";
+  const char *dirBase = "/work/gcpoliveira/post-processing/3d/cell-3/";
+  
+  //const char *dirBase = "/work/gcpoliveira/post-processing/3d/rising-pbc/";
+  //const char *dirBase = "/work/gcpoliveira/post-processing/3d/rising-beta/";
+
   iter = s1.loadSolution(dirBase,"sim",atoi(*(argv+1)));
   
  // Point's distribution
@@ -216,6 +221,7 @@ int main(int argc, char **argv)
    save.printSimulationReport();
 
    s1.stepALEPBC();
+   //s1.stepALE();
    s1.movePoints();
    s1.assemble();
    s1.matMount();
@@ -227,7 +233,10 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    //s1.setInterfaceLevelSet();
    s1.unCoupledPBCNew();
+   //s1.unCoupledBetaPBC(); // rising-beta
 
+   if ( i%5 == 0 )
+   {
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
@@ -235,7 +244,7 @@ int main(int argc, char **argv)
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
    save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter);
-
+   }
    s1.saveOldData();
 
    cout << color(none,magenta,black);
@@ -249,8 +258,8 @@ int main(int argc, char **argv)
   }
   Helmholtz3D h2(m1,h1);
   h2.setBC();
-  h2.initRisingBubble();
-  //h2.initThreeBubbles();
+  //h2.initRisingBubble();
+  h2.initThreeBubbles();
   h2.assemble();
   h2.matMountC();
   h2.setUnCoupledCBC(); 
@@ -267,7 +276,7 @@ int main(int argc, char **argv)
 
   // 3D operations
   m1.insert3dMeshPointsByDiffusion(6.0);
-  m1.remove3dMeshPointsByDiffusion(1.0);
+  m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();

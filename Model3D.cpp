@@ -9629,7 +9629,7 @@ void Model3D::setGenericBCPBCNew(string _group)
    else
    {
 	 // setting of periodic elements
-	 setPeriodicElemsId(); // <<<<
+	 //setPeriodicElemsId(); // <<<<
 	
 	 // treatment of periodic corner points
 	 for ( int i = 0; i < surfMesh.numElems; ++i )
@@ -9662,6 +9662,140 @@ void Model3D::setGenericBCPBCNew(string _group)
 			surfMesh.phyBounds.at(v2) = _group;
 		   if ( v3 == pbcIndicesRight.at(j) )
 			surfMesh.phyBounds.at(v3) = _group;
+		 }	 
+	   }
+	 }
+   } // close else
+
+} // close method
+
+/// PBC
+void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
+{    
+   // cleaning vectors of periodic indices
+   pbcIndicesLeft.resize(0);
+   pbcIndicesRight.resize(0);
+   elemIdMaster.resize(0);
+   elemIdSlave.resize(0);
+   
+   for( int i = 0; i < surfMesh.numElems; i++ )
+   {		
+     int v1 = surfMesh.IEN.Get(i,0);
+	 int v2 = surfMesh.IEN.Get(i,1);
+	 int v3 = surfMesh.IEN.Get(i,2);
+	 int id = surfMesh.idRegion.Get(i);
+	  
+	 // left indices
+	 if ( surfMesh.phyNames.at(id).compare(5,4,"Left") == 0 )
+	 {
+       pbcIndicesLeft.push_back(v1);
+	   pbcIndicesLeft.push_back(v2);
+	   pbcIndicesLeft.push_back(v3);
+	 }
+
+	 // right indices
+	 if ( surfMesh.phyNames.at(id).compare(5,5,"Right") == 0 )
+	 {
+	   pbcIndicesRight.push_back(v1);
+	   pbcIndicesRight.push_back(v2);
+	   pbcIndicesRight.push_back(v3);
+	 }	  
+   }
+
+   // removing duplicatas
+   set<int> setOne( pbcIndicesLeft.begin(), pbcIndicesLeft.end() );
+   set<int> setTwo( pbcIndicesRight.begin(), pbcIndicesRight.end() );
+   set<int>::iterator itsetOne;
+   set<int>::iterator itsetTwo;
+
+   // resizing to reallocate
+   pbcIndicesLeft.resize(0);
+   pbcIndicesRight.resize(0);
+			  
+   for (itsetOne = setOne.begin(); itsetOne != setOne.end(); ++itsetOne)
+   {
+	 pbcIndicesLeft.push_back(*itsetOne);				 
+   }
+			   
+   cout << "Master nodes stored." << endl;
+			  
+   for (itsetTwo = setTwo.begin(); itsetTwo != setTwo.end(); ++itsetTwo)
+   {
+	 pbcIndicesRight.push_back(*itsetTwo);
+   }
+   
+   cout << "Slave nodes stored." << endl;
+
+   int sizeM = pbcIndicesLeft.size();
+   int sizeS = pbcIndicesRight.size();
+			  
+   if ( sizeM != sizeS )
+   {
+	 string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
+	 cerr << warn << endl;
+   }
+   else
+   {
+	 // setting of periodic elements
+	 setPeriodicElemsId(); // <<<<
+	
+	 // treatment of periodic corner points
+	 for ( int i = 0; i < surfMesh.numElems; ++i )
+	 {
+	   int id = surfMesh.idRegion.Get(i);
+	   int v1 = surfMesh.IEN.Get(i,0);
+	   int v2 = surfMesh.IEN.Get(i,1);
+	   int v3 = surfMesh.IEN.Get(i,2);
+
+	   // 1st group
+	   if ( surfMesh.phyNames.at(id) == _group1 )
+	   {
+		 // master
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v1) = _group1;
+		   if ( v2 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v2) = _group1;
+		   if ( v3 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v3) = _group1;
+		 }		
+		 
+		 // slave
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v1) = _group1;
+		   if ( v2 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v2) = _group1;
+		   if ( v3 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v3) = _group1;
+		 }	 
+	   }
+
+	   // 2nd group
+	   if ( surfMesh.phyNames.at(id) == _group2 )
+	   {
+		 // master
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v1) = _group2;
+		   if ( v2 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v2) = _group2;
+		   if ( v3 == pbcIndicesLeft.at(j) )
+			surfMesh.phyBounds.at(v3) = _group2;
+		 }		
+		 
+		 // slave
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 {
+		   if ( v1 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v1) = _group2;
+		   if ( v2 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v2) = _group2;
+		   if ( v3 == pbcIndicesRight.at(j) )
+			surfMesh.phyBounds.at(v3) = _group2;
 		 }	 
 	   }
 	 }

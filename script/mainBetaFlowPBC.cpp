@@ -81,63 +81,17 @@ int main(int argc, char **argv)
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
 
- double Re = 1.0; 
- double Sc = 1;
+ double Re = 30000.0; 
+ double Sc = 1.0;
  double We = 115.662;
  double Fr = 1.0;
  double alpha = 1.0;
 
-
  double rho_in = 1.225;
- double rho_out =1350; 
+ double rho_out =1.225; 
 
- double mu_out = 1;
- double mu_in = 0.0000178;
-
- const char* _case = "3";
-
- // case 1
- if( strcmp( _case,"1") == 0 )
- {
-  Re = sqrt(42.895); 
-  mu_out = 2.73;
- }
-
- else if( strcmp( _case,"2") == 0 )
- {
-  Re = 13.8487; // case 2
-  mu_out = 1.28; 
- }
-
- else if( strcmp( _case,"3") == 0 )
- {
-  Re = 33.0413; // case 3
-  mu_out = 0.5396; // case 3
- }
-
- else if( strcmp( _case,"6") == 0 )
- {
-  Re = sqrt(3892.856); // case 6
-  mu_out = 0.2857; // case 6
- }
-
- else if( strcmp( _case,"7") == 0 )
- {
-  Re = sqrt(18124.092); // case 7
-  mu_out = 0.1324; // case 7
- }
-
- else if( strcmp( _case,"8") == 0 )
- {
-  Re = sqrt(41505.729); // case 8 (extream)
-  mu_out = 0.0875134907735; // extream
- }
- else
- {
-  cerr << "test case " << _case << " not available!" << endl;
-  exit(1);
- }
-
+ double mu_out = 0.001;
+ double mu_in = 0.001;
 
  double cfl = 0.8;
 
@@ -148,8 +102,11 @@ int main(int argc, char **argv)
  double d1 = 1.0;      // surface tangent vel = (u-ut)
  double d2 = 0.1;      // surface smooth coord (fujiwara)
  
- string physGroup = "\"wallNoSlip\"";
- double betaGrad = 32.0;
+ //string physGroup = "\"wallInflowU\"";
+ string physGroup1 = "\"wallNormalV\"";
+ string physGroup2 = "\"wallNormalW\"";
+
+ double betaGrad = 32.0/Re;
  
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
@@ -158,18 +115,16 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/beta/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/beta/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/beta/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/beta/msh/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
  
  string meshDir = (string) getenv("MESH3D_DIR");
  
- //string meshFile = "airWaterSugarPBC-wallLeftRight-GCPO.msh";
- string meshFile = "test.msh";
+ string meshFile = "cuboid.msh";
  
- //meshDir += "/rising/" + meshFile;
- meshDir += "/test/" + meshFile;
+ meshDir += "/cuboid/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -194,7 +149,8 @@ int main(int argc, char **argv)
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
   m1.setGenericBC();
-  m1.setGenericBCPBCNew(physGroup);
+  //m1.setGenericBCPBCNew(physGroup);
+  m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
   
   Periodic3D pbc(m1);
   pbc.MountPeriodicVectorsNew("print");
@@ -214,14 +170,15 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.init();
+  //s1.init();
+  s1.initTaylorVortex();
   s1.setBetaPressureLiquid(betaGrad);
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
  
-
+ /*
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
@@ -233,6 +190,7 @@ int main(int argc, char **argv)
  h1.setCRHS();
  h1.unCoupledC();
  h1.setModel3DEdgeSize();
+ */
 
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"sim",0);
@@ -241,7 +199,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 10000;
+ int nIter = 200;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -264,7 +222,7 @@ int main(int argc, char **argv)
    s1.matMount();
    s1.setUnCoupledBC();
    //s1.setGravity("+X");
-   s1.setBetaFlowLiq("+X");
+   //s1.setBetaFlowLiq("+X");
    s1.setRHS();
    s1.setCopyDirectionPBC("RL");
    s1.unCoupledPBCNew();
@@ -288,6 +246,7 @@ int main(int argc, char **argv)
 
    iter++;
   }
+  /*
   Helmholtz3D h2(m1,h1);
   h2.setBC();
   h2.initRisingBubble();
@@ -300,35 +259,36 @@ int main(int argc, char **argv)
   h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
+  */
 
   Model3D mOld = m1; 
 
   /* *********** MESH TREATMENT ************* */
   // set normal and kappa values
-  m1.setNormalAndKappa();
-  m1.initMeshParameters();
+  //m1.setNormalAndKappa();
+  //m1.initMeshParameters();
 
   // 3D operations
-  m1.insert3dMeshPointsByDiffusion(6.0);
-  m1.remove3dMeshPointsByDiffusion(0.5);
+  //m1.insert3dMeshPointsByDiffusion(6.0);
+  //m1.remove3dMeshPointsByDiffusion(0.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
-  m1.remove3dMeshPointsByHeight();
-  m1.delete3DPoints();
+  //m1.remove3dMeshPointsByHeight();
+  //m1.delete3DPoints();
 
   // surface operations
-  m1.smoothPointsByCurvature();
+  //m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("flat");
+  //m1.insertPointsByLength("flat");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("flat");
+  //m1.contractEdgesByLength("flat");
   //m1.removePointsByLength();
-  m1.flipTriangleEdges();
+  //m1.flipTriangleEdges();
 
-  m1.removePointsByNeighbourCheck();
+  //m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
   /* **************************************** */
 
@@ -344,7 +304,8 @@ int main(int argc, char **argv)
 
   m1.setSurfaceConfig();
   m1.setGenericBC();
-  m1.setGenericBCPBCNew(physGroup);
+  //m1.setGenericBCPBCNew(physGroup);
+  m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
   pbc.MountPeriodicVectorsNew("noPrint");
 
   Simulator3D s2(m1,s1);

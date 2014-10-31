@@ -288,6 +288,7 @@ class Model3D
   vector<double> getAverageTriArea();
   vector<double> getAverageTetVolume();
   void setGenericBCPBCNew(string _group); // PBC
+  void setGenericBCPBCNewDuo(string _group1, string _group2); // PBC
 
   clVector* getUC();
   clVector* getVC();

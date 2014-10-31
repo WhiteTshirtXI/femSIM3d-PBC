@@ -2862,6 +2862,8 @@ void Simulator3D::unCoupled()
 } // fecha metodo unCoupled 
 
 
+/** Doesn't call assemblePBC to perform copies.
+ */
 void Simulator3D::unCoupledBetaPBC()
 {
  clVector uvw(3*numNodes);
@@ -5621,8 +5623,9 @@ void Simulator3D::setDirichletPressurePointPBC(string _method)
    {
 	double xm = 0.5*fabs( X->Max() + X->Min() );
 	double ym = Y->Min();
+	double zm = Z->Min();
 	
-	if ( fabs( X->Get(*it) - xm ) < 0.01 && Y->Get(*it) == ym )
+	if ( fabs( X->Get(*it) - xm ) < 0.01 && Y->Get(*it) == ym && Z->Get(*it) == zm )
 	{  
 	    E.Set( *it, *it, 1.0 ); // diagonal of E
 	    cout << color(none,yellow,black) 
@@ -6415,7 +6418,7 @@ void Simulator3D::initTaylorGreenVortex()
 	   double v = - cos(PI_CONSTANT*x)*sin(PI_CONSTANT*y);
 	   double w = 0.0;
 
-	   double U = 0.0;
+	   double U = 1.0;
 	   double V = 0.0;
 	   double W = 0.0;
 	  

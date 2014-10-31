@@ -78,13 +78,14 @@ int main(int argc, char **argv)
 
  // double cp_l = 1.0; // check if necessary for scalar
  
- string physGroup = "\"wallNoSlip\"";
+ string physGroup1 = "\"wallNoSlip\"";
+ string physGroup2 = "\"wallNoSlip\"";
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PCGSolver();
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverP = new PetscSolver(KSPCG,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCICC);
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverV = new PetscSolver(KSPCG,PCILU);
  Solver *solverC = new PCGSolver();
 
  //** Data Saving Directories
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
  	m1.setNeighbour();
 	m1.setVertNeighbour();
  	m1.setInOutVert();
-	m1.setGenericBCPBCNew(physGroup);
+	m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
 	m1.setGenericBC();
  }
  else if ( selectionExtension == "vtk" )
@@ -223,6 +224,7 @@ int main(int argc, char **argv)
  //*** Mesh Information
  save.saveVTK(vtkFolder,"geometry");
  save.saveInfo(datFolder,"info",mesh);
+ save.saveMeshInfo(datFolder);
 
  //*** Output (Initial Condition)
  save.saveVTK(vtkFolder,"initial",0);

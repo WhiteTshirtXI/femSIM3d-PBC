@@ -6111,3 +6111,31 @@ void InOut::saveBetaPressLiq( const char* _dir)
 
  file.close();
 }
+
+void InOut::saveTaylorVortexError(const char* _dir)
+{
+ string fileAux = (string) _dir + "taylorVortexError" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file taylorVortexError.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file taylorVortexError.dat" << endl;
+  file << "#time" << setw(29) << "error" 
+				  << setw(17) << "iteration" 
+				  << endl;
+ }
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << s->getTaylorVortexError() << " " 
+      << setw(17) << s->getIter() << " " 
+	  << endl;
+ file.close();
+}

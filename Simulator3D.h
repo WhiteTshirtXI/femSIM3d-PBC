@@ -73,10 +73,12 @@ class Simulator3D
   void assemblePBC();
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assembleCPBC();
+  void assembleCPBCNew(); // PBC
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 
   void unCoupledBetaPBC();
   void unCoupledCPBC(); // modified solution scalar
+  void unCoupledCPBCNew(); // modified solution scalar
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);
   void setBetaPressureLiquid();
@@ -95,6 +97,8 @@ class Simulator3D
   void setCopyDirectionPBC(string _direction);
   void stepSLPBCFix();
   void setDirichletPressurePointPBC(string _method);
+  double getTaylorVortexError();
+  void initCTwoShearLayers(double _cLayerXBot, double _cLayerXTop); // PBC
   
   // gets & sets
   double getPeriodicFaceVelXAverage();
@@ -104,6 +108,7 @@ class Simulator3D
   void setBetaPressureLiquidTimeAverage(const char* _direction,const char* _type);
   double getBetaPressLiq();
   double getMeanPressureDomain(string _type);
+  double calcTaylorVortexError();
   //******* 
 
   void step();
@@ -408,6 +413,11 @@ class Simulator3D
   vector<int> *MasterElements;
   vector<int> *SlaveElements;
   vector<double> PeriodicFacePressures;
+
+  double TaylorGreenError, TaylorGreenErrorPoint;
+  double TaylorVortexError, TaylorVortexErrorPoint;
+  double firstStokesProblemError, firstStokesProblemErrorPoint;
+  double normAnalPoint, normNumPoint, uAnalPoint, vAnalPoint;
 };
 
 #endif

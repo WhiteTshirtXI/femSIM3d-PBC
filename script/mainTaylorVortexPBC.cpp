@@ -1,285 +1,178 @@
-/* File: mainChannelPBC.cpp                                            
- * Created on February 17th, 2014                                      
- * Author: Gustavo Charles P. de Oliveira                              
- * e-mail: tavolesliv@gmail.com
- *
- * Description: version adapted from mainStep.cpp to include periodic 
- * boundary conditions. Suitable to run single-phase simulations for 
- * longitudinal channels. PBC is implemented to work with meshes whose
- * x-axis is the streamwise direction of spatial periodicity.
- *
- * \remark: PBC working for velocity and pressure. 
- *         To be implemented to further scalar fields, such as
- *         temperature.  
- * 
- *
- *  ============
- *   Guidelines
- *  ============
- * 
- *
- * # PRE-PROCESSING
- *
- * - Choose mesh file extension: vtk or msh;
- * - Introduce path to file;
- * - Call method to check spatial periodicity of the mesh;
- * 
- * # PBC
- *
- * - Impose pressure gradient based on input parameters;
- *
- *
- * # ITERATIVE STEP
- *
- * - Allow gravity effects or not;
- * - Allow pressure gradient or not;
+/** 
+ * \file    mainBetaFlowPBC.cpp
+ * \author  Gustavo Peixoto de Oliveira 
+ * \email   tavolesliv@gmail.com
+ * \date    Created on August 19th, 2014
  *
  */
 
-// C++ Header Files
 #include <cmath>
-
-// Code Header Files
 #include "Model3D.h"
+#include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
-#include "Simulator3D.h"
-#include "TElement.h"
 #include "InOut.h"
+#include "Helmholtz3D.h"
 #include "PetscSolver.h"
 #include "petscksp.h"
-#include "Periodic3D.h"
+#include "colors.h"
 
-// Number of Phases (Do not change!)
-#define NUMPHASES 1
+#define NUMPHASES 2
 
-// Main function
 int main(int argc, char **argv)
 {
-
- /* PETSC Call */
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+ //PetscInitializeNoArguments();
 
- /* PRE-PROCESSING SECTION */
-
- //** Numerical Parameters
  int iter = 1;
- //double alpha = 1;
- double cfl = 1.0;
+ double Re = 600.0;  
+ /* NaCl (salt) diffusing in water at 20 oC and salinity 35 g/kg
+  * k = 1.611E-9 m2/s (diffusivity coeff.) at 25 oC;
+  * rho = 1035.0 kg/m3
+  * mu = 1.08E-3 Pa.s;
+  * nu = 1.05E-6 m2/s 
+  * Sc = nu/k;
+  */
+ double Sc = 1.05E-6/1.611E-9; cout << "Sc = " << Sc << endl; 
+ double Fr = 1.0;
+ double alpha = 1.0;
+ double cfl = 2.0; // strange behaviour for cfl = 1.5
+ double mu_l = 1.08E-3;
+ double rho_l = 1035.0;
 
- //** Physical Parameters
- double Re = 1000;
- double Sc = 200;
- double Fr = 10;
- double mu_l = 1.0002E-3;
- double rho_l = 998.63;
- double betaGrad = 1.0;
+ string meshFile = "cuboid.msh";
 
- // double cp_l = 1.0; // check if necessary for scalar
+ string physGroup1 = "\"wallNormalV\""; 
+ string physGroup2 = "\"wallNormalW\"";
+
+ double betaGrad = 12.0/Re;
+
+ string meshDir = (string) getenv("MESH3D_DIR");
  
- string physGroup1 = "\"wallNoSlip\"";
- string physGroup2 = "\"wallNoSlip\"";
- 
- //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
- //Solver *solverP = new PCGSolver();
- Solver *solverP = new PetscSolver(KSPCG,PCILU);
+ meshDir += "/cuboid/" + meshFile;
+ const char *mesh = meshDir.c_str();
+
+ Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
- Solver *solverV = new PetscSolver(KSPCG,PCILU);
- Solver *solverC = new PCGSolver();
+ //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ Solver *solverV = new PCGSolver(); // best result
+ //Solver *solverV = new PetscSolver(KSPCG,PCILU);
+ //Solver *solverV = new PCGSolver();
+ //Solver *solverC = new PCGSolver();
+ Solver *solverC = new PetscSolver(KSPCG,PCICC);
+ 
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
 
- //** Data Saving Directories
- const char *vtkFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
- const char *datFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
- const char *binFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
- const char *mshFolder = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
-
- //** Model Constructor
  Model3D m1;
 
- /* Mesh Loading: Selection of File and Path
- * 
- * \remark: Gmsh seems not generating the volume mesh for vtk files.
- * Consequently, .msh should be used. Check it out!
- */
-
- string selectionExtension = "msh";
-
- const char *mesh = NULL;
- if ( selectionExtension == "msh")
- {
-  	//*** File
- 	string meshFile = "cuboid.msh";
-
- 	string meshDir = (string) getenv("MESH3D_DIR");
- 	meshDir += "/cuboid/" + meshFile;
- 	const char *aux = meshDir.c_str();
-	mesh = aux;
-
-	//** Model Objects Call
- 	m1.readMSH(mesh);
- 	m1.setInterfaceBC();
- 	m1.setTriEdge();
- 	m1.mesh2Dto3D();
- 	m1.setMapping();
- 
-	#if NUMGLEU == 5
- 		m1.setMiniElement();
-	#else
- 		m1.setQuadElement();
-	#endif
- 	
- 	m1.setNeighbour();
-	m1.setVertNeighbour();
- 	m1.setInOutVert();
-	m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
-	m1.setGenericBC();
- }
- else if ( selectionExtension == "vtk" )
- {
-	//*** File
- 	string meshFile = "cube-h0.05.vtk";
-
- 	string meshDir = (string) getenv("MESH3D_DIR");
- 	meshDir += "/" + meshFile;
- 	const char *aux = meshDir.c_str();
-	mesh = aux;
-	
-	//** Model Objects Call
-	m1.readVTK(mesh);
-	#if NUMGLEU == 5
-		m1.setMiniElement();
-	#else
-		m1.setQuadElement();
-	#endif
-	m1.setMapping();
-	m1.setInOutVert();
-	//m1.setNeumannPressureBC(); // change to setOnePointPressureBC()
- }
- else
- {
-	cerr << "Error. Check mesh file: vtk/msh." << endl; 
-	exit(1);
- }
-
- //* Periodic Objets Call
- Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew("print");
-
- //** Simulator Objects Call
- Simulator3D sp(pbc,m1);
- 
- //*** Further Setting
- //**** Physics
- sp.setRe(Re);
- sp.setSc(Sc);
- sp.setFr(Fr);
- sp.setMu(mu_l);
- sp.setRho(rho_l);
- //sp.setCp(cp_l); // check for scalar
-
- //**** Numerics
- sp.setCfl(cfl);
- sp.setDtEulerian();
-
- //**** Solver
- sp.setSolverPressure(solverP);
- sp.setSolverVelocity(solverV);
- sp.setSolverConcentration(solverC);
-
- //*** Initial Conditions
- //sp.init(); // default
- sp.initTaylorVortex(); // Taylor vortex
-
- //*** Starting Flow: Pressure Gradient Setting
- sp.setBetaPressureLiquid(betaGrad);
-
- //**** Mounting
- sp.assemble(); 
- //sp.assembleSlip(); 
- sp.matMount();
- //sp.matMountC();
-
- /* PROCESSING / POST-PROCESSING SECTION */
-
- if( (*(argv+1)) == NULL )
- {
   cout << endl;
   cout << "--------------> STARTING FROM 0" << endl;
   cout << endl;
- }
- else if( strcmp( *(argv+1),"restart") == 0 )
- {
-  cout << endl;
-  cout << "--------------> RE-STARTING..." << endl;
-  cout << endl;
 
-  string file = (string) "sim-" + *(argv+2);
-  iter = sp.loadSolution("./","sim",atoi(*(argv+2)));
- }
+  const char *mesh1 = mesh;
 
- //** Save Objects Call
- InOut save(m1,sp); // cria objeto de gravacao
+  m1.readMSH(mesh1);
+  m1.setInterfaceBC();
+  m1.setTriEdge();
+  m1.mesh2Dto3D("QYYApa0.01");
+  m1.setMapping();
+#if NUMGLEU == 5
+  m1.setMiniElement();
+#else
+  m1.setQuadElement();
+#endif
+  m1.setNeighbour();
+  m1.setVertNeighbour(); //
+  m1.setInOutVert(); //
+  m1.setGenericBC();
+  m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
+
+  Periodic3D pbc(m1);
+  pbc.MountPeriodicVectorsNew("print");
+
+  Simulator3D s1(pbc,m1);
+
+  s1.setRe(Re);
+  s1.setSc(Sc);
+  s1.setFr(Fr);
+  s1.setAlpha(alpha);
+  s1.setMu(mu_l);
+  s1.setRho(rho_l);
+  s1.setCfl(cfl);
+  s1.setDtEulerian(); //<<< use this for fixed mesh, instead of setDtALETwoPhase 
+  s1.initTaylorVortex(); //<<< vortex
+  s1.initCTwoShearLayers(0.0,1.0); // init. cond. of scalar
+  s1.setBetaPressureLiquid(betaGrad);
+  s1.setSolverPressure(solverP);
+  s1.setSolverVelocity(solverV);
+  s1.setSolverConcentration(solverC);
  
- //*** Mesh Information
+ InOut save(m1,s1); // cria objeto de gravacao
+ save.saveVTK(vtkFolder,"sim",0);
  save.saveVTK(vtkFolder,"geometry");
- save.saveInfo(datFolder,"info",mesh);
  save.saveMeshInfo(datFolder);
+ save.saveInfo(datFolder,"info",mesh);
 
- //*** Output (Initial Condition)
- save.saveVTK(vtkFolder,"initial",0);
-
- //*** Iterative Process (Temporal Loop)
- int nIter = 10;
- int nRe = 1;
- for( int i=0;i<nIter;i++ )
+ int nIter = 200;
+ int nReMesh = 1;
+ for( int i=1;i<=nIter;i++ )
  {
-  for( int j=0;j<nRe;j++ )
+  for( int j=0;j<nReMesh;j++ )
   {
+   cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
 	    << iter << endl;
+   cout << resetColor();
 
-   //**** Advective Term
-   sp.stepSLPBCFix(); // semi-lagrangian repair
+   InOut save(m1,s1); // cria objeto de gravacao
+   save.printSimulationReport();
 
-   sp.setUnCoupledBC(); 
-   //sp.setUnCoupledCBC();
+   s1.stepSLPBCFix(); // instead of 
+   //s1.assemble(); // pq solverC n funciona?
+   s1.assembleSlip(); // verificar pq solveC funciona aqui. 'wallInflowU'?
+   s1.matMount();
+   s1.matMountC();
+   s1.setUnCoupledBC();  
+   s1.setUnCoupledCBC();
+   //s1.setGravity("+X");
+   //s1.setBetaFlowLiq("+X"); 
+   s1.setRHS();
+   s1.setCRHS();
+   s1.setCopyDirectionPBC("RL");
+   s1.unCoupledPBCNew(); 
+   /* Since this flow doesn't call the beta term, PBCNew and
+	* PBCNewSinglePhase showed equivalent profiles.
+	*/
+   //s1.unCoupledPBCNewSinglePhase(); 
+   //s1.unCoupledCPBCNew();  
 
-   //**** Physical Effects
-   //sp.setGravity("+X");
-   sp.setBetaFlowLiq("+X");
-
-   //**** r.h.s Vector
-   sp.setRHS();
-
-   //**** Periodic Copy
-   sp.setCopyDirectionPBC("RL");
-   
-   //**** Matricial System Solution
-   sp.unCoupledPBCNew();
-   //sp.unCoupledCPBCNew();
-   
-   //**** Solution Saving
-   save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveMSH(mshFolder,"newMesh",iter);
    save.saveSol(binFolder,"sim",iter);
-   save.saveMeshInfo(datFolder);
+   
+   // error
+   s1.calcTaylorVortexError();
+   save.saveTaylorVortexError(datFolder); 
 
-   //**** Updating Quantities
-   sp.saveOldData();
+   s1.saveOldData();
 
-
-   cout << "________________________________________ END of "
+   cout << color(none,magenta,black);
+   cout << "________________________________________ END of " 
 	    << iter << endl;
+   cout << resetColor();
+
+   s1.timeStep();
 
    iter++;
-   
-   //**** Updating Time
-   sp.timeStep();
-  
   }
  }
 
  PetscFinalize();
  return 0;
 }
+
+

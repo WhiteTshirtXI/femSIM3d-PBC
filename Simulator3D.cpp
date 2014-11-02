@@ -59,6 +59,15 @@ Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )
  PeriodicFacePressures.resize(0); 
  pMaster = 0.0;
  pSlave = 0.0;
+ TaylorGreenError = 0.0;
+ TaylorGreenErrorPoint = 0.0;
+ TaylorVortexError = 0.0;
+ TaylorVortexErrorPoint = 0.0;
+ firstStokesProblemError = 0.0;
+ firstStokesProblemErrorPoint = 0.0;
+ normAnalPoint = 0.0;
+ normNumPoint = 0.0;
+   
 
  allocateMemoryToAttrib();
 
@@ -3004,6 +3013,36 @@ void Simulator3D::unCoupledCPBC()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
+
+void Simulator3D::unCoupledCPBCNew()
+{
+ clVector vcIp(numVerts);
+ clVector b1cTilde;
+ Periodic3D pbc;
+
+ vcIp = vcc.MultVec(ipc); // operacao vetor * vetor (elemento a elemento)
+ b1cTilde = b1c + vcIp;
+
+ //*** modifying r.h.s. for scalar 
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b1cTilde);
+ 
+ //*** Reassemble (scalar field)
+ assembleCPBCNew();
+
+ //*** solving scalar modified system AcTilde cTilde = b1cTilde
+ cout << " ----> calculando escalar ----------- " << endl;
+ solverC->solve(1E-25,AcTilde,cTilde,b1cTilde);
+ cout << " ------------------------------------ " << endl;
+
+ //*** copying scalar 
+ pbc.SetPureScalarPBCNew(cTilde,MasterIndices,SlaveIndices,nyPointsL,"RL");
+
+ cSol = cTilde;
+
+} /* End of method */
+
+
+
 void Simulator3D::saveOldData()
 {
  uSolOld     = uSol;
@@ -5924,6 +5963,31 @@ void Simulator3D::assembleCPBC()
 } // close method assembleCPBC
 
 
+/* Method should be used after SetCopyDirectionPBC() */
+void Simulator3D::assembleCPBCNew()
+{
+  /* Copying rows and columns from ibL into ibR: 
+   * i) Remove the contributions from left and overloads in right;
+   * ii) Now, the positions that stayed opened receive the same
+   * values at right. */
+  	
+  if ( direction == "RL" )
+  {	
+    // loop PBC indices
+	for ( int i = 0; i < nyPointsL; i++ ) 
+	{
+	  // master, slave indices
+	  int ibL = MasterIndices->at(i);
+	  int ibR = SlaveIndices->at(i);
+
+	  AcTilde.AddRowColSquareSym(ibL,ibR);
+	}
+  }
+
+} /* End of method */
+
+
+
 /* unCoupledPBC with <vector> structure */
 void Simulator3D::unCoupledPBCNew()
 {
@@ -6366,6 +6430,63 @@ void Simulator3D::initTaylorVortex()
 
 }
 
+/* \brief Error for the Taylor vortex flow. */ 
+double Simulator3D::calcTaylorVortexError()
+{
+    double diffNorm = 0.0;
+	double norm = 0.0;
+	clVector uAux, vAux;
+	uAux.Dim(numVerts);
+	vAux.Dim(numVerts);
+	uAux = uSol.Copy(0,numVerts-1);
+	vAux = vSol.Copy(0,numVerts-1);
+
+    //double xM = 0.5*( X->Max() + X->Min() );
+    double xM = 0.25*( 3.0*X->Max() + X->Min() );
+    double yM = 0.5*( Y->Max() + Y->Min() );
+	
+ 	for ( int i = 0; i < numVerts; i++ )
+	{
+	   double x = X->Get(i) - xM;
+	   double y = Y->Get(i) - yM;
+
+	   double r = sqrt( x*x + y*y );
+	   double theta = atan2(y,x);
+
+	   double r2 = ( Y->Max() - Y->Min() )/40; // vortex radius 
+	   double c1 = 0.5; // proportional to the angular momentum
+	   double vtheta = c1*r*( exp( (-r*r/r2)/(4.0*(1.0/Re)*time) ) );
+
+	   double U = 1.0;
+	   double V = 0.0;
+	   double uAnal = U - vtheta*sin(theta);
+	   double vAnal = V + vtheta*cos(theta);
+
+	   double ue =  uAux.Get(i) - uAnal;
+	   double ve =  vAux.Get(i) - vAnal;
+
+	   diffNorm += sqrt( ue*ue + ve*ve );
+	   norm += sqrt( uAnal*uAnal+ vAnal*vAnal );
+
+		if ( i == 111 ) // point chosen by user
+		{
+			uAnalPoint = uAnal;
+			vAnalPoint = vAnal;
+
+			normAnalPoint = sqrt( uAnalPoint*uAnalPoint + vAnalPoint*vAnalPoint );
+			normNumPoint = sqrt( uAux.Get(i)*uAux.Get(i) + vAux.Get(i)*vAux.Get(i) );
+			TaylorVortexErrorPoint = (normAnalPoint - normNumPoint)/normAnalPoint;
+
+		}
+
+	}	   
+
+	TaylorVortexError = diffNorm/norm;
+	return TaylorVortexError;
+	//return TaylorVortexErrorPoint;
+}
+
+
 void Simulator3D::initTanHJetProfile()
 {
     init();
@@ -6403,7 +6524,7 @@ void Simulator3D::initTanHJetProfile()
 void Simulator3D::initTaylorGreenVortex()
 {
  	init();
-	#if NUMGLEU == 4
+	#if NUMGLEU == 5
  	double numBCPoints = numVerts;
 	#else 
  	double numBCPoints = numNodes;
@@ -6771,4 +6892,34 @@ void Simulator3D::setBetaPressureLiquidTimeAverage(const char* _direction, const
 }
 
 double Simulator3D::getBetaPressLiq(){return betaPressLiq;}
+double Simulator3D::getTaylorVortexError() { return TaylorVortexError;  }
 
+
+void Simulator3D::initCTwoShearLayers(double _cLayerBot, double _cLayerTop)
+{
+  #if NUMGLEU == 5
+  double numBCPoints = numVerts;
+  #else
+  double numBCPoints = numNodes;
+  #endif
+
+  for (int i = 0; i < numBCPoints; ++i)
+  {
+	double limM = 0.5*fabs( Z->Max() + Z->Min() );		
+	double zp = Z->Get(i);
+			
+	// bottom
+	if ( ( zp >= Z->Min() ) && ( zp < limM ) )
+	{	
+	  cSol.Set(i,_cLayerBot);
+	  cSolOld.Set(i,_cLayerBot);
+	} 
+
+	//top
+	if ( ( zp >= limM ) && ( zp <= Z->Max() ) )
+	{
+	  cSol.Set(i,_cLayerTop);
+	  cSolOld.Set(i,_cLayerTop);
+	}
+  }
+}

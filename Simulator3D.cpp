@@ -67,7 +67,9 @@ Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )
  firstStokesProblemErrorPoint = 0.0;
  normAnalPoint = 0.0;
  normNumPoint = 0.0;
-   
+ uAnalPoint = 0.0;
+ vAnalPoint = 0.0;
+ wAnalPoint = 0.0;
 
  allocateMemoryToAttrib();
 
@@ -5597,7 +5599,7 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	setDirichletPressurePointPBC("fixed");
+	//setDirichletPressurePointPBC("fixed");
 	 
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
@@ -5662,9 +5664,12 @@ void Simulator3D::setDirichletPressurePointPBC(string _method)
    {
 	double xm = 0.5*fabs( X->Max() + X->Min() );
 	double ym = Y->Min();
-	double zm = Z->Min();
+	double zm = 0.5*fabs( Z->Max() + Z->Min() );
+	//double zm = Z->Min();
 	
-	if ( fabs( X->Get(*it) - xm ) < 0.01 && Y->Get(*it) == ym && Z->Get(*it) == zm )
+	if ( fabs( X->Get(*it) - xm ) < 0.1 && 
+	                   Y->Get(*it) == ym && 
+         fabs( Z->Get(*it) - zm ) < 0.1 )
 	{  
 	    E.Set( *it, *it, 1.0 ); // diagonal of E
 	    cout << color(none,yellow,black) 
@@ -6064,9 +6069,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- //clVector p(numVerts);
- //p.SetAll( getMeanPressureDomain("average") );
- //pSol = pSol - p;
+ clVector p(numVerts);
+ p.SetAll( getMeanPressureDomain("average") );
+ pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6083,37 +6088,31 @@ void Simulator3D::unCoupledPBCNew()
  **/
 double Simulator3D::getMeanPressureDomain(string _type)
 {
-  vector<double> areaElems(0);
+  
+  vector<double> volElems(0);
   vector<double> pElems(0);
   double p = 0.0;
 
   for ( int e = 0; e < numElems; ++e )
   {
     int v1 = IEN->Get(e,0);
-	double p1x = X->Get(v1);
-	double p1y = Y->Get(v1);
-
     int v2 = IEN->Get(e,1);
-	double p2x = X->Get(v2);
-	double p2y = Y->Get(v2);
+    int v3 = IEN->Get(e,2);
+    int v4 = IEN->Get(e,3);
     
-	int v3 = IEN->Get(e,2);
-	double p3x = X->Get(v3);
-	double p3y = Y->Get(v3);
+	double volumeElem = m->getVolume(e);
+	volElems.push_back(volumeElem);
 
-	double areaElem = getArea(p1x,p1y,p2x,p2y,p3x,p3y);
-	areaElems.push_back(areaElem);
-
-	double pcElem = 1.0/3.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) );
-	double pElem = pcElem*areaElem;
+	double pcElem = 1.0/4.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) + pSol.Get(v4) );
+	double pElem = pcElem*volumeElem;
 	pElems.push_back(pElem);
   }
   
-  double totArea = 0.0;
+  double totVol = 0.0;
   double totP = 0.0;
-  for ( size_t i = 0; i < areaElems.size(); ++i )
+  for ( size_t i = 0; i < volElems.size(); ++i )
   {
-    totArea += areaElems[i];
+    totVol += volElems[i];
 	totP += pElems[i];
   }
   
@@ -6124,7 +6123,7 @@ double Simulator3D::getMeanPressureDomain(string _type)
   }
   else if ( _type == "average" )
   {
-    p = totP/totArea;
+    p = totP/totVol;
     cout << color(none,yellow,black) << ">> Average periodic pressure = " << p << endl << resetColor();
   }
 
@@ -6411,7 +6410,7 @@ void Simulator3D::initTaylorVortex()
 
 		double r2 = ( Y->Max() - Y->Min() )/40;
 
-		double c1 = 0.5;
+		double c1 = 1.0;
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
@@ -6435,11 +6434,13 @@ double Simulator3D::calcTaylorVortexError()
 {
     double diffNorm = 0.0;
 	double norm = 0.0;
-	clVector uAux, vAux;
+	clVector uAux, vAux, wAux;
 	uAux.Dim(numVerts);
 	vAux.Dim(numVerts);
+	wAux.Dim(numVerts);
 	uAux = uSol.Copy(0,numVerts-1);
 	vAux = vSol.Copy(0,numVerts-1);
+	wAux = wSol.Copy(0,numVerts-1);
 
     //double xM = 0.5*( X->Max() + X->Min() );
     double xM = 0.25*( 3.0*X->Max() + X->Min() );
@@ -6459,22 +6460,26 @@ double Simulator3D::calcTaylorVortexError()
 
 	   double U = 1.0;
 	   double V = 0.0;
+	   double W = 0.0;
 	   double uAnal = U - vtheta*sin(theta);
 	   double vAnal = V + vtheta*cos(theta);
+	   double wAnal = W;
 
 	   double ue =  uAux.Get(i) - uAnal;
 	   double ve =  vAux.Get(i) - vAnal;
+	   double we =  wAux.Get(i) - wAnal;
 
-	   diffNorm += sqrt( ue*ue + ve*ve );
-	   norm += sqrt( uAnal*uAnal+ vAnal*vAnal );
+	   diffNorm += sqrt( ue*ue + ve*ve + we*we );
+	   norm += sqrt( uAnal*uAnal+ vAnal*vAnal + wAnal*wAnal );
 
 		if ( i == 111 ) // point chosen by user
 		{
 			uAnalPoint = uAnal;
 			vAnalPoint = vAnal;
+			wAnalPoint = wAnal;
 
-			normAnalPoint = sqrt( uAnalPoint*uAnalPoint + vAnalPoint*vAnalPoint );
-			normNumPoint = sqrt( uAux.Get(i)*uAux.Get(i) + vAux.Get(i)*vAux.Get(i) );
+			normAnalPoint = sqrt( uAnalPoint*uAnalPoint + vAnalPoint*vAnalPoint + wAnalPoint*wAnalPoint );
+			normNumPoint = sqrt( uAux.Get(i)*uAux.Get(i) + vAux.Get(i)*vAux.Get(i) + wAux.Get(i)*wAux.Get(i) );
 			TaylorVortexErrorPoint = (normAnalPoint - normNumPoint)/normAnalPoint;
 
 		}

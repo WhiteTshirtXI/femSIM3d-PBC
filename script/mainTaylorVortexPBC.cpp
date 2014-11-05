@@ -37,27 +37,35 @@ int main(int argc, char **argv)
  double Sc = 1.05E-6/1.611E-9; cout << "Sc = " << Sc << endl; 
  double Fr = 1.0;
  double alpha = 1.0;
- double cfl = 2.0; // strange behaviour for cfl = 1.5
+ double cfl = 0.01; 
  double mu_l = 1.08E-3;
  double rho_l = 1035.0;
 
  string meshFile = "cuboid.msh";
+ //string meshFile = "retangle.msh";
+ //string meshFile = "cylinder.msh";
 
- string physGroup1 = "\"wallNormalV\""; 
- string physGroup2 = "\"wallNormalW\"";
-
- double betaGrad = 12.0/Re;
+ //string physGroup = "\"wallInflowU\"";
+ //string physGroup1 = "\"wallNormalW\"";
+ //string physGroup1 = "\"wallNormalW\"";
+ //string physGroup2 = "\"wallInflowU\"";
+ string physGroup1 = "\"wallNoSlip\"";
+ string physGroup2 = "\"wallInflowU\"";
+ 
+ //double betaGrad = 12.0/Re;
+ double betaGrad = 1.0;
 
  string meshDir = (string) getenv("MESH3D_DIR");
  
  meshDir += "/cuboid/" + meshFile;
  const char *mesh = meshDir.c_str();
 
- Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ //Solver *solverP = new PetscSolver(KSPCG,PCJACOBI);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PCGSolver(); // best result
  //Solver *solverV = new PetscSolver(KSPCG,PCILU);
+ //Solver *solverV = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverV = new PCGSolver();
  //Solver *solverC = new PCGSolver();
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
@@ -78,7 +86,7 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D("QYYApa0.01");
+  m1.mesh2Dto3D();
   m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
@@ -86,10 +94,11 @@ int main(int argc, char **argv)
   m1.setQuadElement();
 #endif
   m1.setNeighbour();
-  m1.setVertNeighbour(); //
-  m1.setInOutVert(); //
-  m1.setGenericBC();
+  m1.setVertNeighbour(); // from step
+  m1.setInOutVert(); // from step
+  //m1.setGenericBCPBCNew(physGroup); // before setGenericBC()
   m1.setGenericBCPBCNewDuo(physGroup1,physGroup2);
+  m1.setGenericBC();
 
   Periodic3D pbc(m1);
   pbc.MountPeriodicVectorsNew("print");
@@ -104,12 +113,21 @@ int main(int argc, char **argv)
   s1.setRho(rho_l);
   s1.setCfl(cfl);
   s1.setDtEulerian(); //<<< use this for fixed mesh, instead of setDtALETwoPhase 
-  s1.initTaylorVortex(); //<<< vortex
-  s1.initCTwoShearLayers(0.0,1.0); // init. cond. of scalar
   s1.setBetaPressureLiquid(betaGrad);
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
+
+  s1.init();
+  //s1.initTaylorVortex(); //<<< vortex
+  s1.initCTwoShearLayers(1.0,0.0); // init. cond. of scalar
+  s1.assembleSlip(); 
+  //s1.assemble(); 
+  //s1.assembleC(); 
+  s1.matMount();
+  s1.matMountC();
+  s1.setUnCoupledBC();  
+  s1.setUnCoupledCBC();
  
  InOut save(m1,s1); // cria objeto de gravacao
  save.saveVTK(vtkFolder,"sim",0);
@@ -117,7 +135,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 200;
+ int nIter = 50;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -128,44 +146,35 @@ int main(int argc, char **argv)
 	    << iter << endl;
    cout << resetColor();
 
-   InOut save(m1,s1); // cria objeto de gravacao
-   save.printSimulationReport();
-
-   s1.stepSLPBCFix(); // instead of 
-   //s1.assemble(); // pq solverC n funciona?
-   s1.assembleSlip(); // verificar pq solveC funciona aqui. 'wallInflowU'?
-   s1.matMount();
-   s1.matMountC();
-   s1.setUnCoupledBC();  
-   s1.setUnCoupledCBC();
+   s1.stepSLPBCFix();
    //s1.setGravity("+X");
    //s1.setBetaFlowLiq("+X"); 
    s1.setRHS();
    s1.setCRHS();
    s1.setCopyDirectionPBC("RL");
    s1.unCoupledPBCNew(); 
-   /* Since this flow doesn't call the beta term, PBCNew and
-	* PBCNewSinglePhase showed equivalent profiles.
-	*/
-   //s1.unCoupledPBCNewSinglePhase(); 
-   //s1.unCoupledCPBCNew();  
+   s1.unCoupledCPBCNew();  
+   //s1.unCoupled(); 
+   //s1.unCoupledC();  
 
-   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveSol(binFolder,"sim",iter);
+   save.saveVTK(vtkFolder,"sim",iter);
+   //save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
+   //save.saveMSH(mshFolder,"newMesh",iter);
+   //save.saveSol(binFolder,"sim",iter);
    
    // error
    s1.calcTaylorVortexError();
    save.saveTaylorVortexError(datFolder); 
-
+   
    s1.saveOldData();
+
+   s1.timeStep();
 
    cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << iter << endl;
    cout << resetColor();
 
-   s1.timeStep();
 
    iter++;
   }

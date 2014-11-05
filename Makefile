@@ -6,7 +6,7 @@
 
 # Compilers
 #CXX = g++ 
-CXX = clang
+CXX = clang++
 
 # Flags
 CXXFLAGS = -g -fPIC
@@ -17,6 +17,7 @@ LIBS += -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I${FEMLIB_DIR} 
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
+INCLUDES += -I${BOOST_INCLUDE_DIR}
 FEM3D_DIR = .
 
 # Sorces
@@ -28,6 +29,7 @@ src += ${FEMLIB_DIR}/PetscSolver.cpp
 src += ${FEMLIB_DIR}/FEMLinElement3D.cpp
 src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp
 #src += ${FEMLIB_DIR}/FEMQuadElement3D.cpp
+src += ${FEMLIB_DIR}/Linalg.cpp
 src += $(wildcard ${FEM3D_DIR}/*.cpp)
 
 # Rules

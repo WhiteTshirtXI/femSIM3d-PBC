@@ -289,6 +289,7 @@ class Model3D
   vector<double> getAverageTetVolume();
   void setGenericBCPBCNew(string _group); // PBC
   void setGenericBCPBCNewDuo(string _group1, string _group2); // PBC
+  void setOnePointPressureBC(); // PBC
 
   clVector* getUC();
   clVector* getVC();

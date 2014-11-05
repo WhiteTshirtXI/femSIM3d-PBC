@@ -35,6 +35,10 @@
 #include "geometry.h"
 #include "searchInterp3D.h"
 #include "Periodic3D.h"
+#include "Linalg.h"
+
+// Boost header file 
+#include <boost/math/special_functions/erf.hpp>
 
 class Simulator3D
 {
@@ -417,7 +421,7 @@ class Simulator3D
   double TaylorGreenError, TaylorGreenErrorPoint;
   double TaylorVortexError, TaylorVortexErrorPoint;
   double firstStokesProblemError, firstStokesProblemErrorPoint;
-  double normAnalPoint, normNumPoint, uAnalPoint, vAnalPoint;
+  double normAnalPoint, normNumPoint, uAnalPoint, vAnalPoint, wAnalPoint;
 };
 
 #endif

@@ -2484,9 +2484,9 @@ void Simulator3D::setRHSBeta()
 
 void Simulator3D::setCRHS()
 {
- //vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
+ vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
  //vcc = ( (1.0/dt) * McLumped - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
- vcc = ( (1.0/dt) * McLumped ) * convC;
+ //vcc = ( (1.0/dt) * McLumped ) * convC;
 }
 
 void Simulator3D::setGravity(const char* _direction)
@@ -3042,8 +3042,6 @@ void Simulator3D::unCoupledCPBCNew()
  cSol = cTilde;
 
 } /* End of method */
-
-
 
 void Simulator3D::saveOldData()
 {
@@ -5599,7 +5597,7 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	//setDirichletPressurePointPBC("fixed");
+	setDirichletPressurePointPBC("fixed");
 	 
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
@@ -6008,7 +6006,7 @@ void Simulator3D::unCoupledPBCNew()
 
  //*** periodicity on rhs vector - velocity
  sumIndexPBCVelNew(MasterIndices,SlaveIndices,b1Tilde);
-
+ 
  //*** modifies the global matrices relative to single-phase
  assemblePBCNew();
 
@@ -6069,9 +6067,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- clVector p(numVerts);
- p.SetAll( getMeanPressureDomain("average") );
- pSol = pSol - p;
+ //clVector p(numVerts);
+ //p.SetAll( getMeanPressureDomain("average") );
+ //pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6398,6 +6396,7 @@ void Simulator3D::initTaylorVortex()
 	#endif
 
 	double xM = 0.25*( 3.0*X->Max() + X->Min() );
+	//double xM = 0.5*( X->Max() + X->Min() );
 	double yM = 0.5*( Y->Max() + Y->Min() );
 
 	for ( int i = 0; i < numBCPoints; i++ )
@@ -6410,7 +6409,7 @@ void Simulator3D::initTaylorVortex()
 
 		double r2 = ( Y->Max() - Y->Min() )/40;
 
-		double c1 = 1.0;
+		double c1 = 0.5;
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
@@ -6928,3 +6927,20 @@ void Simulator3D::initCTwoShearLayers(double _cLayerBot, double _cLayerTop)
 	}
   }
 }
+
+void Model3D::setOnePointPressureBC()
+{	
+  for (int i = 0; i < numVerts; i++)
+  {
+	// Neumman for pressure ("one-point") 
+	if( ( fabs( X.Get(i) - 0.5*X.Max() ) < 0.1 ) && 
+		( Y.Get(i) == Y.Min() ) && ( Z.Get(i) == Z.Min() ) )
+	{
+	  idbcp.AddItem(i);
+	  pc.Set(i,0.0);
+	  cout << "Pressure index set:" << i << endl;
+	  break;
+	}
+  }
+}
+

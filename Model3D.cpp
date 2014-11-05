@@ -5034,6 +5034,23 @@ void Model3D::setGenericBC()
    wc.Set(*it,0.0);
   }
   
+  // symmetry boundary V + forced slip U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalVFlowU\"" )
+  {
+   idbcv.AddItem(*it);
+   vc.Set(*it,0.0);
+   idbcu.AddItem(*it);
+   uc.Set(*it,1.0);
+  }
+
+  // symmetry boundary W + forced slip U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalWFlowU\"" )
+  {
+   idbcw.AddItem(*it);
+   wc.Set(*it,0.0);
+   idbcu.AddItem(*it);
+   uc.Set(*it,1.0);
+  }
   // periodic 
   else if ( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" )
   {
@@ -9643,7 +9660,7 @@ void Model3D::setGenericBCPBCNew(string _group)
 		 int v3 = surfMesh.IEN.Get(i,2);
 
 		 // master
-		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesLeft.at(j) )
 			surfMesh.phyBounds.at(v1) = _group;
@@ -9654,7 +9671,7 @@ void Model3D::setGenericBCPBCNew(string _group)
 		 }		
 		 
 		 // slave
-		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesRight.at(j) )
 			surfMesh.phyBounds.at(v1) = _group;
@@ -9734,12 +9751,15 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 	 string warn = "Master/Slave nodes differing in quantity! PBC not applicable.";
 	 cerr << warn << endl;
    }
+   
    else
    {
-	 // setting of periodic elements
-	 setPeriodicElemsId(); // <<<<
 	
-	 // treatment of periodic corner points
+	 // setting of periodic elements
+	 //setPeriodicElemsId(); // <<<<
+	
+	 // treatment of periodic intersection points
+	  
 	 for ( int i = 0; i < surfMesh.numElems; ++i )
 	 {
 	   int id = surfMesh.idRegion.Get(i);
@@ -9751,25 +9771,61 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 	   if ( surfMesh.phyNames.at(id) == _group1 )
 	   {
 		 // master
-		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v1) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v1) = _group1;
+			surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
+			//cout << "left " << v1 << " " << _group1 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		   if ( v2 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v2) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v2) = _group1;
+			surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
+			//cout << "left " << v2 << " " << _group1 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		   if ( v3 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v3) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v3) = _group1;
+			surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
+			//cout << "left " << v3 << " " << _group1 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		 }		
 		 
 		 // slave
-		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v1) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v1) = _group1;
+			surfMesh.phyBounds.at(v1) = "\"wallRight\"";
+			//cout << "right " << v1 << " " << _group1 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		   if ( v2 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v2) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v2) = _group1;
+			surfMesh.phyBounds.at(v2) = "\"wallRight\"";
+			//cout << "right " << v2 << " " << _group1 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		   if ( v3 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v3) = _group1;
+		   {
+			//surfMesh.phyBounds.at(v3) = _group1;
+			surfMesh.phyBounds.at(v3) = "\"wallRight\"";
+			//cout << "right " << v3 << " " << _group1 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		 }	 
 	   }
 
@@ -9777,28 +9833,90 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 	   if ( surfMesh.phyNames.at(id) == _group2 )
 	   {
 		 // master
-		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesLeft.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v1) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v1) = _group2;
+			surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
+			//cout << "left " << v1 << " " << _group2 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		   if ( v2 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v2) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v2) = _group2;
+			surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
+			//cout << "left " << v2 << " " << _group2 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		   if ( v3 == pbcIndicesLeft.at(j) )
-			surfMesh.phyBounds.at(v3) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v3) = _group2;
+			surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
+			//cout << "left " << v3 << " " << _group2 << endl; 
+			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
+			//continue;
+		   }
 		 }		
 		 
 		 // slave
-		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++ j )
+		 for ( size_t j = 0; j < pbcIndicesRight.size(); ++j )
 		 {
 		   if ( v1 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v1) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v1) = _group2;
+			surfMesh.phyBounds.at(v1) = "\"wallRight\"";
+			//cout << "right " << v1 << " " << _group2 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		   if ( v2 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v2) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v2) = _group2;
+			surfMesh.phyBounds.at(v2) = "\"wallRight\"";
+			//cout << "right " << v2 << " " << _group2 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		   if ( v3 == pbcIndicesRight.at(j) )
-			surfMesh.phyBounds.at(v3) = _group2;
+		   {
+			//surfMesh.phyBounds.at(v3) = _group2;
+			surfMesh.phyBounds.at(v3) = "\"wallRight\"";
+			//cout << "right " << v3 << " " << _group2 << endl; 
+			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
+			//continue;
+		   }
 		 }	 
 	   }
 	 }
+
+	 
+	 
+	 // to overlap corners 
+     for ( int i = 0; i < surfMesh.numVerts; ++i )
+     //for ( int i = 0; i < 9; ++i )
+     {
+      //if( ( Y.Get(i) == Y.Min() || Y.Get(i) == Y.Max() ) )
+	  /*
+      if( ( X.Get(i) == X.Min() && Y.Get(i) == Y.Min() && Z.Get(i) == Z.Min() ) ||
+          ( X.Get(i) == X.Min() && Y.Get(i) == Y.Min() && Z.Get(i) == Z.Max() ) ||
+          ( X.Get(i) == X.Min() && Y.Get(i) == Y.Max() && Z.Get(i) == Z.Min() ) ||
+          ( X.Get(i) == X.Min() && Y.Get(i) == Y.Max() && Z.Get(i) == Z.Max() ) ||
+          ( X.Get(i) == X.Max() && Y.Get(i) == Y.Min() && Z.Get(i) == Z.Min() ) ||
+          ( X.Get(i) == X.Max() && Y.Get(i) == Y.Min() && Z.Get(i) == Z.Max() ) ||
+          ( X.Get(i) == X.Max() && Y.Get(i) == Y.Max() && Z.Get(i) == Z.Min() ) ||
+          ( X.Get(i) == X.Max() && Y.Get(i) == Y.Max() && Z.Get(i) == Z.Max() ) )
+	  */
+	  {
+	    //surfMesh.phyBounds.at(i) = "\"wallInflowU\"";
+	  }
+	  
+		cout << i << endl;
+	    cout << surfMesh.phyBounds.at(i) << endl;
+	}
+	 
    } // close else
 
 } // close method

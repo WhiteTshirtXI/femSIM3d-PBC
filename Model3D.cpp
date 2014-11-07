@@ -9776,7 +9776,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v1 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v1) = _group1;
-			surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
 			//cout << "left " << v1 << " " << _group1 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9784,7 +9784,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v2 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v2) = _group1;
-			surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
 			//cout << "left " << v2 << " " << _group1 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9792,7 +9792,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v3 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v3) = _group1;
-			surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
 			//cout << "left " << v3 << " " << _group1 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9805,7 +9805,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v1 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v1) = _group1;
-			surfMesh.phyBounds.at(v1) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v1) = "\"wallRight\"";
 			//cout << "right " << v1 << " " << _group1 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9813,7 +9813,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v2 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v2) = _group1;
-			surfMesh.phyBounds.at(v2) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v2) = "\"wallRight\"";
 			//cout << "right " << v2 << " " << _group1 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9821,7 +9821,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v3 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v3) = _group1;
-			surfMesh.phyBounds.at(v3) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v3) = "\"wallRight\"";
 			//cout << "right " << v3 << " " << _group1 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9838,7 +9838,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v1 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v1) = _group2;
-			surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v1) = "\"wallLeft\"";
 			//cout << "left " << v1 << " " << _group2 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9846,7 +9846,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v2 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v2) = _group2;
-			surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v2) = "\"wallLeft\"";
 			//cout << "left " << v2 << " " << _group2 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9854,7 +9854,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v3 == pbcIndicesLeft.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v3) = _group2;
-			surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
+			//surfMesh.phyBounds.at(v3) = "\"wallLeft\"";
 			//cout << "left " << v3 << " " << _group2 << endl; 
 			//pbcIndicesLeft.erase(pbcIndicesLeft.begin()+j);
 			//continue;
@@ -9867,7 +9867,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v1 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v1) = _group2;
-			surfMesh.phyBounds.at(v1) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v1) = "\"wallRight\"";
 			//cout << "right " << v1 << " " << _group2 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9875,7 +9875,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v2 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v2) = _group2;
-			surfMesh.phyBounds.at(v2) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v2) = "\"wallRight\"";
 			//cout << "right " << v2 << " " << _group2 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9883,7 +9883,7 @@ void Model3D::setGenericBCPBCNewDuo(string _group1, string _group2)
 		   if ( v3 == pbcIndicesRight.at(j) )
 		   {
 			//surfMesh.phyBounds.at(v3) = _group2;
-			surfMesh.phyBounds.at(v3) = "\"wallRight\"";
+			//surfMesh.phyBounds.at(v3) = "\"wallRight\"";
 			//cout << "right " << v3 << " " << _group2 << endl; 
 			//pbcIndicesRight.erase(pbcIndicesRight.begin()+j);
 			//continue;
@@ -9986,5 +9986,27 @@ void Model3D::setPeriodicElemsId()
 	  cout << "Warning: Master and slave elements differing in cardinality: \n";
 	  cout << elemIdMaster.size() << " != " << elemIdSlave.size() << endl;
 	}
+}
+
+void Model3D::setOnePointPressureBC()
+{	
+ double xm = 0.5*( X.Max() + X.Min() );
+ double ym = Y.Min();
+ double zm = Z.Min();
+
+ for (int i = 0; i < numVerts; i++)
+ {
+   // Neumman for pressure ("one-point") 
+   if( ( fabs( X.Get(i) - xm ) < 0.2 ) && 
+	   ( Y.Get(i) == ym ) && ( Z.Get(i) == zm ) )
+   {
+	 idbcp.AddItem(i);
+	 pc.Set(i,0.0);
+	 cout << color(none,yellow,black) 
+	      << "Pressure index set: " 
+	      << i << endl << resetColor();
+	 break;
+   }
+ }
 }
 

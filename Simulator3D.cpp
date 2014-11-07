@@ -5598,7 +5598,8 @@ void Simulator3D::assemblePBCNew()
 	 * because of mesh dependence.
 	 */
 	setDirichletPressurePointPBC("fixed");
-	 
+	//E.Set(330,330,1.0);
+
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
 	 * periodic algorithm. The diagonal entries are 
@@ -6037,8 +6038,9 @@ void Simulator3D::unCoupledPBCNew()
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  
  ///*** periodicity on rhs vector - pressure
- sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2);
-
+ //sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2); //
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2Tilde);
+ 
  ///*** STEP 2: solves system for pressure
  cout << " --------> solving pressure --------- " << endl;
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
@@ -6395,8 +6397,8 @@ void Simulator3D::initTaylorVortex()
 	double numBCPoints = numNodes;
 	#endif
 
-	double xM = 0.25*( 3.0*X->Max() + X->Min() );
-	//double xM = 0.5*( X->Max() + X->Min() );
+	//double xM = 0.25*( 3.0*X->Max() + X->Min() );
+	double xM = 0.5*( X->Max() + X->Min() );
 	double yM = 0.5*( Y->Max() + Y->Min() );
 
 	for ( int i = 0; i < numBCPoints; i++ )
@@ -6924,22 +6926,6 @@ void Simulator3D::initCTwoShearLayers(double _cLayerBot, double _cLayerTop)
 	{
 	  cSol.Set(i,_cLayerTop);
 	  cSolOld.Set(i,_cLayerTop);
-	}
-  }
-}
-
-void Model3D::setOnePointPressureBC()
-{	
-  for (int i = 0; i < numVerts; i++)
-  {
-	// Neumman for pressure ("one-point") 
-	if( ( fabs( X.Get(i) - 0.5*X.Max() ) < 0.1 ) && 
-		( Y.Get(i) == Y.Min() ) && ( Z.Get(i) == Z.Min() ) )
-	{
-	  idbcp.AddItem(i);
-	  pc.Set(i,0.0);
-	  cout << "Pressure index set:" << i << endl;
-	  break;
 	}
   }
 }

@@ -9684,6 +9684,9 @@ void Model3D::setGenericBCPBCNew(string _group)
 	 }
    } // close else
 
+   //for (int i = 0; i < surfMesh.numVerts; ++i)
+	//cout << i << " " << surfMesh.phyBounds.at(i) << endl;
+
 } // close method
 
 /// PBC

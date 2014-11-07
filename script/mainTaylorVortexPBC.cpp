@@ -44,7 +44,8 @@ int main(int argc, char **argv)
  //string meshFile = "cylinder.msh";
  string meshFile = "cuboid.msh";
 
- string physGroup = "\"wallInflowU\""; // 'requires slip condition
+ //string physGroup = "\"wallInflowU\""; 
+ string physGroup = "\"wallNormalW\""; 
  double betaGrad = 12.0/Re;
 
  string meshDir = (string) getenv("MESH3D_DIR");

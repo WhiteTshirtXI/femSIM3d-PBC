@@ -6069,9 +6069,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- //clVector p(numVerts);
- //p.SetAll( getMeanPressureDomain("average") );
- //pSol = pSol - p;
+ clVector p(numVerts);
+ p.SetAll( getMeanPressureDomain("average") );
+ pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6397,8 +6397,8 @@ void Simulator3D::initTaylorVortex()
 	double numBCPoints = numNodes;
 	#endif
 
-	//double xM = 0.25*( 3.0*X->Max() + X->Min() );
-	double xM = 0.5*( X->Max() + X->Min() );
+	double xM = 0.25*( 3.0*X->Max() + X->Min() );
+	//double xM = 0.5*( X->Max() + X->Min() );
 	double yM = 0.5*( Y->Max() + Y->Min() );
 
 	for ( int i = 0; i < numBCPoints; i++ )
@@ -6409,9 +6409,9 @@ void Simulator3D::initTaylorVortex()
 		double r = sqrt( x*x + y*y );
 		double theta = atan2(y,x);
 
-		double r2 = ( Y->Max() - Y->Min() )/40;
+		double r2 = ( Y->Max() - Y->Min() )/30;
 
-		double c1 = 0.5;
+		double c1 = 1.0;
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
@@ -6455,8 +6455,8 @@ double Simulator3D::calcTaylorVortexError()
 	   double r = sqrt( x*x + y*y );
 	   double theta = atan2(y,x);
 
-	   double r2 = ( Y->Max() - Y->Min() )/40; // vortex radius 
-	   double c1 = 0.5; // proportional to the angular momentum
+	   double r2 = ( Y->Max() - Y->Min() )/30; // vortex radius 
+	   double c1 = 1.0; // proportional to the angular momentum
 	   double vtheta = c1*r*( exp( (-r*r/r2)/(4.0*(1.0/Re)*time) ) );
 
 	   double U = 1.0;
@@ -6927,6 +6927,25 @@ void Simulator3D::initCTwoShearLayers(double _cLayerBot, double _cLayerTop)
 	  cSol.Set(i,_cLayerTop);
 	  cSolOld.Set(i,_cLayerTop);
 	}
+  }
+}
+
+void Simulator3D::initCGaussian(double _peak)
+{
+  #if NUMGLEU == 5
+  double numBCPoints = numVerts;
+  #else
+  double numBCPoints = numNodes;
+  #endif
+
+  double _width = 1.0/(4.0*PI_CONSTANT); 
+  double ym = 0.5*fabs( Y->Max() + Y->Min() );		
+  for (int i = 0; i < numBCPoints; ++i)
+  {    
+	double y = Y->Get(i) - ym;
+	double gaussian = _peak*exp( - (y*y)/(2.0*_width*_width) )*cos(Y->Get(i))*cos(Z->Get(i));    	
+    cSol.Set(i,gaussian);
+	cSolOld.Set(i,gaussian);
   }
 }
 

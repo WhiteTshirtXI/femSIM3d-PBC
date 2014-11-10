@@ -103,6 +103,7 @@ class Simulator3D
   void setDirichletPressurePointPBC(string _method);
   double getTaylorVortexError();
   void initCTwoShearLayers(double _cLayerXBot, double _cLayerXTop); // PBC
+  void initCGaussian(double _peak);
   
   // gets & sets
   double getPeriodicFaceVelXAverage();

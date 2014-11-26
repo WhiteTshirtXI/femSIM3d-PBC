@@ -4890,6 +4890,17 @@ void Model3D::setGenericBC()
    wc.Set(*it,1.0);
   }
 
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWNeg\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,-1.0);
+  }
+  
   // 2 bubbles inflow condition
   else if( surfMesh.phyBounds.at(*it) == "\"wallInflow2Bubbles\"" )
   {

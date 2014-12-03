@@ -93,6 +93,7 @@ class Simulator3D
   void initTaylorVortex();
   void initTaylorGreenVortex();
   void initTanHJetProfile(); // hyperbolic tangent jet profile
+  void initJetVelocity(double _vel); // inner phase with velocity
   void inputPurePressurePBC();
   void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
   void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);

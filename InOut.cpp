@@ -561,7 +561,7 @@ void InOut::saveVTKPBC( const char* _dir,const char* _filename, int _iter, doubl
   vtkScalarCell(vtkFile,"elemId",*elemIdRegion);
 
  vtkScalarHeader(vtkFile);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"relative_velocity",*uSol,*vSol,*wSol);
 
  // version 3.98 of Paraview has Crinkle Slice feature
  setCutPlane(vtkFile); // set cut plane functions
@@ -598,6 +598,17 @@ void InOut::saveVTKPBC( const char* _dir,const char* _filename, int _iter, doubl
  vtkScalar(vtkFile,"pressure",p);
 
  vtkScalar(vtkFile,"periodic_pressure",*pSol);
+
+ clVector u(numNodes);
+ clVector v(numNodes);
+ clVector w(numNodes);
+ for ( int i = 0; i < numNodes; ++i )
+ {
+    u.Set(i,uSol->Get(i) + s->getURef());
+    v.Set(i,vSol->Get(i) + s->getVRef());
+    w.Set(i,wSol->Get(i) + s->getWRef());
+ }
+ vtkVector(vtkFile,"total_velocity",u,v,w);
 
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
@@ -2255,8 +2266,19 @@ void InOut::saveVTKSurfacePBC( const char* _dir,const char* _filename, int _iter
 
  vtkSurfaceScalar(vtkFile,"periodic_pressure",*pSol);
 
+ clVector u(numNodes);
+ clVector v(numNodes);
+ clVector w(numNodes);
+ for ( int i = 0; i < numNodes; ++i )
+ {
+    u.Set(i,uSol->Get(i) + s->getURef());
+    v.Set(i,vSol->Get(i) + s->getVRef());
+    w.Set(i,wSol->Get(i) + s->getWRef());
+ }
+ vtkSurfaceVector(vtkFile,"total_velocity",u,v,w);
+
  if( uSol->Dim() > 0 )
-  vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+  vtkSurfaceVector(vtkFile,"relative_velocity",*uSol,*vSol,*wSol);
 
  if( uALE->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);

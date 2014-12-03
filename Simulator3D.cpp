@@ -5597,8 +5597,7 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	setDirichletPressurePointPBC("fixed");
-	//E.Set(330,330,1.0);
+	//setDirichletPressurePointPBC("fixed");
 
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
@@ -5662,12 +5661,15 @@ void Simulator3D::setDirichletPressurePointPBC(string _method)
 			 it != boundaryVert->end(); ++it )
    {
 	double xm = 0.5*fabs( X->Max() + X->Min() );
-	double ym = Y->Min();
-	double zm = 0.5*fabs( Z->Max() + Z->Min() );
-	//double zm = Z->Min();
+	double ym = 0.5*fabs( Y->Max() + Y->Min() );
+	//double xm = X->Min();
+	//double ym = Y->M();
+	//double zm = 0.5*fabs( Z->Max() + Z->Min() );
+	//double zm = Z->Max();
+	double zm = Z->Min();
 	
 	if ( fabs( X->Get(*it) - xm ) < 0.1 && 
-	                   Y->Get(*it) == ym && 
+	     fabs( Y->Get(*it) - ym ) < 0.1 && 
          fabs( Z->Get(*it) - zm ) < 0.1 )
 	{  
 	    E.Set( *it, *it, 1.0 ); // diagonal of E
@@ -6069,9 +6071,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- clVector p(numVerts);
- p.SetAll( getMeanPressureDomain("average") );
- pSol = pSol - p;
+ //clVector p(numVerts);
+ //p.SetAll( getMeanPressureDomain("average") );
+ //pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6522,10 +6524,20 @@ void Simulator3D::initTanHJetProfile()
 		vSolOld.Set(i, V);
 		wSolOld.Set(i, W);
 	}
-
-
 }
 
+void Simulator3D::initJetVelocity(double _vel)
+{
+ init();
+ for ( int i = 0; i < numNodes; ++i )
+ {
+   if ( heaviside->Get(i) >= 0.5 )
+   {
+	uSol.Set(i,_vel);
+	uSolOld.Set(i,_vel);
+   }
+ }
+}
 /* \brief Intializes a Taylor-Green  vortex in the flow. */ 
 void Simulator3D::initTaylorGreenVortex()
 {
@@ -6938,12 +6950,12 @@ void Simulator3D::initCGaussian(double _peak)
   double numBCPoints = numNodes;
   #endif
 
-  double _width = 1.0/(4.0*PI_CONSTANT); 
+  double _width = 1.0/(2.0*PI_CONSTANT); 
   double ym = 0.5*fabs( Y->Max() + Y->Min() );		
   for (int i = 0; i < numBCPoints; ++i)
   {    
 	double y = Y->Get(i) - ym;
-	double gaussian = _peak*exp( - (y*y)/(2.0*_width*_width) )*cos(Y->Get(i))*cos(Z->Get(i));    	
+	double gaussian = _peak*exp( - (y*y)/(2.0*_width*_width) )*cos(X->Get(i));    	
     cSol.Set(i,gaussian);
 	cSolOld.Set(i,gaussian);
   }

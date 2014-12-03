@@ -16,11 +16,13 @@
  *  outflow: top
  *  periodic: sides
  *  crossflow: bottom
+ *  slip: crossflow-top/bottom
  *  
  *  + physical groups in setGenericBC():
- *  'outflow', 'wallLeft', 'wallRight', 'wallInflowVTransverse'.
+ *  'outflow', 'wallLeft', 'wallRight',
+ *  'wallInflowVTransverse','wallNormalW'.
  *
- *  + calls setGenericBC(velU,velV) 
+ *  + calls setGenericBC(velU,velV,velW) 
  *
  *  }
  */ 
@@ -46,7 +48,7 @@ int main(int argc, char **argv)
  int iter = 1;
  double Re = 50.0;
  double We = 6.0;
- double Fr = 10.0;
+ double Fr = 100.0;
  double alpha = 1;
  double mu_out = 0.048;
  double mu_in = 0.15*mu_out;

@@ -1,3 +1,0 @@
-  double crossflowUVel; // crossflow velocity U: used in setGeneric
-  double crossflowVVel; // crossflow velocity V: used in setGeneric
-

@@ -26,6 +26,11 @@ Model3D::Model3D()
  surfMesh.numNodes = 0;
  surfMesh.numInterfaces = 0;
  surfMesh.numBoundaries = 0;
+ 
+ crossflowUVel = 1.0;
+ crossflowVVel = 1.0;
+ crossflowWVel = 1.0;
+
 }
 
 Model3D::Model3D(const Model3D &_mRight)
@@ -124,6 +129,10 @@ Model3D::Model3D(const Model3D &_mRight)
   inVert = _mRight.inVert;
   outElem = _mRight.outElem;
   inElem = _mRight.inElem;
+
+  crossflowUVel = _mRight.crossflowUVel;
+  crossflowVVel = _mRight.crossflowVVel;
+  crossflowWVel = _mRight.crossflowWVel;
 }
 
 Model3D::~Model3D(){}
@@ -5304,6 +5313,41 @@ void Model3D::setGenericBC(double _vel)
   else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" )
   {}
 
+  // crossflow U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,crossflowUVel);
+   vc.Set(*it,0.0);
+   wc.Set(*it,0.0);
+  }
+
+  // crossflow V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,crossflowVVel);
+   wc.Set(*it,0.0);
+  }
+  
+  // crossflow W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0);
+   vc.Set(*it,0.0);
+   wc.Set(*it,crossflowWVel);
+  }
   // no-slip
   else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
   {
@@ -5318,6 +5362,100 @@ void Model3D::setGenericBC(double _vel)
   else {}
  }
 }
+
+/** \brief Velocities of moving frame reference at bubble's center for
+ *  crossflow simulations.
+*/
+void Model3D::setGenericBC(double _velX, double _velY, double _velZ)
+{
+ clearBC();
+ for (list<int>::iterator it=boundaryVert.begin(); it!=boundaryVert.end(); ++it)
+ {
+  // symmetry boundary U
+  if( surfMesh.phyBounds.at(*it) == "\"wallNormalU\"" )
+  {
+   idbcu.AddItem(*it);
+   uc.Set(*it,0.0 - _velX);
+  }  
+  
+  // symmetry boundary V
+  if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
+  {
+   idbcv.AddItem(*it);
+   vc.Set(*it,0.0 - _velY);
+  }  
+  
+  // symmetry boundary W
+  if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
+  {
+   idbcw.AddItem(*it);
+   wc.Set(*it,0.0 - _velZ);
+  }  
+  
+  // crossflow U
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowUTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,crossflowUVel - _velX);
+   vc.Set(*it,0.0 - _velY);
+   wc.Set(*it,0.0 - _velZ);
+  }
+
+  // crossflow V
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowVTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0 - _velX);
+   vc.Set(*it,crossflowVVel - _velY);
+   wc.Set(*it,0.0 - _velZ);
+  }
+  
+  // crossflow W
+  else if( surfMesh.phyBounds.at(*it) == "\"wallInflowWTransverse\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0 - _velX);
+   vc.Set(*it,0.0 - _velY);
+   wc.Set(*it,crossflowWVel - _velZ);
+  }
+
+  // periodic condition
+  else if( surfMesh.phyBounds.at(*it) == "\"wallLeft\"" ) {}
+  else if( surfMesh.phyBounds.at(*it) == "\"wallRight\"" ) {}
+  
+  // outflow condition
+  else if( surfMesh.phyBounds.at(*it) == "\"wallOutflow\"" )
+  {
+   idbcp.AddItem(*it);
+   pc.Set(*it,0.0);
+  }
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNoSlip\"" )
+  {
+   idbcu.AddItem(*it);
+   idbcv.AddItem(*it);
+   idbcw.AddItem(*it);
+
+   uc.Set(*it,0.0 - _velX);
+   vc.Set(*it,0.0 - _velY);
+   wc.Set(*it,0.0 - _velZ);
+  }
+  else{}
+ }
+}
+
+// set of crossflow velocities
+void Model3D::setCrossflowUVelocity(double _uVelCFlow) { crossflowUVel = _uVelCFlow; }
+void Model3D::setCrossflowVVelocity(double _vVelCFlow) { crossflowVVel = _vVelCFlow; }
+void Model3D::setCrossflowWVelocity(double _wVelCFlow) { crossflowWVel = _wVelCFlow; }
 
 void Model3D::setWallBC()
 {    

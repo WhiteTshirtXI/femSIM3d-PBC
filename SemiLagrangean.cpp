@@ -374,9 +374,9 @@ void SemiLagrangean::getDepartElemPBCFix(double dt)
   zP = zParticle.Get(ii);
 
   if ( xP < X->Min() ) // PBC repair
-  {
     xParticle.Set(ii,xParticle.Get(ii) + X->Max() - X->Min());
-  }
+  else if ( xP > X->Max() ) // PBC repair
+    xParticle.Set(ii,xParticle.Get(ii) - ( X->Max() - X->Min() ) );
   jumpToElem(*mele,ii,xP,yP,zP);
  } 
 } // fim do metodo compute -> getDepartElemPBCFix

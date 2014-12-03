@@ -26,7 +26,7 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- double Re = 600.0;  
+ double Re = 35.0;  
  /* NaCl (salt) diffusing in water at 20 oC and salinity 35 g/kg
   * k = 1.611E-9 m2/s (diffusivity coeff.) at 25 oC;
   * rho = 1035.0 kg/m3
@@ -37,14 +37,13 @@ int main(int argc, char **argv)
  double Sc = 1.05E-6/1.611E-9; cout << "Sc = " << Sc << endl; 
  double Fr = 1.0;
  double alpha = 1.0;
- double cfl = 2.0; // strange behaviour for cfl = 1.5
- double mu_l = 1.08E-3;
- double rho_l = 1035.0;
+ double cfl = 0.1; 
+ double mu_l = 1.0;
+ double rho_l = 2.0;
 
- //string meshFile = "cylinder.msh";
  string meshFile = "cuboid.msh";
 
- //string physGroup = "\"wallInflowU\""; 
+ //string physGroup = "\"wallNoSlip\""; 
  string physGroup = "\"wallNormalW\""; 
  double betaGrad = 12.0/Re;
 
@@ -53,9 +52,9 @@ int main(int argc, char **argv)
  meshDir += "/cuboid/" + meshFile;
  const char *mesh = meshDir.c_str();
 
- Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
+ Solver *solverP = new PetscSolver(KSPCG,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
- Solver *solverV = new PCGSolver(); // best result
+ Solver *solverV = new PCGSolver(); 
  //Solver *solverV = new PetscSolver(KSPCG,PCILU);
  //Solver *solverV = new PCGSolver();
  //Solver *solverC = new PCGSolver();
@@ -77,7 +76,7 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D("QYYAzpa0.001");
+  m1.mesh2Dto3D("QYYAzpaq1.414");
   m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
@@ -104,7 +103,7 @@ int main(int argc, char **argv)
   s1.setCfl(cfl);
   s1.setDtEulerian(); //<<< for fixed mesh 
   s1.initTaylorVortex(); 
-  s1.initCTwoShearLayers(1.0,0.0); 
+  s1.initCGaussian(0.8);
   s1.setBetaPressureLiquid(betaGrad);
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 30;
+ int nIter = 50;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {

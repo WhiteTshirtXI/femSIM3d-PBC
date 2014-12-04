@@ -3023,26 +3023,6 @@ void Simulator3D::unCoupledCPBCNew()
  Periodic3D pbc;
 
  vcIp = vcc.MultVec(ipc); // operacao vetor * vetor (elemento a elemento)
-<<<<<<< HEAD
- b1cTilde = b1c + vcIp; //<<< Por que duplicado??
-
- b1cTilde = b1cTilde + 
-        //dt*invMcLumped*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
-        invC*( ((1.0/(Re*Sc))*( heatFlux )).MultVec(ipc) );  
-
- //*** modifying r.h.s. for scalar
- sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b1cTilde);
-
- //*** Reassemble (scalar field)
- assembleCPBCNew();
-
- // solving scalar modified system AcTilde cTilde = b1cTilde
- cout << endl;
- cout << " --------> solving scalar ----------- " << endl;
- solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
- cout << " ------------------------------------ " << endl;
- cout << endl;
-=======
  b1cTilde = b1c + vcIp;
 
  //*** modifying r.h.s. for scalar 
@@ -3055,21 +3035,13 @@ void Simulator3D::unCoupledCPBCNew()
  cout << " ----> calculando escalar ----------- " << endl;
  solverC->solve(1E-25,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
->>>>>>> local
 
  //*** copying scalar 
  pbc.SetPureScalarPBCNew(cTilde,MasterIndices,SlaveIndices,nyPointsL,"RL");
 
-<<<<<<< HEAD
- // comentar em caso de utilizacao de setInterface()
- // pois cSol nao pode ser atualizado
- cSol = cTilde;
-}
-=======
  cSol = cTilde;
 
 } /* End of method */
->>>>>>> local
 
 void Simulator3D::saveOldData()
 {
@@ -5995,39 +5967,6 @@ void Simulator3D::assembleCPBC()
      }
 
 } // close method assembleCPBC
-
-/* Method should be used after SetCopyDirectionPBC() */
-void Simulator3D::assembleCPBCNew()
-{
-  /* Copying rows and columns from ibL into ibR: 
-   * i) Remove the contributions from left and overloads in right;
-   * ii) Now, the positions that stayed opened receive the same
-   * values at right. */
-  	
-  if ( direction == "RL" )
-  {	
-    // loop PBC indices
-	for ( int i = 0; i < nyPointsL; i++ ) 
-	{
-	  // master, slave indices
-	  int ibL = MasterIndices->at(i);
-	  int ibR = SlaveIndices->at(i);
-
-	  AcTilde.AddRowColSquareSym(ibL,ibR);
-	  AcTilde.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
-	  AcTilde.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
-	  AcTilde.Set(ibL,ibL,1.0);
-	} 
-  }
-  /* Copying rows and columns from ibR to ibL. Idem, with inversed
-   * indices. */
-  else
-  {
-   /* DIRECTION "LR" TO BE IMPLEMENTED!!! */
-  } 
-
-} /* End of method */
-
 
 
 /* Method should be used after SetCopyDirectionPBC() */

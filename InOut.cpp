@@ -561,7 +561,7 @@ void InOut::saveVTKPBC( const char* _dir,const char* _filename, int _iter, doubl
   vtkScalarCell(vtkFile,"elemId",*elemIdRegion);
 
  vtkScalarHeader(vtkFile);
- vtkVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+ vtkVector(vtkFile,"relative_velocity",*uSol,*vSol,*wSol);
 
  // version 3.98 of Paraview has Crinkle Slice feature
  setCutPlane(vtkFile); // set cut plane functions
@@ -598,6 +598,17 @@ void InOut::saveVTKPBC( const char* _dir,const char* _filename, int _iter, doubl
  vtkScalar(vtkFile,"pressure",p);
 
  vtkScalar(vtkFile,"periodic_pressure",*pSol);
+
+ clVector u(numNodes);
+ clVector v(numNodes);
+ clVector w(numNodes);
+ for ( int i = 0; i < numNodes; ++i )
+ {
+    u.Set(i,uSol->Get(i) + s->getURef());
+    v.Set(i,vSol->Get(i) + s->getVRef());
+    w.Set(i,wSol->Get(i) + s->getWRef());
+ }
+ vtkVector(vtkFile,"total_velocity",u,v,w);
 
  if( fint->Dim() > 0 )
   vtkVector(vtkFile,"surface_force",*fint);
@@ -2255,8 +2266,19 @@ void InOut::saveVTKSurfacePBC( const char* _dir,const char* _filename, int _iter
 
  vtkSurfaceScalar(vtkFile,"periodic_pressure",*pSol);
 
+ clVector u(numNodes);
+ clVector v(numNodes);
+ clVector w(numNodes);
+ for ( int i = 0; i < numNodes; ++i )
+ {
+    u.Set(i,uSol->Get(i) + s->getURef());
+    v.Set(i,vSol->Get(i) + s->getVRef());
+    w.Set(i,wSol->Get(i) + s->getWRef());
+ }
+ vtkSurfaceVector(vtkFile,"total_velocity",u,v,w);
+
  if( uSol->Dim() > 0 )
-  vtkSurfaceVector(vtkFile,"velocity",*uSol,*vSol,*wSol);
+  vtkSurfaceVector(vtkFile,"relative_velocity",*uSol,*vSol,*wSol);
 
  if( uALE->Dim() > 0 )
   vtkSurfaceVector(vtkFile,"ALE_velocity",*uALE,*vALE,*wALE);
@@ -6109,5 +6131,33 @@ void InOut::saveBetaPressLiq( const char* _dir)
 		   << setw(5) << setprecision(0) << fixed << iter 
 		   << endl;
 
+ file.close();
+}
+
+void InOut::saveTaylorVortexError(const char* _dir)
+{
+ string fileAux = (string) _dir + "taylorVortexError" + ".dat";
+ const char* filename = fileAux.c_str();
+
+ ifstream testFile( filename );
+ ofstream file( filename,ios::app );
+ if( testFile )
+ {
+  testFile.close();
+  cout << "appending on file taylorVortexError.dat" << endl;
+ }
+ else
+ {
+  cout << "Creating file taylorVortexError.dat" << endl;
+  file << "#time" << setw(29) << "error" 
+				  << setw(17) << "iteration" 
+				  << endl;
+ }
+
+ file << setprecision(10) << scientific; 
+ file << setw(10) << simTime << " " 
+      << setw(17) << s->getTaylorVortexError() << " " 
+      << setw(17) << s->getIter() << " " 
+	  << endl;
  file.close();
 }

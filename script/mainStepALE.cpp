@@ -25,32 +25,33 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- real Re = 1000;
- real Sc = 200;
- real Fr = 10;
- //real alpha = 1;
- real c1 = 0.3;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 2.0;  // smooth coord (fujiwara)
- real cfl = 1.0;
- real mu_l = 1.0;
- real rho_l = 1.0;
+ double Re = 1000;
+ double Sc = 200;
+ double Fr = 10;
+ //double alpha = 1;
+ double c1 = 0.3;  // lagrangian
+ double c2 = 0.0;  // smooth vel
+ double c3 = 2.0;  // smooth coord (fujiwara)
+ double cfl = 1.0;
+ double mu_l = 1.0;
+ double rho_l = 1.0;
  Solver *solverP = new PetscSolver(KSPBICG,PCICC);
  //Solver *solverP = new PetscSolver(KSPCG,PCICC);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
  //string meshFile = "backwardStep.msh";
- string meshFile = "backwardStepHole.msh";
+ //string meshFile = "backwardStepHole.msh";
  //string meshFile = "retangle.msh";
+ string meshFile = "sample.msh";
 
- //const char *txtFolder  = "./txt/";
- const char *binFolder  = "./bin/";
- const char *vtkFolder  = "./vtk/";
- const char *mshFolder  = "./msh/";
- const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/singlePhase/" + meshFile;
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
+
+ string meshDir = (string) getenv("MESH3D_DIR");
+ meshDir += "/cuboid/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -87,6 +88,10 @@ int main(int argc, char **argv)
 
   s1(m1);
 
+  InOut save(m1,s1); // cria objeto de gravacao
+  save.saveVTK(vtkFolder,"geometry");
+  save.saveVTKSurface(vtkFolder,"geometry");
+  return 0;
   s1.setRe(Re);
   s1.setSc(Sc);
   s1.setFr(Fr);

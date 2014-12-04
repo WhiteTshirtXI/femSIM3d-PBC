@@ -198,6 +198,7 @@ class Model3D
   void setInterfaceBC();
   void setGenericBC();
   void setGenericBC(double _vel);
+  void setGenericBC(double _velX, double _velY, double _velZ);
   void setWallBC();
   void setWallBC(double _vel);
   void setMovingWallBC();
@@ -288,6 +289,11 @@ class Model3D
   vector<double> getAverageTriArea();
   vector<double> getAverageTetVolume();
   void setGenericBCPBCNew(string _group); // PBC
+  void setGenericBCPBCNewDuo(string _group1, string _group2); // PBC
+  void setOnePointPressureBC(); // PBC
+  void setCrossflowUVelocity(double _uVelCFlow);
+  void setCrossflowVVelocity(double _vVelCFlow);
+  void setCrossflowWVelocity(double _wVelCFlow);
 
   clVector* getUC();
   clVector* getVC();
@@ -456,6 +462,10 @@ class Model3D
   vector<int> pbcIndicesRight;
   vector<int> elemIdMaster; // vector with indices of master elements 
   vector<int> elemIdSlave; // vector with indices of slave elements
+
+  double crossflowUVel; // crossflow velocity U: used in setGenericBC
+  double crossflowVVel; // crossflow velocity V: used in setGenericBC
+  double crossflowWVel; // crossflow velocity W: used in setGenericBC
 
 };
 

@@ -35,6 +35,10 @@
 #include "geometry.h"
 #include "searchInterp3D.h"
 #include "Periodic3D.h"
+#include "Linalg.h"
+
+// Boost header file 
+#include <boost/math/special_functions/erf.hpp>
 
 class Simulator3D
 {
@@ -73,12 +77,20 @@ class Simulator3D
   void assemblePBC();
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assembleCPBC();
+<<<<<<< HEAD
   void assembleCPBCNew(); // idem assemblePCBC with vector structure
+=======
+  void assembleCPBCNew(); // PBC
+>>>>>>> local
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 
   void unCoupledBetaPBC();
   void unCoupledCPBC(); // modified solution scalar
+<<<<<<< HEAD
   void unCoupledCPBCNew(); 
+=======
+  void unCoupledCPBCNew(); // modified solution scalar
+>>>>>>> local
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);
   void setBetaPressureLiquid();
@@ -89,6 +101,7 @@ class Simulator3D
   void initTaylorVortex();
   void initTaylorGreenVortex();
   void initTanHJetProfile(); // hyperbolic tangent jet profile
+  void initJetVelocity(double _vel); // inner phase with velocity
   void inputPurePressurePBC();
   void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
   void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
@@ -96,8 +109,10 @@ class Simulator3D
   void sumIndexPBCScalarNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);
   void setCopyDirectionPBC(string _direction);
   void stepSLPBCFix();
-  void setFintPBC();
-  void setDirichletPressurePointPBC();
+  void setDirichletPressurePointPBC(string _method);
+  double getTaylorVortexError();
+  void initCTwoShearLayers(double _cLayerXBot, double _cLayerXTop); // PBC
+  void initCGaussian(double _peak);
   
   // gets & sets
   double getPeriodicFaceVelXAverage();
@@ -107,6 +122,7 @@ class Simulator3D
   void setBetaPressureLiquidTimeAverage(const char* _direction,const char* _type);
   double getBetaPressLiq();
   double getMeanPressureDomain(string _type);
+  double calcTaylorVortexError();
   //******* 
 
   void step();
@@ -411,6 +427,11 @@ class Simulator3D
   vector<int> *MasterElements;
   vector<int> *SlaveElements;
   vector<double> PeriodicFacePressures;
+
+  double TaylorGreenError, TaylorGreenErrorPoint;
+  double TaylorVortexError, TaylorVortexErrorPoint;
+  double firstStokesProblemError, firstStokesProblemErrorPoint;
+  double normAnalPoint, normNumPoint, uAnalPoint, vAnalPoint, wAnalPoint;
 };
 
 #endif

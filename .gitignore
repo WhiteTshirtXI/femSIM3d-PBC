@@ -47,6 +47,8 @@ zalesak
 channelPBC
 taylorVortexPBC
 movingFramePBC
+movingFramePBCRestart
 risingBubblePBC
 betaFlowPBC
 risingBubbleBetaFlowPBC
+crossflowPBC

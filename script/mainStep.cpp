@@ -22,13 +22,13 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
 
  int iter = 1;
- real Re = 10000;
- real Sc = 2000;
- real Fr = 10;
- //real alpha = 1;
- real cfl = 0.1;
- real mu_l = 1.0;
- real rho_l = 1.0;
+ double Re = 10000;
+ double Sc = 2000;
+ double Fr = 10;
+ //double alpha = 1;
+ double cfl = 0.1;
+ double mu_l = 1.0;
+ double rho_l = 1.0;
  //Solver *solverP = new PCGSolver();
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
@@ -39,12 +39,12 @@ int main(int argc, char **argv)
 
  string meshFile = "retangle.msh";
 
- //const char *txtFolder  = "./txt/";
- const char *binFolder  = "./bin/";
- const char *vtkFolder  = "./vtk/";
- //const char *datFolder  = "./dat/";
- string meshDir = (string) getenv("DATA_DIR");
- meshDir += "/gmsh/3d/singlePhase/" + meshFile;
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
+ string meshDir = (string) getenv("MESH3D_DIR");
+ meshDir += "/cuboid/" + meshFile;
  const char *mesh = meshDir.c_str();
 
  Model3D m1;
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
  m1.readMSH(mesh);
  m1.setInterfaceBC();
  m1.setTriEdge();
- m1.mesh2Dto3D();
+ m1.mesh2Dto3D("qYYApa0.001");
  m1.setMapping();
 #if NUMGLEU == 5
  m1.setMiniElement();

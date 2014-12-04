@@ -77,20 +77,12 @@ class Simulator3D
   void assemblePBC();
   void assemblePBCNew(); // idem assemblePBC with vector structure
   void assembleCPBC();
-<<<<<<< HEAD
-  void assembleCPBCNew(); // idem assemblePCBC with vector structure
-=======
   void assembleCPBCNew(); // PBC
->>>>>>> local
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 
   void unCoupledBetaPBC();
   void unCoupledCPBC(); // modified solution scalar
-<<<<<<< HEAD
-  void unCoupledCPBCNew(); 
-=======
   void unCoupledCPBCNew(); // modified solution scalar
->>>>>>> local
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);
   void setBetaPressureLiquid();

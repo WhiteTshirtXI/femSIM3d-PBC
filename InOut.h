@@ -230,6 +230,7 @@ class InOut
   void saveFilmThickness(const char* _dir);
   void savePoint( const char* _dir,int _point );
   void saveBubbleShapeFactors(const char* _dir,const char* _filename, int _iter); ///<<< 
+  void saveTaylorVortexError(const char* _dir);
   void saveBetaPressLiq(const char* _dir);
 
   void crossSectionSol( const char* _var,const char* _plane,

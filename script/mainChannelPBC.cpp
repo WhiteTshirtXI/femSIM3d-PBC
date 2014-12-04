@@ -73,6 +73,12 @@ int main(int argc, char **argv)
  double Fr = 100;
  double mu_l = 1.0;
  double rho_l = 1.0;
+ double betaGrad = 1.0;
+
+
+ string physGroup = "\"wallNoSlip\"";
+
+
  
  //** Solver and Pre-Conditioner Choice - pressure, velocity, scalar
  //Solver *solverP = new PCGSolver();
@@ -85,15 +91,14 @@ int main(int argc, char **argv)
  Solver *solverC = new PCGSolver();
 
  //** Data Saving Directories
+ const char *vtkFolder = "/work/gcpoliveira/post-processing/3d/jet/vtk/";
+ const char *datFolder = "/work/gcpoliveira/post-processing/3d/jet/dat/";
+ const char *binFolder = "/home/gcpoliveira/post-processing/3d/jet/bin/";
+ const char *mshFolder = "/home/gcpoliveira/post-processing/3d/jet/msh/";
  //const char *binFolder  = "./bin/";
  //const char *datFolder  = "./dat/";
  //const char *datFolder  = "./sol/";
  //const char *txtFolder  = "./txt/";
- const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille/";
- const char *datFolder = "/home/gcpoliveira/post-processing/vtk/3d/poiseuille/dat/";
- //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/midwall-pbc/";
- //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-vortex/";
- //const char *vtkFolder = "/home/gcpoliveira/post-processing/vtk/3d/taylor-green-vortex/";
 
  //** Model Constructor
  Model3D m1;
@@ -106,13 +111,10 @@ int main(int argc, char **argv)
  if ( selectionExtension == "msh")
  {
   	//*** File
- 	//string meshFile = "cuboid-3d.msh";
- 	//string meshFile = "thesis-jet.msh";
- 	//string meshFile = "cuboid-3d-w0.1.msh";
- 	string meshFile = "poiseuille-3d-transfinite.msh";
+ 	string meshFile = "cylinder.msh";
 
  	string meshDir = (string) getenv("MESH3D_DIR");
- 	meshDir += "/" + meshFile;
+ 	meshDir += "/cuboid/" + meshFile;
  	const char *aux = meshDir.c_str();
 	mesh = aux;
 
@@ -129,12 +131,11 @@ int main(int argc, char **argv)
  		m1.setQuadElement();
 	#endif
  	
- 	m1.setVertNeighbour();
- 	m1.setInOutVert(); // set of boundaryVert
-	m1.setGenericBC(); 
-	//m1.setWallNormalVWBC();
-	//m1.setWallMovingPBC(0.0,0.0);
- 	//m1.setOnePointPressureBC();
+ 	m1.setNeighbour();
+	m1.setVertNeighbour();
+ 	m1.setInOutVert();
+	m1.setGenericBCPBCNew(physGroup);
+	m1.setGenericBC();
  }
  else if ( selectionExtension == "vtk" )
  {
@@ -165,8 +166,7 @@ int main(int argc, char **argv)
 
  //* Periodic Objets Call
  Periodic3D pbc(m1);
- //pbc.MountPeriodicVectorsNew("noPrint");
- //pbc.MountPeriodicVectors("print");
+ pbc.MountPeriodicVectorsNew("print");
 
  //** Simulator Objects Call
  Simulator3D sp(pbc,m1);
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
  //sp.matMountC();
 
  //*** Starting Flow: Pressure Gradient Setting
- sp.setBetaPressureLiquid();
+ sp.setBetaPressureLiquid(betaGrad);
 
 
  /* PROCESSING / POST-PROCESSING SECTION */
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
  save.saveVTK(vtkFolder,"initial",0);
 
  //*** Iterative Process (Temporal Loop)
- int nIter = 30000;
+ int nIter = 10;
  int nRe = 1;
  for( int i=0;i<nIter;i++ )
  {
@@ -244,44 +244,42 @@ int main(int argc, char **argv)
 	    << iter << endl;
 
    //**** Advective Term
-   //sp.stepSLPBCFix();
-   //sp.stepNoConvection();
-   sp.stepSL();
+   sp.stepSLPBCFix();
    
    //**** B.C. update
-   //sp.setUnCoupledPBC(); 
    sp.setUnCoupledBC(); 
 
    //**** Physical Effects
    //sp.setGravity("+X");
-   //sp.setBetaFlowLiq("+X");
+   sp.setBetaFlowLiq("+X");
 
    //**** r.h.s Vector
-   sp.setRHS_PBC();
+   sp.setRHS();
 
    //**** Periodic Copy
    sp.setCopyDirectionPBC("RL");
    
    //**** Matricial System Solution
-   //sp.unCoupledPBCVector();
-   //sp.unCoupledPBC();
-   sp.unCoupled();
+   //sp.unCoupledPBCNew();
+   sp.unCoupledBetaPBC();
    
    //**** Solution Saving
-   save.saveVTK(vtkFolder,"sim",iter);
-   //save.saveVTU(vtkFolder,"sim",iter);
-   //save.saveSol(binFolder,"sim",iter);
+   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveSol(binFolder,"sim",iter);
+   save.saveMeshInfo(datFolder);
 
    //**** Updating Quantities
    sp.saveOldData();
 
-   //**** Updating Time
-   sp.timeStep();
 
    cout << "________________________________________ END of "
 	    << iter << endl;
 
    iter++;
+   
+   //**** Updating Time
+   sp.timeStep();
+
   }
  }
 

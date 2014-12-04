@@ -6,7 +6,7 @@
 
 # Compilers
 #CXX = g++ 
-CXX = clang
+CXX = clang++
 
 # Flags
 CXXFLAGS = -g -fPIC
@@ -17,6 +17,7 @@ LIBS += -L${TETGEN_DIR} -ltet
 INCLUDES += -I. -I${FEMLIB_DIR} 
 INCLUDES += -I${PETSC_DIR}/include
 INCLUDES += -I${TETGEN_DIR}
+INCLUDES += -I${BOOST_INCLUDE_DIR}
 FEM3D_DIR = .
 
 # Sorces
@@ -28,6 +29,7 @@ src += ${FEMLIB_DIR}/PetscSolver.cpp
 src += ${FEMLIB_DIR}/FEMLinElement3D.cpp
 src += ${FEMLIB_DIR}/FEMMiniElement3D.cpp
 #src += ${FEMLIB_DIR}/FEMQuadElement3D.cpp
+src += ${FEMLIB_DIR}/Linalg.cpp
 src += $(wildcard ${FEM3D_DIR}/*.cpp)
 
 # Rules
@@ -49,7 +51,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   risingBubbleTaylor microInterp
 
 two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC \
-              risingBubbleBetaFlowPBC
+              risingBubbleBetaFlowPBC movingFramePBCRestart movingFrameCrossflowPBC  
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -83,6 +85,12 @@ taylorVortexPBC: ${FEM3D_DIR}/script/mainTaylorVortexPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFramePBC: ${FEM3D_DIR}/script/mainMovingFramePBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+crossflowPBC: ${FEM3D_DIR}/script/mainMovingFrameCrossflowPBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+movingFramePBCRestart: ${FEM3D_DIR}/script/mainMovingFramePBCRestart.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFramePBC-debug: ${FEM3D_DIR}/script/mainMovingFramePBC-debug.o $(obj)

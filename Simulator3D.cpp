@@ -59,6 +59,17 @@ Simulator3D::Simulator3D( Periodic3D &_pbc, Model3D &_m )
  PeriodicFacePressures.resize(0); 
  pMaster = 0.0;
  pSlave = 0.0;
+ TaylorGreenError = 0.0;
+ TaylorGreenErrorPoint = 0.0;
+ TaylorVortexError = 0.0;
+ TaylorVortexErrorPoint = 0.0;
+ firstStokesProblemError = 0.0;
+ firstStokesProblemErrorPoint = 0.0;
+ normAnalPoint = 0.0;
+ normNumPoint = 0.0;
+ uAnalPoint = 0.0;
+ vAnalPoint = 0.0;
+ wAnalPoint = 0.0;
 
  allocateMemoryToAttrib();
 
@@ -2473,9 +2484,9 @@ void Simulator3D::setRHSBeta()
 
 void Simulator3D::setCRHS()
 {
- //vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
+ vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
  //vcc = ( (1.0/dt) * McLumped - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
- vcc = ( (1.0/dt) * McLumped ) * convC;
+ //vcc = ( (1.0/dt) * McLumped ) * convC;
 }
 
 void Simulator3D::setGravity(const char* _direction)
@@ -2862,6 +2873,8 @@ void Simulator3D::unCoupled()
 } // fecha metodo unCoupled 
 
 
+/** Doesn't call assemblePBC to perform copies.
+ */
 void Simulator3D::unCoupledBetaPBC()
 {
  clVector uvw(3*numNodes);
@@ -3010,6 +3023,7 @@ void Simulator3D::unCoupledCPBCNew()
  Periodic3D pbc;
 
  vcIp = vcc.MultVec(ipc); // operacao vetor * vetor (elemento a elemento)
+<<<<<<< HEAD
  b1cTilde = b1c + vcIp; //<<< Por que duplicado??
 
  b1cTilde = b1cTilde + 
@@ -3028,14 +3042,34 @@ void Simulator3D::unCoupledCPBCNew()
  solverC->solve(1E-15,AcTilde,cTilde,b1cTilde);
  cout << " ------------------------------------ " << endl;
  cout << endl;
+=======
+ b1cTilde = b1c + vcIp;
+
+ //*** modifying r.h.s. for scalar 
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b1cTilde);
+ 
+ //*** Reassemble (scalar field)
+ assembleCPBCNew();
+
+ //*** solving scalar modified system AcTilde cTilde = b1cTilde
+ cout << " ----> calculando escalar ----------- " << endl;
+ solverC->solve(1E-25,AcTilde,cTilde,b1cTilde);
+ cout << " ------------------------------------ " << endl;
+>>>>>>> local
 
  //*** copying scalar 
  pbc.SetPureScalarPBCNew(cTilde,MasterIndices,SlaveIndices,nyPointsL,"RL");
 
+<<<<<<< HEAD
  // comentar em caso de utilizacao de setInterface()
  // pois cSol nao pode ser atualizado
  cSol = cTilde;
 }
+=======
+ cSol = cTilde;
+
+} /* End of method */
+>>>>>>> local
 
 void Simulator3D::saveOldData()
 {
@@ -5591,8 +5625,8 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	setDirichletPressurePointPBC();
-	 
+	//setDirichletPressurePointPBC("fixed");
+
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
 	 * periodic algorithm. The diagonal entries are 
@@ -5610,68 +5644,70 @@ void Simulator3D::assemblePBCNew()
 
 } /* End of method */
 
-void Simulator3D::setFintPBC()
+/* \brief Forces pressure Dirichlet condition at 1 non-PBC node */
+void Simulator3D::setDirichletPressurePointPBC(string _method)
 {
-  size_t j = 0;
-  // iterators to interface nodes
-  list<int>::iterator lst;
-  list<int>::iterator lstt;  
-  lst  = pbc->GetIL()->begin(); 
-  lstt  = pbc->GetIR()->begin(); 
-  
-  // fint: copy and elimination
-  while ( j < pbc->GetIL()->size() )
-  {	  
-	// running lists node-to-node (2D is only one point)
-	int iL = *lst;
-	int iR = *lstt;	  
+  // first non-PBC point found randomily
+  if ( _method == "random" )
+  {
+	 vector<int> aux(0);  
+	 for ( list<int>::iterator it  = boundaryVert->begin(); 
+			 it != boundaryVert->end(); ++it )
+	 {
+	   aux.push_back(*it);
+	 }
+
+	 // extracting nonPBC nodes
+	 for ( int i = 0; i < nyPointsL; ++i )
+	 {
+	   int ibL = MasterIndices->at(i);
+	   int ibR = SlaveIndices->at(i);
+
+	   // eliminates PBC master
+	   for ( size_t j = 0; j < aux.size(); ++j)
+	   {
+		if ( aux.at(j) == ibL )
+		   aux.erase(aux.begin()+j);
+	   }
+	   // eliminates PBC slave
+	   for ( size_t j = 0; j < aux.size(); ++j)
+	   {
+		if ( aux.at(j) == ibR )
+		   aux.erase(aux.begin()+j);
+	   }
+	 } 
+	 /* --- SETTING POSITION AT MATRIX E --- */
+	 // set 1st. nonPBC found.
+	 E.Set( aux.at(0), aux.at(0), 1.0 ); // diagonal of E
+	 cout << color(none,yellow,black) 
+		  << " >> Nonperiodic pressure point set: " 
+		  << aux.at(0) << endl << resetColor();
+  }
+  else
+  {	 
+   for ( list<int>::iterator it  = boundaryVert->begin(); 
+			 it != boundaryVert->end(); ++it )
+   {
+	double xm = 0.5*fabs( X->Max() + X->Min() );
+	double ym = 0.5*fabs( Y->Max() + Y->Min() );
+	//double xm = X->Min();
+	//double ym = Y->M();
+	//double zm = 0.5*fabs( Z->Max() + Z->Min() );
+	//double zm = Z->Max();
+	double zm = Z->Min();
 	
-	double fR = fint.Get(iR);
-	fR += fint.Get(iL);
-	fint.Set(iL,0.0);
-
-	// update
-	lst++;
-	lstt++;
-	j++;
+	if ( fabs( X->Get(*it) - xm ) < 0.1 && 
+	     fabs( Y->Get(*it) - ym ) < 0.1 && 
+         fabs( Z->Get(*it) - zm ) < 0.1 )
+	{  
+	    E.Set( *it, *it, 1.0 ); // diagonal of E
+	    cout << color(none,yellow,black) 
+		     << " >> Nonperiodic pressure point set: " 
+		     << *it << endl << resetColor();
+		break;
+	}
+   }
   }
-}
-
-void Simulator3D::setDirichletPressurePointPBC()
-{
-  vector<int> aux(0);  
-  for ( list<int>::iterator it  = boundaryVert->begin(); 
-	      it != boundaryVert->end(); ++it )
-  {
-    aux.push_back(*it);
-  }
-
-  // extracting nonPBC nodes
-  for ( int i = 0; i < nyPointsL; ++i )
-  {
-    int ibL = MasterIndices->at(i);
-	int ibR = SlaveIndices->at(i);
-
-	// eliminates PBC master
-	for ( size_t j = 0; j < aux.size(); ++j)
-	{
-	 if ( aux.at(j) == ibL )
-	    aux.erase(aux.begin()+j);
-    }
-	// eliminates PBC slave
-	for ( size_t j = 0; j < aux.size(); ++j)
-	{
-	 if ( aux.at(j) == ibR )
-	    aux.erase(aux.begin()+j);
-    }
-  }
- 
-  /* --- SETTING POSITION AT MATRIX E --- */
-  // set 1st. nonPBC found.
-  E.Set( aux.at(0), aux.at(0), 1.0 ); // diagonal of E
-  cout << color(none,yellow,black) 
-       << " >> Nonperiodic pressure point set: " 
-	   << aux.at(0) << endl << resetColor();
 }
 
 void Simulator3D::assemblePBC()
@@ -5994,6 +6030,31 @@ void Simulator3D::assembleCPBCNew()
 
 
 
+/* Method should be used after SetCopyDirectionPBC() */
+void Simulator3D::assembleCPBCNew()
+{
+  /* Copying rows and columns from ibL into ibR: 
+   * i) Remove the contributions from left and overloads in right;
+   * ii) Now, the positions that stayed opened receive the same
+   * values at right. */
+  	
+  if ( direction == "RL" )
+  {	
+    // loop PBC indices
+	for ( int i = 0; i < nyPointsL; i++ ) 
+	{
+	  // master, slave indices
+	  int ibL = MasterIndices->at(i);
+	  int ibR = SlaveIndices->at(i);
+
+	  AcTilde.AddRowColSquareSym(ibL,ibR);
+	}
+  }
+
+} /* End of method */
+
+
+
 /* unCoupledPBC with <vector> structure */
 void Simulator3D::unCoupledPBCNew()
 {
@@ -6009,7 +6070,7 @@ void Simulator3D::unCoupledPBCNew()
 
  //*** periodicity on rhs vector - velocity
  sumIndexPBCVelNew(MasterIndices,SlaveIndices,b1Tilde);
-
+ 
  //*** modifies the global matrices relative to single-phase
  assemblePBCNew();
 
@@ -6040,8 +6101,9 @@ void Simulator3D::unCoupledPBCNew()
  b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
  
  ///*** periodicity on rhs vector - pressure
- sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2);
-
+ //sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2); //
+ sumIndexPBCScalarNew(MasterIndices,SlaveIndices,b2Tilde);
+ 
  ///*** STEP 2: solves system for pressure
  cout << " --------> solving pressure --------- " << endl;
  solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
@@ -6070,9 +6132,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- clVector p(numVerts);
- p.SetAll( getMeanPressureDomain("average") );
- pSol = pSol - p;
+ //clVector p(numVerts);
+ //p.SetAll( getMeanPressureDomain("average") );
+ //pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6089,37 +6151,31 @@ void Simulator3D::unCoupledPBCNew()
  **/
 double Simulator3D::getMeanPressureDomain(string _type)
 {
-  vector<double> areaElems(0);
+  
+  vector<double> volElems(0);
   vector<double> pElems(0);
   double p = 0.0;
 
   for ( int e = 0; e < numElems; ++e )
   {
     int v1 = IEN->Get(e,0);
-	double p1x = X->Get(v1);
-	double p1y = Y->Get(v1);
-
     int v2 = IEN->Get(e,1);
-	double p2x = X->Get(v2);
-	double p2y = Y->Get(v2);
+    int v3 = IEN->Get(e,2);
+    int v4 = IEN->Get(e,3);
     
-	int v3 = IEN->Get(e,2);
-	double p3x = X->Get(v3);
-	double p3y = Y->Get(v3);
+	double volumeElem = m->getVolume(e);
+	volElems.push_back(volumeElem);
 
-	double areaElem = getArea(p1x,p1y,p2x,p2y,p3x,p3y);
-	areaElems.push_back(areaElem);
-
-	double pcElem = 1.0/3.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) );
-	double pElem = pcElem*areaElem;
+	double pcElem = 1.0/4.0*( pSol.Get(v1) + pSol.Get(v2) + pSol.Get(v3) + pSol.Get(v4) );
+	double pElem = pcElem*volumeElem;
 	pElems.push_back(pElem);
   }
   
-  double totArea = 0.0;
+  double totVol = 0.0;
   double totP = 0.0;
-  for ( size_t i = 0; i < areaElems.size(); ++i )
+  for ( size_t i = 0; i < volElems.size(); ++i )
   {
-    totArea += areaElems[i];
+    totVol += volElems[i];
 	totP += pElems[i];
   }
   
@@ -6130,7 +6186,7 @@ double Simulator3D::getMeanPressureDomain(string _type)
   }
   else if ( _type == "average" )
   {
-    p = totP/totArea;
+    p = totP/totVol;
     cout << color(none,yellow,black) << ">> Average periodic pressure = " << p << endl << resetColor();
   }
 
@@ -6405,6 +6461,7 @@ void Simulator3D::initTaylorVortex()
 	#endif
 
 	double xM = 0.25*( 3.0*X->Max() + X->Min() );
+	//double xM = 0.5*( X->Max() + X->Min() );
 	double yM = 0.5*( Y->Max() + Y->Min() );
 
 	for ( int i = 0; i < numBCPoints; i++ )
@@ -6415,9 +6472,9 @@ void Simulator3D::initTaylorVortex()
 		double r = sqrt( x*x + y*y );
 		double theta = atan2(y,x);
 
-		double r2 = ( Y->Max() - Y->Min() )/40;
+		double r2 = ( Y->Max() - Y->Min() )/30;
 
-		double c1 = 0.5;
+		double c1 = 1.0;
 
 		double vtheta = c1*r*( exp ( -r*r/r2 ) );
 
@@ -6435,6 +6492,69 @@ void Simulator3D::initTaylorVortex()
 	}
 
 }
+
+/* \brief Error for the Taylor vortex flow. */ 
+double Simulator3D::calcTaylorVortexError()
+{
+    double diffNorm = 0.0;
+	double norm = 0.0;
+	clVector uAux, vAux, wAux;
+	uAux.Dim(numVerts);
+	vAux.Dim(numVerts);
+	wAux.Dim(numVerts);
+	uAux = uSol.Copy(0,numVerts-1);
+	vAux = vSol.Copy(0,numVerts-1);
+	wAux = wSol.Copy(0,numVerts-1);
+
+    //double xM = 0.5*( X->Max() + X->Min() );
+    double xM = 0.25*( 3.0*X->Max() + X->Min() );
+    double yM = 0.5*( Y->Max() + Y->Min() );
+	
+ 	for ( int i = 0; i < numVerts; i++ )
+	{
+	   double x = X->Get(i) - xM;
+	   double y = Y->Get(i) - yM;
+
+	   double r = sqrt( x*x + y*y );
+	   double theta = atan2(y,x);
+
+	   double r2 = ( Y->Max() - Y->Min() )/30; // vortex radius 
+	   double c1 = 1.0; // proportional to the angular momentum
+	   double vtheta = c1*r*( exp( (-r*r/r2)/(4.0*(1.0/Re)*time) ) );
+
+	   double U = 1.0;
+	   double V = 0.0;
+	   double W = 0.0;
+	   double uAnal = U - vtheta*sin(theta);
+	   double vAnal = V + vtheta*cos(theta);
+	   double wAnal = W;
+
+	   double ue =  uAux.Get(i) - uAnal;
+	   double ve =  vAux.Get(i) - vAnal;
+	   double we =  wAux.Get(i) - wAnal;
+
+	   diffNorm += sqrt( ue*ue + ve*ve + we*we );
+	   norm += sqrt( uAnal*uAnal+ vAnal*vAnal + wAnal*wAnal );
+
+		if ( i == 111 ) // point chosen by user
+		{
+			uAnalPoint = uAnal;
+			vAnalPoint = vAnal;
+			wAnalPoint = wAnal;
+
+			normAnalPoint = sqrt( uAnalPoint*uAnalPoint + vAnalPoint*vAnalPoint + wAnalPoint*wAnalPoint );
+			normNumPoint = sqrt( uAux.Get(i)*uAux.Get(i) + vAux.Get(i)*vAux.Get(i) + wAux.Get(i)*wAux.Get(i) );
+			TaylorVortexErrorPoint = (normAnalPoint - normNumPoint)/normAnalPoint;
+
+		}
+
+	}	   
+
+	TaylorVortexError = diffNorm/norm;
+	return TaylorVortexError;
+	//return TaylorVortexErrorPoint;
+}
+
 
 void Simulator3D::initTanHJetProfile()
 {
@@ -6465,15 +6585,25 @@ void Simulator3D::initTanHJetProfile()
 		vSolOld.Set(i, V);
 		wSolOld.Set(i, W);
 	}
-
-
 }
 
+void Simulator3D::initJetVelocity(double _vel)
+{
+ init();
+ for ( int i = 0; i < numNodes; ++i )
+ {
+   if ( heaviside->Get(i) >= 0.5 )
+   {
+	uSol.Set(i,_vel);
+	uSolOld.Set(i,_vel);
+   }
+ }
+}
 /* \brief Intializes a Taylor-Green  vortex in the flow. */ 
 void Simulator3D::initTaylorGreenVortex()
 {
  	init();
-	#if NUMGLEU == 4
+	#if NUMGLEU == 5
  	double numBCPoints = numVerts;
 	#else 
  	double numBCPoints = numNodes;
@@ -6488,7 +6618,7 @@ void Simulator3D::initTaylorGreenVortex()
 	   double v = - cos(PI_CONSTANT*x)*sin(PI_CONSTANT*y);
 	   double w = 0.0;
 
-	   double U = 0.0;
+	   double U = 1.0;
 	   double V = 0.0;
 	   double W = 0.0;
 	  
@@ -6841,4 +6971,54 @@ void Simulator3D::setBetaPressureLiquidTimeAverage(const char* _direction, const
 }
 
 double Simulator3D::getBetaPressLiq(){return betaPressLiq;}
+double Simulator3D::getTaylorVortexError() { return TaylorVortexError;  }
+
+
+void Simulator3D::initCTwoShearLayers(double _cLayerBot, double _cLayerTop)
+{
+  #if NUMGLEU == 5
+  double numBCPoints = numVerts;
+  #else
+  double numBCPoints = numNodes;
+  #endif
+
+  for (int i = 0; i < numBCPoints; ++i)
+  {
+	double limM = 0.5*fabs( Z->Max() + Z->Min() );		
+	double zp = Z->Get(i);
+			
+	// bottom
+	if ( ( zp >= Z->Min() ) && ( zp < limM ) )
+	{	
+	  cSol.Set(i,_cLayerBot);
+	  cSolOld.Set(i,_cLayerBot);
+	} 
+
+	//top
+	if ( ( zp >= limM ) && ( zp <= Z->Max() ) )
+	{
+	  cSol.Set(i,_cLayerTop);
+	  cSolOld.Set(i,_cLayerTop);
+	}
+  }
+}
+
+void Simulator3D::initCGaussian(double _peak)
+{
+  #if NUMGLEU == 5
+  double numBCPoints = numVerts;
+  #else
+  double numBCPoints = numNodes;
+  #endif
+
+  double _width = 1.0/(2.0*PI_CONSTANT); 
+  double ym = 0.5*fabs( Y->Max() + Y->Min() );		
+  for (int i = 0; i < numBCPoints; ++i)
+  {    
+	double y = Y->Get(i) - ym;
+	double gaussian = _peak*exp( - (y*y)/(2.0*_width*_width) )*cos(X->Get(i));    	
+    cSol.Set(i,gaussian);
+	cSolOld.Set(i,gaussian);
+  }
+}
 

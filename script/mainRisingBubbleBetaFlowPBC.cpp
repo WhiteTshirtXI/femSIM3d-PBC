@@ -181,10 +181,10 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/bin/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/vtk/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/dat/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising-beta/msh/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-beta/msh/";
  
  string meshDir = (string) getenv("MESH3D_DIR");
  if( strcmp( _frame,"moving") == 0 )
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 20000;
+ int nIter = 30000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -319,12 +319,14 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupledBetaPBC();
 
+   if ( i%5 == 0 )
+   {
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
-
+   }
    s1.saveOldData();
 
    cout << color(none,magenta,black);
@@ -345,9 +347,13 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
-  h2.saveChordalEdge(datFolder,"edge",iter-1);
-  h2.setModel3DEdgeSize();
+
+  if ( i%5 == 0 )
+  {
+   h2.saveVTK(vtkFolder,"edge",iter-1);
+   h2.saveChordalEdge(datFolder,"edge",iter-1);
+   h2.setModel3DEdgeSize();
+  }
 
   Model3D mOld = m1; 
 

@@ -27,20 +27,19 @@ int main(int argc, char **argv)
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
 
- double Re = 100; 
- double Sc = 1;
+ double Re = 100;
  double We = 115.662;
+ double Sc = 1;
  double Fr = 1.0;
  double alpha = 1.0;
 
-
  double rho_in = 1.225;
- double rho_out =1350; 
+ double rho_out = 1350; 
 
  double mu_out = 1;
  double mu_in = 0.0000178;
 
- const char* _case = "3";
+ const char* _case = "9";
 
  // case 1
  if( strcmp( _case,"1") == 0 )
@@ -78,6 +77,20 @@ int main(int argc, char **argv)
   Re = sqrt(41505.729); // case 8 (extream)
   mu_out = 0.0875134907735; // extream
  }
+ else if( strcmp( _case,"9") == 0 )
+ {
+   double bubbleDiam = 5.2E-3;
+   double gravity = 9.8; 
+   double sigma = 0.0728; 
+   
+   rho_in = 1.205; 
+   rho_out = 998.0; 
+   mu_out = 958.08E-6; 
+   mu_in = 18.21E-6; 
+
+   Re = sqrt( CalcArchimedesBuoyancy(gravity,bubbleDiam,rho_out,mu_out) );
+   We = CalcEotvos(gravity,bubbleDiam,rho_out,sigma);
+ }
  else
  {
   cerr << "test case " << _case << " not available!" << endl;
@@ -85,7 +98,7 @@ int main(int argc, char **argv)
  }
 
 
- double cfl = 0.1;
+ double cfl = 0.5;
 
  const char* _frame = "fixed";
  //const char* _frame = "moving";
@@ -95,7 +108,7 @@ int main(int argc, char **argv)
  double c2 = 1.0;      // smooth vel 
  double c3 = 10.0;     // smooth coord (fujiwara)
  double d1 = 1.0;      // surface tangent vel = (u-ut)
- double d2 = 0.2;      // surface smooth coord (fujiwara)
+ double d2 = 0.1;      // surface smooth coord (fujiwara)
 
  // moving
  if( strcmp( _frame,"moving") == 0 )
@@ -114,10 +127,10 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/bin/";
- const char *mshFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/msh/";
- const char *vtkFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/vtk/";
- const char *datFolder  = "/home/gcpoliveira/post-processing/vtk/3d/rising/dat/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-compare/bin/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-compare/msh/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-compare/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-compare/dat/";
  string meshDir = (string) getenv("MESH3D_DIR");
  
  if( strcmp( _frame,"moving") == 0 )
@@ -182,7 +195,7 @@ int main(int argc, char **argv)
 
   // load surface mesh
   string aux = *(argv+2);
-  string file = (string) "./msh/newMesh-" + *(argv+2) + (string) ".msh";
+  string file = (string) "/work/gcpoliveira/post-processing/3d/rising/msh/newMesh-" + *(argv+2) + (string) ".msh";
   const char *mesh2 = file.c_str();
   m1.readMSH(mesh2);
   m1.setInterfaceBC();
@@ -192,7 +205,7 @@ int main(int argc, char **argv)
   s1(m1);
 
   // load 3D mesh
-  file = (string) "./vtk/sim-" + *(argv+2) + (string) ".vtk";
+  file = (string) "/work/gcpoliveira/post-processing/3d/rising/vtk/sim-" + *(argv+2) + (string) ".vtk";
   const char *vtkFile = file.c_str();
 
   m1.readVTK(vtkFile);
@@ -214,7 +227,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
-  iter = s1.loadSolution("./","sim",atoi(*(argv+2)));
+  iter = s1.loadSolution("/work/gcpoliveira/post-processing/3d/rising/","sim",atoi(*(argv+2)));
  }
 
  // Point's distribution
@@ -249,7 +262,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 10000;
+ int nIter = 30000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -295,12 +308,15 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupled();
 
+   if ( i%5 == 0 )
+   {
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTK(vtkFolder,"sim",iter);
    save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);
+   }
 
    s1.saveOldData();
 
@@ -322,8 +338,13 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
+  
+  if ( i%5 == 0 )
+  {
   h2.saveVTK(vtkFolder,"edge",iter-1);
   h2.saveChordalEdge(datFolder,"edge",iter-1);
+  }
+
   h2.setModel3DEdgeSize();
 
   Model3D mOld = m1; 

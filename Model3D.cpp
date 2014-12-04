@@ -4749,6 +4749,9 @@ void Model3D::setGenericBC()
   if( surfMesh.phyNames.at(id).compare(5,7,"InflowU") == 0 || 
       surfMesh.phyNames.at(id).compare(5,7,"InflowV") == 0 || 
       surfMesh.phyNames.at(id).compare(5,7,"InflowW") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,17,"InflowUTransverse") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,17,"InflowVTransverse") == 0 || 
+      surfMesh.phyNames.at(id).compare(5,17,"InflowWTransverse") == 0 || 
       surfMesh.phyNames.at(id).compare(5,16,"InflowUParabolic") == 0 || 
       surfMesh.phyNames.at(id).compare(5,16,"InflowVParabolic") == 0 || 
       surfMesh.phyNames.at(id).compare(5,16,"InflowWParabolic") == 0 )
@@ -5359,6 +5362,7 @@ void Model3D::setGenericBC(double _vel)
    vc.Set(*it,0.0);
    wc.Set(*it,0.0);
   }
+  // open boundary condition if any is imposed
   else {}
  }
 }

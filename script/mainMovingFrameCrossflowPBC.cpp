@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   m1.readMSH(mesh1);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D();
+  m1.mesh2Dto3D("QYYApa0.1");
   m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
   zinit = s1.getCentroidPosZAverage(); // initial z centroid
  }
 
- int nIter = 1000;
+ int nIter = 10;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -250,18 +250,20 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
+   //s1.stepALE();
    s1.stepALEPBC();
-   s1.movePoints();
+   //s1.movePoints();
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC(); // <<
-   s1.setGravity("-Z");
+   //s1.setGravity("-Z");
    //s1.setBetaFlowLiq("+X");
    s1.setRHS();
    s1.setCopyDirectionPBC("RL");
    s1.setInterfaceGeo();
    //s1.setInterfaceLevelSet();
    s1.unCoupledPBCNew();
+   //s1.unCoupled();
 
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
@@ -281,7 +283,7 @@ int main(int argc, char **argv)
 
    iter++;
   }
-
+  /*
   Helmholtz3D h2(m1,h1);
   h2.setBC();
   h2.initRisingBubble();
@@ -297,9 +299,9 @@ int main(int argc, char **argv)
   
 
   Model3D mOld = m1; 
-
+  */
   /* *********** MESH TREATMENT ************* */
-  
+  /*
   m1.setNormalAndKappa();
   m1.initMeshParameters();
   // 3D mesh operations
@@ -324,9 +326,9 @@ int main(int argc, char **argv)
   
   m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
-
+  */
   /* **************************************** */
-  
+  /*
   m1.mesh3DPoints();
   m1.setMapping();
 #if NUMGLEU == 5
@@ -341,7 +343,7 @@ int main(int argc, char **argv)
   {
 	m1.setCrossflowVVelocity(velVCrossflow); 
     m1.setGenericBCPBCNew(_physGroup);
-	m1.setGenericBC(uinst,vinst,winst);
+	m1.setGenericBC(uref,vref,wref);
     pbc.MountPeriodicVectorsNew("noPrint");
   }
   else
@@ -362,9 +364,9 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
   saveEnd.saveMeshInfo(datFolder);
-  
+ */  
  }
-
+ 
  PetscFinalize();
  return 0;
 }

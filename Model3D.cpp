@@ -5383,14 +5383,14 @@ void Model3D::setGenericBC(double _velX, double _velY, double _velZ)
   }  
   
   // symmetry boundary V
-  if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalV\"" )
   {
    idbcv.AddItem(*it);
    vc.Set(*it,0.0 - _velY);
   }  
   
   // symmetry boundary W
-  if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
+  else if( surfMesh.phyBounds.at(*it) == "\"wallNormalW\"" )
   {
    idbcw.AddItem(*it);
    wc.Set(*it,0.0 - _velZ);

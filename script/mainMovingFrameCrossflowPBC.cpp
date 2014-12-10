@@ -48,19 +48,22 @@ int main(int argc, char **argv)
  int iter = 1;
  double Re = 50.0;
  double We = 6.0;
- double Fr = 100.0;
+ double Fr = 1.0;
  double alpha = 1;
+ double cfl = 1.0;
  double mu_out = 0.048;
  double mu_in = 0.15*mu_out;
  double rho_out = 1136.0;
  double rho_in = 1.18*rho_out;
- double betaGrad = 0.0;
+
  double velVCrossflow = 2.0; // i.e. V_crossflow = velVCrossflow x V_jet
+ double velWCrossflow = 2.0; 
 
  //const char* _frame = "fixed";
  const char* _frame = "moving";
  
  string _physGroup = "\"wallInflowVTransverse\"";
+ double betaGrad = 0.0;
 
  // fixed
  double c1 = 0.0;      // lagrangian
@@ -74,15 +77,15 @@ int main(int argc, char **argv)
  {
   c1 = 0.0;      // lagrangian
   c2 = 1.0;      // smooth vel: OBS - different result with c1=0.0
-  c3 = 3.0;      // smooth coord (fujiwara)
+  c3 = 5.0;      // smooth coord (fujiwara)
   d1 = 0.0;      // surface tangent velocity u_n=u-u_t 
-  d2 = 0.5;      // surface smooth cord (fujiwara)
+  d2 = 0.1;      // surface smooth cord (fujiwara)
  }
 
 
- Solver *solverP = new PCGSolver(); 
+ //Solver *solverP = new PCGSolver(); 
  //Solver *solverP = new PetscSolver(KSPCG,PCICC);
- //Solver *solverP = new PetscSolver(KSPCG,PCILU); 
+ Solver *solverP = new PetscSolver(KSPCG,PCILU); 
  //Solver *solverP = new PetscSolver(KSPGMRES,PCILU); 
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PCGSolver();
@@ -127,11 +130,13 @@ int main(int argc, char **argv)
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
   m1.setCrossflowVVelocity(velVCrossflow); 
+  m1.setCrossflowWVelocity(velWCrossflow); 
   m1.setGenericBCPBCNew(_physGroup);
   m1.setGenericBC();
 
   Periodic3D pbc(m1);
-  pbc.MountPeriodicVectorsNew("noPrint");
+  //pbc.MountPeriodicVectorsNew("noPrint");
+  pbc.MountPeriodicVectors("noPrint");
 
   Simulator3D s1(pbc,m1);
 
@@ -146,6 +151,7 @@ int main(int argc, char **argv)
   s1.setAlpha(alpha);
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
+  s1.setCfl(cfl);
   s1.initJetVelocity(1.0);
   s1.setBetaPressureLiquid(betaGrad); 
   s1.setDtALETwoPhase();
@@ -168,8 +174,8 @@ int main(int argc, char **argv)
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
- save.saveVTKPBC(vtkFolder,"initial",0,betaGrad);
  save.saveVTKSurface(vtkFolder,"geometry");
+ save.saveVTKPBC(vtkFolder,"initial",0,betaGrad);
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
@@ -191,13 +197,21 @@ int main(int argc, char **argv)
 
  if( strcmp( _frame,"moving") == 0 )
  {
+  // moving
+  uref = s1.getURef();
+  xref = s1.getXRef();
+  vref = s1.getVRef();
+  yref = s1.getYRef();
+  wref = s1.getWRef();
+  zref = s1.getZRef();
+
   s1.setCentroidVelPos();
   xinit = s1.getCentroidPosXAverage(); // initial x centroid
   yinit = s1.getCentroidPosYAverage(); // initial y centroid
   zinit = s1.getCentroidPosZAverage(); // initial z centroid
  }
 
- int nIter = 10;
+ int nIter = 10000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -234,9 +248,11 @@ int main(int argc, char **argv)
 	s1.setVSol(vinst); // subtraction for inertial frame: v - v_MFR
 	s1.setWSol(winst); // subtraction for inertial frame: w - w_MFR
 	m1.setCrossflowVVelocity(velVCrossflow); // set of crossflow velocity for BC
+	m1.setCrossflowWVelocity(velWCrossflow); // set of crossflow velocity for BC
     m1.setGenericBCPBCNew(_physGroup);
 	m1.setGenericBC(uref,vref,wref); // crossflow condition
-    pbc.MountPeriodicVectorsNew("print");
+    //pbc.MountPeriodicVectorsNew("print");
+    pbc.MountPeriodicVectors("print");
 	s1.setURef(uref); // sets to recover the inertial physics; ease prints in InOut
 	s1.setVRef(vref);
 	s1.setWRef(wref);
@@ -250,20 +266,18 @@ int main(int argc, char **argv)
    InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
-   //s1.stepALE();
    s1.stepALEPBC();
-   //s1.movePoints();
+   s1.movePoints();
    s1.assemble();
    s1.matMount();
-   s1.setUnCoupledBC(); // <<
+   s1.setUnCoupledBC();
    //s1.setGravity("-Z");
    //s1.setBetaFlowLiq("+X");
    s1.setRHS();
    s1.setCopyDirectionPBC("RL");
    s1.setInterfaceGeo();
-   //s1.setInterfaceLevelSet();
-   s1.unCoupledPBCNew();
-   //s1.unCoupled();
+   //s1.unCoupledPBCNew();
+   s1.unCoupledPBC();
 
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
@@ -283,7 +297,7 @@ int main(int argc, char **argv)
 
    iter++;
   }
-  /*
+  
   Helmholtz3D h2(m1,h1);
   h2.setBC();
   h2.initRisingBubble();
@@ -297,11 +311,10 @@ int main(int argc, char **argv)
   //h2.saveChordalEdge(datFolder,"edge",iter-1);
   h2.setModel3DEdgeSize();
   
-
   Model3D mOld = m1; 
-  */
+
   /* *********** MESH TREATMENT ************* */
-  /*
+  
   m1.setNormalAndKappa();
   m1.initMeshParameters();
   // 3D mesh operations
@@ -326,9 +339,9 @@ int main(int argc, char **argv)
   
   m1.removePointsByNeighbourCheck();
   //m1.checkAngleBetweenPlanes();
-  */
+  
   /* **************************************** */
-  /*
+  
   m1.mesh3DPoints();
   m1.setMapping();
 #if NUMGLEU == 5
@@ -342,16 +355,20 @@ int main(int argc, char **argv)
   if( strcmp( _frame,"moving") == 0 )
   {
 	m1.setCrossflowVVelocity(velVCrossflow); 
+	m1.setCrossflowWVelocity(velWCrossflow); 
     m1.setGenericBCPBCNew(_physGroup);
 	m1.setGenericBC(uref,vref,wref);
-    pbc.MountPeriodicVectorsNew("noPrint");
+    //pbc.MountPeriodicVectorsNew("noPrint");
+    pbc.MountPeriodicVectors("noPrint");
   }
   else
   { 
 	m1.setCrossflowVVelocity(velVCrossflow); 
+	m1.setCrossflowWVelocity(velWCrossflow); 
     m1.setGenericBCPBCNew(_physGroup);
     m1.setGenericBC();
-    pbc.MountPeriodicVectorsNew("noPrint");
+    //pbc.MountPeriodicVectorsNew("noPrint");
+    pbc.MountPeriodicVectors("noPrint");
   }
 
   Simulator3D s2(m1,s1);
@@ -364,7 +381,6 @@ int main(int argc, char **argv)
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
   saveEnd.saveMeshInfo(datFolder);
- */  
  }
  
  PetscFinalize();

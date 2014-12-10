@@ -5555,7 +5555,7 @@ void Simulator3D::assemblePBCNew()
 	  ATilde.AddRowColSquareSym(ibL,ibR);
 	  ATilde.AddRowColSquareSym(ibL + numNodes,ibR + numNodes);
 	  ATilde.AddRowColSquareSym(ibL + 2*numNodes,ibR + 2*numNodes);
-
+	  
 	  GTilde.AddRows(ibL,ibR);
 	  GTilde.AddRows(ibL + numNodes,ibR + numNodes);
 	  GTilde.AddRows(ibL + 2*numNodes,ibR + 2*numNodes);
@@ -5684,6 +5684,9 @@ void Simulator3D::setDirichletPressurePointPBC(string _method)
 
 void Simulator3D::assemblePBC()
 {
+    clDMatrix invAP;
+	invAP = invA;
+
  	register int i,j;
 	int ibL,ibR;
 
@@ -5709,40 +5712,155 @@ void Simulator3D::assemblePBC()
 	     ibL = VecXMinAux.Get(i);
 	     ibR = VecXMaxAux.Get(i);
 
+		  // inverses
+		  // x-direction
+		  double a = 1.0/invMrhoLumped.Get(ibR);
+		  a += 1.0/invMrhoLumped.Get(ibL);
+		  invMrhoLumped.Set(ibR,1.0/a);
+		  invMrhoLumped.Set(ibL,0.0);
+
+		  // y-direction
+		  a = 1.0/invMrhoLumped.Get(ibR+numNodes);
+		  a += 1.0/invMrhoLumped.Get(ibL+numNodes);
+		  invMrhoLumped.Set(ibR+numNodes,1.0/a);
+		  invMrhoLumped.Set(ibL+numNodes,0.0);
+
+		  // z-direction
+		  a = 1.0/invMrhoLumped.Get(ibR+2*numNodes);
+		  a += 1.0/invMrhoLumped.Get(ibL+2*numNodes);
+		  invMrhoLumped.Set(ibR+2*numNodes,1.0/a);
+		  invMrhoLumped.Set(ibL+2*numNodes,0.0);
+
+		  // x-direction
+		  a = 1.0/invMLumped.Get(ibR);
+		  a += 1.0/invMLumped.Get(ibL);
+		  invMLumped.Set(ibR,1.0/a);
+		  invMLumped.Set(ibL,0.0);
+
+		  // y-direction
+		  a = 1.0/invMLumped.Get(ibR+numNodes);
+		  a += 1.0/invMLumped.Get(ibL+numNodes);
+		  invMLumped.Set(ibR+numNodes,1.0/a);
+		  invMLumped.Set(ibL+numNodes,0.0);
+		 
+		  // z-direction
+		  a = 1.0/invMLumped.Get(ibR+2*numNodes);
+		  a += 1.0/invMLumped.Get(ibL+2*numNodes);
+		  invMLumped.Set(ibR+2*numNodes,1.0/a);
+		  invMLumped.Set(ibL+2*numNodes,0.0);
+
+		  // x-direction
+		  a = 1.0/invAP.Get(ibR);
+		  a += 1.0/invAP.Get(ibL);
+		  invAP.Set(ibR,1.0/a);
+		  invAP.Set(ibL,0.0);
+
+		  // y-direction
+		  a = 1.0/invAP.Get(ibR+numNodes);
+		  a += 1.0/invAP.Get(ibL+numNodes);
+		  invAP.Set(ibR+numNodes,1.0/a);
+		  invAP.Set(ibL+numNodes,0.0);
+		  
+		  // z-direction
+		  a = 1.0/invAP.Get(ibR+2*numNodes);
+		  a += 1.0/invAP.Get(ibL+2*numNodes);
+		  invAP.Set(ibR+2*numNodes,1.0/a);
+		  invAP.Set(ibL+2*numNodes,0.0);
+		  
 		  for ( j = 0; j < 3*numNodes; j++ ) // loop rows
 		  {
 			 // x-direction
-			 double ATildeRow = ATilde.Get(ibR,j);
-			 ATildeRow += ATilde.Get(ibL,j);
-			 ATilde.Set(ibR,j,ATildeRow);
+			 double a = ATilde.Get(ibR,j);
+			 a += ATilde.Get(ibL,j);
+			 ATilde.Set(ibR,j,a);
 			  
 			 // y-direction
-			 double ATildeRowN = ATilde.Get(ibR + numNodes,j);
-			 ATildeRowN += ATilde.Get(ibL + numNodes,j);
-			 ATilde.Set(ibR + numNodes,j,ATildeRowN);
+			 a = ATilde.Get(ibR + numNodes,j);
+			 a += ATilde.Get(ibL + numNodes,j);
+			 ATilde.Set(ibR + numNodes,j,a);
 			 
 			 // z-direction
-			 ATildeRowN = ATilde.Get(ibR + 2*numNodes,j);
-			 ATildeRowN += ATilde.Get(ibL + 2*numNodes,j);
-			 ATilde.Set(ibR + 2*numNodes,j,ATildeRowN);
+			 a = ATilde.Get(ibR + 2*numNodes,j);
+			 a += ATilde.Get(ibL + 2*numNodes,j);
+			 ATilde.Set(ibR + 2*numNodes,j,a);
+
+			 // x-direction
+			 a = Mrho.Get(ibR,j);
+			 a += Mrho.Get(ibL,j);
+			 Mrho.Set(ibR,j,a);
+			  
+			 // y-direction
+			 a = Mrho.Get(ibR+numNodes,j);
+			 a += Mrho.Get(ibL+numNodes,j);
+			 Mrho.Set(ibR+numNodes,j,a);
+			 
+			 // z-direction
+			 a = Mrho.Get(ibR+2*numNodes,j);
+			 a += Mrho.Get(ibL+2*numNodes,j);
+			 Mrho.Set(ibR+2*numNodes,j,a);
+
+			 // x-direction
+			 a = M.Get(ibR,j);
+			 a += M.Get(ibL,j);
+			 M.Set(ibR,j,a);
+			  
+			 // y-direction
+			 a = M.Get(ibR+numNodes,j);
+			 a += M.Get(ibL+numNodes,j);
+			 M.Set(ibR+numNodes,j,a);
+
+			 // z-direction
+			 a = M.Get(ibR+2*numNodes,j);
+			 a += M.Get(ibL+2*numNodes,j);
+			 M.Set(ibR+2*numNodes,j,a);
 	      }
 
 		  for ( j = 0; j < 3*numNodes; j++ ) // loop columns
 		  {
 		   	 // x-direction
-			 double ATildeColumn = ATilde.Get(j,ibR);
-			 ATildeColumn += ATilde.Get(j,ibL);
-			 ATilde.Set(j,ibR,ATildeColumn);
+			 double a = ATilde.Get(j,ibR);
+			 a += ATilde.Get(j,ibL);
+			 ATilde.Set(j,ibR,a);
 
 		   	 // y-direction
-			 double ATildeColumnN = ATilde.Get(j,ibR + numNodes);
-			 ATildeColumnN += ATilde.Get(j,ibL + numNodes);
-			 ATilde.Set(j,ibR + numNodes,ATildeColumnN);
+			 a = ATilde.Get(j,ibR + numNodes);
+			 a += ATilde.Get(j,ibL + numNodes);
+			 ATilde.Set(j,ibR + numNodes,a);
 
 		   	 // z-direction
-			 ATildeColumnN = ATilde.Get(j,ibR + 2*numNodes);
-			 ATildeColumnN += ATilde.Get(j,ibL + 2*numNodes);
-			 ATilde.Set(j,ibR + 2*numNodes,ATildeColumnN);
+			 a = ATilde.Get(j,ibR + 2*numNodes);
+			 a += ATilde.Get(j,ibL + 2*numNodes);
+			 ATilde.Set(j,ibR + 2*numNodes,a);
+
+		   	 // x-direction
+			 a = Mrho.Get(j,ibR);
+			 a += Mrho.Get(j,ibL);
+			 Mrho.Set(j,ibR,a);
+
+		   	 // y-direction
+			 a = Mrho.Get(j,ibR + numNodes);
+			 a += Mrho.Get(j,ibL + numNodes);
+			 Mrho.Set(j,ibR + numNodes,a);
+
+		   	 // z-direction
+			 a = Mrho.Get(j,ibR + 2*numNodes);
+			 a += Mrho.Get(j,ibL + 2*numNodes);
+			 Mrho.Set(j,ibR + 2*numNodes,a);
+
+		   	 // x-direction
+			 a = M.Get(j,ibR);
+			 a += M.Get(j,ibL);
+			 M.Set(j,ibR,a);
+
+		   	 // y-direction
+			 a = M.Get(j,ibR + numNodes);
+			 a += M.Get(j,ibL + numNodes);
+			 M.Set(j,ibR + numNodes,a);
+
+		   	 // z-direction
+			 a = M.Get(j,ibR + 2*numNodes);
+			 a += M.Get(j,ibL + 2*numNodes);
+			 M.Set(j,ibR + 2*numNodes,a);
 		  }
 	  }
 	
@@ -5756,11 +5874,29 @@ void Simulator3D::assemblePBC()
 		ATilde.SetColumnZero(ibL + numNodes);
 		ATilde.SetRowZero(ibL + 2*numNodes);
 		ATilde.SetColumnZero(ibL + 2*numNodes);
+		Mrho.SetRowZero(ibL);
+		Mrho.SetColumnZero(ibL);
+		Mrho.SetRowZero(ibL + numNodes);
+		Mrho.SetColumnZero(ibL + numNodes);
+		Mrho.SetRowZero(ibL + 2*numNodes);
+		Mrho.SetColumnZero(ibL + 2*numNodes);
+		M.SetRowZero(ibL);
+		M.SetColumnZero(ibL);
+		M.SetRowZero(ibL + numNodes);
+		M.SetColumnZero(ibL + numNodes);
+		M.SetRowZero(ibL + 2*numNodes);
+		M.SetColumnZero(ibL + 2*numNodes);
 
 		// changed diagonal's values
 		ATilde.Set(ibL,ibL,1.0);
 		ATilde.Set(ibL + numNodes,ibL + numNodes,1.0);
 		ATilde.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+		Mrho.Set(ibL,ibL,1.0);
+		Mrho.Set(ibL + numNodes,ibL + numNodes,1.0);
+		Mrho.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
+		M.Set(ibL,ibL,1.0);
+		M.Set(ibL + numNodes,ibL + numNodes,1.0);
+		M.Set(ibL + 2*numNodes,ibL + 2*numNodes,1.0);
 	  }
 
 	  // DTilde
@@ -5841,19 +5977,11 @@ void Simulator3D::assemblePBC()
 		GTilde.SetColumnZero(ibL);
 		GTilde.SetColumnZero(ibL + numNodes);
 		GTilde.SetColumnZero(ibL + 2*numNodes);
+		E.Set(ibL,ibL,1.0);
 	  }
 	  
 	  //*** ETilde call
-	  ETilde = E - (( DTilde * invA) * GTilde );
-
-	  for ( i = 0; i < nyPointsL; i++ )
-	  {
-		  ibL = VecXMinAux.Get(i);
-		  ETilde.SetRowZero(ibL);
-		  ETilde.SetColumnZero(ibL);
-		  ETilde.Set(ibL,ibL,1.0);		  
-	  }
-
+	  ETilde = E - (( DTilde * invAP) * GTilde );
 	}
 
 	/* Copying rows and columns from ibR to ibL. Idem, with inversed

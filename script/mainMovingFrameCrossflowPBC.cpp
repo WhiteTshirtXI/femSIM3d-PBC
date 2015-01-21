@@ -46,18 +46,35 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- double Re = 50.0;
- double We = 6.0;
- double Fr = 1.0;
  double alpha = 1;
  double cfl = 1.0;
+
+ /* 
+ // ==== Meister & Scheele (1969); Richards (1994)
+ double Re = 1851.0;
+ double We = 2.20;
+ double Fr = 1.0;
+ double mu_out = 1.0;
+ double mu_in = 0.41*mu_out;
+ double rho_out = 1.0;
+ double rho_in = 0.686*rho_out;
+ // ====
+ */
+ 
+ 
+ // ==== Webster & Longmire (2001)
+ double Re = 50.0;
+ double We = 0.8;
+ double Fr = 1.0;
  double mu_out = 0.048;
  double mu_in = 0.15*mu_out;
  double rho_out = 1136.0;
  double rho_in = 1.18*rho_out;
+  // ====
+ 
 
- double velVCrossflow = 2.0; // i.e. V_crossflow = velVCrossflow x V_jet
- double velWCrossflow = 2.0; 
+ double velVCrossflow = 1.0; // i.e. V_crossflow = velVCrossflow x V_jet
+ double velWCrossflow = velVCrossflow; 
 
  //const char* _frame = "fixed";
  const char* _frame = "moving";
@@ -94,10 +111,28 @@ int main(int argc, char **argv)
  // moving
  //string meshFile = "crossflow.msh";
  string meshFile = "crossflow-holed-3d.msh";
+ //string meshFile = "crossflow-holed-3d-Lp3.msh";
+ 
+ /*
  const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/bin/";
  const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/vtk/";
  const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/dat/";
  const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/msh/";
+ */
+ 
+ 
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/";
+ 
+
+ /*
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/msh/";
+ */
 
  string meshDir = (string) getenv("MESH3D_DIR");
 
@@ -152,7 +187,7 @@ int main(int argc, char **argv)
   s1.setMu(mu_in,mu_out);
   s1.setRho(rho_in,rho_out);
   s1.setCfl(cfl);
-  s1.initJetVelocity(1.0);
+  s1.initPastCylinderFlow(-1.0,velVCrossflow);
   s1.setBetaPressureLiquid(betaGrad); 
   s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
@@ -211,7 +246,7 @@ int main(int argc, char **argv)
   zinit = s1.getCentroidPosZAverage(); // initial z centroid
  }
 
- int nIter = 10000;
+ int nIter = 50000;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -279,13 +314,17 @@ int main(int argc, char **argv)
    //s1.unCoupledPBCNew();
    s1.unCoupledPBC();
 
+   if ( i%15 == 0 )
+   {
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    save.bubbleWallDistance(datFolder,"dist",iter);
-
+   save.saveBubbleShapeFactors(datFolder,"shapeFactors",iter);
+   }
+   
    s1.saveOldData();
 
    cout << color(none,magenta,black);
@@ -309,7 +348,7 @@ int main(int argc, char **argv)
   h2.unCoupledC();
   h2.saveVTK(vtkFolder,"edge",iter-1);
   //h2.saveChordalEdge(datFolder,"edge",iter-1);
-  h2.setModel3DEdgeSize();
+  //h2.setModel3DEdgeSize();
   
   Model3D mOld = m1; 
 
@@ -318,8 +357,8 @@ int main(int argc, char **argv)
   m1.setNormalAndKappa();
   m1.initMeshParameters();
   // 3D mesh operations
-  m1.insert3dMeshPointsByDiffusion(6.5); //<<
-  m1.remove3dMeshPointsByDiffusion(1.5); //<<
+  m1.insert3dMeshPointsByDiffusion(6.5);
+  m1.remove3dMeshPointsByDiffusion(1.5);
   //m1.removePointByVolume();
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
@@ -378,9 +417,12 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
+  if ( i%15 == 0 )
+  {
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();
   saveEnd.saveMeshInfo(datFolder);
+  }
  }
  
  PetscFinalize();

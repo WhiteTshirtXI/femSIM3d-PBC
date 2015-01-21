@@ -1,36 +1,15 @@
-/* \file mainMovingFrameCrossflowPBC.cpp
- * \author Gustavo Peixoto
- * \email gustavo.oliveira@uerj.br 
- * \date November 2014
- *
- *  \description{ 
- *  
- *  Script to simulate the problem of the drop jet in
- *  crossflow.
- *
- *  Boundary conditions
- *  ===================
- *  
- *  + kinds:
- *
- *  outflow: top
- *  periodic: sides
- *  crossflow: bottom
- *  slip: crossflow-top/bottom
- *  
- *  + physical groups in setGenericBC():
- *  'outflow', 'wallLeft', 'wallRight',
- *  'wallInflowVTransverse','wallNormalW'.
- *
- *  + calls setGenericBC(velU,velV,velW) 
- *
- *  }
- */ 
+// =================================================================== //
+// this is file mainRisingBubble.cpp, created at 10-Jun-2009           //
+// maintained by Gustavo Rabello dos Anjos                             //
+// e-mail: gustavo.rabello@gmail.com                                   //
+// =================================================================== //
+
 #include <cmath>
 #include "Model3D.h"
 #include "Simulator3D.h"
 #include "CGSolver.h"
 #include "PCGSolver.h"
+#include "TElement.h"
 #include "GMRes.h"
 #include "InOut.h"
 #include "Helmholtz3D.h"
@@ -45,94 +24,45 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  //PetscInitializeNoArguments();
 
- int iter = 1;
- double alpha = 1;
- double cfl = 1.0;
-
- /* 
- // ==== Meister & Scheele (1969); Richards (1994)
- double Re = 1851.0;
- double We = 2.20;
- double Fr = 1.0;
- double mu_out = 1.0;
- double mu_in = 0.41*mu_out;
- double rho_out = 1.0;
- double rho_in = 0.686*rho_out;
- // ====
- */
- 
- 
- // ==== Webster & Longmire (2001)
- double Re = 50.0;
- double We = 0.8;
- double Fr = 1.0;
- double mu_out = 0.048;
- double mu_in = 0.15*mu_out;
- double rho_out = 1136.0;
- double rho_in = 1.18*rho_out;
-  // ====
- 
+ int iter = 0;
 
  double velVCrossflow = 1.0; // i.e. V_crossflow = velVCrossflow x V_jet
  double velWCrossflow = velVCrossflow; 
-
+ 
  //const char* _frame = "fixed";
  const char* _frame = "moving";
- 
+
  string _physGroup = "\"wallInflowVTransverse\"";
  double betaGrad = 0.0;
-
- // fixed
- double c1 = 0.0;      // lagrangian
- double c2 = 1.0;      // smooth vel 
- double c3 = 3.0;     // smooth coord (fujiwara)
- double d1 = 1.0;      // surface tangent vel = (u-ut)
- double d2 = 0.5;      // surface smooth coord (fujiwara)
-
- // moving
- if( strcmp( _frame,"moving") == 0 )
- {
-  c1 = 0.0;      // lagrangian
-  c2 = 1.0;      // smooth vel: OBS - different result with c1=0.0
-  c3 = 5.0;      // smooth coord (fujiwara)
-  d1 = 0.0;      // surface tangent velocity u_n=u-u_t 
-  d2 = 0.1;      // surface smooth cord (fujiwara)
- }
-
-
- //Solver *solverP = new PCGSolver(); 
- //Solver *solverP = new PetscSolver(KSPCG,PCICC);
- Solver *solverP = new PetscSolver(KSPCG,PCILU); 
- //Solver *solverP = new PetscSolver(KSPGMRES,PCILU); 
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ 
+ Solver *solverP = new PetscSolver(KSPCG,PCILU);
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
- 
- // moving
- //string meshFile = "crossflow.msh";
+
  string meshFile = "crossflow-holed-3d.msh";
  //string meshFile = "crossflow-holed-3d-Lp3.msh";
- 
- /*
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/msh/";
- */
- 
- 
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/";
- 
 
- /*
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/msh/";
- */
+ const char* name = "wl";
+ 
+ const char *binFolder = "null";
+ const char *datFolder = "null";
+ const char *mshFolder = "null";
+ const char *vtkFolder = "null";
+
+ if( strcmp( name,"wl") == 0 )
+ {
+ binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/bin/";
+ datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/dat/";
+ mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/";
+ vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/";
+ }
+ else
+ { 
+ binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/bin/";
+ datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/dat/";
+ mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/msh/";
+ vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/vtk/";
+ } 
 
  string meshDir = (string) getenv("MESH3D_DIR");
 
@@ -145,22 +75,44 @@ int main(int argc, char **argv)
 
  Model3D m1;
 
- const char *mesh1 = mesh;
 
   cout << endl;
-  cout << "--------------> STARTING FROM 0" << endl;
+  cout << "--------------> RE-STARTING..." << endl;
   cout << endl;
 
-  m1.readMSH(mesh1);
+  string mshBase = "null"; 
+ if( strcmp( name,"wl") == 0 )
+  mshBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/newMesh-";
+ else
+  mshBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/msh/newMesh-";
+
+  // load surface mesh
+  string aux = *(argv+1);
+  string file = mshBase + *(argv+1) + (string) ".msh";
+  const char *mesh2 = file.c_str();
+  m1.readMSH(mesh2);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D("QYYApa0.1");
+  m1.mesh2Dto3D();
+
+  string vtkBase = "null";
+ if( strcmp( name,"wl") == 0 )
+  vtkBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/sim-";
+ else
+  vtkBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/vtk/sim-";
+  
+  // load 3D mesh
+  file = vtkBase + *(argv+1) + (string) ".vtk";
+  const char *vtkFile = file.c_str();
+
+  m1.readVTK(vtkFile);
   m1.setMapping();
 #if NUMGLEU == 5
   m1.setMiniElement();
 #else
   m1.setQuadElement();
 #endif
+  m1.readVTKHeaviside(vtkFile);
   m1.setSurfaceConfig();
   m1.setInitSurfaceVolume();
   m1.setInitSurfaceArea();
@@ -175,26 +127,18 @@ int main(int argc, char **argv)
 
   Simulator3D s1(pbc,m1);
 
-  s1.setRe(Re);
-  s1.setWe(We);
-  s1.setFr(Fr);
-  s1.setC1(c1);
-  s1.setC2(c2);
-  s1.setC3(c3);
-  s1.setD1(d1);
-  s1.setD2(d2);
-  s1.setAlpha(alpha);
-  s1.setMu(mu_in,mu_out);
-  s1.setRho(rho_in,rho_out);
-  s1.setCfl(cfl);
-  s1.initPastCylinderFlow(-1.0,velVCrossflow);
-  s1.setBetaPressureLiquid(betaGrad); 
-  s1.setDtALETwoPhase();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
- 
 
+ const char *dirBase = "null";
+ if( strcmp( name,"wl") == 0 )
+  dirBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/";
+ else
+  dirBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/";
+  
+  iter = s1.loadSolution(dirBase,"sim",atoi(*(argv+1)));
+  
  // Point's distribution
  Helmholtz3D h1(m1);
  h1.setBC();
@@ -205,7 +149,6 @@ int main(int argc, char **argv)
  h1.setUnCoupledCBC(); 
  h1.setCRHS();
  h1.unCoupledC();
- //h1.saveVTK(vtkFolder,"edge");
  h1.setModel3DEdgeSize();
 
  InOut save(m1,s1); // cria objeto de gravacao
@@ -348,7 +291,7 @@ int main(int argc, char **argv)
   h2.unCoupledC();
   h2.saveVTK(vtkFolder,"edge",iter-1);
   //h2.saveChordalEdge(datFolder,"edge",iter-1);
-  //h2.setModel3DEdgeSize();
+  h2.setModel3DEdgeSize();
   
   Model3D mOld = m1; 
 
@@ -363,16 +306,16 @@ int main(int argc, char **argv)
   //m1.removePointsByInterfaceDistance();
   //m1.remove3dMeshPointsByDistance();
   m1.remove3dMeshPointsByHeight();
-  m1.delete3DPoints(); //<<
+  m1.delete3DPoints();
 
   // surface mesh operations
   m1.smoothPointsByCurvature();
 
-  m1.insertPointsByLength("curvature"); //<<
+  m1.insertPointsByLength("curvature");
   //m1.insertPointsByCurvature("flat");
   //m1.removePointsByCurvature();
   //m1.insertPointsByInterfaceDistance("flat");
-  m1.contractEdgesByLength("curvature"); //<<
+  m1.contractEdgesByLength("curvature");
   //m1.removePointsByLength();
   m1.flipTriangleEdges();
   
@@ -380,7 +323,7 @@ int main(int argc, char **argv)
   //m1.checkAngleBetweenPlanes();
   
   /* **************************************** */
-  
+
   m1.mesh3DPoints();
   m1.setMapping();
 #if NUMGLEU == 5
@@ -389,7 +332,7 @@ int main(int argc, char **argv)
   m1.setQuadElement();
 #endif
   m1.setSurfaceConfig();
-  m1.setInterfaceBC();
+  
 
   if( strcmp( _frame,"moving") == 0 )
   {

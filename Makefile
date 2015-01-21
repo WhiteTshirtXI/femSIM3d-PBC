@@ -51,7 +51,8 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   risingBubbleTaylor microInterp
 
 two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC \
-              risingBubbleBetaFlowPBC movingFramePBCRestart movingFrameCrossflowPBC  
+              risingBubbleBetaFlowPBC movingFramePBCRestart movingFrameCrossflowPBC \
+			  movingFrameCrossflowPBCRestart
 
 two-phaseHT: risingBubbleHT sphereHMT
 
@@ -91,6 +92,9 @@ crossflowPBC: ${FEM3D_DIR}/script/mainMovingFrameCrossflowPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFramePBCRestart: ${FEM3D_DIR}/script/mainMovingFramePBCRestart.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+crossflowPBCRestart: ${FEM3D_DIR}/script/mainMovingFrameCrossflowPBCRestart.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 movingFramePBC-debug: ${FEM3D_DIR}/script/mainMovingFramePBC-debug.o $(obj)

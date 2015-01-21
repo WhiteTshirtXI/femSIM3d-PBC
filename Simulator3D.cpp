@@ -6666,6 +6666,54 @@ void Simulator3D::initJetVelocity(double _vel)
    }
  }
 }
+
+/* \brief Intializes the flow past a cylinder without circulation. */ 
+void Simulator3D::initPastCylinderFlow(double _U, double _V)
+{
+ 	init();
+
+	double xc = 0.5*( X->Max() + X->Min() );
+ 	double yc = 0.5*( Y->Max() + Y->Min() );
+ 	double zc = 0.5*( Z->Max() + Z->Min() );
+	
+  for ( int i = 0; i < numNodes; ++i )
+  {
+	   double x = X->Get(i) - xc;
+	   double y = Y->Get(i) - yc;
+	   double z = Z->Get(i) - zc;
+
+	   double r = sqrt( x*x + y*y + z*z );
+	   double theta = atan2(y,x);
+	   
+	   double rad = 0.5; // sphere radius;
+
+	   // velocity profiles
+	   double vr = ( _U*cos(theta) + _V*sin(theta) )*(1.0 - (rad*rad)/(r*r) );
+	   double vtheta = ( - _U*sin(theta) + _V*cos(theta) )*(1.0 + (rad*rad)/(r*r) );
+
+   if ( heaviside->Get(i) < 0.5 )
+   {
+	   uSol.Set(i, vr*cos(theta) - vtheta*sin(theta) + 1.0);
+	   vSol.Set(i, vr*sin(theta) + vtheta*cos(theta) );
+
+	   uSolOld.Set(i, vr*cos(theta) - vtheta*sin(theta) + 1.0 );
+	   vSolOld.Set(i, vr*sin(theta) + vtheta*cos(theta));
+   }
+   else 
+   {
+
+	   double smooth = pow(r,3.0);
+	   vr = vr*smooth;
+	   vtheta = vtheta*smooth;
+
+	   uSol.Set(i, vr*cos(theta) - vtheta*sin(theta) + 1.0);
+	   vSol.Set(i, vr*sin(theta) + vtheta*cos(theta));
+
+	   uSolOld.Set(i, vr*cos(theta) - vtheta*sin(theta) + 1.0);
+	   vSolOld.Set(i, vr*sin(theta) + vtheta*cos(theta));
+   }
+  }
+}
 /* \brief Intializes a Taylor-Green  vortex in the flow. */ 
 void Simulator3D::initTaylorGreenVortex()
 {

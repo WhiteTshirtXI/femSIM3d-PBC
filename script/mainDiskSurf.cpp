@@ -20,18 +20,18 @@ int main(int argc, char **argv)
  PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
 
  int iter = 1;
- real Re = 500;
- real Sc = 1;
- real Fr = 1;
+ double Re = 500;
+ double Sc = 1;
+ double Fr = 1;
  int beta = 1;
- real c1 = 0.6;  // lagrangian
- real c2 = 0.1;  // smooth vel
- real c3 = 0.6;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.0;  // surface smooth cord (fujiwara)
- real mu_l = 1.0;
- real rho_l = 1.0;
- real cfl = 0.3;
+ double c1 = 0.6;  // lagrangian
+ double c2 = 0.1;  // smooth vel
+ double c3 = 0.6;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.0;  // surface smooth cord (fujiwara)
+ double mu_l = 1.0;
+ double rho_l = 1.0;
+ double cfl = 0.3;
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
  Solver *solverV = new PetscSolver(KSPCG,PCICC);

@@ -25,24 +25,24 @@ int main(int argc, char **argv)
  //PetscInitializeNoArguments();
 
  int iter = 1;
- real mu_in   = 0.01;
- real mu_out  = 1.0;
- real rho_in  = 0.001;
- real rho_out = 1.0;
- real Mo      = 1E-4;
- real Eo      = 40;
+ double mu_in   = 0.01;
+ double mu_out  = 1.0;
+ double rho_in  = 0.001;
+ double rho_out = 1.0;
+ double Mo      = 1E-4;
+ double Eo      = 40;
 
- real Re = sqrt( sqrt(Eo*Eo*Eo/Mo) );
- real We = Eo;
- real Fr = 1;
- real c1 = 0.0;
- real c2 = 0.0;
- real c3 = 10.0;
- real d1 = 1.0;
- real d2 = 0.1;
- real alpha = 1;
+ double Re = sqrt( sqrt(Eo*Eo*Eo/Mo) );
+ double We = Eo;
+ double Fr = 1;
+ double c1 = 0.0;
+ double c2 = 0.0;
+ double c3 = 10.0;
+ double d1 = 1.0;
+ double d2 = 0.1;
+ double alpha = 1;
 
- real cfl = 0.8;
+ double cfl = 0.8;
 
  string meshFile = "circular.msh";
  
@@ -258,12 +258,12 @@ int main(int argc, char **argv)
  save.saveInfo(datFolder,"info",mesh);
 
  // fixed 
- //real vinst=0;
- //real vref=0;
+ //double vinst=0;
+ //double vref=0;
 
  // moving
- real vinst = 0;
- real vref = s1.getURef();
+ double vinst = 0;
+ double vref = s1.getURef();
  s1.setCentroidVelPos();
 
  int nIter = 3000;

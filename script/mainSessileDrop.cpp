@@ -23,23 +23,23 @@ int main(int argc, char **argv)
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
  
  int iter = 1;
- real Re = 20;
- real We = 200;
- real Fr = 1.0;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 0.05;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.01;  // surface smooth cord (fujiwara)
- real alpha = 1;
+ double Re = 20;
+ double We = 200;
+ double Fr = 1.0;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 1.0;  // smooth vel
+ double c3 = 0.05;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.01;  // surface smooth cord (fujiwara)
+ double alpha = 1;
 
- real mu_in = 1.0;
- real mu_out = 0.9;
+ double mu_in = 1.0;
+ double mu_out = 0.9;
 
- real rho_in = 1.0;
- real rho_out = 0.001;
+ double rho_in = 1.0;
+ double rho_out = 0.001;
 
- real cfl = 1.0;
+ double cfl = 1.0;
 
  string meshFile = "sessile.msh";
 

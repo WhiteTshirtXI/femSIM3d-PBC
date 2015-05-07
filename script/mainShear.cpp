@@ -37,15 +37,15 @@ int main(int argc, char **argv)
  PetscInitializeNoArguments();
  
  int iter = 1;
- real c1 = 1.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 0.0;  // smooth coord (fujiwara)
- real d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.0;  // surface smooth cord (fujiwara)
+ double c1 = 1.0;  // lagrangian
+ double c2 = 0.0;  // smooth vel
+ double c3 = 0.0;  // smooth coord (fujiwara)
+ double d1 = 0.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.0;  // surface smooth cord (fujiwara)
 
- real dt = 0.0003;
- real T = 3.0;
- real time = 0.0;
+ double dt = 0.0003;
+ double T = 3.0;
+ double time = 0.0;
 
  //string meshFile = "sphere.msh";
  string meshFile = "sphere.msh";
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
    s1.stepLagrangian();
    //s1.setInterfaceGeo();
 
-   real field = cos(3.14159265358*time/T);
+   double field = cos(3.14159265358*time/T);
    cout << endl;
    cout << "                             | T:        " << T << endl;
    cout << "                             | dt:       " << dt << endl;

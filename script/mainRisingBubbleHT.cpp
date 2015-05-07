@@ -26,26 +26,26 @@ int main(int argc, char **argv)
 
  // bogdan's thesis 2010 (Bhaga and Weber, JFM 1980)
  int iter = 1;
- //real Re = 6.53; // case 1
- real Re = 13.8487; // case 2
- //real Re = 32.78; // case 3
- real Sc = 1000;
- real We = 115.66;
- real Fr = 1.0;
- real c1 = 0.0;  // lagrangian
- real c2 = 1.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1.0;
+ //double Re = 6.53; // case 1
+ double Re = 13.8487; // case 2
+ //double Re = 32.78; // case 3
+ double Sc = 1000;
+ double We = 115.66;
+ double Fr = 1.0;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 1.0;  // smooth vel
+ double c3 = 10.0;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
+ double alpha = 1.0;
 
- real mu_in = 0.0000178;
- real mu_out = 1.28;
+ double mu_in = 0.0000178;
+ double mu_out = 1.28;
 
- real rho_in = 1.225;
- real rho_out = 1350;
+ double rho_in = 1.225;
+ double rho_out = 1350;
 
- real cfl = 0.8;
+ double cfl = 0.8;
 
  string meshFile = "airWaterSugar.msh";
  //string meshFile = "test.msh";

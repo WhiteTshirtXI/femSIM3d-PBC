@@ -36,27 +36,27 @@ int main(int argc, char **argv)
  int iter = 0;
 
  // R1234ze at saturation temperature (31.5 celcius)
- real D       = 100E-06; // m
- real G       = 695; // kg/m^2.s
- real mu_in   = 12.8E-06; // Pa.s
- real mu_out  = 187.4E-06; // Pa.s
- real rho_in  = 31.6; // kg/m^3
- real rho_out = 1137.6; // kg/m^3
- real v       = G/rho_out; // m/s
- real sigma   = 7.7E-03; // N/m
- real g       = 9.81; // m/s^2
- real Re = rho_out*v*D/mu_out;
- real We = rho_out*v*v*D/sigma;
- real Fr = v/(sqrt(g*D));
+ double D       = 100E-06; // m
+ double G       = 695; // kg/m^2.s
+ double mu_in   = 12.8E-06; // Pa.s
+ double mu_out  = 187.4E-06; // Pa.s
+ double rho_in  = 31.6; // kg/m^3
+ double rho_out = 1137.6; // kg/m^3
+ double v       = G/rho_out; // m/s
+ double sigma   = 7.7E-03; // N/m
+ double g       = 9.81; // m/s^2
+ double Re = rho_out*v*D/mu_out;
+ double We = rho_out*v*v*D/sigma;
+ double Fr = v/(sqrt(g*D));
 
- real c1 = 0.0;  // lagrangian
- real c2 = 0.0;  // smooth vel
- real c3 = 10.0;  // smooth coord (fujiwara)
- real d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
- real d2 = 0.1;  // surface smooth cord (fujiwara)
- real alpha = 1;
+ double c1 = 0.0;  // lagrangian
+ double c2 = 0.0;  // smooth vel
+ double c3 = 10.0;  // smooth coord (fujiwara)
+ double d1 = 1.0;  // surface tangent velocity u_n=u-u_t 
+ double d2 = 0.1;  // surface smooth cord (fujiwara)
+ double alpha = 1;
 
- real cfl = 0.8;
+ double cfl = 0.8;
 
  //const char* _frame = "fixed";
  const char* _frame = "moving";
@@ -117,8 +117,8 @@ int main(int argc, char **argv)
   fileDir += "/projects/cpp/testTriangleSingle/vtk/secU-715.vtk";
   const char *file = fileDir.c_str();
   m2.readVTKSol(file,"uSol");
-  real length = m1.getX()->Max()-m1.getX()->Min();
-  real initial = m1.getX()->Min();
+  double length = m1.getX()->Max()-m1.getX()->Min();
+  double initial = m1.getX()->Min();
   m2.extrude2DPoints(10,initial,length,"X");
   uSol = *m2.getCC();
   m2.setMesh();
@@ -306,8 +306,8 @@ int main(int argc, char **argv)
  save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- real vinst=0;
- real vref=0;
+ double vinst=0;
+ double vref=0;
  if( strcmp( _frame,"moving") == 0 )
  {
   // moving

@@ -24,17 +24,17 @@ int main(int argc, char **argv)
  int iter = 1;
 
  // R1234ze at saturation temperature (31.5 celcius)
- real D       = 100E-06; // m
- real G       = 695; // kg/m^2.s
- real mu_l    = 187.4E-06; // Pa.s
- real rho_l   = 1137.6; // kg/m^3
- real v       = G/rho_l; // m/s
- real sigma   = 7.7E-03; // N/m
- real g       = 9.81; // m/s^2
- real Re = rho_l*v*D/mu_l;
- real Fr = v/(sqrt(g*D));
+ double D       = 100E-06; // m
+ double G       = 695; // kg/m^2.s
+ double mu_l    = 187.4E-06; // Pa.s
+ double rho_l   = 1137.6; // kg/m^3
+ double v       = G/rho_l; // m/s
+ double sigma   = 7.7E-03; // N/m
+ double g       = 9.81; // m/s^2
+ double Re = rho_l*v*D/mu_l;
+ double Fr = v/(sqrt(g*D));
 
- real cfl = 0.3;
+ double cfl = 0.3;
 
  Solver *solverP = new PetscSolver(KSPGMRES,PCILU);
  Solver *solverV = new PCGSolver();

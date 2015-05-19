@@ -49,7 +49,7 @@ int main(int argc, char **argv)
  double alpha = 1;
  double cfl = 1.0;
 
- /* 
+  
  // ==== Meister & Scheele (1969); Richards (1994)
  double Re = 1851.0;
  double We = 2.20;
@@ -59,9 +59,9 @@ int main(int argc, char **argv)
  double rho_out = 1.0;
  double rho_in = 0.686*rho_out;
  // ====
- */
  
  
+ /*
  // ==== Webster & Longmire (2001)
  double Re = 50.0;
  double We = 0.8;
@@ -71,9 +71,9 @@ int main(int argc, char **argv)
  double rho_out = 1136.0;
  double rho_in = 1.18*rho_out;
   // ====
- 
+ */
 
- double velVCrossflow = 1.0; // i.e. V_crossflow = velVCrossflow x V_jet
+ double velVCrossflow = 0.0; // i.e. V_crossflow = velVCrossflow x V_jet
  double velWCrossflow = velVCrossflow; 
 
  //const char* _frame = "fixed";
@@ -109,29 +109,30 @@ int main(int argc, char **argv)
  Solver *solverC = new PCGSolver();
  
  // moving
- //string meshFile = "crossflow.msh";
- string meshFile = "crossflow-holed-3d.msh";
- //string meshFile = "crossflow-holed-3d-Lp3.msh";
+ //string meshFile = "crossflow-3d-Lp1.5-b0.04.msh";
+ string meshFile = "crossflow-3d-Lp1.5-b0.09.msh";
+ //string meshFile = "crossflow-3d-Lp1.5-b0.2.msh";
  
- /*
+ 
  const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/bin/";
  const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/vtk/";
  const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/dat/";
  const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow/msh/";
+ 
+ 
+ /* 
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-longmire-Lp3/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-longmire-Lp3/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-longmire-Lp3/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-longmire-Lp3/msh/";
  */
- 
- 
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/";
- 
 
+ 
  /*
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.5-meister-Lp5/msh/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/msh/";
  */
 
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -306,7 +307,7 @@ int main(int argc, char **argv)
    s1.assemble();
    s1.matMount();
    s1.setUnCoupledBC();
-   //s1.setGravity("-Z");
+   s1.setGravity("-Z");
    //s1.setBetaFlowLiq("+X");
    s1.setRHS();
    s1.setCopyDirectionPBC("RL");
@@ -314,7 +315,7 @@ int main(int argc, char **argv)
    //s1.unCoupledPBCNew();
    s1.unCoupledPBC();
 
-   if ( i%15 == 0 )
+   if ( i%1 == 0 )
    {
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
    save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
@@ -346,7 +347,7 @@ int main(int argc, char **argv)
   h2.setUnCoupledCBC(); 
   h2.setCRHS();
   h2.unCoupledC();
-  h2.saveVTK(vtkFolder,"edge",iter-1);
+  //h2.saveVTK(vtkFolder,"edge",iter-1);
   //h2.saveChordalEdge(datFolder,"edge",iter-1);
   //h2.setModel3DEdgeSize();
   
@@ -417,7 +418,7 @@ int main(int argc, char **argv)
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
 
-  if ( i%15 == 0 )
+  if ( i%1 == 0 )
   {
   InOut saveEnd(m1,s1); // cria objeto de gravacao
   saveEnd.printMeshReport();

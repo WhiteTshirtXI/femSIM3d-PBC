@@ -80,12 +80,11 @@ class Simulator3D
   void assembleCPBCNew(); // PBC
   void unCoupledPBC(); // modified solution velocity+pressure
   void unCoupledPBCNew(); 
-  void unCoupledBetaPBC();
+  void unCoupledBeta();
   void unCoupledCPBC(); // modified solution scalar
   void unCoupledCPBCNew(); // modified solution scalar
   void getPeriodic3DToAttrib(Periodic3D &_pbc);
   void setPressureJump(double _pJump);
-  void setBetaPressureLiquid();
   void setBetaPressureLiquid(double _val);
   void setBetaFlowLiq(const char* _direction);
   void setRHSBeta();
@@ -95,6 +94,7 @@ class Simulator3D
   void initTanHJetProfile(); // hyperbolic tangent jet profile
   void initJetVelocity(double _vel); // inner phase with velocity
   void initPastCylinderFlow(double _U, double _V);
+  void initDoubletFlow(double _force);
   void inputPurePressurePBC();
   void sumIndexPBCVel(clVector* _indexL, clVector* _indexR, clVector& _b);
   void sumIndexPBCVelNew(vector<int>* _indexL, vector<int>* _indexR, clVector& _b);

@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
  int iter = 0;
 
- double velVCrossflow = 1.0; // i.e. V_crossflow = velVCrossflow x V_jet
+ double velVCrossflow = 0.0; // i.e. V_crossflow = velVCrossflow x V_jet
  double velWCrossflow = velVCrossflow; 
  
  //const char* _frame = "fixed";
@@ -39,10 +39,9 @@ int main(int argc, char **argv)
  Solver *solverV = new PCGSolver();
  Solver *solverC = new PCGSolver();
 
- string meshFile = "crossflow-holed-3d.msh";
- //string meshFile = "crossflow-holed-3d-Lp3.msh";
+ string meshFile = "crossflow-3d-Lp1.5-b0.09.msh";
 
- const char* name = "wl";
+ const char* name = "ms";
  
  const char *binFolder = "null";
  const char *datFolder = "null";
@@ -58,10 +57,10 @@ int main(int argc, char **argv)
  }
  else
  { 
- binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/bin/";
- datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/dat/";
- mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/msh/";
- vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/vtk/";
+ binFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/bin/";
+ datFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/dat/";
+ mshFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/msh/";
+ vtkFolder  = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/vtk/";
  } 
 
  string meshDir = (string) getenv("MESH3D_DIR");
@@ -84,7 +83,7 @@ int main(int argc, char **argv)
  if( strcmp( name,"wl") == 0 )
   mshBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/msh/newMesh-";
  else
-  mshBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/msh/newMesh-";
+  mshBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/msh/newMesh-";
 
   // load surface mesh
   string aux = *(argv+1);
@@ -99,7 +98,7 @@ int main(int argc, char **argv)
  if( strcmp( name,"wl") == 0 )
   vtkBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/vtk/sim-";
  else
-  vtkBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/vtk/sim-";
+  vtkBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/vtk/sim-";
   
   // load 3D mesh
   file = vtkBase + *(argv+1) + (string) ".vtk";
@@ -135,7 +134,7 @@ int main(int argc, char **argv)
  if( strcmp( name,"wl") == 0 )
   dirBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-longmire-Lp5/";
  else
-  dirBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-1.0-meister-Lp5/";
+  dirBase = "/work/gcpoliveira/post-processing/3d/crossflow-lambda-0.0-meister-Lp1.5-b0.09/";
   
   iter = s1.loadSolution(dirBase,"sim",atoi(*(argv+1)));
   

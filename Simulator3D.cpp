@@ -2467,21 +2467,26 @@ void Simulator3D::setInterfaceVelocity()
  }
 } // fecha metodo setInterfaceVelocity
 
-//setRHS eh o metodo que cria o vetor do lado direito (condicao de
-//contorno + termo convectivo)
+/** \brief This is the r.h.s. of the linear system. It stores
+ * the advective term (coming from semi-lagrangian) + boundary 
+ * conditions.
+ */
 void Simulator3D::setRHS()
 {
- // sem correcao na pressao
+ // no correction for pressure
  va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW;
 }
 
+/** \brief Adds pressure gradient term \f$ Eu_{\beta} \f$ at the r.h.s.
+ * of the linear system together with the advection term. */
 void Simulator3D::setRHSBeta()
 {
- // sem correcao na pressao
  va = ( (1.0/dt) * Mrho + (1-alpha) * -(1.0/Re) * K ) * convUVW + M*betaFlowLiq;
 }
 
-
+/** \brief This is the r.h.s. of the linear system for the scalar field. 
+ * Ditto setRHS().
+ */
 void Simulator3D::setCRHS()
 {
  vcc = ( (1.0/dt) * Mc - (1-alpha) * (1.0/(Re*Sc)) * Kc ) * convC;
@@ -2823,91 +2828,6 @@ void Simulator3D::unCoupled()
   cout << setw(70) << "DROPLET SIMULATION" << endl;
   uvw = uTilde + 
         invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
-		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
- }
- 
- //uvw = uTilde;
-
-
- /* 
-  * Mass Transfer
-  * */
- //clVector massTransfer = dt*invMcLumped*( heatFlux );
- //clVector massTransfer = ( invMcLumped*heatFlux );
- clVector massTransfer = invC*
-                         (1.0/rho_inAdimen - 1.0/rho_outAdimen)
-						 *heatFlux;
-
- b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
- //b2Tilde = (-1.0)*( b2 - (DTilde * uvw) + (massTransfer) );
-
-
- // resolve sistema E pTilde = b2
- cout << " --------> solving pressure --------- " << endl;
- solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
- cout << " ------------------------------------ " << endl;
- 
- //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
- uvw = uvw - (invA * GTilde * pTilde);
-
- uvw.CopyTo(         0,uSol);
- uvw.CopyTo(  numNodes,vSol);
- uvw.CopyTo(numNodes*2,wSol);
-
- pSol = pTilde;       // sem correcao na pressao
- //pSol = pSol + pTilde;  // com correcao na pressao
-
- // compute bubble's centroid velocity
- if( surfMesh->numInterfaces > 0 )
-  setCentroidVelPos();
- //setCentroidVelPosInterface();
- // NOT WORKING!
- //setCentroidVelPosInterface();
-//--------------------------------------------------
-//  for ( int i=0;i<numVerts;i++ )
-//  {
-//   int node = i;
-//   uSol.Set(node,uSol.Get(node) - getCentroidVelXMax());
-//  }
-//-------------------------------------------------- 
-} // fecha metodo unCoupled 
-
-
-/** Doesn't call assemblePBC to perform copies.
- */
-void Simulator3D::unCoupledBetaPBC()
-{
- clVector uvw(3*numNodes);
- clVector vaIp(3*numNodes);
- clVector b1Tilde;
- clVector b2Tilde;
-
- // applying boundary conditions to b1Tilde
- vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
-
- b1Tilde = b1 + vaIp;
-
- // resolve sitema ATilde uTilde = b
- cout << " --------> solving velocity --------- " << endl;
- solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
- cout << " ------------------------------------ " << endl;
-
- // uvw = uTilde + surface tension + gravity
- if( rho_in <= rho_out ) // BUBBLE
- {
-  cout << setw(70) << "BUBBLE SIMULATION" << endl;
-  uvw = uTilde + 
-        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
-        dt*invMrhoLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
-		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
-
- }
- else // DROPLET
- {
-  cout << setw(70) << "DROPLET SIMULATION" << endl;
-  uvw = uTilde + 
-        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
-        invA*( ( M*betaFlowLiq ).MultVec(ip) ) + 
 		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
  }
  
@@ -6120,6 +6040,68 @@ void Simulator3D::assembleCPBCNew()
 
 } /* End of method */
 
+/** \brief Solves system by introducing
+ *  the pressure gradient term \f$ Eu_{\beta} \f$.
+ */
+void Simulator3D::unCoupledBeta()
+{
+ clVector uvw(3*numNodes);
+ clVector vaIp(3*numNodes);
+ clVector b1Tilde;
+ clVector b2Tilde;
+
+ // applying boundary conditions to b1Tilde
+ vaIp = va.MultVec(ip); // operacao vetor * vetor (elemento a elemento)
+
+ b1Tilde = b1 + vaIp;
+
+ // resolve sitema ATilde uTilde = b
+ cout << " --------> solving velocity --------- " << endl;
+ solverV->solve(1E-15,ATilde,uTilde,b1Tilde);
+ cout << " ------------------------------------ " << endl;
+
+ // uvw = uTilde + surface tension + gravity
+ if( rho_in <= rho_out ) // BUBBLE
+ {
+  cout << setw(70) << "BUBBLE SIMULATION" << endl;
+  uvw = uTilde + 
+        dt*invMrhoLumped*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+        dt*invMrhoLumped*( ( M*betaFlowLiq ).MultVec(ip) ) + 
+		dt*invMLumped*( ((1.0/We)*(fint) ).MultVec(ip) );
+
+ }
+ else // DROPLET
+ {
+  cout << setw(70) << "DROPLET SIMULATION" << endl;
+  uvw = uTilde + 
+        invA*( ((1.0/(Fr*Fr))*( Mrho*gravity )).MultVec(ip) ) + 
+        invA*( ( M*betaFlowLiq ).MultVec(ip) ) + 
+		invA*( ((1.0/We)*(fint) ).MultVec(ip) );
+ }
+
+ b2Tilde = (-1.0)*( b2 - (DTilde * uvw) ); 
+
+ // resolve sistema E pTilde = b2
+ cout << " --------> solving pressure --------- " << endl;
+ solverP->solve(1E-15,ETilde,pTilde,b2Tilde);
+ cout << " ------------------------------------ " << endl;
+ 
+ //uvw = uTilde - dt*(invMrhoLumped * GTilde * pTilde);
+ uvw = uvw - (invA * GTilde * pTilde);
+
+ uvw.CopyTo(         0,uSol);
+ uvw.CopyTo(  numNodes,vSol);
+ uvw.CopyTo(numNodes*2,wSol);
+
+ pSol = pTilde;       // sem correcao na pressao
+ //pSol = pSol + pTilde;  // com correcao na pressao
+
+ // compute bubble's centroid velocity
+ if( surfMesh->numInterfaces > 0 )
+  setCentroidVelPos();
+
+} // fecha metodo unCoupledBeta
+
 
 
 /* unCoupledPBC with <vector> structure */
@@ -6199,9 +6181,9 @@ void Simulator3D::unCoupledPBCNew()
  //pSol = pSol + pTilde;  // com correcao na pressao
 
  // Removal of periodic pressure floating: test
- //clVector p(numVerts);
- //p.SetAll( getMeanPressureDomain("average") );
- //pSol = pSol - p;
+ clVector p(numVerts);
+ p.SetAll( getMeanPressureDomain("average") );
+ pSol = pSol - p;
  
  // compute bubble's centroid velocity
  if( surfMesh->numInterfaces > 0 )
@@ -6363,24 +6345,15 @@ void Simulator3D::unCoupledPBC()
   setCentroidVelPos();
 } // fecha metodo unCoupledPBC 
 
-
-/* Sets the dimensionless pressure gradient for PBC application.
+/** \brief Sets the dimensionless pressure gradient \f$ Eu_{\beta} ]f$
  * 
  * \param[in]: pressure drop, channel length, density of liquid,
  * velocity (Quantities of reference).
- * 
- * 
- * \remark Standard values for code verification against the Poiseuille 
+ *
+ * \details Standard values for code verification against the Poiseuille 
  * flow and recovery of the flow rate are Re = 1.0; betaPressLiq =
  * 32.0/Re.
- *
  */
-void Simulator3D::setBetaPressureLiquid()
-{
-  //betaPressLiq = 32.0/Re; // Poiseuille flow
-  betaPressLiq = 0.9625;
-}
-
 void Simulator3D::setBetaPressureLiquid(double _val)
 {
   betaPressLiq = _val;
@@ -6691,6 +6664,7 @@ void Simulator3D::initPastCylinderFlow(double _U, double _V)
 	   double vr = ( _U*cos(theta) + _V*sin(theta) )*(1.0 - (rad*rad)/(r*r) );
 	   double vtheta = ( - _U*sin(theta) + _V*cos(theta) )*(1.0 + (rad*rad)/(r*r) );
 
+   // summed 1.0 for moving-frame jet case.
    if ( heaviside->Get(i) < 0.5 )
    {
 	   uSol.Set(i, vr*cos(theta) - vtheta*sin(theta) + 1.0);
@@ -6714,6 +6688,38 @@ void Simulator3D::initPastCylinderFlow(double _U, double _V)
    }
   }
 }
+
+/* \brief Intializes the flow past a cylinder without circulation. */ 
+void Simulator3D::initDoubletFlow(double _force)
+{
+ 	init();
+
+	double xc = 0.5*( X->Max() + X->Min() );
+ 	double yc = 0.5*( Y->Max() + Y->Min() );
+ 	double zc = 0.5*( Z->Max() + Z->Min() );
+	
+  for ( int i = 0; i < numNodes; ++i )
+  {
+	   double x = X->Get(i) - xc;
+	   double y = Y->Get(i) - yc;
+	   double z = Z->Get(i) - zc;
+
+	   double r = sqrt( x*x + y*y + z*z );
+	   double theta = acos(z/r);
+	   double phi = atan2(y,x);
+	   
+	   // velocity profiles
+	   double vr = (_force/2.0*acos(-1.0))*(cos(theta)/r*r*r); 
+	   double vtheta = (_force/4.0*acos(-1.0))*(sin(theta)/r*r*r); 
+	   double vphi = 0.0;
+
+	   uSol.Set(i, vr*sin(theta)*cos(phi) + vtheta*cos(theta)*cos(phi) - vphi*sin(phi) );
+	   vSol.Set(i, vr*sin(theta)*sin(phi) + vtheta*cos(theta)*sin(phi) + vphi*cos(phi) );
+	   wSol.Set(i, vr*cos(theta)          - vtheta*sin(phi)            + 0.0           );
+
+  }
+}
+
 /* \brief Intializes a Taylor-Green  vortex in the flow. */ 
 void Simulator3D::initTaylorGreenVortex()
 {

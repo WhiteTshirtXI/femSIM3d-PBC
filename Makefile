@@ -38,9 +38,9 @@ obj = $(src:%.cpp=%.o)
 all: single-phase two-phase two-phaseHT
 
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
-              sphereNuCte 
+              sphereNuCte poiseuilleBeta
 
-single-phasePBC: channelPBC taylorVortexPBC testMesh betaFlowPBC
+single-phasePBC: taylorVortexPBC testMesh 
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
@@ -64,6 +64,12 @@ step: ${FEM3D_DIR}/script/mainStep.o $(obj)
 
 stepALE: ${FEM3D_DIR}/script/mainStepALE.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+poiseuille: ${FEM3D_DIR}/script/mainPoiseuille.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
+poiseuilleBeta: ${FEM3D_DIR}/script/mainPoiseuilleBeta.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 #                                                                            #
 # -------------------------------------------------------------------------- #
 
@@ -74,12 +80,6 @@ risingBubblePBC: ${FEM3D_DIR}/script/mainRisingBubblePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 risingBubbleBetaFlowPBC: ${FEM3D_DIR}/script/mainRisingBubbleBetaFlowPBC.o $(obj)
-	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-
-betaFlowPBC: ${FEM3D_DIR}/script/mainBetaFlowPBC.o $(obj)
-	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
-
-channelPBC: ${FEM3D_DIR}/script/mainChannelPBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 
 taylorVortexPBC: ${FEM3D_DIR}/script/mainTaylorVortexPBC.o $(obj)
@@ -267,6 +267,7 @@ libtest.so: $(obj)
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 	
+.PHONY: erase
 erase:
 	@rm -f core
 	@find . -name "*~" -exec rm {} \;
@@ -276,6 +277,7 @@ erase:
 	@find ./bin -type f -name "?*.*" | xargs rm -f
 	@find ./msh -type f -name "?*.*" | xargs rm -f
 
+.PHONY: deepclean
 deepclean: erase
 	@rm -f step poiseuille risingBubble staticDroplet oscillatingDrop 
 	@rm -f fallingDrop sessileDrop 2Bubbles micro staticDropletHMT
@@ -287,3 +289,8 @@ deepclean: erase
 	@find ${FEMLIB_DIR} -name "?*.o" -exec rm {} \;
 	@find . -name "?*.o" -exec rm {} \;
 
+# clean post processing dirs
+.PHONY: cleanPP
+
+cleanPP:
+	@find ${POST_PROCESSING3D_DIR} -type f -name "*.*" -exec rm -f {} \;

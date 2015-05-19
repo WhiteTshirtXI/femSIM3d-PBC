@@ -319,7 +319,7 @@ int main(int argc, char **argv)
    s1.setInterfaceGeo();
    s1.unCoupledBetaPBC();
 
-   if ( i%5 == 0 )
+   if ( i%15 == 0 )
    {
    save.saveMSH(mshFolder,"newMesh",iter);
    save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
   h2.setCRHS();
   h2.unCoupledC();
 
-  if ( i%5 == 0 )
+  if ( i%15 == 0 )
   {
    h2.saveVTK(vtkFolder,"edge",iter-1);
    h2.saveChordalEdge(datFolder,"edge",iter-1);

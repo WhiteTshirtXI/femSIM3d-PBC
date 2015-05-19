@@ -46,12 +46,12 @@ stepALE
 torus
 vortex
 zalesak
-channelPBC
 taylorVortexPBC
 movingFramePBC
 movingFramePBCRestart
 risingBubblePBC
-betaFlowPBC
+poiseuilleBeta
+poiseuillePBC
 risingBubbleBetaFlowPBC
 crossflowPBC
 crossflowPBCRestart

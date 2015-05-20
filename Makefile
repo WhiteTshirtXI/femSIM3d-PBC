@@ -9,7 +9,7 @@
 CXX = clang++
 
 # Flags
-CXXFLAGS = -g -fPIC
+CXXFLAGS = -g -fPIC -Wall
 
 # Libraries and includes
 LIBS += -lm 
@@ -20,7 +20,7 @@ INCLUDES += -I${TETGEN_DIR}
 INCLUDES += -I${BOOST_INCLUDE_DIR}
 FEM3D_DIR = .
 
-# Sorces
+# Sources
 src += ${FEMLIB_DIR}/clVector.cpp
 src += ${FEMLIB_DIR}/clMatrix.cpp
 src += ${FEMLIB_DIR}/clDMatrix.cpp
@@ -40,7 +40,7 @@ all: single-phase two-phase two-phaseHT
 single-phase: diskNuC diskNuZ diskNuCte diskSurf finiteDisk step stepALE \
               sphereNuCte poiseuilleBeta
 
-single-phasePBC: taylorVortexPBC testMesh 
+single-phasePBC: taylorVortexPBC poiseuillePBC testMesh 
 
 two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
            curvatureHyperboloid curvatureTorus curvatureAndPressureSphere \
@@ -50,7 +50,7 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   2Bubbles micro zalesak vortex curvatureTest shear \
 		   risingBubbleTaylor microInterp
 
-two-phasePBC: channelPBC movingFramePBC movingFramePBC-debug risingBubblePBC \
+two-phasePBC: movingFramePBC movingFramePBC-debug risingBubblePBC \
               risingBubbleBetaFlowPBC movingFramePBCRestart movingFrameCrossflowPBC \
 			  movingFrameCrossflowPBCRestart
 
@@ -76,6 +76,9 @@ poiseuilleBeta: ${FEM3D_DIR}/script/mainPoiseuilleBeta.o $(obj)
 
 # ------------------------------<< periodic >>------------------------------ #
 #
+poiseuillePBC: ${FEM3D_DIR}/script/mainPoiseuillePBC.o $(obj)
+	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
+
 risingBubblePBC: ${FEM3D_DIR}/script/mainRisingBubblePBC.o $(obj)
 	-${CLINKER} $(obj) $(LIBS) ${PETSC_KSP_LIB} $< -o $@
 

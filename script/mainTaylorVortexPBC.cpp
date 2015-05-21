@@ -1,150 +1,174 @@
-/** 
- * \file    mainBetaFlowPBC.cpp
+/* \file    mainTaylorVortexPBC.cpp
  * \author  Gustavo Peixoto de Oliveira 
- * \email   tavolesliv@gmail.com
+ * \email   gustavo.oliveira@uerj.br
  * \date    Created on August 19th, 2014
+ *
+ * \Remark {Slow convergence without pressure point; faster with
+ * one-point pressure setting.}
+ *
+ * Transport case:
+ *
+ * NaCl (salt) diffusing in water at 20 oC and salinity 35 g/kg
+ * k = 1.611E-9 m2/s (diffusivity coeff.) at 25 oC;
+ * rho = 1035.0 kg/m3
+ * mu = 1.08E-3 Pa.s;
+ * nu = 1.05E-6 m2/s 
+ * Sc = nu/k;
  *
  */
 
 #include <cmath>
 #include "Model3D.h"
-#include "Simulator3D.h"
 #include "CGSolver.h"
+#include "Simulator3D.h"
 #include "PCGSolver.h"
 #include "GMRes.h"
 #include "InOut.h"
-#include "Helmholtz3D.h"
-#include "PetscSolver.h"
 #include "petscksp.h"
-#include "colors.h"
+#include "PetscSolver.h"
 
-#define NUMPHASES 2
+#define NUMPHASES 1
 
 int main(int argc, char **argv)
 {
  PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
- //PetscInitializeNoArguments();
 
  int iter = 1;
- double Re = 35.0;  
- /* NaCl (salt) diffusing in water at 20 oC and salinity 35 g/kg
-  * k = 1.611E-9 m2/s (diffusivity coeff.) at 25 oC;
-  * rho = 1035.0 kg/m3
-  * mu = 1.08E-3 Pa.s;
-  * nu = 1.05E-6 m2/s 
-  * Sc = nu/k;
-  */
- double Sc = 1.05E-6/1.611E-9; cout << "Sc = " << Sc << endl; 
+ double Re = 600.0;  
+ double Sc = 1.05E-6/1.611E-9; 
  double Fr = 1.0;
- double alpha = 1.0;
- double cfl = 0.1; 
- double mu_l = 1.0;
- double rho_l = 2.0;
+ double alpha = 1;
+ double cfl = 1.5;
+ double EuBeta = 12.0;
+ double mu_l = 1.08E-3;
+ double rho_l = 1035.0;
 
- string meshFile = "cuboid.msh";
+ /* Overlapping phys. group */
+ string physGroup = "\"wallInflowU\""; // requireed for slip-kind condition
 
- //string physGroup = "\"wallNoSlip\""; 
- string physGroup = "\"wallNormalW\""; 
- double betaGrad = 12.0/Re;
-
+ /* \attention{ Certify that these environmental 
+  * variables are correctly defined. Otherwise, 
+  * SIGABORT runtime error will be launched. }
+  */
  string meshDir = (string) getenv("MESH3D_DIR");
- 
- meshDir += "/cuboid/" + meshFile;
+ string ppd = getenv("POST_PROCESSING3D_DIR");
+
+ string meshFile = "taylorVortexPBC.msh";
+ meshDir += "/singlePhase/pbc/" + meshFile;
  const char *mesh = meshDir.c_str();
 
- Solver *solverP = new PetscSolver(KSPCG,PCILU);
- //Solver *solverP = new PetscSolver(KSPGMRES,PCJACOBI);
+ /* \remark PCGSolver family gives the best results for PBC.
+  * Compare with PetscSolver to see error propagation over the
+  * periodic boundaries. Scalar is unchangeed. */
+ Solver *solverP = new PCGSolver();
  Solver *solverV = new PCGSolver(); 
- //Solver *solverV = new PetscSolver(KSPCG,PCILU);
- //Solver *solverV = new PCGSolver();
- //Solver *solverC = new PCGSolver();
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
- 
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/taylor-vortex/msh/";
+
+ string bin = "/taylorVortexPBC/bin/";
+ string vtk = "/taylorVortexPBC/vtk/";
+ string dat = "/taylorVortexPBC/dat/";
+ string msh = "/taylorVortexPBC/msh/";
+ bin = ppd + bin;
+ vtk = ppd + vtk;
+ dat = ppd + dat;
+ msh = ppd + msh;
+ const char *binFolder = bin.c_str();
+ const char *vtkFolder = vtk.c_str();
+ const char *datFolder = dat.c_str();
+ const char *mshFolder = msh.c_str();
 
  Model3D m1;
 
-  cout << endl;
-  cout << "--------------> STARTING FROM 0" << endl;
-  cout << endl;
-
-  const char *mesh1 = mesh;
-
-  m1.readMSH(mesh1);
+  m1.readMSH(mesh);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D("QYYAzpaq1.414");
+  m1.mesh2Dto3D("QYYAzpa0.1");
   m1.setMapping();
-#if NUMGLEU == 5
-  m1.setMiniElement();
+
+#if NUMGLEU == 4
+ m1.setMiniElement();
 #else
-  m1.setQuadElement();
+ m1.setQuadElement();
 #endif
-  m1.setNeighbour();
-  //m1.setVertNeighbour();
-  //m1.setInOutVert();
-  m1.setGenericBCPBCNew(physGroup);
-  m1.setGenericBC();
+ m1.setSurfaceConfig();
 
-  Periodic3D pbc(m1);
-  pbc.MountPeriodicVectorsNew("print");
+ // mesh statistics info 
+ m1.setInitSurfaceVolume();
+ m1.setSurfaceVolume();
+ m1.setInitSurfaceArea();
+ m1.tetMeshStats();
 
-  Simulator3D s1(pbc,m1);
+ // boundary conditions
+ m1.setGenericBCPBCNew(physGroup); // set periodic vectors
+ m1.setGenericBC(); 
 
-  s1.setRe(Re);
-  s1.setSc(Sc);
-  s1.setFr(Fr);
-  s1.setAlpha(alpha);
+ // Periodic call
+ Periodic3D pbc(m1);
+ pbc.MountPeriodicVectorsNew("noprint");
+
+ Simulator3D s1(pbc,m1);
+
+ s1.setRe(Re);
+ s1.setSc(Sc);
+ s1.setAlpha(alpha);
+ s1.setFr(Fr);
   s1.setMu(mu_l);
   s1.setRho(rho_l);
   s1.setCfl(cfl);
-  s1.setDtEulerian(); //<<< for fixed mesh 
-  s1.initTaylorVortex(); 
-  s1.initCGaussian(0.8);
-  s1.setBetaPressureLiquid(betaGrad);
+  s1.setDtEulerian();
   s1.setSolverPressure(solverP);
   s1.setSolverVelocity(solverV);
   s1.setSolverConcentration(solverC);
+
+  // initial condition vortex + scalar layer
+  s1.initTaylorVortex(); 
+  s1.initCTwoShearLayers(1.0,0.0); 
+
+ if( (*(argv+1)) == NULL )
+ {
+  cout << endl;
+  cout << "--------------> STARTING FROM 0" << endl;
+  cout << endl;
+ }
+ else if( strcmp( *(argv+1),"restart") == 0 )
+ {
+  cout << endl;
+  cout << "--------------> RE-STARTING..." << endl;
+  cout << endl;
+  iter = s1.loadSolution("./","sim",atoi(*(argv+2))); // change dir
+  s1.setCfl(cfl);
+  s1.setDtEulerian();
+ }
  
- InOut save(m1,s1); // cria objeto de gravacao
+ InOut save(m1,s1); 
  save.saveVTK(vtkFolder,"sim",0);
  save.saveVTK(vtkFolder,"geometry");
- save.saveMeshInfo(datFolder);
  save.saveInfo(datFolder,"info",mesh);
 
- int nIter = 50;
- int nReMesh = 1;
+ int nIter = 100;
+ int nRe = 1;
  for( int i=1;i<=nIter;i++ )
  {
-  for( int j=0;j<nReMesh;j++ )
+  for( int j=0;j<nRe;j++ )
   {
-   cout << color(none,magenta,black);
    cout << "____________________________________ Iteration: " 
 	    << iter << endl;
-   cout << resetColor();
 
-   InOut save(m1,s1); // cria objeto de gravacao
    save.printSimulationReport();
 
    s1.stepSLPBCFix(); 
-   s1.assembleSlip(); 
+   s1.assembleSlip(); // required for moving walls and scalar solving
    s1.matMount();
    s1.matMountC();
    s1.setUnCoupledBC();  
    s1.setUnCoupledCBC();
-   //s1.setGravity("+X");
-   //s1.setBetaFlowLiq("+X"); 
    s1.setRHS();
    s1.setCRHS();
    s1.setCopyDirectionPBC("RL");
    s1.unCoupledPBCNew(); 
    s1.unCoupledCPBCNew();  
 
-   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveMSH(mshFolder,"newMesh",iter);
+   save.saveVTK(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    
    // error
@@ -152,13 +176,10 @@ int main(int argc, char **argv)
    save.saveTaylorVortexError(datFolder); 
 
    s1.saveOldData();
+   s1.timeStep();
 
-   cout << color(none,magenta,black);
    cout << "________________________________________ END of " 
 	    << iter << endl;
-   cout << resetColor();
-
-   s1.timeStep();
 
    iter++;
   }

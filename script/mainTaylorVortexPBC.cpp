@@ -38,13 +38,12 @@ int main(int argc, char **argv)
  double Sc = 1.05E-6/1.611E-9; 
  double Fr = 1.0;
  double alpha = 1;
- double cfl = 1.5;
- double EuBeta = 12.0;
+ double cfl = 0.5;
  double mu_l = 1.08E-3;
  double rho_l = 1035.0;
 
  /* Overlapping phys. group */
- string physGroup = "\"wallInflowU\""; // requireed for slip-kind condition
+ string physGroup = "\"wallInflowU\""; // required for slip-kind condition
 
  /* \attention{ Certify that these environmental 
   * variables are correctly defined. Otherwise, 
@@ -60,7 +59,8 @@ int main(int argc, char **argv)
  /* \remark PCGSolver family gives the best results for PBC.
   * Compare with PetscSolver to see error propagation over the
   * periodic boundaries. Scalar is unchangeed. */
- Solver *solverP = new PCGSolver();
+ //Solver *solverP = new PCGSolver();
+ Solver *solverP = new PetscSolver(KSPCG,PCICC);
  Solver *solverV = new PCGSolver(); 
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
@@ -82,10 +82,10 @@ int main(int argc, char **argv)
   m1.readMSH(mesh);
   m1.setInterfaceBC();
   m1.setTriEdge();
-  m1.mesh2Dto3D("QYYAzpa0.1");
+  m1.mesh2Dto3D();
   m1.setMapping();
 
-#if NUMGLEU == 4
+#if NUMGLEU == 5
  m1.setMiniElement();
 #else
  m1.setQuadElement();
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
  // Periodic call
  Periodic3D pbc(m1);
- pbc.MountPeriodicVectorsNew("noprint");
+ pbc.MountPeriodicVectorsNew("print");
 
  Simulator3D s1(pbc,m1);
 

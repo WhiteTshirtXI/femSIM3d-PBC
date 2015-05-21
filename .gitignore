@@ -4,6 +4,7 @@
 *.dat
 *.swp
 *.swo
+*.swn
 .DS*
 *.vtk
 *.vtu

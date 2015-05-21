@@ -260,8 +260,8 @@ int main(int argc, char **argv)
    s1.unCoupledPBCNew();
 
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    //save.crossSectionalVoidFraction(datFolder,"voidFraction",iter);

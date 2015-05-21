@@ -50,9 +50,8 @@ two-phase: sphere cylinder torus curvatureSphere curvatureCylinder \
 		   2Bubbles micro zalesak vortex curvatureTest shear \
 		   risingBubbleTaylor microInterp
 
-two-phasePBC: movingFramePBC movingFramePBC-debug risingBubblePBC \
-              risingBubbleBetaFlowPBC movingFramePBCRestart movingFrameCrossflowPBC \
-			  movingFrameCrossflowPBCRestart
+two-phasePBC: movingFramePBC risingBubblePBC \
+              risingBubbleBetaFlowPBC movingFramePBCRestart \
 
 two-phaseHT: risingBubbleHT sphereHMT
 

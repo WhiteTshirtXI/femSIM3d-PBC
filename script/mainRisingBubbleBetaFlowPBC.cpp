@@ -317,13 +317,13 @@ int main(int argc, char **argv)
    s1.setBetaFlowLiq("+X");
    s1.setRHS(); //<<
    s1.setInterfaceGeo();
-   s1.unCoupledBetaPBC();
+   s1.unCoupledBeta();
 
    if ( i%15 == 0 )
    {
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    }

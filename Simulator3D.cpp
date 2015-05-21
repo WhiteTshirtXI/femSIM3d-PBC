@@ -1479,7 +1479,7 @@ void Simulator3D::assembleSlip()
  // gx = Gx;
  // gy = Gy;
  // gz = Gz;
-
+ 
  Mrho.CopyFrom(          0,          0, Mx_rho );
  Mrho.CopyFrom(   numNodes,   numNodes, Mx_rho );
  Mrho.CopyFrom( 2*numNodes, 2*numNodes, Mx_rho );
@@ -5517,7 +5517,7 @@ void Simulator3D::assemblePBCNew()
 	 * It worked here, but it's not efficient,
 	 * because of mesh dependence.
 	 */
-	//setDirichletPressurePointPBC("fixed");
+	setDirichletPressurePointPBC("fixed");
 
 	/* Changed ETilde. Since the periodicity was applied
 	 * to {D,G}Tilde, the matrix ETilde doesn't need the 
@@ -6119,7 +6119,7 @@ void Simulator3D::unCoupledPBCNew()
 
  //*** periodicity on rhs vector - velocity
  sumIndexPBCVelNew(MasterIndices,SlaveIndices,b1Tilde);
- 
+
  //*** modifies the global matrices relative to single-phase
  assemblePBCNew();
 

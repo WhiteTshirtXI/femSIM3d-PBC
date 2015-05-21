@@ -181,17 +181,16 @@ int main(int argc, char **argv)
  //Solver *solverV = new PetscSolver(KSPCG,PCJACOBI);
  Solver *solverC = new PetscSolver(KSPCG,PCICC);
 
- const char *binFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/bin/";
- const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/vtk/";
- const char *datFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/dat/";
- const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/rising-pbc/msh/";
+ const char *binFolder  = "/work/gcpoliveira/post-processing/3d/risingPBC/bin/";
+ const char *vtkFolder  = "/work/gcpoliveira/post-processing/3d/risingPBC/vtk/";
+ const char *datFolder  = "/work/gcpoliveira/post-processing/3d/risingPBC/dat/";
+ const char *mshFolder  = "/work/gcpoliveira/post-processing/3d/risingPBC/msh/";
  
  string meshDir = (string) getenv("MESH3D_DIR");
  if( strcmp( _frame,"moving") == 0 )
-  meshDir += "/rising/movingFrame/" + meshFile;
+  meshDir += "/twoPhase/pbc/" + meshFile;
  else
-  meshDir += "/rising/" + meshFile;
-  //meshDir += "/test/" + meshFile;
+  meshDir += "/twoPhase/pbc/" + meshFile;
  
  const char *mesh = meshDir.c_str();
 
@@ -277,7 +276,7 @@ int main(int argc, char **argv)
   xinit = s1.getCentroidPosXAverage();
  }
 
- int nIter = 30000;
+ int nIter = 300;
  int nReMesh = 1;
  for( int i=1;i<=nIter;i++ )
  {
@@ -327,8 +326,8 @@ int main(int argc, char **argv)
    if ( i%5 == 0 )
    {
    save.saveMSH(mshFolder,"newMesh",iter);
-   save.saveVTKPBC(vtkFolder,"sim",iter,betaGrad);
-   save.saveVTKSurfacePBC(vtkFolder,"sim",iter,betaGrad);
+   save.saveVTK(vtkFolder,"sim",iter);
+   save.saveVTKSurface(vtkFolder,"sim",iter);
    save.saveSol(binFolder,"sim",iter);
    save.saveBubbleInfo(datFolder);
    }
